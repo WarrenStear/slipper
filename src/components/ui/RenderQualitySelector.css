@@ -1,0 +1,86 @@
+.render-quality-selector {
+  position: fixed;
+  right: 18px;
+  top: 18px;
+  z-index: 42;
+  display: grid;
+  gap: 8px;
+  width: min(292px, calc(100vw - 36px));
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 20px;
+  color: rgba(255, 255, 255, 0.76);
+  background:
+    radial-gradient(circle at top right, rgba(216, 208, 186, 0.1), transparent 38%),
+    rgba(6, 6, 8, 0.5);
+  box-shadow: 0 18px 70px rgba(0, 0, 0, 0.32);
+  backdrop-filter: blur(14px) saturate(118%);
+  -webkit-backdrop-filter: blur(14px) saturate(118%);
+}
+
+.render-quality-selector > span {
+  color: rgba(216, 208, 186, 0.72);
+  font-size: 0.62rem;
+  font-weight: 850;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.render-quality-selector div {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.render-quality-selector button {
+  min-width: 0;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  padding: 7px 8px;
+  color: rgba(255, 255, 255, 0.68);
+  background: rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  font-size: 0.68rem;
+  font-weight: 760;
+  transition:
+    transform 160ms ease,
+    color 160ms ease,
+    background 160ms ease,
+    border-color 160ms ease;
+}
+
+.render-quality-selector button:hover,
+.render-quality-selector button:focus-visible {
+  outline: none;
+  transform: translateY(-1px);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.render-quality-selector button.is-active {
+  color: #050506;
+  border-color: rgba(216, 208, 186, 0.72);
+  background: rgba(216, 208, 186, 0.92);
+}
+
+@media (max-width: 920px) {
+  .render-quality-selector {
+    top: auto;
+    right: 10px;
+    bottom: 10px;
+    width: min(360px, calc(100vw - 20px));
+    z-index: 44;
+  }
+}
+
+@media (max-width: 520px) {
+  .render-quality-selector {
+    padding: 10px;
+    border-radius: 18px;
+  }
+
+  .render-quality-selector div {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

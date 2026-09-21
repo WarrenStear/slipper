@@ -1,0 +1,26 @@
+name = "slipper-in-the-woods"
+compatibility_date = "2026-04-30"
+pages_build_output_dir = "./dist"
+
+# Copy these bindings into wrangler.toml after creating the namespaces, or add the
+# same bindings in Cloudflare Pages → Settings → Functions → KV namespace bindings.
+[[kv_namespaces]]
+binding = "SIDTW_JOURNEY_KV"
+id = "PASTE_REAL_JOURNEY_NAMESPACE_ID_HERE"
+preview_id = "PASTE_REAL_JOURNEY_PREVIEW_NAMESPACE_ID_HERE"
+
+[[kv_namespaces]]
+binding = "SIDTW_MAGIC_KV"
+id = "PASTE_REAL_MAGIC_NAMESPACE_ID_HERE"
+preview_id = "PASTE_REAL_MAGIC_PREVIEW_NAMESPACE_ID_HERE"
+
+[vars]
+APP_ORIGIN = "https://slipperinthewoods.com"
+
+# Optional webhook receiver for sending the email. If omitted, /api/magic-link
+# returns devMagicLink in JSON so you can test locally or in preview.
+# EMAIL_WEBHOOK_URL = "https://your-email-sender.example/send"
+
+# Required secret. Add it with:
+#   npx wrangler secret put MAGIC_LINK_SECRET
+# Or in Cloudflare Pages → Settings → Environment variables.

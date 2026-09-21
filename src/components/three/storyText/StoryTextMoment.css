@@ -1,0 +1,139 @@
+.story-text-moment {
+  --story-text-ink: rgba(239, 235, 222, 0.82);
+  position: fixed;
+  z-index: 19;
+  left: clamp(1.25rem, 5vw, 5.5rem);
+  bottom: clamp(6.5rem, 13vh, 10rem);
+  width: min(29rem, calc(100vw - 2.5rem));
+  padding: 1.1rem 3.5rem 1.1rem 1.25rem;
+  pointer-events: none;
+  isolation: isolate;
+  animation: story-text-arrives 1.6s cubic-bezier(.2,.7,.2,1) both;
+}
+
+.story-text-moment::before,
+.story-text-moment::after,
+.story-text-moment__material {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+}
+
+.story-text-moment blockquote {
+  margin: 0;
+  color: var(--story-text-ink);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(var(--reader-text-min, 1rem), var(--reader-text-fluid, 1.55vw), var(--reader-text-max, 1.18rem));
+  font-style: italic;
+  font-weight: 400;
+  line-height: 1.68;
+  text-wrap: pretty;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.84);
+}
+
+.story-text-moment button {
+  position: absolute;
+  right: .35rem;
+  bottom: .4rem;
+  min-width: 2.6rem;
+  border: 0;
+  padding: .55rem;
+  color: rgba(238, 224, 192, .7);
+  background: transparent;
+  cursor: pointer;
+  font: 600 .62rem/1 system-ui, sans-serif;
+  letter-spacing: .14em;
+  pointer-events: auto;
+  text-transform: uppercase;
+}
+
+.story-text-moment button:hover,
+.story-text-moment button:focus-visible {
+  outline: 1px solid rgba(231, 210, 166, .42);
+  outline-offset: .2rem;
+  color: #fff5df;
+}
+
+.story-text-moment--ambient::before {
+  background: radial-gradient(ellipse at 25% 55%, rgba(8, 13, 12, .82), transparent 76%);
+  filter: blur(1.1rem);
+}
+
+.story-text-moment--reflected {
+  transform: perspective(34rem) rotateX(1.5deg);
+}
+
+.story-text-moment--reflected::after {
+  top: 86%;
+  opacity: .15;
+  background: linear-gradient(180deg, rgba(219, 231, 227, .4), transparent 78%);
+  transform: scaleY(-.7);
+  filter: blur(5px);
+}
+
+.story-text-moment--water::before {
+  background: linear-gradient(108deg, transparent, rgba(106, 143, 149, .13), transparent);
+  filter: blur(.55rem);
+  animation: story-text-water 9s ease-in-out infinite;
+}
+
+.story-text-moment--ash { --story-text-ink: rgba(229, 217, 201, .76); }
+.story-text-moment--ash .story-text-moment__material i {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: #d5a76b;
+  box-shadow: 0 0 10px rgba(213, 167, 107, .42);
+  animation: story-text-ash 5.4s linear infinite;
+}
+.story-text-moment--ash .story-text-moment__material i:nth-child(1) { left: 12%; bottom: 5%; }
+.story-text-moment--ash .story-text-moment__material i:nth-child(2) { left: 52%; bottom: 0; animation-delay: -2s; }
+.story-text-moment--ash .story-text-moment__material i:nth-child(3) { left: 83%; bottom: 14%; animation-delay: -4s; }
+
+.story-text-moment--wall::before {
+  border-left: 1px solid rgba(201, 192, 173, .13);
+  background: linear-gradient(90deg, rgba(29, 27, 24, .72), transparent 92%);
+}
+
+.story-text-moment--constellation {
+  left: 50%;
+  bottom: 12vh;
+  text-align: center;
+  transform: translateX(-50%);
+}
+.story-text-moment--constellation::before {
+  background: radial-gradient(circle, rgba(213, 223, 224, .12), transparent 68%);
+  filter: blur(1rem);
+}
+
+@keyframes story-text-arrives {
+  from { opacity: 0; filter: blur(8px); }
+  to { opacity: 1; filter: blur(0); }
+}
+@keyframes story-text-water {
+  0%, 100% { transform: translateX(-4%) skewX(-2deg); opacity: .46; }
+  50% { transform: translateX(4%) skewX(2deg); opacity: .9; }
+}
+@keyframes story-text-ash {
+  from { opacity: 0; transform: translateY(0); }
+  28% { opacity: .72; }
+  to { opacity: 0; transform: translate(1rem, -4rem); }
+}
+
+@media (max-width: 720px) {
+  .story-text-moment {
+    left: max(1rem, env(safe-area-inset-left));
+    bottom: max(7.5rem, calc(env(safe-area-inset-bottom) + 6.5rem));
+    width: min(24rem, calc(100vw - 2rem));
+    padding-left: .75rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .story-text-moment,
+  .story-text-moment::before,
+  .story-text-moment .story-text-moment__material i { animation: none !important; }
+}

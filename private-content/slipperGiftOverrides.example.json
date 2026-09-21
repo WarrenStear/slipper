@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "fragments": [
+    {
+      "id": "fragment-001",
+      "expectedPlaceholderCount": 9,
+      "body": "Replace with the complete exact canonical fragment text for the private deployment.",
+      "paragraphs": [
+        "Replace with the complete exact canonical fragment text for the private deployment."
+      ],
+      "excerpt": "Replace with an exact source excerpt if a private excerpt is required."
+    }
+  ]
+}

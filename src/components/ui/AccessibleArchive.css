@@ -1,0 +1,341 @@
+.accessible-archive {
+  height: var(--app-height, 100dvh);
+  min-height: 100dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding:
+    max(28px, env(safe-area-inset-top))
+    max(20px, env(safe-area-inset-right))
+    max(56px, env(safe-area-inset-bottom))
+    max(20px, env(safe-area-inset-left));
+  color: #f6efe2;
+  background:
+    radial-gradient(circle at 84% 4%, rgba(216, 208, 186, 0.12), transparent 28%),
+    linear-gradient(180deg, #090a0d, #050607 62%, #080807);
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+}
+
+.accessible-archive-skip {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 200;
+  transform: translateY(-150%);
+  border-radius: 10px;
+  padding: 10px 14px;
+  color: #111;
+  background: #fff5ce;
+  font-weight: 800;
+}
+
+.accessible-archive-skip:focus {
+  transform: translateY(0);
+}
+
+.accessible-archive-header,
+.accessible-archive-search,
+.accessible-archive-chapters,
+.accessible-archive-empty {
+  width: min(960px, 100%);
+  margin-inline: auto;
+}
+
+.accessible-archive-header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 30px;
+  padding: clamp(28px, 6vw, 72px) 0;
+}
+
+.accessible-archive-kicker,
+.accessible-archive-chapter > header p,
+.accessible-archive-fragment-heading > div > p {
+  margin: 0;
+  color: rgba(255, 245, 206, 0.68);
+  font-size: 0.7rem;
+  font-weight: 850;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.accessible-archive-header h1 {
+  margin: 8px 0 14px;
+  color: #fff;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(3rem, 9vw, 6.8rem);
+  font-weight: 500;
+  letter-spacing: -0.065em;
+  line-height: 0.9;
+}
+
+.accessible-archive-header > div > p:last-child {
+  max-width: 64ch;
+  margin: 0;
+  color: rgba(246, 239, 226, 0.7);
+  line-height: 1.7;
+}
+
+.accessible-archive-header nav,
+.accessible-archive-fragment-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.accessible-archive button {
+  min-height: 44px;
+  border: 1px solid rgba(255, 245, 206, 0.2);
+  border-radius: 999px;
+  padding: 10px 14px;
+  color: #f6efe2;
+  background: rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.accessible-archive button:hover:not(:disabled),
+.accessible-archive button:focus-visible {
+  border-color: rgba(255, 245, 206, 0.62);
+  color: #fff5ce;
+  background: rgba(255, 245, 206, 0.1);
+}
+
+.accessible-archive button:focus-visible,
+.accessible-archive input:focus-visible,
+.accessible-archive a:focus-visible {
+  outline: 2px solid #fff5ce;
+  outline-offset: 3px;
+}
+
+.accessible-archive button:disabled {
+  cursor: not-allowed;
+  opacity: 0.56;
+}
+
+.accessible-archive-search {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px 16px;
+  margin-bottom: 34px;
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.accessible-archive-search h2 {
+  margin: 0;
+  color: #fff;
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 500;
+}
+
+.accessible-archive-search label {
+  align-self: end;
+  color: rgba(246, 239, 226, 0.68);
+  font-size: 0.78rem;
+}
+
+.accessible-archive-search input {
+  grid-column: 1 / -1;
+  min-height: 48px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 14px;
+  padding: 10px 13px;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.24);
+  font: inherit;
+}
+
+.accessible-archive-search p {
+  margin: 0;
+  color: rgba(246, 239, 226, 0.56);
+  font-size: 0.76rem;
+}
+
+.accessible-archive-chapters {
+  display: grid;
+  gap: 42px;
+}
+
+.accessible-archive-chapter {
+  scroll-margin-top: 20px;
+}
+
+.accessible-archive-chapter > header {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end;
+  gap: 4px 16px;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.accessible-archive-chapter > header p {
+  grid-column: 1 / -1;
+}
+
+.accessible-archive-chapter > header h2 {
+  margin: 0;
+  color: #fff;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.8rem, 5vw, 3.3rem);
+  font-weight: 500;
+  letter-spacing: -0.035em;
+}
+
+.accessible-archive-chapter > header span {
+  color: rgba(246, 239, 226, 0.54);
+  font-size: 0.76rem;
+}
+
+.accessible-archive-chapter ol {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.accessible-archive-chapter li {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.accessible-archive-chapter li.is-active {
+  border-left: 4px solid #fff5ce;
+  box-shadow: inset 0 0 0 1px rgba(255, 245, 206, 0.12);
+}
+
+.accessible-archive-chapter li.is-unvisited {
+  border-style: dashed;
+}
+
+.accessible-archive-chapter article {
+  padding: 18px;
+}
+
+.accessible-archive-fragment-heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.accessible-archive-fragment-heading h3 {
+  margin: 5px 0;
+  color: #fff;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.25rem, 3vw, 1.8rem);
+  font-weight: 500;
+  line-height: 1.15;
+}
+
+.accessible-archive-fragment-heading > div > span {
+  color: rgba(246, 239, 226, 0.52);
+  font-size: 0.74rem;
+}
+
+.accessible-archive-fragment-actions {
+  flex: 0 0 auto;
+  justify-content: end;
+}
+
+.accessible-archive-fragment-body {
+  max-width: 68ch;
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(246, 239, 226, 0.86);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(
+    var(--archive-reader-text-min, 1.05rem),
+    var(--archive-reader-text-fluid, 2.4vw),
+    var(--archive-reader-text-max, 1.25rem)
+  );
+  line-height: 1.78;
+}
+
+.accessible-archive-chapters:focus-visible {
+  outline: 2px solid #fff5ce;
+  outline-offset: 5px;
+}
+
+.accessible-archive-fragment-body p {
+  margin: 0 0 1.25em;
+}
+
+.accessible-archive-unread-note {
+  max-width: 64ch;
+  margin: 14px 0 0;
+  color: rgba(246, 239, 226, 0.58);
+  font-size: 0.78rem;
+  line-height: 1.55;
+}
+
+.accessible-archive-empty {
+  padding: 30px;
+  border: 1px dashed rgba(255, 255, 255, 0.18);
+  border-radius: 20px;
+  text-align: center;
+  color: rgba(246, 239, 226, 0.66);
+}
+
+@media (max-width: 720px) {
+  .accessible-archive-header,
+  .accessible-archive-fragment-heading {
+    display: grid;
+  }
+
+  .accessible-archive-header nav,
+  .accessible-archive-fragment-actions {
+    justify-content: stretch;
+  }
+
+  .accessible-archive-header nav button,
+  .accessible-archive-fragment-actions button {
+    flex: 1 1 180px;
+  }
+}
+
+@media (max-width: 480px) {
+  .accessible-archive {
+    padding-inline:
+      max(12px, env(safe-area-inset-right))
+      max(12px, env(safe-area-inset-left));
+  }
+
+  .accessible-archive-header {
+    padding-top: 36px;
+  }
+
+  .accessible-archive-search {
+    grid-template-columns: 1fr;
+    border-radius: 18px;
+    padding: 16px;
+  }
+
+  .accessible-archive-search input {
+    grid-column: auto;
+  }
+
+  .accessible-archive-chapter article {
+    padding: 15px;
+  }
+
+  .accessible-archive-fragment-actions {
+    display: grid;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .accessible-archive {
+    scroll-behavior: auto;
+  }
+}

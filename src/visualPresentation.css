@@ -1,0 +1,164 @@
+/* Presentation only: no new copy, controls, hidden story content, or state. */
+:root {
+  --story-ivory: #eee8dc;
+  --story-muted: #b3b8b1;
+  --story-brass: #bda47c;
+  --story-ink: #080d0e;
+}
+
+#root .onboarding-gate.is-story-first {
+  background: #030607;
+  place-items: center;
+  padding: max(2rem, env(safe-area-inset-top)) max(1.5rem, env(safe-area-inset-right)) max(2rem, env(safe-area-inset-bottom)) max(1.5rem, env(safe-area-inset-left));
+  overflow-y: auto;
+}
+#root .onboarding-gate.is-story-first::before {
+  background: radial-gradient(ellipse at 50% 43%, #3447431b, transparent 57%), radial-gradient(ellipse at 50% 115%, #aa784a0c, transparent 60%);
+}
+#root .onboarding-gate.is-story-first .onboarding-grain {
+  inset: 0;
+  opacity: .022;
+  animation: none;
+}
+#root .onboarding-gate.is-story-first .onboarding-card {
+  width: min(49rem, 100%);
+  gap: clamp(1.4rem, 4vh, 2.3rem);
+  padding-block: 2.5rem;
+}
+#root .onboarding-gate.is-story-first .onboarding-card h1 {
+  max-width: 12ch;
+  color: var(--story-ivory);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(2.35rem, 6.4vw, 5.35rem);
+  line-height: 1.1;
+  font-weight: 400;
+  letter-spacing: .105em;
+  text-wrap: balance;
+  text-shadow: none;
+  visibility: visible;
+  animation: story-type-arrival 1.2s .25s ease both;
+}
+#root .onboarding-gate.is-story-first .onboarding-copy {
+  color: var(--story-muted);
+  font-size: clamp(1rem, 2vw, 1.18rem);
+  line-height: 1.7;
+  letter-spacing: .035em;
+  visibility: visible;
+  animation: story-type-arrival .9s 1.05s ease both;
+}
+#root .onboarding-gate.is-story-first .onboarding-actions {
+  margin-top: clamp(1.4rem, 4vh, 2.5rem);
+  visibility: visible;
+  animation: story-type-arrival .8s 1.6s ease both;
+}
+#root .onboarding-gate.is-story-first .onboarding-actions button.primary {
+  min-width: min(13.75rem, 100%);
+  min-height: 3.35rem;
+  max-width: 100%;
+  padding: .9rem 1.8rem;
+  border: 1px solid #bda47c72;
+  border-radius: 2px;
+  background: #bda47c06;
+  color: var(--story-ivory);
+  box-shadow: none;
+  font-family: inherit;
+  font-size: .8rem;
+  font-weight: 400;
+  line-height: 1.45;
+  letter-spacing: .16em;
+  transition: background-color 180ms ease, border-color 180ms ease;
+}
+#root .onboarding-gate.is-story-first .onboarding-actions button.primary:hover,
+#root .onboarding-gate.is-story-first .onboarding-actions button.primary:focus-visible {
+  color: #fff6e7;
+  background: #bda47c13;
+  border-color: var(--story-brass);
+  outline: 2px solid var(--story-brass);
+  outline-offset: 5px;
+  box-shadow: none;
+}
+#root .onboarding-gate.is-story-first .onboarding-actions:focus-within {
+  opacity: 1;
+  animation: none;
+}
+#root .onboarding-gate.is-story-first .onboarding-settings {
+  color: #d6d9d080;
+  width: 2.85rem;
+  height: 2.85rem;
+}
+/* Only opacity changes. Animation suspension cannot strand the CTA in the
+   accessibility tree's visibility:hidden state. Focus also reveals it. */
+@keyframes story-type-arrival { from { opacity: 0; } to { opacity: 1; } }
+
+.story-object-hud .story-object-focus {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  column-gap: .8rem;
+  row-gap: .25rem;
+  max-width: min(30rem, 82vw);
+  min-height: 3.1rem;
+  padding: .8rem 1.35rem;
+  border: 1px solid #bda47c65;
+  border-radius: 2px;
+  color: var(--story-ivory);
+  background: #080e11ec;
+  box-shadow: 0 4px 18px #00000025;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: .98rem;
+  line-height: 1.35;
+  text-align: center;
+}
+.story-object-hud .story-object-focus small {
+  color: #c1c7c4;
+  font-size: .79rem;
+  line-height: 1.5;
+  opacity: 1;
+}
+.story-object-hud .story-object-focus:hover,
+.story-object-hud .story-object-focus:focus-visible {
+  background: #152024f5;
+  border-color: #c9b28c;
+  outline: 2px solid #c9b28c;
+  outline-offset: 4px;
+}
+.story-object-hud .story-object-onboarding {
+  color: #d9dedb;
+  font-size: .9rem;
+  line-height: 1.65;
+  text-shadow: 0 2px 7px #000;
+}
+.story-object-hud .story-object-carry-label {
+  color: #d2d7d1;
+  line-height: 1.6;
+  text-shadow: 0 2px 6px #000;
+}
+@media (max-width: 600px) {
+  #root .onboarding-gate.is-story-first .onboarding-card h1 {
+    font-size: clamp(2.25rem, 9.4vw, 3.35rem);
+    letter-spacing: .075em;
+  }
+  #root .onboarding-gate.is-story-first .onboarding-card { gap: 1.6rem; }
+  .story-object-hud .story-object-focus { padding: .75rem 1rem; max-width: 78vw; }
+  .story-object-hud .story-object-focus small { flex-basis: 100%; font-size: .76rem; }
+}
+@media (max-height: 500px) {
+  #root .onboarding-gate.is-story-first .onboarding-card { gap: .8rem; padding-block: .75rem; }
+  #root .onboarding-gate.is-story-first .onboarding-card h1 { font-size: 2.25rem; max-width: 25ch; }
+  #root .onboarding-gate.is-story-first .onboarding-actions { margin-top: .6rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #root .onboarding-gate.is-story-first .onboarding-card h1,
+  #root .onboarding-gate.is-story-first .onboarding-copy,
+  #root .onboarding-gate.is-story-first .onboarding-actions {
+    animation: none; opacity: 1; visibility: visible;
+  }
+}
+@media (forced-colors: active) {
+  #root .onboarding-gate.is-story-first { background: Canvas; color: CanvasText; }
+  #root .onboarding-gate.is-story-first .onboarding-card h1,
+  #root .onboarding-gate.is-story-first .onboarding-copy { color: CanvasText; }
+  #root .onboarding-gate.is-story-first .onboarding-actions button.primary,
+  .story-object-hud .story-object-focus { color: ButtonText; background: ButtonFace; border-color: ButtonText; }
+}

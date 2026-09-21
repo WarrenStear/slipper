@@ -1,0 +1,63 @@
+name: Guided story experience
+on:
+  pull_request:
+    paths:
+      - 'src/storyEvents/**'
+      - 'src/hooks/useStoryAftermath.ts'
+      - 'src/hooks/useStoryCaptionVisibility.ts'
+      - 'tests/story-reading-handoff.test.mjs'
+      - 'tests/story-aftermath.test.mjs'
+      - 'src/components/ui/GuidedStoryMoment*'
+      - 'src/components/ui/AccessibleStoryJourney.tsx'
+      - 'src/components/three/journey/StoryTransitionDirector*'
+      - 'src/components/three/storyEvents/StoryEventDirector.tsx'
+      - 'scripts/review-guided-presentation.mjs'
+      - 'src/components/three/audio/**'
+      - 'src/App.tsx'
+      - 'src/stores/useJourneyStore.ts'
+      - 'tests/guided-story.test.mjs'
+      - 'e2e/guided-story.spec.ts'
+      - '.github/workflows/guided-story.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: guided-story-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  guided:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm install --global npm@10.9.2
+      - run: npm ci
+      - name: Validate exact candidate
+        run: npm run check
+      - run: npx playwright install --with-deps chromium
+      - name: Exercise earned guidance, response pause and resume on desktop and mobile
+        run: npx playwright test e2e/guided-story.spec.ts --project=chromium --project=mobile-chromium
+      - name: Verify visible transition timing and actual 3D guidance components
+        run: node scripts/review-guided-presentation.mjs
+      - name: Keep evidence including failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: guided-story-evidence
+          path: |
+            playwright-report
+            test-results
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Keep component rendering evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: guided-presentation-evidence
+          path: /tmp/slipper-guided-presentation
+          if-no-files-found: ignore
+          retention-days: 7

@@ -1,0 +1,642 @@
+import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
+import test from "node:test";
+import { fileURLToPath } from "node:url";
+import {
+  THORNED_HOUSE_COLLIDER_BUDGET,
+  THORNED_HOUSE_SAFE_ROUTE_HALF_WIDTH,
+  resolveThornedHouseColliderLayout,
+} from "../src/lib/thornedHouseArchitecture.ts";
+
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+
+function read(relativePath) {
+  return fs.readFileSync(path.join(ROOT, relativePath), "utf8");
+}
+
+test("semantic Rapier sensors keep exactly one instanced-mesh child", () => {
+  const source = read("src/components/three/StoryScene.tsx");
+  const lines = source.split(/\r?\n/);
+  const themes = ["water", "threshold", "thorns", "celestial"];
+
+  for (const theme of themes) {
+    const openingIndex = lines.findIndex((line) =>
+      line.includes(`instances={interactiveSemanticRigidBodies.${theme}}`),
+    );
+    assert.notEqual(openingIndex, -1, `missing ${theme} InstancedRigidBodies`);
+    assert.match(lines[openingIndex], /colliderNodes=\{\[<BallCollider\b.*\/>\]\}>/);
+
+    const firstChild = lines.slice(openingIndex + 1).find((line) => line.trim() !== "");
+    assert.match(firstChild ?? "", /^\s*<instancedMesh\b/);
+  }
+});
+
+test("the master lantern and canvas own their render responsibilities", () => {
+  const scene = read("src/components/three/StoryScene.tsx");
+  const wrapper = read("src/components/three/StorySceneWithMasterLantern.tsx");
+  const canvas = read("src/components/three/WorldCanvas.tsx");
+  const atmosphere = read("src/components/three/world/WorldAtmosphere.tsx");
+  const engine = read("src/components/three/world/WorldEngineLayer.tsx");
+  const visualState = read("src/components/three/worldVisualState.ts");
+  const lanternNarrative = read("src/lib/lanternNarrative.ts");
+  const finalizer = read("scripts/check-final-4d-world.mjs");
+
+  assert.doesNotMatch(scene, /<PlayerLantern\b/);
+  assert.doesNotMatch(scene, /useRenderQualityProfile\(\)/);
+  assert.doesNotMatch(scene, /<RenderQualityController\b/);
+  assert.match(wrapper, /deriveLanternNarrative/);
+  assert.match(wrapper, /const showCarriedLantern[\s\S]*lanternNarrative\.presence === "carried"/);
+  assert.match(wrapper, /showCarriedLantern \? \([\s\S]*<MasterPlayerLantern/);
+  assert.match(wrapper, /narrativePhase=\{lanternNarrative\}/);
+  assert.match(wrapper, /<MasterPlayerLantern[\s\S]*reducedEffects=\{reducedEffects\}/);
+  assert.match(wrapper, /<StoryScene[\s\S]*qualityProfile=\{qualityProfile\}[\s\S]*reducedEffects=\{reducedEffects\}/);
+  assert.match(canvas, /resolveEnvironmentalEffectsProfile\(requestedQualityProfile, reducedEffects\)/);
+  assert.match(canvas, /<CanvasRendererController\b/);
+  assert.doesNotMatch(atmosphere, /gl\.toneMapping|gl\.outputColorSpace/);
+  assert.doesNotMatch(engine, /<WorldAtmosphere|<WorldLightingRig/);
+  assert.match(scene, /function CelestialMoon[\s\S]*<CelestialMoon/);
+  assert.match(scene, /FOREST_GROUND_ALBEDO_PATH/);
+  assert.match(scene, /FIRST_WOOD_PANORAMA_PATH/);
+  assert.match(scene, /FIRST_WOOD_DEPTH_PLATE_PATH/);
+  assert.match(scene, /<AtmosphericForestPanorama/);
+  assert.match(scene, /first-wood-panorama-v3\.webp/);
+  assert.match(scene, /forest-sky-horizon-v1\.webp/);
+  assert.match(scene, /function ProceduralDome[\s\S]*skyFbm/);
+  assert.match(scene, /activeVisualState\.showStars && qualityProfile\.starMultiplier > 0/);
+  assert.match(scene, /function DistantForestSilhouetteRing[\s\S]*<DistantForestSilhouetteRing/);
+  assert.match(scene, /showDepthPlate=\{visualState\.biome === "firstWood" && qualityProfile\.quality !== "low"\}/);
+  assert.match(scene, /qualityProfile\.quality === "medium"[\s\S]*cloudDetail/);
+  assert.doesNotMatch(visualState, /fireBias > 0\.54/);
+  assert.match(lanternNarrative, /"distant"[\s\S]*"borrowed"[\s\S]*"released"/);
+  assert.match(visualState, /const baseMoonColor = biome === "fireRiver"[\s\S]*mixColor/);
+  assert.match(scene, /MOON_ALBEDO_PATH/);
+  assert.match(scene, /MEMORY_BLOOM_TEXTURE_PATH/);
+  assert.match(scene, /<MemoryBloomLandmark/);
+  assert.match(scene, /<LivingPathMist/);
+  assert.match(scene, /<LivingPathRibbon/);
+  assert.match(scene, /function createOrganicCrownGeometry/);
+  assert.match(scene, /mergeGeometries/);
+  assert.doesNotMatch(scene, /crownAccentRef|lowerCrownRef|upperCrownRef|sideCrownRef/);
+  assert.doesNotMatch(scene, /applyNarrativeTextureBlend/);
+  assert.ok(
+    fs.statSync(path.join(ROOT, "public/textures/forest/ground-albedo-v3.webp")).size < 400_000,
+  );
+  assert.ok(
+    fs.statSync(path.join(ROOT, "public/textures/forest/memory-bloom-v1.png")).size < 320_000,
+  );
+  assert.ok(
+    fs.statSync(path.join(ROOT, "public/textures/environment/moon-albedo-v1.png")).size < 240_000,
+  );
+  assert.ok(
+    fs.statSync(path.join(ROOT, "public/textures/environment/forest-sky-horizon-v1.webp")).size < 140_000,
+  );
+  assert.ok(
+    fs.statSync(path.join(ROOT, "public/textures/environment/first-wood-panorama-v3.webp")).size < 250_000,
+  );
+  assert.match(
+    finalizer,
+    /resolveEnvironmentalEffectsProfile[\s\S]*?particleMultiplier: 0,/,
+  );
+});
+
+test("authored world geometry replaces generic portals while thresholds remain a fallback", () => {
+  const app = read("src/App.tsx");
+  const scene = read("src/components/three/StoryScene.tsx");
+  const wrapper = read("src/components/three/StorySceneWithMasterLantern.tsx");
+  const layout = read("src/lib/worldLayout.ts");
+  const worker = read("src/workers/forestWorker.ts");
+  const journeyDirector = read("src/components/three/journey/JourneyDirector.tsx");
+  const threshold = read("src/components/three/journey/EnvironmentalThreshold.tsx");
+  const worldMemory = read("src/components/three/worldMemory/WorldMemoryDirector.tsx");
+  const ritual = read("src/components/three/rituals/RitualInteraction.tsx");
+  const lanternNarrative = read("src/lib/lanternNarrative.ts");
+
+  assert.match(app, /<JourneyDirector[\s\S]*activeEntryId=\{resolvedActiveEntryId\}/);
+  assert.match(app, /lockedEntryIds=\{lockedJourneyEntryIds\}/);
+  assert.match(scene, /if \(getJourneyEntryContext\(node\.entry\.id\)\) return false;/);
+  assert.match(scene, /<EnvironmentalThreshold[\s\S]*locked=\{lockedEntryIdSet\.has\(node\.entry\.id\)\}/);
+  assert.match(scene, /<WorldMemoryDirector\b/);
+  assert.doesNotMatch(scene, /function WorldGateway|function Portals|function PortalPathBeams/);
+  assert.doesNotMatch(scene, /<WorldGateway\b|<Portals\b|<PortalPathBeams\b/);
+  assert.match(layout, /buildPhysicalStoryLinks/);
+  assert.match(journeyDirector, /canEnterJourneyEntry/);
+  assert.match(journeyDirector, /completionRequirements\.every/);
+  assert.match(journeyDirector, /applyJourneyOutcome/);
+  assert.match(threshold, /the way is not ready/);
+  assert.match(threshold, /import \{ CapsuleCollider, RigidBody \} from "@react-three\/rapier"/);
+  assert.match(
+    threshold,
+    /LOCKED_BRANCH_ROTATIONS\.map\([\s\S]*?<cylinderGeometry[\s\S]*?LOCKED_BRANCH_LENGTH[\s\S]*?<RigidBody type="fixed" colliders=\{false\}[\s\S]*?<CapsuleCollider[\s\S]*?LOCKED_BRANCH_COLLIDER_HALF_HEIGHT[\s\S]*?LOCKED_BRANCH_RADIUS/,
+  );
+  assert.match(threshold, /locked = false/);
+  assert.match(threshold, /\{locked \? <LockedThresholdBarrier \/> : null\}/);
+  assert.equal((threshold.match(/<LockedThresholdBarrier \/>/g) ?? []).length, 1);
+  assert.match(worldMemory, /name="persistent-world-memory"/);
+  assert.match(worldMemory, /AUTHORED_MEMORY_LANDMARKS[\s\S]*JOURNEY_CHAPTER_LAYOUTS\.map/);
+  assert.match(worldMemory, /landmark\.chapterId !== state\.chapterId/);
+  assert.match(wrapper, /deriveLanternNarrative/);
+  assert.match(lanternNarrative, /lantern\.placed-and-lit/);
+  assert.match(ritual, /event\.code !== "KeyE"/);
+  assert.match(ritual, /inputMode === "stillness"/);
+  assert.doesNotMatch(ritual, /Stand still for|seconds remaining|% complete/i);
+  assert.doesNotMatch(worker, /tooCloseToPlayer|playerPosition/);
+});
+
+test("persistent world memory renders authored multi-stage consequences within fixed budgets", () => {
+  const app = read("src/App.tsx");
+  const worldMemory = read("src/components/three/worldMemory/WorldMemoryDirector.tsx");
+  const fireRiver = read("src/components/three/chapters/FireRiverChapter.tsx");
+  const fork = read("src/components/three/chapters/ForkChapter.tsx");
+
+  assert.match(app, /const resonances = useJourneyStore\(\(state\) => state\.resonances\)/);
+  assert.match(app, /const releasedWords = useJourneyStore\(\(state\) => state\.releasedWords\)/);
+  assert.match(app, /worldFlags,\s*resonances,\s*releasedWords,\s*storyStarted,\s*storyCompleted,/);
+  assert.match(worldMemory, /resonances: Readonly<Record<ResonanceKey, number>>/);
+  assert.match(worldMemory, /releasedWords: readonly string\[\]/);
+  assert.match(worldMemory, /resolveResonancePalette/);
+  assert.match(worldMemory, /symbolKeys: RESONANCE_KEYS\.filter/);
+
+  assert.match(worldMemory, /mirrorStage = witnessed \? "readable-cracked" : "distorted"/);
+  assert.match(worldMemory, /MIRROR_DISTORTION_SLICES/);
+  assert.match(worldMemory, /memoryStage = flowersBloomed \? "open-flowering" : doorOpen \? "open-bare" : "closed-thorned"/);
+  assert.match(worldMemory, /"beautiful-no-longer-loops"/);
+  assert.match(worldMemory, /name="blue-moon-memory-open-path"/);
+  assert.match(worldMemory, /name="blue-moon-memory-looping-path"/);
+  assert.match(worldMemory, /fireStage: shootsGrowing \? "ash-and-shoots" : burned \? "ash" : "flame"/);
+  assert.match(worldMemory, /waterStage: washed \? "clear" : "dark"/);
+  assert.match(worldMemory, /birdsStage: departed \? "departed" : "present"/);
+  assert.match(worldMemory, /name="white-surrender-flag"/);
+  assert.match(worldMemory, /gateStage: keyRecognised \? "key-recognised" : "awaiting-key"/);
+  assert.match(worldMemory, /name="sparse-final-room-symbols"/);
+  assert.match(worldMemory, /name="completed-in-world-constellation"/);
+  assert.match(worldMemory, /lanternStage: placed \? "placed-and-lit"/);
+  assert.match(worldMemory, /"landmark\.first-wood-lantern"[\s\S]*actDone\(state, "first-wood"\)/);
+  assert.match(worldMemory, /memoryStage: transformed[\s\S]*"path-transformed"/);
+  assert.match(worldMemory, /name="first-wood-transformed-path"/);
+  assert.match(worldMemory, /name="broken-floor-memory"/);
+  assert.match(worldMemory, /"calm-after-crowned-return"/);
+  assert.match(worldMemory, /name="nest-memory"/);
+  assert.match(worldMemory, /"warm-open-space"/);
+  assert.match(worldMemory, /name="wolf-swan-seer-memory"/);
+  assert.match(worldMemory, /"three-symbols-integrated"/);
+  assert.match(worldMemory, /name="fork-memory"/);
+  assert.match(worldMemory, /pastPathStage: pastOvergrown \? "partially-overgrown"/);
+  assert.match(worldMemory, /futurePathStage: futureEstablished \? "established"/);
+  assert.match(worldMemory, /name="three-climbs-memory"/);
+  assert.match(worldMemory, /name="lantern-epilogue-memory"/);
+
+  for (const chapterId of [
+    "broken-floor",
+    "enchanted-wood",
+    "blue-moon-sanctuary",
+    "nest",
+    "sunset-seer",
+    "thorned-house",
+    "wolf-swan-seer",
+    "fire-river",
+    "fork",
+    "three-climbs",
+    "crowned-return",
+  ]) {
+    assert.match(worldMemory, new RegExp(`chapterId === "${chapterId}"`));
+  }
+  assert.match(worldMemory, /return <EpilogueMemory/);
+  assert.doesNotMatch(worldMemory, /LANDMARK_ANCHOR_BY_CHAPTER|entryWorldPosition|grouped\.get\(entry\.chapter\)/);
+
+  assert.match(fireRiver, /worldFlags\["fire\.boundary-burned"\]/);
+  assert.match(fireRiver, /completedRitualIds\.includes\("ritual\.burn-boundary"\)/);
+  assert.match(fireRiver, /worldFlags\["river\.grief-washed"\]/);
+  assert.match(fireRiver, /worldFlags\["surrender\.white-flag-raised"\]/);
+  assert.match(fireRiver, /resolved=\{fireResolved\}/);
+  assert.match(fireRiver, /resolved=\{riverResolved\}/);
+  assert.doesNotMatch(fireRiver, /fireResolved = atRiver \|\| surrendered/);
+
+  assert.match(fork, /name="fork-past-path-overgrowth"/);
+  assert.match(fork, /name="fork-future-path-established"/);
+  assert.match(fork, /rememberFourVerbs = fourVerbs \|\| letGo \|\| declined \|\| departed \|\| deleted/);
+  assert.match(fork, /rememberOwnership = ownershipScene \|\| oldHopeRelinquished \|\| lanternOwned/);
+
+  assert.match(worldMemory, /const MAX_RELEASED_WORDS = 5/);
+  assert.match(worldMemory, /words\.slice\(-MAX_RELEASED_WORDS\)/);
+  assert.doesNotMatch(worldMemory, /state\.releasedWords\.map\(/);
+  assert.match(worldMemory, /createBlackBirdFlockGeometry/);
+  assert.match(worldMemory, /<lineSegments>/);
+  assert.match(worldMemory, /useSettingsStore\(\(settings\) => settings\.reducedMotion\)/);
+  assert.match(worldMemory, /if \(reducedMotion\) \{/);
+  assert.doesNotMatch(worldMemory, /useTexture|useGLTF|<Text\b/);
+});
+
+test("the prologue, story roles, and guidance express authored progression", () => {
+  const app = read("src/App.tsx");
+  const scene = read("src/components/three/StoryScene.tsx");
+  const brokenFloor = read("src/components/three/chapters/BrokenFloorChapter.tsx");
+  const onboarding = read("src/components/ui/OnboardingGate.tsx");
+  const onboardingStyles = read("src/components/ui/OnboardingGate.css");
+  const ritual = read("src/components/three/rituals/RitualInteraction.tsx");
+  const ritualStyles = read("src/components/three/rituals/RitualInteraction.css");
+  const worldMemory = read("src/components/three/worldMemory/WorldMemoryDirector.tsx");
+  const sunsetSeer = read("src/components/three/chapters/SunsetSeerChapter.tsx");
+  const reflection = read("src/components/three/reflections/ReflectionDirector.tsx");
+  const mirrorSurface = read("src/components/three/reflections/MirrorMemorySurface.tsx");
+  const reflectedPath = read("src/components/three/reflections/ReflectedPath.tsx");
+  const waterReflection = read("src/components/three/reflections/WaterMemoryReflection.tsx");
+  const nest = read("src/components/three/chapters/NestChapter.tsx");
+  const thornedHouse = read("src/components/three/chapters/ThornedHouseChapter.tsx");
+  const fireRiver = read("src/components/three/chapters/FireRiverChapter.tsx");
+  const firePath = read("src/components/three/chapters/FirePath.tsx");
+  const riverPath = read("src/components/three/chapters/RiverPath.tsx");
+  const surrenderClearing = read("src/components/three/chapters/SurrenderClearing.tsx");
+  const archiveIndex = read("src/components/ui/ArchiveIndex.tsx");
+  const accessibleArchive = read("src/components/ui/AccessibleArchive.tsx");
+  const constellation = read("src/components/ui/ConstellationMap.tsx");
+
+  assert.match(onboarding, /SLIPPER IN THE WOODS/);
+  assert.match(onboarding, /A journey to you\./);
+  assert.match(onboarding, /startState\.actionLabel/);
+  assert.match(onboarding, /className="onboarding-gate is-story-first"/);
+  assert.doesNotMatch(onboarding, /Read First|Open Map|Enter the Wood/);
+  assert.match(onboardingStyles, /\.onboarding-gate\.is-story-first/);
+  assert.match(onboardingStyles, /background: #010202/);
+  assert.match(brokenFloor, /name="broken-floor-progressive-inversion"/);
+  assert.match(brokenFloor, /name="forest-beneath-wet-reflection"/);
+  assert.match(brokenFloor, /storyObjectStates\?\.\["broken-floor\.reflection"\]/);
+  assert.match(brokenFloor, /<WetFloorReveal stage=\{revealStage\}/);
+  assert.match(brokenFloor, /const targetProgress = openingResolved \? 1 : revealStage \/ 5/);
+  assert.match(brokenFloor, /THREE\.MathUtils\.damp\(inversionProgressRef\.current, targetProgress/);
+  assert.doesNotMatch(brokenFloor, /inversionProgressRef\.current \+ delta \/ duration/);
+  assert.match(brokenFloor, /roomMaterialRef\.current\.opacity = roomOpacity/);
+  assert.match(brokenFloor, /name="distant-light-recedes-into-wood"/);
+
+  assert.match(ritual, /ritual\.id === "ritual\.surrender"/);
+  assert.match(ritual, /className="ritual-interaction__surrender-cue"/);
+  assert.match(ritualStyles, /\.ritual-interaction\.is-surrender/);
+  assert.doesNotMatch(ritual, /seconds remaining|% complete/i);
+
+  assert.match(scene, /const journeyRole = getJourneyEntryContext\(node\.entry\.id\)\?\.role \?\? "echo"/);
+  assert.doesNotMatch(scene, /getJourneyBeatForEntry\(node\.entry\.id\)/);
+  assert.match(app, /activeJourneyChapter\?\.title \?\? activeEntry\?\.chapter/);
+  assert.match(app, /contentDiagnostics\.visualCount\} visuals \/ \{journeyChapters\.length\} chapters/);
+  assert.match(archiveIndex, /canonicalChapter\?\.title \?\? entry\.chapter/);
+  assert.match(accessibleArchive, /journeyChapters\.map\(\(chapter, chapterIndex\)/);
+  assert.match(constellation, /journeyChapters\.length\} chapters/);
+  assert.doesNotMatch(constellation, /completedRituals\} rituals/);
+  assert.match(scene, /name="keystone-memory-halo"/);
+  assert.match(scene, /name="echo-memory-whisper"/);
+  assert.match(scene, /availableNavigationNodes/);
+  assert.match(scene, /lockedEntryIdSet\.has\(node\.entry\.id\)/);
+  assert.match(app, /nextRequiredEntry/);
+  assert.match(app, /authoredJourneyTarget \?\? nextUnreadEntry/);
+
+  assert.match(worldMemory, /JOURNEY_CHAPTER_LAYOUTS/);
+  assert.match(worldMemory, /anchorSceneId: chapter\.anchorSceneId/);
+  assert.match(worldMemory, /rotationY: chapter\.anchor\.headingRadians/);
+  assert.match(scene, /thresholdRotationForNode/);
+  assert.match(scene, /rotationY=\{thresholdRotationForNode\(node, pathSegments\)\}/);
+
+  assert.match(sunsetSeer, /<ReflectionDirector/);
+  assert.match(sunsetSeer, /<WaterMemoryReflection/);
+  assert.match(reflection, /samplesRef/);
+  assert.match(reflection, /useStillnessState\(\{ stillSpeed: 0\.025, requiredSeconds: 2\.4 \}\)/);
+  assert.match(
+    reflection,
+    /reflectionSettled = isStillnessScene && \(isPlayerStill \|\| assistedStillnessActive\)/,
+  );
+  assert.match(reflection, /sampleCount = reducedMotion \? 1 : reflectionSettled \? 2/);
+  assert.match(reflection, /name="reflected-past-and-future"/);
+  assert.match(reflection, /<ReflectionApparition apparition/);
+  assert.match(reflection, /<ReflectedPath/);
+  assert.match(mirrorSurface, /uDistortion/);
+  assert.match(mirrorSurface, /still \? 0\.012/);
+  assert.match(reflectedPath, /name="reflection-only-hidden-text"/);
+  assert.match(reflectedPath, /name="reflection-only-hidden-route"/);
+  assert.match(waterReflection, /name="reflection-only-water-route"/);
+
+  assert.match(nest, /function TwoHandRepair/);
+  assert.match(nest, /function UnsupportedWeight/);
+  assert.match(nest, /function ProtectionShelter/);
+  assert.match(thornedHouse, /name="thorned-house-modular-rooms"/);
+  assert.match(thornedHouse, /name="thorned-house-refilled-surfaces"/);
+  assert.match(thornedHouse, /name=\{`thorned-house-exit:\$\{stage\}`\}/);
+  assert.match(fireRiver, /<FirePath/);
+  assert.match(fireRiver, /<RiverPath/);
+  assert.match(fireRiver, /<SurrenderClearing/);
+  assert.match(firePath, /name="fire-path"/);
+  assert.match(riverPath, /name="river-path"/);
+  assert.match(surrenderClearing, /name="surrender-clearing"/);
+});
+
+test("forest trees use grounded rooted geometry and opaque instanced crowns", () => {
+  const scene = read("src/components/three/StoryScene.tsx");
+  const worker = read("src/workers/forestWorker.ts");
+
+  assert.match(scene, /function createForestTrunkGeometry/);
+  assert.match(scene, /const rootAngles = \[/);
+  assert.match(scene, /groundYAt/);
+  assert.match(scene, /ORGANIC_CROWN_LOBES/);
+  assert.doesNotMatch(scene, /transparent\s+opacity=.*crown/i);
+  assert.match(worker, /edgeWall/);
+  assert.match(worker, /trunkWidth/);
+});
+
+test("disabled audio stays unmounted and render loops avoid known allocations", () => {
+  const scene = read("src/components/three/StoryScene.tsx");
+  const engine = read("src/components/three/world/WorldEngineLayer.tsx");
+  const ground = read("src/components/three/world/PerfectWorldGround.tsx");
+  const lantern = read("src/components/three/MasterPlayerLantern.tsx");
+  const repair = read("scripts/enforce-single-master-lantern.mjs");
+
+  assert.match(
+    scene,
+    /audioEnabled && !narrativeAudioSuppressed && mode === "explore"[\s\S]*<NarrativeAudioDirector\b/,
+  );
+  assert.match(scene, /const PROXIMITY_UI_UPDATE_INTERVAL = 0\.2;/);
+  assert.match(scene, /const PLAYER_SPATIAL_CELL_SIZE = 6;/);
+  assert.match(
+    scene,
+    /now - lastUpdateTimeRef\.current >= PROXIMITY_UI_UPDATE_INTERVAL/,
+  );
+  assert.match(
+    scene,
+    /spatialSignature !== lastSpatialSignatureRef\.current/,
+  );
+  assert.doesNotMatch(scene, /group\.scale\.lerp\(new THREE\.Vector3/);
+  assert.doesNotMatch(engine, /\.lerp\(new THREE\.(?:Vector3|Color)/);
+  assert.doesNotMatch(ground, /\.lerp\(new THREE\.(?:Vector3|Color)/);
+  assert.match(lantern, /const director = useMemo\(/);
+  assert.match(lantern, /mergeGeometries\(metalParts, false\)/);
+  assert.match(lantern, /<pointLight[\s\S]*castShadow=\{false\}/);
+  assert.doesNotMatch(lantern, /visible=\{false\}/);
+  assert.doesNotMatch(
+    lantern,
+    /useFrame\([\s\S]*?const director = resolveLanternDirector/,
+  );
+  assert.match(repair, /migrateInstancedRigidBodySensors/);
+  assert.doesNotMatch(repair, /Rapier instanced sensor disabled/);
+});
+
+test("live HUD updates do not continuously remount or reconcile the 4D canvas", () => {
+  const app = read("src/App.tsx");
+  const canvas = read("src/components/three/WorldCanvas.tsx");
+  const scene = read("src/components/three/StoryScene.tsx");
+
+  assert.doesNotMatch(
+    app,
+    /useJourneyStore\(\(state\) => state\.playerPosition\)/,
+  );
+  assert.match(
+    app,
+    /const initialPlayerPosition = useMemo\([\s\S]*useJourneyStore\.getState\(\)/,
+  );
+  assert.match(app, /onPortalSelect=\{handlePortalSelect\}/);
+  assert.match(app, /onMapSelectEntry=\{handleMapSelectEntry\}/);
+  assert.match(canvas, /export default memo\(WorldCanvas\);/);
+  assert.match(canvas, /className="slipper-world-canvas"/);
+  assert.match(scene, /const STORY_PREVIEW_CHARACTER_LIMIT = 220;/);
+  assert.match(scene, /function SafePointerLockLookControls/);
+  assert.match(scene, /<SafePointerLockLookControls \/>/);
+  assert.match(
+    scene,
+    /"pointerLockElement" in document[\s\S]*navigator\.webdriver !== true[\s\S]*typeof document\.documentElement\.requestPointerLock === "function"/,
+  );
+});
+
+test("terrain rendering, grounding, and collision share one explicit surface", () => {
+  const scene = read("src/components/three/StoryScene.tsx");
+  const worker = read("src/workers/forestWorker.ts");
+  const layout = read("src/lib/worldLayout.ts");
+  const ground = read("src/components/three/world/PerfectWorldGround.tsx");
+
+  assert.match(scene, /createTerrainSurfaceSampler/);
+  assert.match(scene, /<TrimeshCollider[\s\S]*terrainColliderSurface\.positions/);
+  assert.match(scene, /<RigidBody type="fixed" colliders=\{false\}>/);
+  assert.doesNotMatch(scene, /colliders="trimesh"/);
+  assert.doesNotMatch(scene, /crownRampSegments|buildCrownRampSegments/);
+  assert.match(worker, /createTerrainSurfaceSampler/);
+  assert.match(worker, /sampleTerrainElevation as terrainElevationAtPoint/);
+  assert.match(layout, /createTerrainSurfaceSampler/);
+  assert.doesNotMatch(ground, /WorldGroundShader|shaderMaterial|planeGeometry/);
+  assert.match(ground, /positions\[\(row \+ 0\) \* 3 \+ 2\] = t - 0\.5/);
+});
+
+test("Heart, Womb, and Crowned Return stage saved choices as authored world objects", () => {
+  const climbs = read("src/components/three/chapters/ThreeClimbsChapter.tsx");
+  const crowned = read("src/components/three/chapters/CrownedReturnChapter.tsx");
+
+  for (const marker of [
+    "heart-three-physical-memories",
+    "heart-memory-tenderness-rose",
+    "heart-memory-beauty-swan-feather",
+    "heart-memory-selfhood-blue-moon-reflection",
+    "womb-protected-creation-space",
+    "womb-three-approachable-futures",
+    "womb-future-rest",
+    "womb-future-home",
+    "womb-future-voice",
+  ]) {
+    assert.match(climbs, new RegExp(`name="${marker}"`));
+  }
+  for (const symbolicObjectId of [
+    "memory.heart.tenderness",
+    "memory.heart.beauty",
+    "memory.heart.selfhood",
+    "creation.future.rest",
+    "creation.future.home",
+    "creation.future.voice",
+  ]) {
+    assert.match(climbs, new RegExp(`inventory\\.symbolicObjects\\.includes\\("${symbolicObjectId.replaceAll(".", "\\.")}\\"\\)`));
+  }
+  assert.match(climbs, /HEART_MEMORY_WORLD_TARGETS/);
+  assert.match(climbs, /WOMB_FUTURE_WORLD_TARGETS/);
+  assert.match(climbs, /interaction: "approach-and-press"/);
+  assert.match(climbs, /worldChoiceId: "heart\.selfhood"/);
+  assert.match(climbs, /worldChoiceId: "future\.voice"/);
+
+  for (const marker of [
+    "kylie-self-owned-inner-home",
+    "home-living-water-fountain",
+    "home-reflection-gallery",
+    "home-books-reading-writing",
+    "home-writing-desk",
+    "home-velvet-reading-nook",
+    "home-candles-and-roses",
+    "home-protected-child-space",
+    "home-open-light-windows",
+    "home-high-protective-walls",
+    "home-intentionally-unused-space",
+  ]) {
+    assert.match(crowned, new RegExp(`name="${marker}"`));
+  }
+  assert.match(crowned, /name="crowned-gate-recognises-accumulated-state"/);
+  assert.match(crowned, /open=\{gateRecognisesJourney\}/);
+  assert.match(crowned, /requiredJourneyState: "keys-heart-womb-lantern-surrender"/);
+  assert.match(crowned, /reservedFor: "what-may-come"/);
+  const mirrorObject = read("src/components/three/storyEvents/StoryObjectModel.tsx");
+  assert.match(mirrorObject, /name="crown-visible-only-in-sovereign-mirror"/);
+  assert.match(mirrorObject, /reflectionOnly: true, physicalCrown: false/);
+  assert.match(mirrorObject, /viewer.z < -.1/);
+  assert.match(mirrorObject, /state === "recognised"/);
+});
+
+test("the epilogue composes the travelled world from the current journey history", () => {
+  const epilogue = read("src/components/three/chapters/LanternEpilogueChapter.tsx");
+  const tableau = read("src/components/three/chapters/IntegratedFinalTableau.tsx");
+  const scene = read("src/components/three/StoryScene.tsx");
+
+  assert.match(epilogue, /<IntegratedFinalTableau/);
+  assert.doesNotMatch(epilogue, /<ConstellationField/);
+  assert.match(tableau, /useJourneyStore\(\(state\) => state\.witnessedEntryIds\)/);
+  assert.match(tableau, /model\.routeEntryIds[\s\S]*\.map\(memoryStarPosition\)/);
+  assert.match(tableau, /source: "journey-store-history"/);
+  assert.match(tableau, /name="witnessed-memory-constellation"/);
+  assert.match(tableau, /name="constellation-actual-walked-route"/);
+  assert.match(tableau, /name=\{`constellation-resonance-\$\{node\.id\}`\}/);
+  assert.match(tableau, /name="constellation-protected-nest"/);
+  assert.match(tableau, /name="constellation-released-words"/);
+  assert.match(tableau, /name="constellation-completed-story-moments"/);
+  assert.match(tableau, /name="constellation-transformed-landmarks"/);
+  assert.match(tableau, /name="placed-lit-lantern-beside-home"/);
+  assert.match(tableau, /name="placed-lantern-visible-flame"/);
+  assert.doesNotMatch(tableau, /name="self-owned-crown"/);
+  assert.match(tableau, /crownedInReflection: crowned/);
+  assert.match(tableau, /<ReverseMemoryLights/);
+  assert.match(tableau, /name="returned-self-inside-home"/);
+  assert.match(tableau, /name="self-owned-home-interior-floor"/);
+  assert.match(tableau, /name="recovered-key-protection"/);
+  assert.match(tableau, /name="recovered-key-self-permission"/);
+  assert.match(tableau, /name="protected-nest-child-space"/);
+  assert.match(tableau, /name="resting-wolf"/);
+  assert.match(tableau, /name="swan-on-moving-water"/);
+  assert.match(tableau, /name="quiet-seer"/);
+  assert.match(tableau, /name="distant-thorned-house"/);
+  assert.match(tableau, /name="remembered-ember-fire"/);
+  assert.match(tableau, /name="living-final-river"/);
+  assert.match(tableau, /name="realistic-final-blue-moon"/);
+  assert.match(tableau, /name="final-woods-remain"/);
+  assert.match(tableau, /name="clearly-visible-homeward-path"/);
+  assert.match(tableau, /name="final-cracked-look-back-mirror"/);
+  assert.match(tableau, /name="remembered-fork-landmark"/);
+  assert.match(tableau, /name="remembered-three-climbs-landmark"/);
+  assert.match(tableau, /name: "remembered-climb-mind"/);
+  assert.match(tableau, /name: "remembered-climb-heart"/);
+  assert.match(tableau, /name: "remembered-climb-womb"/);
+  assert.match(tableau, /name=\{climb\.name\}/);
+  assert.match(tableau, /name="final-home-library-and-writing"/);
+  assert.match(tableau, /name="final-home-velvet-reading-nook"/);
+  assert.match(tableau, /name="final-reserved-empty-space"/);
+  assert.match(tableau, /name="constellation-formation-reveal"/);
+  assert.match(tableau, /formationReady=\{\(lanternPlaced && \(!eventDriven \|\| reverseComplete\)\) \|\| storyCompleted\}/);
+  assert.match(tableau, /formationMode: reducedMotion \? "immediate" : "gradual"/);
+  assert.match(tableau, /beginsAfter: "lantern-placement-or-story-completion"/);
+  assert.match(tableau, /uTime: \{ value: 0 \}/);
+  assert.match(tableau, /reducedMotion \? 0 : clock\.elapsedTime/);
+  assert.match(tableau, /reducedEffects \? 8 : 12/);
+  assert.match(scene, /function isIntegratedFinaleEntry/);
+  assert.match(scene, /function usesAuthoredCausalComposition/);
+  assert.match(scene, /function hasAuthoredChapterMoon/);
+  assert.match(scene, /suppressAmbientMoon \? null : \(/);
+  assert.match(scene, /mode === "explore" && !suppressLegacyActiveLandmark \? <StoryText/);
+});
+
+test("the Thorned House mounts bounded fixed collision architecture from its visible layout", () => {
+  const house = read("src/components/three/chapters/ThornedHouseChapter.tsx");
+
+  assert.match(house, /import \{ CuboidCollider, RigidBody \} from "@react-three\/rapier"/);
+  assert.match(
+    house,
+    /<RigidBody[\s\S]*name="thorned-house-fixed-collision"[\s\S]*type="fixed"[\s\S]*colliders=\{false\}/,
+  );
+  assert.match(
+    house,
+    /colliderSpecs\.map\(\(spec\) => \([\s\S]*<CuboidCollider[\s\S]*args=\{spec\.args\}[\s\S]*position=\{spec\.position\}[\s\S]*rotation=\{spec\.rotation\}/,
+  );
+  assert.match(house, /journey\.worldFlags\["thorn-door\.open"\] === true/);
+  assert.match(house, /journey\.worldFlags\["path\.house-exit-open"\] === true/);
+  assert.match(house, /const exitUnlocked = thornDoorOpen \|\| houseExitOpen \|\| exitCrossed/);
+  assert.match(house, /isLeaving && exitUnlocked[\s\S]*\? "open"/);
+  assert.match(house, /<ThornedHouseCollisionArchitecture[\s\S]*exitStage=\{exitStage\}/);
+});
+
+test("the Thorned House collision layout opens its exit and preserves a walkable centre route", () => {
+  const shellSize = [12.8, 5.05, 11.4];
+  const closed = resolveThornedHouseColliderLayout({
+    stage: "leaving",
+    exitStage: "glimpsed",
+    detail: 3,
+    reducedEffects: false,
+    shellSize,
+    cleared: true,
+    refilled: true,
+    reorganisationReleased: true,
+  });
+  const open = resolveThornedHouseColliderLayout({
+    stage: "leaving",
+    exitStage: "open",
+    detail: 3,
+    reducedEffects: false,
+    shellSize,
+    cleared: true,
+    refilled: true,
+    reorganisationReleased: true,
+  });
+
+  assert.ok(closed.some((spec) => spec.role === "exit-door"));
+  assert.ok(!open.some((spec) => spec.role === "exit-door"));
+  assert.ok(open.some((spec) => spec.role === "shell-wall"));
+  assert.ok(open.some((spec) => spec.role === "room-wall"));
+  assert.ok(open.some((spec) => spec.role === "corridor-frame"));
+  assert.ok(open.some((spec) => spec.role === "memory-surface"));
+  assert.ok(open.some((spec) => spec.role === "memory-clutter"));
+
+  const routeBlockers = open.filter((spec) => {
+    const reachesPlayerHeight = spec.position[1] + spec.args[1] > 0.25;
+    const overlapsRouteDepth =
+      spec.position[2] + spec.args[2] >= -3 &&
+      spec.position[2] - spec.args[2] <= 8.45;
+    const conservativeHalfWidth = Math.hypot(spec.args[0], spec.args[2]);
+    const intrudesIntoCentre =
+      Math.abs(spec.position[0]) - conservativeHalfWidth <
+      THORNED_HOUSE_SAFE_ROUTE_HALF_WIDTH;
+    return reachesPlayerHeight && overlapsRouteDepth && intrudesIntoCentre;
+  });
+  assert.deepEqual(
+    routeBlockers.map((spec) => spec.id),
+    [],
+    "the opened, reorganised house must leave a capsule-safe route from spawn through the exit",
+  );
+});
+
+test("the Thorned House collider budget holds across scene and saved-state variants", () => {
+  const shellSizes = {
+    garden: [13.5, 5.45, 11],
+    bedroom: [12.2, 4.75, 11.8],
+    leaving: [12.8, 5.05, 11.4],
+  };
+
+  for (const stage of ["garden", "bedroom", "leaving"]) {
+    for (const exitStage of ["sealed", "glimpsed", "open"]) {
+      for (const reducedEffects of [false, true]) {
+        for (const detail of [0, 1, 2, 3, 6]) {
+          for (const [cleared, refilled] of [[false, false], [true, false], [true, true]]) {
+            const layout = resolveThornedHouseColliderLayout({
+              stage,
+              exitStage,
+              detail,
+              reducedEffects,
+              shellSize: shellSizes[stage],
+              cleared,
+              refilled,
+              reorganisationReleased: stage === "leaving",
+            });
+            assert.ok(layout.length <= THORNED_HOUSE_COLLIDER_BUDGET);
+            assert.equal(new Set(layout.map((spec) => spec.id)).size, layout.length);
+            for (const spec of layout) {
+              assert.ok(spec.args.every((extent) => Number.isFinite(extent) && extent > 0));
+              assert.ok(spec.position.every(Number.isFinite));
+            }
+          }
+        }
+      }
+    }
+  }
+});

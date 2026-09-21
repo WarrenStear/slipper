@@ -1,0 +1,132 @@
+name: Story interaction smoke tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/components/three/storyEvents/**'
+      - 'src/components/ui/AccessibleStoryObjects.tsx'
+      - 'src/components/three/chapters/BlueMoonSanctuaryChapter.tsx'
+      - 'src/storyEvents/**'
+      - 'src/cinematics/openingPresentation.ts'
+      - 'src/components/three/journey/OpeningInteractionBoundary.tsx'
+      - 'src/components/three/journey/JourneyWorldComposition.tsx'
+      - 'src/components/three/StorySceneWithMasterLantern.tsx'
+      - 'src/components/three/chapters/BrokenFloorChapter.tsx'
+      - 'tests/opening-presentation.test.mjs'
+      - 'e2e/opening-sequence.spec.ts'
+      - 'src/lib/scenePolishRuntime.ts'
+      - 'tests/scene-polish.test.mjs'
+      - 'tests/story-attention-session.test.mjs'
+      - 'e2e/scene-polish.spec.ts'
+      - 'e2e/story-attention.spec.ts'
+      - 'e2e/cinematic-story-gameplay.spec.ts'
+      - 'e2e/cinematic-story-controls.ts'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'playwright.config.ts'
+      - '.github/workflows/story-polish-smoke.yml'
+  pull_request:
+    paths:
+      - 'src/components/three/storyEvents/**'
+      - 'src/components/ui/AccessibleStoryObjects.tsx'
+      - 'src/components/three/chapters/BlueMoonSanctuaryChapter.tsx'
+      - 'src/storyEvents/**'
+      - 'src/cinematics/openingPresentation.ts'
+      - 'src/components/three/journey/OpeningInteractionBoundary.tsx'
+      - 'src/components/three/journey/JourneyWorldComposition.tsx'
+      - 'src/components/three/StorySceneWithMasterLantern.tsx'
+      - 'src/components/three/chapters/BrokenFloorChapter.tsx'
+      - 'tests/opening-presentation.test.mjs'
+      - 'e2e/opening-sequence.spec.ts'
+      - 'src/lib/scenePolishRuntime.ts'
+      - 'tests/scene-polish.test.mjs'
+      - 'tests/story-attention-session.test.mjs'
+      - 'e2e/scene-polish.spec.ts'
+      - 'e2e/story-attention.spec.ts'
+      - 'e2e/cinematic-story-gameplay.spec.ts'
+      - 'e2e/cinematic-story-controls.ts'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'playwright.config.ts'
+      - '.github/workflows/story-polish-smoke.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: story-polish-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validate and build exact candidate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Use declared npm version
+        run: npm install --global npm@10.9.2
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Validate source, saves, security, and production build
+        run: npm run check
+      - name: Preserve the exact production preview
+        uses: actions/upload-artifact@v4
+        with:
+          name: story-polish-production-preview
+          path: dist
+          if-no-files-found: error
+          retention-days: 7
+
+  browser:
+    name: ${{ matrix.lane }} / ${{ matrix.project }}
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        lane: [physical, semantic, opening]
+        project: [chromium, mobile-chromium]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Use declared npm version
+        run: npm install --global npm@10.9.2
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Restore the validated build, not a separately rebuilt candidate
+        uses: actions/download-artifact@v5
+        with:
+          name: story-polish-production-preview
+          path: dist
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Exercise physical input and reload without weakening assertions
+        if: matrix.lane == 'physical'
+        run: npx playwright test e2e/scene-polish.spec.ts e2e/cinematic-story-gameplay.spec.ts --project=${{ matrix.project }} --grep 'rendered floor|surface coverage'
+      - name: Exercise integrated opening and separate rendered evidence
+        if: matrix.lane == 'opening'
+        run: npx playwright test e2e/opening-sequence.spec.ts --project=${{ matrix.project }}
+      - name: Exercise attention lifecycle and the complete fresh semantic journey
+        if: matrix.lane == 'semantic'
+        run: npx playwright test e2e/story-attention.spec.ts e2e/cinematic-story-gameplay.spec.ts --project=${{ matrix.project }} --grep 'Settings pauses attention|fresh semantic journey'
+      - name: Preserve each lane's evidence even when another lane fails
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: story-polish-${{ matrix.lane }}-${{ matrix.project }}-evidence
+          path: |
+            playwright-report
+            test-results
+          if-no-files-found: ignore
+          retention-days: 7

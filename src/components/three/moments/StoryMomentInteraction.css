@@ -1,0 +1,249 @@
+.story-moment {
+  position: fixed;
+  z-index: 41;
+  left: 50%;
+  bottom: clamp(5.5rem, 10vh, 8rem);
+  display: grid;
+  width: min(35rem, calc(100vw - 2rem));
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 1rem;
+  padding: 0.95rem 1rem;
+  border: 1px solid rgba(224, 205, 166, 0.22);
+  border-radius: 1rem;
+  background: linear-gradient(150deg, rgba(9, 12, 12, 0.9), rgba(26, 23, 18, 0.7));
+  box-shadow: 0 1.25rem 4rem rgba(0, 0, 0, 0.46), inset 0 1px rgba(255, 255, 255, 0.04);
+  color: #f4ead6;
+  transform: translateX(-50%);
+  backdrop-filter: blur(18px);
+}
+
+.story-moment__copy {
+  display: grid;
+  gap: 0.18rem;
+}
+
+.story-moment__copy > span {
+  color: rgba(220, 197, 148, 0.8);
+  font-size: 0.64rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.story-moment__copy strong {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.03rem;
+  font-weight: 500;
+}
+
+.story-moment__copy p {
+  max-width: 23rem;
+  margin: 0.18rem 0 0;
+  color: rgba(239, 231, 214, 0.7);
+  font-size: 0.76rem;
+  line-height: 1.42;
+}
+
+.story-moment.is-awaiting-target {
+  border-color: rgba(190, 209, 205, 0.18);
+  background: linear-gradient(150deg, rgba(8, 12, 13, 0.82), rgba(18, 24, 23, 0.68));
+}
+
+.story-moment__target {
+  display: grid;
+  min-width: 9.5rem;
+  justify-items: end;
+  gap: 0.16rem;
+  color: rgba(222, 235, 229, 0.7);
+}
+
+.story-moment__target > span,
+.story-moment__target > em {
+  font-size: 0.58rem;
+  font-style: normal;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.story-moment__target > strong {
+  color: #f1ead8;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+
+.story-moment__target > button {
+  margin-top: 0.32rem;
+  padding: 0.38rem 0.52rem;
+  color: rgba(245, 234, 211, 0.7);
+  font-size: 0.58rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.story-moment button {
+  border: 1px solid rgba(242, 222, 174, 0.24);
+  border-radius: 0.7rem;
+  background: rgba(236, 216, 170, 0.075);
+  color: #f7ecd5;
+  cursor: pointer;
+  font: inherit;
+  touch-action: none;
+}
+
+.story-moment__primary {
+  position: relative;
+  display: flex;
+  min-width: 9rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.48rem;
+  overflow: hidden;
+  padding: 0.62rem 0.72rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.story-moment__key {
+  display: grid;
+  min-width: 1.55rem;
+  height: 1.55rem;
+  padding: 0 0.16rem;
+  place-items: center;
+  border: 1px solid rgba(255, 244, 216, 0.28);
+  border-radius: 0.4rem;
+  background: rgba(255, 255, 255, 0.055);
+  font-size: 0.64rem;
+}
+
+.story-moment__progress {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  background: #e8c778;
+  transform-origin: left;
+}
+
+.story-moment__two-hands {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem;
+  overflow: hidden;
+}
+
+.story-moment__two-hands > button:not(.story-moment__accessible) {
+  display: flex;
+  min-width: 6.2rem;
+  align-items: center;
+  gap: 0.42rem;
+  padding: 0.5rem 0.58rem;
+  color: rgba(247, 236, 213, 0.62);
+  font-size: 0.67rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.story-moment__two-hands > button.is-held {
+  border-color: rgba(238, 202, 126, 0.62);
+  background: rgba(232, 199, 120, 0.16);
+  color: #fff2d5;
+}
+
+.story-moment__accessible {
+  grid-column: 1 / -1;
+  padding: 0.38rem 0.5rem;
+  color: rgba(245, 234, 211, 0.7) !important;
+  font-size: 0.58rem !important;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.story-moment__passive,
+.story-moment__movement {
+  display: grid;
+  min-width: 10rem;
+  justify-items: center;
+  gap: 0.38rem;
+  color: rgba(238, 231, 215, 0.58);
+  font-size: 0.64rem;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.story-moment__passive > i {
+  width: 0.68rem;
+  height: 0.68rem;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  transition: background 900ms ease, box-shadow 900ms ease;
+}
+
+.story-moment__passive.is-listening > i {
+  background: rgba(232, 215, 173, 0.44);
+  box-shadow: 0 0 0 0.65rem rgba(229, 215, 179, 0.035), 0 0 1.6rem rgba(229, 215, 179, 0.18);
+}
+
+.story-moment__movement > i {
+  width: 100%;
+  height: 2px;
+  overflow: hidden;
+  background: rgba(237, 213, 158, 0.16);
+  transform-origin: left;
+}
+
+.story-moment__movement > i > b {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: #e8c778;
+  transform-origin: left;
+}
+
+.story-moment__movement button {
+  padding: 0.36rem 0.54rem;
+  color: rgba(245, 234, 211, 0.66);
+  font-size: 0.58rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.story-moment-feedback {
+  position: fixed;
+  z-index: 43;
+  left: 50%;
+  bottom: 3.2rem;
+  margin: 0;
+  color: rgba(244, 232, 204, 0.84);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+
+@media (max-width: 720px) {
+  .story-moment {
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 6.6rem);
+    grid-template-columns: 1fr;
+  }
+
+  .story-moment__primary,
+  .story-moment__movement,
+  .story-moment__target {
+    width: 100%;
+  }
+
+  .story-moment__target {
+    justify-items: start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .story-moment__passive > i {
+    transition: none;
+  }
+}

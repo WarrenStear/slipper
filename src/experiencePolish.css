@@ -1,0 +1,502 @@
+/*
+  Slipper in the Woods — final environment/UI polish layer.
+  This file intentionally sits after the legacy style sheets so the app can be
+  visually tightened without destabilising the underlying story/navigation code.
+*/
+
+:root {
+  --sidtw-ink: #f5f2e9;
+  --sidtw-muted: rgba(225, 231, 238, 0.66);
+  --sidtw-soft: rgba(204, 216, 230, 0.46);
+  --sidtw-gold: #f0d28c;
+  --sidtw-panel: rgba(8, 12, 20, 0.58);
+  --sidtw-panel-strong: rgba(7, 11, 19, 0.76);
+  --sidtw-border: rgba(207, 220, 235, 0.17);
+  --sidtw-border-strong: rgba(218, 228, 239, 0.28);
+  --sidtw-blur: blur(14px) saturate(112%);
+  --sidtw-shadow: 0 18px 58px rgba(0, 0, 0, 0.3);
+}
+
+.app-shell {
+  isolation: isolate;
+  background:
+    radial-gradient(circle at 50% 34%, rgba(69, 90, 124, 0.1), transparent 38%),
+    #05070b;
+}
+
+.app-shell::after {
+  z-index: 2;
+  background:
+    radial-gradient(circle at 50% 32%, transparent 0%, transparent 48%, rgba(0, 0, 0, 0.22) 100%),
+    linear-gradient(180deg, rgba(8, 6, 6, 0.12), transparent 30%, rgba(6, 6, 7, 0.24));
+}
+
+.app-mode-read::after {
+  background:
+    radial-gradient(circle at 50% 26%, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.46) 74%, rgba(0, 0, 0, 0.72) 100%),
+    linear-gradient(180deg, rgba(6, 6, 7, 0.36), transparent 44%, rgba(6, 6, 7, 0.62));
+}
+
+.app-mode-map::after {
+  background:
+    radial-gradient(circle at center, rgba(22, 24, 28, 0.22), rgba(0, 0, 0, 0.64)),
+    rgba(0, 0, 0, 0.34);
+}
+
+.story-hud,
+.narrative-veil,
+.portal-dock,
+.chapter-path,
+.scene-compass,
+.journey-trail,
+.contextual-nav-prompt,
+.story-instructions,
+.cloud-journey-summary,
+.cloud-journey-panel,
+section[aria-label="Live mini-map"] {
+  border-color: var(--sidtw-border) !important;
+  color: var(--sidtw-ink) !important;
+  background:
+    radial-gradient(circle at 18% 0%, rgba(141, 164, 197, 0.1), transparent 36%),
+    linear-gradient(180deg, rgba(12, 17, 28, 0.78), rgba(5, 8, 13, 0.64)) !important;
+  box-shadow: var(--sidtw-shadow) !important;
+  backdrop-filter: var(--sidtw-blur) !important;
+  -webkit-backdrop-filter: var(--sidtw-blur) !important;
+}
+
+.story-hud {
+  top: max(14px, env(safe-area-inset-top)) !important;
+  left: max(14px, env(safe-area-inset-left)) !important;
+  grid-template-columns: minmax(230px, 1fr) auto auto;
+  gap: 14px;
+  max-width: min(880px, calc(100vw - 28px));
+  padding: 13px 14px;
+  border-radius: 24px;
+}
+
+.story-hud-kicker,
+.journey-trail-label,
+.portal-dock-header p,
+.chapter-path-header span,
+.scene-compass span,
+.narrative-veil-copy p,
+.contextual-nav-prompt span,
+.cloud-journey-summary span {
+  color: rgba(240, 210, 140, 0.72) !important;
+}
+
+.story-hud h2,
+.reader-panel h1,
+.narrative-veil-copy h3,
+.portal-dock-copy strong,
+.scene-compass strong,
+.contextual-nav-prompt strong {
+  color: #fffdf4 !important;
+  text-shadow: 0 1px 18px rgba(255, 236, 190, 0.08);
+}
+
+.story-hud h2 {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.story-hud p:not(.story-hud-kicker),
+.story-instructions,
+.narrative-veil-copy span,
+.contextual-nav-prompt em,
+.portal-dock-copy em,
+.scene-compass em,
+.cloud-journey-panel p,
+.cloud-journey-panel small {
+  color: var(--sidtw-muted) !important;
+}
+
+.story-mode-switch,
+.story-hud-actions {
+  align-self: center;
+}
+
+.story-hud-actions {
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+.story-mode-switch {
+  flex-wrap: nowrap;
+  background: rgba(214, 226, 240, 0.05) !important;
+  border-color: rgba(214, 226, 240, 0.11) !important;
+}
+
+.story-mode-switch button,
+.story-hud-actions button,
+.story-hud-more summary,
+.reader-footer button,
+.cloud-journey-panel button {
+  min-height: 36px;
+  border-color: rgba(214, 226, 240, 0.15) !important;
+  color: rgba(231, 236, 242, 0.78) !important;
+  background: rgba(214, 226, 240, 0.06) !important;
+}
+
+.story-hud-more {
+  position: relative;
+}
+
+.story-hud-more summary {
+  display: grid;
+  min-width: 66px;
+  place-items: center;
+  border: 1px solid rgba(255, 248, 220, 0.14);
+  border-radius: 999px;
+  padding: 8px 11px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.story-hud-more summary::-webkit-details-marker {
+  display: none;
+}
+
+.story-hud-more summary:hover,
+.story-hud-more summary:focus-visible,
+.story-hud-more[open] summary {
+  outline: none;
+  color: #17130a !important;
+  border-color: rgba(240, 210, 140, 0.52) !important;
+  background: linear-gradient(180deg, rgba(255, 241, 191, 0.96), rgba(218, 184, 104, 0.82)) !important;
+}
+
+.story-hud-overflow {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 8;
+  display: grid;
+  gap: 7px;
+  width: 184px;
+  padding: 8px;
+  border: 1px solid var(--sidtw-border-strong);
+  border-radius: 18px;
+  background: rgba(8, 8, 10, 0.94);
+  box-shadow: 0 22px 72px rgba(0, 0, 0, 0.48);
+}
+
+.story-hud-overflow button {
+  width: 100%;
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.story-mode-switch button.is-active,
+.story-hud-actions button:hover:not(:disabled),
+.reader-footer button:hover:not(:disabled),
+.cloud-journey-panel button:hover:not(:disabled) {
+  color: #17130a !important;
+  border-color: rgba(240, 210, 140, 0.52) !important;
+  background: linear-gradient(180deg, rgba(255, 241, 191, 0.96), rgba(218, 184, 104, 0.82)) !important;
+}
+
+.story-hud-actions button:disabled,
+.reader-footer button:disabled {
+  opacity: 0.32 !important;
+}
+
+section[aria-label="Live mini-map"] {
+  right: max(18px, env(safe-area-inset-right)) !important;
+  bottom: 124px !important;
+  width: 206px !important;
+  padding: 13px !important;
+  border-radius: 24px !important;
+  opacity: 0.92;
+}
+
+section[aria-label="Live mini-map"] svg {
+  display: block;
+  width: 100% !important;
+  height: auto !important;
+  max-height: 154px;
+  margin-inline: auto;
+}
+
+.contextual-nav-prompt {
+  bottom: max(26px, env(safe-area-inset-bottom)) !important;
+  width: min(560px, calc(100vw - 36px));
+  border-radius: 20px;
+  padding: 12px 15px;
+}
+
+.app-mode-explore:not(.is-walking-forest) .contextual-nav-prompt {
+  bottom: 108px !important;
+}
+
+.contextual-nav-prompt.is-lost {
+  border-color: rgba(255, 190, 130, 0.36) !important;
+  background:
+    radial-gradient(circle at left, rgba(255, 132, 84, 0.16), transparent 42%),
+    rgba(9, 7, 6, 0.7) !important;
+}
+
+.contextual-nav-prompt.is-edge-of-trail {
+  border-color: rgba(255, 220, 150, 0.3) !important;
+}
+
+.narrative-veil {
+  top: 160px;
+  width: min(392px, calc(100vw - 32px));
+  border-radius: 24px;
+}
+
+.narrative-veil-meter {
+  background: rgba(255, 248, 220, 0.055) !important;
+}
+
+.narrative-veil-meter i,
+.chapter-progress-row i {
+  background: linear-gradient(90deg, rgba(240, 210, 140, 0.28), rgba(182, 212, 188, 0.13)) !important;
+}
+
+.portal-dock {
+  width: min(488px, calc(100vw - 32px));
+  border-radius: 24px;
+}
+
+.portal-dock-list {
+  grid-template-columns: 1fr !important;
+}
+
+.portal-dock-card {
+  cursor: default;
+  background: rgba(255, 248, 220, 0.055) !important;
+}
+
+.portal-dock-card:hover {
+  transform: none;
+}
+
+.chapter-path {
+  bottom: 18px;
+  width: min(540px, calc(100vw - 32px));
+}
+
+.chapter-path-nodes button.is-active {
+  color: #17130a !important;
+  border-color: rgba(255, 241, 191, 0.8) !important;
+  background: rgba(255, 241, 191, 0.96) !important;
+}
+
+.chapter-progress {
+  right: max(18px, env(safe-area-inset-right));
+  bottom: 435px;
+  width: min(328px, calc(100vw - 32px));
+}
+
+.chapter-progress-row {
+  background: rgba(8, 9, 10, 0.42) !important;
+}
+
+.story-instructions {
+  right: auto;
+  bottom: max(18px, env(safe-area-inset-bottom));
+  left: max(18px, env(safe-area-inset-left));
+  max-width: min(320px, calc(100vw - 36px));
+  border-radius: 18px;
+  padding: 10px 12px;
+  line-height: 1.35;
+}
+
+.reader-panel {
+  padding: 98px 22px 28px;
+}
+
+.reader-panel-inner {
+  width: min(860px, 100%);
+  border-color: var(--sidtw-border-strong) !important;
+  background:
+    radial-gradient(circle at 82% 0%, rgba(240, 210, 140, 0.14), transparent 38%),
+    linear-gradient(180deg, rgba(12, 12, 13, 0.74), rgba(7, 7, 8, 0.66)) !important;
+  box-shadow: 0 30px 110px rgba(0, 0, 0, 0.42) !important;
+}
+
+.reader-body {
+  max-width: 680px;
+}
+
+.reader-body p {
+  color: rgba(255, 248, 232, 0.82) !important;
+}
+
+.map-workspace {
+  inset: 196px 18px 18px;
+  gap: 18px;
+}
+
+.map-workspace .constellation-panel,
+.map-workspace .archive-index {
+  border-color: var(--sidtw-border) !important;
+  box-shadow: var(--sidtw-shadow) !important;
+}
+
+.cloud-journey-card {
+  top: max(14px, env(safe-area-inset-top)) !important;
+  right: max(18px, env(safe-area-inset-right)) !important;
+}
+
+.scene-compass {
+  top: 72px;
+}
+
+.cloud-journey-summary {
+  min-height: 42px;
+}
+
+.cloud-journey-panel input {
+  border-color: rgba(255, 248, 220, 0.16) !important;
+  color: var(--sidtw-ink) !important;
+  background: rgba(255, 248, 220, 0.065) !important;
+}
+
+.slipper-canvas-crash-fallback,
+.slipper-scene-loader,
+.slipper-scene-error {
+  color: var(--sidtw-ink) !important;
+}
+
+@media (max-width: 1120px) {
+  .story-hud {
+    grid-template-columns: 1fr;
+    width: min(640px, calc(100vw - 28px));
+  }
+
+  .story-mode-switch,
+  .story-hud-actions {
+    justify-content: flex-start;
+  }
+
+  .map-workspace {
+    inset: 176px 14px 14px;
+  }
+
+  .story-instructions {
+    display: none !important;
+  }
+
+  .app-mode-explore .journey-trail {
+    display: none !important;
+  }
+}
+
+@media (max-width: 1280px), (max-height: 900px) {
+  .app-mode-explore .journey-trail,
+  .app-mode-explore .portal-dock,
+  .app-mode-explore .chapter-progress {
+    display: none !important;
+  }
+}
+
+@media (max-height: 800px) {
+  .app-mode-explore .narrative-veil {
+    display: none !important;
+  }
+}
+
+@media (max-width: 920px) {
+  .narrative-veil,
+  .journey-trail,
+  .chapter-progress,
+  .story-instructions,
+  section[aria-label="Live mini-map"] {
+    display: none !important;
+  }
+
+  .portal-dock {
+    left: 12px !important;
+    bottom: 12px !important;
+    width: min(420px, calc(100vw - 24px));
+  }
+
+  .contextual-nav-prompt {
+    bottom: max(18px, env(safe-area-inset-bottom)) !important;
+  }
+
+  .map-workspace {
+    inset: 184px 12px 12px;
+  }
+}
+
+@media (max-width: 720px) {
+  .story-hud {
+    top: max(10px, env(safe-area-inset-top)) !important;
+    left: 10px !important;
+    width: calc(100vw - 20px) !important;
+    max-width: none;
+    padding: 11px;
+    border-radius: 20px;
+  }
+
+  .story-hud h2 {
+    font-size: 1.18rem;
+  }
+
+  .story-hud p:not(.story-hud-kicker) {
+    font-size: 0.72rem;
+  }
+
+  .story-mode-switch,
+  .story-hud-actions,
+  .reader-footer {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px;
+  }
+
+  .story-mode-switch button,
+  .story-hud-actions button,
+  .reader-footer button {
+    width: 100%;
+    min-height: 38px;
+    padding-inline: 8px;
+  }
+
+  .contextual-nav-prompt {
+    bottom: max(14px, env(safe-area-inset-bottom)) !important;
+    width: calc(100vw - 20px);
+    padding: 10px 12px;
+  }
+
+  .reader-panel {
+    padding: 190px 10px 12px;
+  }
+
+  .reader-panel-inner {
+    max-height: calc(100vh - 206px);
+    padding: 22px;
+    border-radius: 22px;
+  }
+
+  .reader-panel h1 {
+    font-size: clamp(2rem, 13vw, 3.2rem);
+  }
+
+  .reader-body p {
+    font-size: 1rem;
+    line-height: 1.68;
+  }
+
+  .map-workspace {
+    inset: 212px 10px 10px;
+  }
+}
+
+@media (max-width: 520px) {
+  .story-hud-copy .story-hud-stats {
+    display: none;
+  }
+
+  .portal-dock,
+  .chapter-path,
+  .scene-compass {
+    display: none !important;
+  }
+}

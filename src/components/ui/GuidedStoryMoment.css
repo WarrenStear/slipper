@@ -1,0 +1,25 @@
+.guided-story{position:fixed;z-index:22;top:max(4.4rem,calc(env(safe-area-inset-top) + 3.5rem));left:clamp(1rem,3vw,3rem);width:min(23rem,calc(100vw - 2rem));box-sizing:border-box;padding:1rem 1.1rem;border-left:1px solid #cbb98a88;color:#f0e9dc;background:linear-gradient(100deg,#0c1213ed,#0c1213c9);font-family:Georgia,"Times New Roman",serif;pointer-events:auto;animation:guided-story-arrive .65s ease-out both}
+.guided-story__heading{display:flex;align-items:center;justify-content:space-between;gap:.65rem}.guided-story__heading>span{font:500 .65rem/1.5 system-ui,sans-serif;text-transform:uppercase;letter-spacing:.14em;color:#d5c5a5}.guided-story .guided-story__intention{font-size:clamp(1rem,1.4vw,1.16rem);line-height:1.55;margin:.5rem 0 .65rem;text-wrap:pretty}.guided-story .guided-story__help{font:400 .88rem/1.6 system-ui,sans-serif;color:#c4cbd0;margin:.6rem 0}.guided-story__actions{display:flex;gap:.25rem .75rem;flex-wrap:wrap}.guided-story button{background:transparent;color:#e5d7b8;border:0;border-bottom:1px solid #d9c39455;border-radius:0;padding:.5rem .1rem;min-height:44px;font:500 .75rem/1.4 system-ui,sans-serif;cursor:pointer}.guided-story button:focus-visible{outline:2px solid #f1d69d;outline-offset:3px}.guided-story button:hover{color:#fff5de;border-bottom-color:#fff5de}.guided-story__heading button{min-width:44px;color:#bcc4c7;border:0}.guided-story__caption-label{font:400 .67rem/1.5 system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#bfc4c4}.guided-story.is-collapsed{width:auto;padding:.15rem .7rem}.guided-story--inline{position:relative;inset:auto;width:100%;margin:1.25rem 0;background:#121b1de6;z-index:auto}.guided-story[data-reduced-motion=true]{animation:none}.story-guided-target{display:block;white-space:nowrap;font:500 .7rem/1.4 system-ui,sans-serif;color:#f4e6c7;background:#111b1be6;border-bottom:1px solid #dac394a3;padding:.4rem .65rem;pointer-events:none}
+@keyframes guided-story-arrive{from{opacity:0}to{opacity:1}}
+@media(max-width:700px){.guided-story:not(.guided-story--inline){top:max(4.1rem,calc(env(safe-area-inset-top) + 3rem));padding:.55rem .8rem;width:min(21rem,calc(100vw - 2rem))}.guided-story .guided-story__intention{font-size:.98rem;margin:.25rem 0}.guided-story__heading>span{font-size:.6rem}.guided-story__actions{gap:.2rem .65rem}}
+@media(max-height:500px) and (orientation:landscape){.guided-story:not(.guided-story--inline){top:1rem;width:18rem;max-height:calc(100dvh - 2rem);overflow-y:auto}}
+@media(prefers-reduced-motion:reduce){.guided-story{animation:none}}
+@media(forced-colors:active){.guided-story{background:Canvas;border:1px solid CanvasText;color:CanvasText}.guided-story button{color:LinkText;border-color:LinkText}}
+
+/* The directed guide replaces the old generic navigation paragraph. In particular,
+   asking for object help must not bring it back into a later quiet interval. */
+.app-shell:not(.is-free-woods) .contextual-nav-prompt{display:none}
+
+/* Holding a response is player control, not a countdown or a progression gate. */
+.guided-story button[aria-pressed="true"]{color:#fff5de;border-bottom-color:currentColor}
+
+/* The next intention never displaces the consequence currently being read. */
+.guided-story__next-step{margin-top:.85rem;padding-top:.75rem;border-top:1px solid #d9c39444}
+.guided-story__next-step[hidden]{display:none}
+.guided-story__next-step h2{margin:0 0 .4rem;font:500 .7rem/1.5 system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#d5c5a5}
+.guided-story__next-step>p{margin:.35rem 0;font-size:1rem;line-height:1.55}
+.guided-story .guided-story__intention:focus-visible{outline:2px solid #f1d69d;outline-offset:4px}
+.guided-story:not(.guided-story--inline){max-height:calc(100dvh - 8rem);overflow-y:auto;overscroll-behavior:contain;overflow-wrap:anywhere}
+@media(max-width:700px){.guided-story:not(.guided-story--inline){max-height:min(60dvh,26rem)}}
+@media(max-height:500px) and (orientation:landscape){.guided-story:not(.guided-story--inline){max-height:calc(100dvh - 2rem)}}
+@media(forced-colors:active){.guided-story__next-step{border-color:CanvasText}.guided-story__next-step h2{color:CanvasText}.guided-story .guided-story__intention:focus-visible{outline-color:Highlight}}

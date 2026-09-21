@@ -1,0 +1,105 @@
+name: Validate mobile exploration and reading
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mobile-integration-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Source, unit, security, build, and Pages Functions
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Use Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Use the declared npm version
+        run: npm install --global npm@10.9.2
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Run the complete non-browser check
+        run: npm run check
+
+      - name: Fingerprint and retain the validated preview
+        env:
+          BUILD_REVISION: ${{ github.sha }}
+        run: |
+          node scripts/build-artifact.mjs write "$BUILD_REVISION" /tmp/build-validation.json
+          tar -czf /tmp/validated-preview.tgz dist src/data/worldState.json -C /tmp build-validation.json
+
+      - name: Share the exact build with browser checks
+        uses: actions/upload-artifact@v4
+        with:
+          name: validated-preview-${{ github.sha }}
+          path: /tmp/validated-preview.tgz
+          if-no-files-found: error
+          retention-days: 7
+
+  browsers:
+    name: Chromium, Firefox, WebKit, Pixel, and iPhone projects
+    needs: check
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Use Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Use the declared npm version
+        run: npm install --global npm@10.9.2
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npm run test:e2e:setup
+
+      - name: Restore the exact validated preview
+        uses: actions/download-artifact@v4
+        with:
+          name: validated-preview-${{ github.sha }}
+          path: /tmp/validated-preview
+
+      - name: Verify build identity before browser execution
+        env:
+          BUILD_REVISION: ${{ github.sha }}
+        run: |
+          tar -xzf /tmp/validated-preview/validated-preview.tgz
+          node scripts/build-artifact.mjs verify "$BUILD_REVISION" build-validation.json
+
+      - name: Run every configured browser project
+        run: npm run test:e2e
+
+      - name: Preserve browser diagnostics on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-diagnostics
+          path: |
+            playwright-report
+            test-results
+          if-no-files-found: ignore
+          retention-days: 7

@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "include": ["/api/*"],
+  "exclude": [
+    "/assets/*",
+    "/models/*",
+    "/textures/*",
+    "/visuals/*",
+    "/*.{png,jpg,jpeg,svg,webp,ico,css,js,glb,gltf,ktx2,wasm}"
+  ]
+}

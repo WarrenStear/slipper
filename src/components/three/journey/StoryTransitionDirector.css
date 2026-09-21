@@ -1,0 +1,50 @@
+.story-transition {
+  position: fixed;
+  z-index: 31;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  gap: .8rem;
+  padding: 2rem;
+  color: #eee9df;
+  text-align: center;
+  pointer-events: none;
+  background: radial-gradient(circle at center, rgba(5, 8, 8, .16), rgba(0, 0, 0, .7));
+  animation: story-transition-presence var(--story-transition-duration, 3.6s) ease both;
+  animation-delay: var(--story-transition-elapsed, 0ms);
+  animation-play-state: paused;
+}
+
+.story-transition--reflection { background: linear-gradient(180deg, rgba(0, 0, 0, .64), rgba(27, 47, 49, .28), rgba(0, 0, 0, .7)); }
+.story-transition--environment { background: radial-gradient(circle at 50% 58%, transparent, rgba(0, 0, 0, .68)); }
+.story-transition--walk { justify-content: start; align-content: center; padding-left: clamp(2rem, 10vw, 10rem); text-align: left; background: linear-gradient(90deg, rgba(0, 0, 0, .64), transparent 68%); }
+.story-transition--silence { background: rgba(0, 0, 0, .82); }
+.story-transition--phase-departure { background-color: rgba(0, 0, 0, .52); }
+.story-transition--phase-silence {
+  background: #010202;
+  animation-name: story-transition-silence;
+}
+
+.story-transition p,
+.story-transition h2,
+.story-transition span { margin: 0; font-family: Georgia, "Times New Roman", serif; text-wrap: balance; }
+.story-transition p { color: rgba(221, 205, 174, .62); font-size: .72rem; letter-spacing: .18em; text-transform: uppercase; }
+.story-transition h2 { color: rgba(244, 239, 228, .94); font-size: clamp(2rem, 6vw, 4.7rem); font-weight: 400; letter-spacing: -.04em; }
+.story-transition span { max-width: 34rem; color: rgba(234, 232, 224, .78); font-size: clamp(1rem, 2.2vw, 1.35rem); font-style: italic; line-height: 1.6; }
+.story-transition--title-none span { margin-top: 1.5rem; }
+
+@keyframes story-transition-presence {
+  0% { opacity: 0; }
+  18%, 66% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes story-transition-silence {
+  0% { opacity: .72; }
+  12%, 78% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .story-transition { animation-timing-function: linear; }
+}

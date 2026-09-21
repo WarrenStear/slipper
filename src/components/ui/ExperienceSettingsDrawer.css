@@ -1,0 +1,657 @@
+.experience-settings-trigger {
+  position: fixed;
+  top: max(18px, env(safe-area-inset-top));
+  right: max(18px, env(safe-area-inset-right));
+  z-index: 46;
+  display: grid;
+  gap: 2px;
+  min-width: 136px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  padding: 9px 13px;
+  color: rgba(255, 255, 255, 0.76);
+  background:
+    radial-gradient(circle at top right, rgba(216, 208, 186, 0.12), transparent 42%),
+    rgba(6, 6, 8, 0.62);
+  box-shadow: 0 18px 70px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(14px) saturate(118%);
+  -webkit-backdrop-filter: blur(14px) saturate(118%);
+  cursor: pointer;
+  text-align: left;
+  transition:
+    transform 170ms ease,
+    border-color 170ms ease,
+    background 170ms ease;
+}
+
+.experience-settings-trigger:hover,
+.experience-settings-trigger:focus-visible {
+  outline: 2px solid rgba(255, 245, 206, 0.8);
+  outline-offset: 3px;
+  transform: translateY(-1px);
+  border-color: rgba(216, 208, 186, 0.34);
+  background: rgba(6, 6, 8, 0.76);
+}
+
+.experience-settings-trigger span {
+  color: rgba(216, 208, 186, 0.72);
+  font-size: 0.58rem;
+  font-weight: 850;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.experience-settings-trigger strong {
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 760;
+}
+
+.experience-settings-trigger.is-story-safe {
+  width: 2.75rem;
+  min-width: 2.75rem;
+  height: 2.75rem;
+  place-items: center;
+  border-color: rgba(235, 222, 194, 0.14);
+  padding: 0;
+  background: rgba(5, 7, 8, 0.26);
+  text-align: center;
+}
+
+.experience-settings-trigger.is-story-safe .experience-settings-trigger__story-mark {
+  color: rgba(236, 226, 207, 0.56);
+  font-size: 1.4rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1;
+}
+
+.experience-settings-dialog {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  max-width: none;
+  height: 100vh;
+  height: 100dvh;
+  max-height: none;
+  margin: 0;
+  overflow: hidden;
+  border: 0;
+  padding: 12px;
+  color: inherit;
+  background: transparent;
+}
+
+.experience-settings-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.52);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+
+.experience-settings-dialog:focus {
+  outline: none;
+}
+
+.experience-settings-drawer {
+  position: absolute;
+  top: max(12px, env(safe-area-inset-top));
+  right: max(12px, env(safe-area-inset-right));
+  bottom: max(12px, env(safe-area-inset-bottom));
+  display: grid;
+  grid-auto-rows: max-content;
+  gap: 12px;
+  width: min(440px, calc(100vw - 24px));
+  overflow: auto;
+  overscroll-behavior: contain;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 28px;
+  padding: 16px;
+  color: rgba(255, 255, 255, 0.8);
+  background:
+    radial-gradient(circle at top right, rgba(216, 208, 186, 0.12), transparent 34%),
+    linear-gradient(180deg, rgba(10, 10, 13, 0.97), rgba(5, 5, 7, 0.95));
+  box-shadow: 0 30px 110px rgba(0, 0, 0, 0.58);
+  backdrop-filter: blur(22px) saturate(125%);
+  -webkit-backdrop-filter: blur(22px) saturate(125%);
+  animation: settings-drawer-enter 240ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  scrollbar-gutter: stable;
+}
+
+.experience-settings-drawer::-webkit-scrollbar {
+  width: 8px;
+}
+
+.experience-settings-drawer::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.experience-settings-drawer header {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px 12px;
+  align-items: start;
+}
+
+.experience-settings-drawer header > div {
+  display: grid;
+  gap: 5px;
+}
+
+.experience-settings-drawer header p,
+.experience-settings-drawer header h2,
+.experience-settings-drawer header span {
+  margin: 0;
+}
+
+.experience-settings-drawer header p {
+  color: rgba(216, 208, 186, 0.68);
+  font-size: 0.62rem;
+  font-weight: 850;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.experience-settings-drawer header h2 {
+  color: #fff;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.7rem, 5vw, 2rem);
+  font-weight: 500;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+.experience-settings-drawer header span {
+  max-width: 36ch;
+  color: rgba(255, 255, 255, 0.54);
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+.experience-settings-drawer header button {
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  padding: 8px 11px;
+  color: rgba(255, 255, 255, 0.78);
+  background: rgba(255, 255, 255, 0.07);
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 760;
+}
+
+.experience-settings-card {
+  display: grid;
+  min-width: 0;
+  gap: 12px;
+  margin: 0;
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 22px;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.055);
+}
+
+fieldset.experience-settings-card {
+  padding-top: 10px;
+}
+
+.experience-settings-card legend {
+  padding: 0 7px;
+  color: rgba(216, 208, 186, 0.82);
+  font-size: 0.64rem;
+  font-weight: 850;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.experience-settings-card span,
+.settings-section-heading span,
+.cloud-card span {
+  color: rgba(255, 255, 255, 0.52);
+  font-size: 0.62rem;
+  font-weight: 850;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.experience-settings-card strong,
+.settings-section-heading strong,
+.cloud-card strong {
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 780;
+}
+
+.journey-card > div:first-child,
+.settings-section-heading,
+.cloud-card > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.journey-meter {
+  position: relative;
+  overflow: hidden;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.journey-meter i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  display: block;
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgba(159, 182, 173, 0.8), rgba(216, 208, 186, 0.96));
+}
+
+.journey-card dl {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.journey-card dl div {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+  border-radius: 14px;
+  padding: 8px;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.journey-card dt,
+.journey-card dd {
+  margin: 0;
+}
+
+.journey-card dt {
+  color: rgba(255, 255, 255, 0.42);
+  font-size: 0.58rem;
+  font-weight: 820;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.journey-card dd {
+  overflow: hidden;
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 760;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.quality-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.quality-grid button,
+.settings-toggle-list button,
+.experience-settings-drawer footer button {
+  min-height: 44px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 18px;
+  padding: 10px;
+  color: rgba(255, 255, 255, 0.76);
+  background: rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  text-align: left;
+  transition:
+    transform 160ms ease,
+    color 160ms ease,
+    background 160ms ease,
+    border-color 160ms ease;
+}
+
+.quality-grid button:hover,
+.quality-grid button:focus-visible,
+.settings-toggle-list button:hover,
+.settings-toggle-list button:focus-visible,
+.experience-settings-drawer header button:hover,
+.experience-settings-drawer header button:focus-visible,
+.experience-settings-drawer footer button:hover,
+.experience-settings-drawer footer button:focus-visible,
+.settings-control-row select:hover,
+.settings-control-row select:focus-visible,
+.settings-range-row input:focus-visible {
+  outline: 2px solid rgba(255, 245, 206, 0.76);
+  outline-offset: 2px;
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.quality-grid button:hover,
+.settings-toggle-list button:hover,
+.experience-settings-drawer footer button:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.105);
+}
+
+.quality-grid button.is-active,
+.settings-toggle-list button.is-active {
+  border-color: rgba(216, 208, 186, 0.44);
+  background: rgba(216, 208, 186, 0.14);
+}
+
+.quality-grid button strong,
+.quality-grid button span {
+  display: block;
+}
+
+.quality-grid button span {
+  margin-top: 4px;
+  color: rgba(255, 255, 255, 0.46);
+  font-size: 0.66rem;
+  font-weight: 720;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.settings-toggle-list {
+  display: grid;
+  gap: 8px;
+}
+
+.settings-toggle-list button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-radius: 16px;
+}
+
+.settings-toggle-list button:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+  transform: none;
+}
+
+.settings-toggle-list button span {
+  letter-spacing: 0;
+  text-transform: none;
+  font-size: 0.8rem;
+  font-weight: 760;
+  color: rgba(255, 255, 255, 0.74);
+}
+
+.settings-toggle-list button strong {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 0.68rem;
+}
+
+.settings-control-row,
+.settings-range-row {
+  display: grid;
+  gap: 7px;
+  color: rgba(255, 255, 255, 0.74);
+  font-size: 0.78rem;
+  font-weight: 740;
+}
+
+.settings-control-row {
+  grid-template-columns: minmax(0, 1fr) minmax(150px, 0.9fr);
+  align-items: center;
+}
+
+.settings-control-row > span,
+.settings-range-row > span {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.78rem;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.settings-control-row select {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 13px;
+  padding: 8px 10px;
+  color: #fff;
+  color-scheme: dark;
+  background: rgba(0, 0, 0, 0.28);
+  font: inherit;
+}
+
+.settings-range-row {
+  grid-template-columns: minmax(0, 1fr) minmax(130px, 1fr) 50px;
+  align-items: center;
+}
+
+.settings-range-row input {
+  width: 100%;
+  accent-color: #d8d0ba;
+}
+
+.settings-range-row input:disabled {
+  opacity: 0.48;
+}
+
+.settings-range-row output {
+  color: #fff;
+  font-size: 0.72rem;
+  text-align: right;
+}
+
+.settings-help {
+  margin: -3px 0 0;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+.cloud-card {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.cloud-card.is-synced {
+  border-color: rgba(159, 182, 173, 0.3);
+}
+
+.cloud-card.is-error {
+  border-color: rgba(248, 113, 113, 0.34);
+}
+
+.cloud-card.is-working {
+  border-color: rgba(216, 208, 186, 0.28);
+}
+
+.cloud-card p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.experience-settings-drawer footer {
+  display: grid;
+  gap: 10px;
+  margin-top: 2px;
+}
+
+.experience-settings-drawer footer > div:first-child {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.experience-settings-drawer footer .settings-reset-button {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  padding: 9px 12px;
+}
+
+.experience-settings-drawer footer > div:first-child > span {
+  color: rgba(255, 255, 255, 0.48);
+  font-size: 0.7rem;
+  font-weight: 720;
+  text-align: right;
+}
+
+.settings-confirmation {
+  display: grid;
+  gap: 9px;
+  border: 1px solid rgba(248, 196, 113, 0.3);
+  border-radius: 18px;
+  padding: 13px;
+  background: rgba(58, 38, 18, 0.52);
+}
+
+.settings-confirmation > strong {
+  color: #fff5ce;
+}
+
+.settings-confirmation p,
+.settings-status {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+
+.settings-confirmation > div {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.settings-confirmation .settings-reset-confirm {
+  border-color: rgba(248, 113, 113, 0.44);
+  color: #ffe4e4;
+  background: rgba(127, 29, 29, 0.34);
+}
+
+.settings-status {
+  border-radius: 12px;
+  padding: 9px 11px;
+  color: rgba(218, 247, 230, 0.9);
+  background: rgba(42, 93, 67, 0.28);
+}
+
+.sidtw-settings-open {
+  overflow: hidden;
+}
+
+.sidtw-reduced-motion *,
+.sidtw-reduced-motion *::before,
+.sidtw-reduced-motion *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  scroll-behavior: auto !important;
+  transition-duration: 0.001ms !important;
+}
+
+.sidtw-high-contrast .experience-settings-drawer {
+  border-color: rgba(255, 255, 255, 0.48);
+  color: #fff;
+  background: rgba(0, 0, 0, 0.98);
+}
+
+@keyframes settings-drawer-enter {
+  from {
+    opacity: 0;
+    transform: translateX(28px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@media (max-width: 920px) {
+  .experience-settings-trigger {
+    top: auto;
+    right: max(10px, env(safe-area-inset-right));
+    bottom: max(10px, env(safe-area-inset-bottom));
+    z-index: 48;
+  }
+
+  .experience-settings-dialog {
+    padding: 0;
+  }
+
+  .experience-settings-drawer {
+    top: auto;
+    right: max(8px, env(safe-area-inset-right));
+    bottom: max(8px, env(safe-area-inset-bottom));
+    left: max(8px, env(safe-area-inset-left));
+    width: auto;
+    max-height: min(88vh, 760px);
+    max-height: min(88dvh, 760px);
+    border-radius: 26px 26px 20px 20px;
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+    animation-name: settings-sheet-enter;
+  }
+
+  @keyframes settings-sheet-enter {
+    from {
+      opacity: 0;
+      transform: translateY(32px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+@media (max-width: 560px) {
+  .experience-settings-drawer {
+    gap: 10px;
+    padding: 13px;
+  }
+
+  .journey-card dl {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .quality-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .settings-control-row,
+  .settings-range-row {
+    grid-template-columns: 1fr;
+  }
+
+  .settings-range-row output {
+    grid-column: 1;
+    text-align: left;
+  }
+
+  .experience-settings-drawer footer > div:first-child {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .experience-settings-drawer footer > div:first-child > span {
+    text-align: left;
+  }
+}
+
+@media (max-height: 560px) and (orientation: landscape) {
+  .experience-settings-drawer {
+    top: max(6px, env(safe-area-inset-top));
+    right: max(6px, env(safe-area-inset-right));
+    bottom: max(6px, env(safe-area-inset-bottom));
+    left: auto;
+    width: min(520px, 72vw);
+    max-height: none;
+    border-radius: 20px;
+    padding: 12px;
+  }
+}

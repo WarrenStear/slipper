@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2048" height="1024" viewBox="0 0 2048 1024">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#17211f"/>
+      <stop offset="0.42" stop-color="#0b1112"/>
+      <stop offset="1" stop-color="#030405"/>
+    </linearGradient>
+    <radialGradient id="threshold" cx="50%" cy="52%" r="32%">
+      <stop offset="0" stop-color="#c6b07a" stop-opacity="0.32"/>
+      <stop offset="0.35" stop-color="#847457" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#050506" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="blur">
+      <feGaussianBlur stdDeviation="16"/>
+    </filter>
+  </defs>
+  <rect width="2048" height="1024" fill="url(#sky)"/>
+  <ellipse cx="1024" cy="520" rx="540" ry="360" fill="url(#threshold)"/>
+  <g opacity="0.22" filter="url(#blur)">
+    <ellipse cx="360" cy="560" rx="420" ry="80" fill="#d8ddc6"/>
+    <ellipse cx="1620" cy="500" rx="520" ry="90" fill="#c7d0be"/>
+    <ellipse cx="980" cy="660" rx="820" ry="110" fill="#aeb9a9"/>
+  </g>
+  <g fill="#020403" opacity="0.95">
+    <path d="M44 1024 L70 1024 L58 100 Z"/><path d="M130 1024 L154 1024 L145 220 Z"/>
+    <path d="M230 1024 L260 1024 L246 130 Z"/><path d="M342 1024 L368 1024 L353 270 Z"/>
+    <path d="M455 1024 L480 1024 L467 110 Z"/><path d="M595 1024 L620 1024 L608 250 Z"/>
+    <path d="M735 1024 L762 1024 L748 80 Z"/><path d="M850 1024 L878 1024 L864 310 Z"/>
+    <path d="M1180 1024 L1206 1024 L1193 230 Z"/><path d="M1310 1024 L1342 1024 L1327 95 Z"/>
+    <path d="M1455 1024 L1484 1024 L1470 260 Z"/><path d="M1588 1024 L1614 1024 L1602 160 Z"/>
+    <path d="M1730 1024 L1764 1024 L1748 230 Z"/><path d="M1900 1024 L1930 1024 L1914 120 Z"/>
+  </g>
+  <g stroke="#030504" stroke-width="8" stroke-linecap="round" opacity="0.78">
+    <path d="M60 420 C130 360 180 330 230 250"/><path d="M246 390 C330 350 410 300 490 210"/>
+    <path d="M746 330 C820 300 870 245 940 160"/><path d="M1192 420 C1270 360 1340 300 1390 200"/>
+    <path d="M1470 480 C1560 390 1640 320 1700 245"/><path d="M1912 420 C1830 340 1780 280 1730 200"/>
+  </g>
+  <rect y="720" width="2048" height="304" fill="#010202" opacity="0.55"/>
+</svg>

@@ -1,0 +1,381 @@
+html,
+body,
+#root {
+  min-height: 100%;
+  min-height: var(--app-height, 100dvh);
+  overscroll-behavior: none;
+}
+
+.sidtw-touch-device .app-shell {
+  width: var(--app-width, 100vw);
+  height: var(--app-height, 100dvh);
+  min-height: var(--app-height, 100dvh);
+  overflow: hidden;
+}
+
+.sidtw-touch-device canvas {
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* A prior release injected a synthetic keyboard D-pad outside React. Keep it
+   inert even if stale HTML survives a hot reload; the analogue component is
+   now the only mobile movement surface. */
+#sidtw-mobile-controls,
+.sidtw-mobile-controls,
+.sidtw-mobile-pad,
+.sidtw-mobile-look-hint {
+  display: none !important;
+}
+
+/* Reserve the desktop top-right corner for cloud status. Once the reader or
+   map takes over, the in-HUD controls are redundant and the settings trigger
+   becomes the single compact utility surface. */
+.app-mode-explore .story-hud {
+  max-width: min(880px, calc(100vw - 340px));
+}
+
+.app-mode-read .cloud-journey-card,
+.app-mode-map .cloud-journey-card {
+  display: none !important;
+}
+
+/* The full semantic map workspace sits above the canvas in this app. Suppress
+   the older in-canvas HTML chooser so it cannot show through panel gaps or
+   create a duplicate keyboard-navigation tree. */
+.app-mode-map .slipper-map-fallback-panel {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* High contrast is a functional setting, so it must cover the threshold,
+   non-WebGL archive, and touch controls as well as the in-app panels. */
+html.sidtw-high-contrast .onboarding-gate,
+html.sidtw-high-contrast .accessible-archive {
+  color: #fff;
+  background: #000;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+html.sidtw-high-contrast .onboarding-card,
+html.sidtw-high-contrast .accessible-archive-search,
+html.sidtw-high-contrast .accessible-archive-chapter,
+html.sidtw-high-contrast .accessible-archive-fragment,
+html.sidtw-high-contrast .mobile-control-mode,
+html.sidtw-high-contrast .mobile-control-header-actions,
+html.sidtw-high-contrast .mobile-guided-actions,
+html.sidtw-high-contrast .mobile-joystick,
+html.sidtw-high-contrast .mobile-look-pad,
+html.sidtw-high-contrast .mobile-more-sheet {
+  border-color: #fff;
+  color: #fff;
+  background: #000;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+html.sidtw-high-contrast .onboarding-card :is(p, span),
+html.sidtw-high-contrast .accessible-archive :is(p, span, small),
+html.sidtw-high-contrast .mobile-explore-controls :is(p, span, strong, small) {
+  color: #fff;
+}
+
+html.sidtw-high-contrast .onboarding-actions button,
+html.sidtw-high-contrast .accessible-archive button,
+html.sidtw-high-contrast .mobile-explore-controls button {
+  border-color: #fff;
+  color: #fff;
+  background: #000;
+}
+
+html.sidtw-high-contrast .onboarding-actions button.primary,
+html.sidtw-high-contrast .mobile-control-mode button.is-active {
+  border-color: #fff;
+  color: #000;
+  background: #fff;
+}
+
+html.sidtw-high-contrast .onboarding-actions button:focus-visible,
+html.sidtw-high-contrast .accessible-archive :is(button, input, a):focus-visible,
+html.sidtw-high-contrast .mobile-explore-controls :is(button, [role="group"]):focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 3px;
+}
+
+@media (min-width: 861px) and (max-width: 1120px) {
+  .app-mode-explore .story-hud {
+    grid-template-columns: minmax(220px, 1fr) auto !important;
+    width: min(700px, calc(100vw - 354px)) !important;
+  }
+
+  .app-mode-explore .story-hud-actions {
+    grid-column: 1 / -1;
+  }
+
+  .app-mode-read .story-hud,
+  .app-mode-map .story-hud {
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    width: min(640px, calc(100vw - 180px)) !important;
+  }
+
+  .app-mode-read .story-hud-copy > p,
+  .app-mode-map .story-hud-copy > p,
+  .app-mode-read .story-hud-actions,
+  .app-mode-map .story-hud-actions {
+    display: none !important;
+  }
+
+  .app-mode-read .story-hud h2,
+  .app-mode-map .story-hud h2 {
+    overflow: hidden;
+    margin: 0;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .app-mode-map .map-workspace {
+    inset: 98px 14px 14px !important;
+  }
+}
+
+@media (max-width: 780px), (pointer: coarse) {
+  .sidtw-touch-device .story-hud {
+    top: max(10px, env(safe-area-inset-top));
+    left: max(10px, env(safe-area-inset-left));
+    right: max(10px, env(safe-area-inset-right));
+    width: auto;
+    max-width: none;
+    grid-template-columns: 1fr;
+    gap: 9px;
+    border-radius: 18px;
+    padding: 10px;
+  }
+
+  .sidtw-touch-device .story-hud h2 {
+    font-size: clamp(1rem, 5.4vw, 1.28rem);
+  }
+
+  .sidtw-touch-device .story-hud p:not(.story-hud-kicker),
+  .sidtw-touch-device .story-hud-stats {
+    display: none;
+  }
+
+  .sidtw-touch-device .story-mode-switch,
+  .sidtw-touch-device .story-hud-actions {
+    gap: 6px;
+  }
+
+  .sidtw-touch-device .story-mode-switch button,
+  .sidtw-touch-device .story-hud-actions button,
+  .sidtw-touch-device .reader-footer button {
+    min-height: 44px;
+    padding: 8px 10px;
+    font-size: 0.72rem;
+  }
+
+  .sidtw-touch-device .scene-quicknav,
+  .sidtw-touch-device .journey-trail,
+  .sidtw-touch-device .story-instructions {
+    display: none !important;
+  }
+
+  .sidtw-touch-device .reader-panel {
+    padding: calc(max(110px, env(safe-area-inset-top) + 96px)) 10px max(18px, env(safe-area-inset-bottom));
+  }
+
+  .sidtw-touch-device .reader-panel-inner {
+    max-height: calc(var(--app-height, 100dvh) - 132px);
+    border-radius: 20px;
+    padding: 20px;
+  }
+
+  .sidtw-touch-device .reader-panel h1 {
+    font-size: clamp(2rem, 12vw, 3.35rem);
+  }
+
+  .sidtw-touch-device .reader-body p {
+    font-size: 1rem;
+    line-height: 1.64;
+  }
+
+  .sidtw-touch-device .map-workspace {
+    inset: 108px 10px 10px;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    overflow: auto;
+    pointer-events: auto;
+  }
+
+  .sidtw-touch-device .map-workspace .constellation-panel,
+  .sidtw-touch-device .map-workspace .archive-index {
+    min-height: 420px;
+  }
+
+  .sidtw-touch-device .slipper-story-card {
+    max-width: min(84vw, 360px) !important;
+    padding: 16px;
+    border-radius: 18px;
+  }
+
+  .sidtw-touch-device .slipper-story-title {
+    font-size: clamp(1.45rem, 8vw, 2.35rem);
+  }
+
+  .sidtw-touch-device .slipper-story-body p {
+    font-size: 0.92rem;
+    line-height: 1.58;
+  }
+}
+
+/*
+  This sheet is imported after the desktop polish layer. These final rules
+  keep legacy desktop declarations from winning the mobile cascade.
+*/
+@media (max-width: 860px), (pointer: coarse) {
+  html[data-mobile="true"] .story-hud {
+    top: max(8px, env(safe-area-inset-top)) !important;
+    right: max(8px, env(safe-area-inset-right)) !important;
+    left: max(8px, env(safe-area-inset-left)) !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    gap: 8px !important;
+    width: auto !important;
+    max-width: none !important;
+    padding: 9px 10px !important;
+    border-radius: 16px !important;
+  }
+
+  html[data-mobile="true"] .story-hud-copy {
+    min-width: 0;
+  }
+
+  html[data-mobile="true"] .story-hud-copy .story-hud-kicker,
+  html[data-mobile="true"] .story-hud-copy > p:not(.story-hud-guidance),
+  html[data-mobile="true"] .story-hud-actions {
+    display: none !important;
+  }
+
+  html[data-mobile="true"] .story-hud h2 {
+    overflow: hidden;
+    margin: 0;
+    font-size: clamp(0.92rem, 4.6vw, 1.16rem) !important;
+    line-height: 1.1;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  html[data-mobile="true"] .story-mode-switch {
+    display: flex !important;
+    grid-template-columns: none !important;
+    align-self: center;
+    flex-wrap: nowrap;
+    gap: 2px !important;
+    width: auto !important;
+    padding: 2px;
+  }
+
+  html[data-mobile="true"] .story-mode-switch button {
+    width: auto !important;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 6px 8px;
+    font-size: 0.68rem;
+  }
+
+  html[data-mobile="true"] .contextual-nav-prompt,
+  html[data-mobile="true"] section[aria-label="Live mini-map"],
+  html[data-mobile="true"] .cloud-journey-card {
+    display: none !important;
+  }
+
+  html[data-mobile="true"] .reader-panel {
+    padding:
+      calc(68px + max(8px, env(safe-area-inset-top)))
+      max(8px, env(safe-area-inset-right))
+      max(8px, env(safe-area-inset-bottom))
+      max(8px, env(safe-area-inset-left)) !important;
+  }
+
+  html[data-mobile="true"] .reader-panel-inner {
+    width: 100% !important;
+    height: 100%;
+    max-height: none !important;
+    overflow-y: auto;
+    border-radius: 18px !important;
+    padding: 24px 18px calc(190px + env(safe-area-inset-bottom)) !important;
+    scroll-padding-bottom: 190px;
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  html[data-mobile="true"] .app-mode-read .reader-kicker {
+    padding-right: 112px;
+  }
+
+  html[data-mobile="true"] .reader-footer {
+    position: fixed;
+    right: max(8px, env(safe-area-inset-right));
+    bottom: max(8px, env(safe-area-inset-bottom));
+    left: max(8px, env(safe-area-inset-left));
+    z-index: 42;
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 6px !important;
+    width: auto !important;
+    margin: 0;
+    padding: 8px;
+  }
+
+  html[data-mobile="true"] .reader-footer button {
+    width: auto !important;
+    min-width: 0;
+    min-height: 46px;
+    padding: 7px;
+    font-size: 0.68rem;
+  }
+
+  html[data-mobile="true"] .map-workspace {
+    inset:
+      calc(68px + max(8px, env(safe-area-inset-top)))
+      max(8px, env(safe-area-inset-right))
+      max(8px, env(safe-area-inset-bottom))
+      max(8px, env(safe-area-inset-left)) !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-rows: auto minmax(0, 1fr) !important;
+    gap: 8px !important;
+    overflow: hidden !important;
+  }
+
+  html[data-mobile="true"] .map-workspace > [role="tabpanel"] {
+    width: 100%;
+    min-width: 0;
+    min-height: 0;
+  }
+
+  html[data-mobile="true"] .map-workspace > [role="tabpanel"][hidden] {
+    display: none !important;
+  }
+
+  html[data-mobile="true"] .map-workspace .constellation-panel,
+  html[data-mobile="true"] .map-workspace .archive-index {
+    width: 100%;
+    height: 100%;
+    min-height: 0 !important;
+    max-height: none;
+  }
+
+  html[data-mobile="true"] .app-mode-map + .experience-settings-trigger {
+    top: auto !important;
+    right: max(10px, env(safe-area-inset-right)) !important;
+    bottom: max(10px, env(safe-area-inset-bottom)) !important;
+  }
+}
+
+@media (max-width: 860px) and (orientation: landscape), (pointer: coarse) and (orientation: landscape) {
+  html[data-mobile="true"] .reader-footer {
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+  }
+}

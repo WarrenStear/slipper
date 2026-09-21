@@ -1,0 +1,5 @@
+{
+  "package": "slipper-in-the-woods-runtime-safe",
+  "builtAt": "2026-04-30T13:30:00+02:00",
+  "notes": "Runtime-safe Canvas boundary, WebGL fallback, and missing-asset fallbacks."
+}

@@ -1,0 +1,34 @@
+name = "slipper-in-the-woods"
+compatibility_date = "2026-04-30"
+pages_build_output_dir = "./dist"
+
+# Phase 4 persistence is intentionally disabled for the first successful Pages deploy.
+# The frontend and Pages Functions will publish without KV bindings.
+#
+# When you are ready to activate cross-device saving/magic links:
+# 1. Create the KV namespaces in Cloudflare.
+# 2. Replace the placeholder KV bindings below with real namespace IDs.
+# 3. Add MAGIC_LINK_SECRET in Cloudflare Pages → Settings → Environment variables.
+# 4. Add EMAIL_WEBHOOK_URL if production emails should be sent.
+#
+# [[kv_namespaces]]
+# binding = "SIDTW_JOURNEY_KV"
+# id = "PASTE_REAL_JOURNEY_NAMESPACE_ID_HERE"
+# preview_id = "PASTE_REAL_JOURNEY_PREVIEW_NAMESPACE_ID_HERE"
+#
+# [[kv_namespaces]]
+# binding = "SIDTW_MAGIC_KV"
+# id = "PASTE_REAL_MAGIC_NAMESPACE_ID_HERE"
+# preview_id = "PASTE_REAL_MAGIC_PREVIEW_NAMESPACE_ID_HERE"
+
+[vars]
+APP_ORIGIN = "https://slipperinthewoods.com"
+SESSION_MAX_AGE_DAYS = "30"
+ENABLE_DEV_MAGIC_LINK = "false"
+
+# Optional production email sender webhook. If omitted, /api/magic-link will not expose
+# a devMagicLink unless ENABLE_DEV_MAGIC_LINK is explicitly set to "true".
+# EMAIL_WEBHOOK_URL = "https://your-email-sender.example/send"
+
+# Required later for Phase 4:
+# MAGIC_LINK_SECRET should be added as a Cloudflare Pages secret/environment variable.

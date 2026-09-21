@@ -1,0 +1,44 @@
+name: Woodland and ending presentation
+on:
+  pull_request:
+    paths:
+      - 'src/components/three/environment/**'
+      - 'src/components/three/chapters/EnchantedWoodChapter.tsx'
+      - 'src/components/three/chapters/IntegratedFinalTableau.tsx'
+      - 'src/components/three/cinematics/**'
+      - 'tests/woodland-presentation.test.mjs'
+      - 'scripts/review-woodland-presentation.mjs'
+      - '.github/workflows/woodland-presentation.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: woodland-presentation-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  woodland:
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm install --global npm@10.9.2
+      - run: npm ci
+      - name: Validate exact application candidate
+        run: npm run check
+      - run: npx playwright install --with-deps chromium
+      - name: Compare woodland and ending composition and rendering cost
+        run: node scripts/review-woodland-presentation.mjs
+      - name: Retain bounded visual and rendering evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: woodland-presentation-evidence
+          path: /tmp/slipper-woodland-review
+          if-no-files-found: warn
+          retention-days: 7

@@ -1,0 +1,207 @@
+.gift-dedication {
+  position: fixed;
+  z-index: 90;
+  inset: 0;
+  display: grid;
+  min-height: 100dvh;
+  place-items: center;
+  overflow: hidden;
+  padding:
+    max(2rem, env(safe-area-inset-top))
+    max(1.5rem, env(safe-area-inset-right))
+    max(2rem, env(safe-area-inset-bottom))
+    max(1.5rem, env(safe-area-inset-left));
+  color: #eee9df;
+  background: #010202;
+  isolation: isolate;
+}
+
+.gift-dedication::before {
+  position: absolute;
+  z-index: -2;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 31%, rgba(193, 211, 218, 0.075), transparent 28rem),
+    radial-gradient(circle at 50% 112%, rgba(182, 145, 94, 0.06), transparent 36rem);
+  content: "";
+}
+
+.gift-dedication:focus {
+  outline: none;
+}
+
+.gift-dedication__stars {
+  position: absolute;
+  z-index: -1;
+  inset: 8% 4%;
+  opacity: 0.3;
+  background-image:
+    radial-gradient(circle, rgba(222, 231, 232, 0.65) 0 1px, transparent 1.5px),
+    radial-gradient(circle, rgba(221, 197, 157, 0.5) 0 1px, transparent 1.5px);
+  background-position: 0 0, 3.7rem 5.1rem;
+  background-size: 9.5rem 10.7rem, 12.8rem 13.9rem;
+  -webkit-mask-image: radial-gradient(circle at center, #000, transparent 74%);
+  mask-image: radial-gradient(circle at center, #000, transparent 74%);
+}
+
+.gift-dedication__content {
+  display: grid;
+  width: min(38rem, 100%);
+  justify-items: center;
+  gap: clamp(2rem, 7vh, 4.75rem);
+  text-align: center;
+}
+
+.gift-dedication__heading,
+.gift-dedication__message {
+  display: grid;
+  justify-items: center;
+}
+
+.gift-dedication__heading {
+  gap: 0.8rem;
+}
+
+.gift-dedication__heading h1 {
+  margin: 0;
+  color: #f5f1e8;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(2.35rem, 7vw, 5.8rem);
+  font-weight: 400;
+  letter-spacing: -0.045em;
+  line-height: 0.98;
+  text-wrap: balance;
+}
+
+.gift-dedication__heading > p {
+  margin: 0;
+  color: rgba(211, 220, 218, 0.68);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1rem, 2.4vw, 1.3rem);
+  font-style: italic;
+  letter-spacing: 0.035em;
+}
+
+.gift-dedication__message {
+  gap: 0.55rem;
+  max-width: 31rem;
+}
+
+.gift-dedication__message p {
+  margin: 0;
+  color: rgba(239, 235, 225, 0.74);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.05rem, 2.2vw, 1.3rem);
+  line-height: 1.65;
+  text-wrap: balance;
+}
+
+.gift-dedication__message .gift-dedication__recipient {
+  margin-bottom: 0.9rem;
+  color: #f1dfbb;
+  font-size: clamp(1.25rem, 2.8vw, 1.65rem);
+}
+
+.gift-dedication button {
+  min-width: min(18rem, 100%);
+  min-height: 3.25rem;
+  border: 1px solid rgba(229, 207, 166, 0.46);
+  border-radius: 999px;
+  padding: 0.8rem 1.5rem;
+  color: #f3e5c8;
+  background: rgba(177, 140, 83, 0.08);
+  box-shadow: 0 0 2.6rem rgba(190, 147, 82, 0.06);
+  cursor: pointer;
+  font: 650 0.82rem/1.2 system-ui, sans-serif;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transition:
+    border-color 240ms ease,
+    background 240ms ease,
+    box-shadow 240ms ease,
+    color 240ms ease,
+    transform 240ms ease;
+}
+
+.gift-dedication button:hover,
+.gift-dedication button:focus-visible {
+  border-color: rgba(244, 223, 181, 0.9);
+  outline: none;
+  color: #fff8e9;
+  background: rgba(199, 158, 91, 0.15);
+  box-shadow: 0 0 3.2rem rgba(205, 162, 92, 0.14);
+  transform: translateY(-1px);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .gift-dedication {
+    animation: gift-dedication-fade-from-black 1.8s ease both;
+  }
+
+  .gift-dedication__heading,
+  .gift-dedication__message,
+  .gift-dedication button {
+    animation: gift-dedication-rise 1.25s cubic-bezier(0.2, 0.68, 0.2, 1) both;
+  }
+
+  .gift-dedication__message {
+    animation-delay: 1.15s;
+  }
+
+  .gift-dedication button {
+    animation-delay: 2.25s;
+  }
+}
+
+@keyframes gift-dedication-fade-from-black {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes gift-dedication-rise {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 520px) {
+  .gift-dedication__content {
+    gap: clamp(1.75rem, 6vh, 3.25rem);
+  }
+
+  .gift-dedication__heading h1 {
+    font-size: clamp(2.4rem, 13vw, 4rem);
+  }
+
+  .gift-dedication button {
+    min-width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gift-dedication,
+  .gift-dedication__heading,
+  .gift-dedication__message,
+  .gift-dedication button {
+    animation: none;
+    transition: none;
+  }
+
+  .gift-dedication button:hover,
+  .gift-dedication button:focus-visible {
+    transform: none;
+  }
+}
+
+.sidtw-reduced-motion .gift-dedication,
+.sidtw-reduced-motion .gift-dedication__heading,
+.sidtw-reduced-motion .gift-dedication__message,
+.sidtw-reduced-motion .gift-dedication button {
+  animation: none;
+  transition: none;
+}

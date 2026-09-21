@@ -1,0 +1,49 @@
+name: Cinematography and material review
+on:
+  pull_request:
+    paths:
+      - 'src/cinematics/shotComposition.ts'
+      - 'src/components/three/cinematics/**'
+      - 'src/components/three/environment/**'
+      - 'src/components/three/storyEvents/TactileMaterial.tsx'
+      - 'src/components/three/storyEvents/tactileShader.ts'
+      - 'src/components/three/chapters/ChapterPrimitives.tsx'
+      - 'src/components/three/chapters/surfaceGeometry.ts'
+      - 'src/components/three/journey/JourneyWorldComposition.tsx'
+      - 'tests/surface-materials.test.mjs'
+      - 'tests/shot-composition.test.mjs'
+      - 'scripts/review-cinematography.mjs'
+      - '.github/workflows/cinematography-review.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: cinematography-review-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  cinematography:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm install --global npm@10.9.2
+      - run: npm ci
+      - name: Validate exact candidate and story contracts
+        run: npm run check && node --experimental-strip-types --test tests/surface-materials.test.mjs
+      - run: npx playwright install --with-deps chromium
+      - name: Compare five chapters and exercise camera input ownership
+        run: node scripts/review-cinematography.mjs
+      - name: Preserve captures, measurements and failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cinematography-presentation-evidence
+          path: /tmp/slipper-cinematography-review
+          if-no-files-found: warn
+          retention-days: 7
