@@ -3148,6 +3148,7 @@ function HillyForestGround({
   }, []);
 
   const workerRef = useRef<Worker | null>(null);
+  const [workerError, setWorkerError] = useState<Error | null>(null);
   const requestIdRef = useRef(0);
   const colliderRevisionRef = useRef(0);
   const clearingSeeds = useMemo(() => packForestClearingSeeds(entries), [entries]);
@@ -3195,6 +3196,11 @@ function HillyForestGround({
   useEffect(() => {
     const worker = new Worker(new URL("../../workers/forestWorker.ts", import.meta.url), { type: "module" });
     workerRef.current = worker;
+    const handleWorkerFailure = () => {
+      setWorkerError(new Error("The terrain could not be prepared. Please reload or continue with the text journey."));
+    };
+    worker.addEventListener("error", handleWorkerFailure);
+    worker.addEventListener("messageerror", handleWorkerFailure);
 
     worker.onmessage = (event: MessageEvent<ForestWorkerResponse>) => {
       const result = event.data;
@@ -3212,6 +3218,9 @@ function HillyForestGround({
     };
 
     return () => {
+      worker.removeEventListener("error", handleWorkerFailure);
+      worker.removeEventListener("messageerror", handleWorkerFailure);
+      worker.onmessage = null;
       worker.terminate();
       workerRef.current = null;
     };
@@ -3267,6 +3276,9 @@ function HillyForestGround({
   ]);
 
   useEffect(() => () => geometry.dispose(), [geometry]);
+
+  // Worker errors are asynchronous; rethrow during render so the canvas can recover.
+  if (workerError) throw workerError;
 
   return (
     <RigidBody type="fixed" colliders={false}>
@@ -3480,6 +3492,7 @@ function ContinuousForestBed({
   const clearingCrownGeometry = useMemo(() => createOrganicCrownGeometry(1), []);
 
   const workerRef = useRef<Worker | null>(null);
+  const [workerError, setWorkerError] = useState<Error | null>(null);
   const requestIdRef = useRef(0);
   const lastCellRef = useRef({
     cellX: Number.NaN,
@@ -3568,6 +3581,11 @@ function ContinuousForestBed({
 
     const worker = new Worker(new URL("../../workers/forestWorker.ts", import.meta.url), { type: "module" });
     workerRef.current = worker;
+    const handleWorkerFailure = () => {
+      setWorkerError(new Error("The forest could not be prepared. Please reload or continue with the text journey."));
+    };
+    worker.addEventListener("error", handleWorkerFailure);
+    worker.addEventListener("messageerror", handleWorkerFailure);
 
     worker.onmessage = (event: MessageEvent<ForestWorkerResponse>) => {
       const result = event.data;
@@ -3600,6 +3618,9 @@ function ContinuousForestBed({
     };
 
     return () => {
+      worker.removeEventListener("error", handleWorkerFailure);
+      worker.removeEventListener("messageerror", handleWorkerFailure);
+      worker.onmessage = null;
       worker.terminate();
       workerRef.current = null;
     };
@@ -3676,6 +3697,8 @@ function ContinuousForestBed({
 
     requestForestBuild(cellX, cellZ);
   });
+
+  if (workerError) throw workerError;
 
   return (
     <group>

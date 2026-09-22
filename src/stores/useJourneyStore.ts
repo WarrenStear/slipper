@@ -5,6 +5,7 @@ import { STORY_EVENT_WORLD_FLAG_IDS } from "../storyEvents/storyEventRegistry";
 import type { StoryEventInput } from "../storyEvents/storyEventTypes";
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
+import { safeBrowserStorage } from "../lib/safeStorage";
 import type { NarrativeWorldState } from "../components/three/StoryScene";
 import type { Vector3Tuple } from "../data/slipper3dTypes";
 import {
@@ -19,6 +20,7 @@ import {
 import { entries } from "../data/slipperContent";
 import {
   createFreshStoryJourneyState,
+  isSupportedStoryJourneyState,
   JOURNEY_ACT_IDS,
   JOURNEY_CHAPTER_IDS,
   JOURNEY_HISTORY_LIMIT,
@@ -64,6 +66,8 @@ export type JourneyStore = StoryJourneyState & {
   playerPosition: Vector3Tuple | null;
   sceneRelocationRevision: number;
   isInitialized: boolean;
+  /** Local-only provenance: an existing save or intentional change, not a generated opening. */
+  hasLocalJourney: boolean;
   narrativeWorldState: NarrativeWorldState;
   cloudStatus: JourneyCloudStatus;
   cloudMessage: string | null;
@@ -123,6 +127,14 @@ const JOURNEY_WORLD_FLAG_ID_SET = new Set<string>([...JOURNEY_WORLD_FLAG_IDS, ..
 const JOURNEY_LANDMARK_ID_SET = new Set<string>(JOURNEY_LANDMARK_IDS);
 const JOURNEY_RECOVERED_KEY_ID_SET = new Set<string>(JOURNEY_RECOVERED_KEY_IDS);
 const JOURNEY_SYMBOLIC_OBJECT_ID_SET = new Set<string>(JOURNEY_SYMBOLIC_OBJECT_IDS);
+
+function hasStoredJourneyNavigation(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const candidate = value as Record<string, unknown>;
+  const isEntryId = (entryId: unknown) => typeof entryId === "string" && ENTRY_MAP.has(entryId);
+  return isEntryId(candidate.activeEntryId) ||
+    [candidate.history, candidate.visitedEntryIds].some((ids) => Array.isArray(ids) && ids.some(isEntryId));
+}
 
 function storySanitizeOptions(fallbackEntryId = ALL_ENTRY_IDS[0] ?? "") {
   return {
@@ -226,6 +238,7 @@ export const useJourneyStore = create<JourneyStore>()(
         const sanitized = sanitizeStoryJourneyState(snapshot, storySanitizeOptions(snapshot.activeEntryId));
         set({
           ...withNarrativeWorldState(sanitized),
+          hasLocalJourney: true,
           cloudStatus: state.cloudSubject ? "saving" : state.cloudStatus,
         });
       };
@@ -244,6 +257,7 @@ export const useJourneyStore = create<JourneyStore>()(
         playerPosition: null,
         sceneRelocationRevision: 0,
         isInitialized: false,
+        hasLocalJourney: false,
         narrativeWorldState: FALLBACK_NARRATIVE_WORLD_STATE,
         cloudStatus: "local",
         cloudMessage: null,
@@ -265,7 +279,14 @@ export const useJourneyStore = create<JourneyStore>()(
                 ...storySanitizeOptions(fallbackEntryId),
                 validEntryIds,
               });
-          set({ ...withNarrativeWorldState(snapshot), isInitialized: true });
+          set({
+            ...withNarrativeWorldState(snapshot),
+            isInitialized: true,
+            // A generated opening timestamp must not outrank an existing cloud save.
+            hasLocalJourney: current.hasLocalJourney || Boolean(
+              !currentIsValid && legacySnapshot?.activeEntryId && validIds.has(legacySnapshot.activeEntryId)
+            ),
+          });
         },
 
         setActiveEntry: (entryId) => {
@@ -296,6 +317,7 @@ export const useJourneyStore = create<JourneyStore>()(
 
           set({
             ...withNarrativeWorldState(snapshot),
+            hasLocalJourney: true,
             lastSafeEntryId: entryId,
             playerPosition: null,
             cloudStatus: state.cloudSubject ? "saving" : state.cloudStatus,
@@ -353,6 +375,7 @@ export const useJourneyStore = create<JourneyStore>()(
           );
           set({
             ...withNarrativeWorldState(snapshot),
+            hasLocalJourney: true,
             lastSafeEntryId: previousEntryId,
             playerPosition: null,
             sceneRelocationRevision: state.sceneRelocationRevision + 1,
@@ -374,6 +397,7 @@ export const useJourneyStore = create<JourneyStore>()(
             playerPosition: null,
             sceneRelocationRevision: current.sceneRelocationRevision + 1,
             isInitialized: true,
+            hasLocalJourney: true,
             cloudLoadedAt: options?.source === "cloud" ? now() : current.cloudLoadedAt,
           });
         },
@@ -383,6 +407,7 @@ export const useJourneyStore = create<JourneyStore>()(
           const snapshot = createFreshStoryJourneyState(storySanitizeOptions(initialEntryId));
           set({
             ...withNarrativeWorldState(snapshot),
+            hasLocalJourney: true,
             bookmarkedEntryIds: [],
             lastSafeEntryId: snapshot.activeEntryId,
             playerPosition: null,
@@ -582,12 +607,15 @@ export const useJourneyStore = create<JourneyStore>()(
     {
       name: "sidtw:journey:v3",
       version: 6,
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() => safeBrowserStorage),
       // Persist v6 adds the schema-v2 narrative chapter/scene projection. The
       // story sanitizer performs the explicit v1 migration without widening
       // the navigation-only cloud contract. Layouts before v4 also discard the
       // one player coordinate that belonged to the earlier physical world.
       migrate: (persistedState, version) => {
+        if (!hasStoredJourneyNavigation(persistedState) || !isSupportedStoryJourneyState(persistedState)) {
+          return persistedState;
+        }
         let migrated = persistedState;
         if (
           version < 4 &&
@@ -604,18 +632,26 @@ export const useJourneyStore = create<JourneyStore>()(
       },
       partialize: (state) => ({
         ...storySnapshotFrom(state),
+        // Keep generated opening state distinguishable after a failed restore
+        // and reload, while intentional resets remain authoritative local saves.
+        hasLocalJourney: state.hasLocalJourney,
         bookmarkedEntryIds: state.bookmarkedEntryIds,
         lastSafeEntryId: state.lastSafeEntryId,
         playerPosition: state.playerPosition,
       }),
       merge: (persisted, current) => {
+        // Zustand merges even when the key is missing. Keep the empty initial
+        // entry so initializeJourney can still import the legacy journey.
+        if (!hasStoredJourneyNavigation(persisted) || !isSupportedStoryJourneyState(persisted)) return current;
         const persistedSnapshot = persisted as
           | (Partial<StoryJourneyState> & {
               bookmarkedEntryIds?: unknown;
               lastSafeEntryId?: unknown;
               playerPosition?: unknown;
+              hasLocalJourney?: unknown;
             })
           | undefined;
+        if (persistedSnapshot?.hasLocalJourney === false) return current;
         const snapshot = sanitizeStoryJourneyState(persistedSnapshot, storySanitizeOptions());
         const validIds = validIdSet(ALL_ENTRY_IDS);
         const lastSafeEntryId =
@@ -625,6 +661,7 @@ export const useJourneyStore = create<JourneyStore>()(
         return {
           ...current,
           ...withNarrativeWorldState(snapshot),
+          hasLocalJourney: true,
           bookmarkedEntryIds: sanitizeEntryIds(persistedSnapshot?.bookmarkedEntryIds, validIds, DEFAULT_MAX_BOOKMARKS),
           lastSafeEntryId,
           playerPosition: sanitizePosition(persistedSnapshot?.playerPosition),

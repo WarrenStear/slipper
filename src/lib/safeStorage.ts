@@ -15,3 +15,10 @@ export function removeBrowserStorage(key: string): boolean {
     window.localStorage.removeItem(key); return true;
   } catch { return false; }
 }
+
+/** Zustand storage must stay callable even if storage is blocked or becomes full. */
+export const safeBrowserStorage = {
+  getItem: readBrowserStorage,
+  setItem: (key: string, value: string): void => { writeBrowserStorage(key, value); },
+  removeItem: (key: string): void => { removeBrowserStorage(key); },
+};

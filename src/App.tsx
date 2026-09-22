@@ -13,6 +13,9 @@ import AccessibleArchive from "./components/ui/AccessibleArchive";
 import AccessibleStoryJourney from "./components/ui/AccessibleStoryJourney";
 import MobileExploreControls from "./components/ui/MobileExploreControls";
 import OnboardingGate from "./components/ui/OnboardingGate";
+import { RenderRecoveryBoundary } from "./components/ui/RenderRecovery";
+import { TEXT_JOURNEY_REQUEST_EVENT, textJourneyUrl } from "./lib/textJourney";
+import { resetPlayerInput } from "./stores/usePlayerInputStore";
 import {
   getJourneyChapterForEntry,
   getJourneySceneForEntry,
@@ -85,10 +88,11 @@ export function requiresAccessibleJourney() {
 
   try {
     const canvas = document.createElement("canvas");
-    return !(
-      canvas.getContext("webgl2", { failIfMajorPerformanceCaveat: true }) ||
-      canvas.getContext("webgl", { failIfMajorPerformanceCaveat: true })
-    );
+    // Three.js r171 requires WebGL2. Release this probe before the real scene
+    // allocates a context, including StrictMode's repeated initialization.
+    const context = canvas.getContext("webgl2", { failIfMajorPerformanceCaveat: true });
+    context?.getExtension("WEBGL_lose_context")?.loseContext();
+    return !context;
   } catch {
     return true;
   }
@@ -265,7 +269,7 @@ function ContextualNavigationPrompt({ sceneProximity }: { sceneProximity: SceneP
 export default function App() {
   const legacyJourney = useMemo(() => loadStoredJourney(VALID_ENTRY_IDS, FIRST_ENTRY_ID), []);
   const mobileViewport = useMobileViewport();
-  const accessibleJourney = useMemo(() => requiresAccessibleJourney(), []);
+  const [accessibleJourney, setAccessibleJourney] = useState(requiresAccessibleJourney);
   const [experienceStarted, setExperienceStarted] = useState(false);
   const [sessionJourneyMode, setSessionJourneyMode] = useState<"first-journey" | "returning-journey" | null>(null);
   const [archiveOpen, setArchiveOpen] = useState(false);
@@ -353,6 +357,20 @@ export default function App() {
   const setControls = useWorldStore((state) => state.setControls);
   const setSceneProximity = useWorldStore((state) => state.setSceneProximity);
   const setWorldNarrativeState = useWorldStore((state) => state.setNarrativeWorldState);
+  const enterTextJourney = useCallback(() => {
+    if (document.pointerLockElement) document.exitPointerLock?.();
+    resetPlayerInput();
+    setAccessibleJourney(true);
+    setArchiveOpen(false);
+    setStoryTransitionPhase("idle");
+    setMode("explore");
+    window.history.replaceState(window.history.state, "", textJourneyUrl());
+  }, [setMode]);
+
+  useEffect(() => {
+    window.addEventListener(TEXT_JOURNEY_REQUEST_EVENT, enterTextJourney);
+    return () => window.removeEventListener(TEXT_JOURNEY_REQUEST_EVENT, enterTextJourney);
+  }, [enterTextJourney]);
   const handleSceneProximityChange = useCallback((next: SceneProximityState) => {
     const previous = previousPlayerPositionRef.current;
     const current = next.playerPosition;
@@ -990,6 +1008,7 @@ export default function App() {
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (!experienceStarted || archiveOpen || isExperienceSettingsOpen()) return;
+      if (event.ctrlKey || event.metaKey || event.altKey || event.isComposing) return;
       if (event.defaultPrevented) return;
       const target = event.target as HTMLElement | null;
       const isInteractive = Boolean(
@@ -1162,6 +1181,7 @@ export default function App() {
   }
 
   return (
+    <RenderRecoveryBoundary onContinueTextJourney={enterTextJourney}>
     <main
       id="primary-experience"
       data-experience-root
@@ -1223,6 +1243,7 @@ export default function App() {
               handleFinalConstellationFormationComplete
             }
             onPlayerProximityChange={handleSceneProximityChange}
+            onContinueTextJourney={enterTextJourney}
           />
         </Suspense>
       ) : null}
@@ -1651,5 +1672,6 @@ export default function App() {
       ) : null}
 
     </main>
+    </RenderRecoveryBoundary>
   );
 }

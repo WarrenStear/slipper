@@ -305,6 +305,11 @@ export function AccessibleStoryJourney({
     [entryById, journey],
   );
 
+  const chapterHeadingRef = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    chapterHeadingRef.current?.focus({ preventScroll: true });
+  }, [activeEntry?.id]);
+
   if (!activeEntry) {
     return (
       <main className="accessible-story-journey" data-accessible-journey="true">
@@ -337,7 +342,7 @@ export function AccessibleStoryJourney({
       <header className="accessible-story-journey__header">
         <div>
           <p>Slipper in the Woods · text journey</p>
-          <h1>{activeChapter?.title ?? "The remembered path"}</h1>
+          <h1 ref={chapterHeadingRef} tabIndex={-1}>{activeChapter?.title ?? "The remembered path"}</h1>
           <span>
             {capabilities.showJourneyMetrics
               ? `Chapter ${chapterNumber} of ${journeyChapters.length}${activeScene ? ` · ${activeScene.title}` : ""}`

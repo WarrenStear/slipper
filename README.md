@@ -97,12 +97,12 @@ docs/                       architecture, mobile, browser, and test guidance
 | `npm run dev` | Run Vite locally. |
 | `npm run validate` | Check required mobile architecture, tooling, browser projects, and world references. |
 | `npm run lint` | Run the checked-in project-specific static source lint. |
-| `npm run test:unit` | Run mobile input and journey-recovery Node tests. |
+| `npm run test:unit` | Run all automatically discovered unit test suites. |
 | `npm run test:security` | Run session/payload tests and static security safeguards. |
 | `npm run check` | Run all non-browser validation, build, and Pages Functions compilation. |
 | `npm run build` | Finalize/precompute world state, typecheck, and build Vite. |
-| `npm run test:e2e` | Build and run all five Playwright projects. |
-| `npm run test:e2e:mobile` | Build and run Pixel-class Chromium and iPhone-class WebKit projects. |
+| `npm run test:e2e` | Run all five Playwright projects after `npm run build`. |
+| `npm run test:e2e:mobile` | Run Pixel-class Chromium and iPhone-class WebKit projects after building. |
 | `npm run wrangler:check` | Compile Pages Functions locally without publishing. |
 | `npm run dev:pages` | Build and run Cloudflare Pages Functions locally. |
 | `npm run deploy:pages` | Deploy `dist/` to Cloudflare Pages. |
@@ -136,6 +136,11 @@ The mobile experience shares the desktop world and journey model:
 The semantic archive remains available without walking the 3D world. Unread
 fragment prose is excluded from archive search and previews; unread entries
 offer guidance instead.
+
+Choose **Continue with text journey** in accessibility settings to follow the
+same story and choices without 3D, keeping your current place. Browsers without
+WebGL2 use that journey automatically. If a scene or forest worker fails to
+load, a keyboard-accessible recovery dialog offers the text journey or a reload.
 
 See:
 

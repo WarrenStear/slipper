@@ -190,9 +190,12 @@ test("cloud hydration reaches readiness before the start action can mutate story
   const onboarding = source("src/components/ui/OnboardingGate.tsx");
 
   assert.match(cloudSync, /const \[bootstrapReady, setBootstrapReady\] = useState\(false\)/);
-  assert.match(cloudSync, /if \(!isInitialized \|\| bootstrappedRef\.current\) return/);
-  assert.match(cloudSync, /hydrateJourney\(payload\.journey, \{ source: "cloud" \}\);[\s\S]{0,500}setBootstrapReady\(true\)/);
+  assert.match(cloudSync, /if \(!isInitialized \|\| cloudReadyRef\.current\) return/);
+  assert.match(cloudSync, /hydrateJourney\(payload\.journey, \{ source: "cloud" \}\);[\s\S]{0,800}setBootstrapReady\(true\)/);
   assert.match(cloudSync, /if \(!isInitialized \|\| !bootstrapReady \|\| !bootstrappedRef\.current \|\| !cloudReadyRef\.current/);
+  assert.match(cloudSync, /bootstrapRequestRef\.current \?\? beginCloudJourneyRestore/);
+  assert.match(cloudSync, /if \(!restore\.accept\(payload\.sessionToken\)\)/);
+  assert.match(cloudSync, /cloudReadyRef\.current = false;[\s\S]{0,250}setBootstrapReady\(true\)/);
   assert.match(cloudSync, /return \{ bootstrapReady \} as const/);
 
   assert.match(app, /if \(!experienceStarted \|\| archiveOpen \|\| !journeyInitialized \|\| !cloudJourney\.bootstrapReady\) return;[\s\S]{0,180}if \(!storyStarted\) startStory\(\)/);

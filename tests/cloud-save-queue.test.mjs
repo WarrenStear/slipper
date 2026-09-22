@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { createLatestTaskQueue } from "../src/lib/latestTaskQueue.ts";
 import { fetchJourneyJson, JourneyHttpError } from "../src/lib/journeyTransport.ts";
-import { clearJourneySessionToken, getJourneySessionToken, saveCloudJourney, setJourneySessionToken } from "../src/lib/cloudJourneyClient.ts";
+import { beginCloudJourneyRestore, clearJourneySessionToken, getJourneySessionToken, saveCloudJourney, setJourneySessionToken } from "../src/lib/cloudJourneyClient.ts";
 import { readBrowserStorage, writeBrowserStorage, removeBrowserStorage } from "../src/lib/safeStorage.ts";
 
 function deferred() { let resolve, reject; const promise = new Promise((a, b) => { resolve = a; reject = b; }); return { promise, resolve, reject }; }
@@ -81,4 +81,63 @@ test("successful requests preserve authorization and forbid caching or redirects
     return new Response('{"ok":true}');
   });
   assert.deepEqual(await fetchJourneyJson("/api/save", { headers: { authorization: "Bearer fixed" } }), { ok: true });
+});
+
+
+test("magic-link verification remains staged until its current restore is accepted", async t => {
+  browser(t, memoryStorage());
+  t.mock.method(globalThis, "fetch", async () => new Response('{"ok":true,"sessionToken":"restored-account","journey":null}'));
+  const restore = beginCloudJourneyRestore("magic-token");
+  const payload = await restore.result;
+  assert.equal(getJourneySessionToken(), null, "network completion cannot reconnect the account by itself");
+  assert.equal(restore.accept(payload.sessionToken), true);
+  assert.equal(getJourneySessionToken(), "restored-account");
+  assert.equal(restore.accept(payload.sessionToken), false, "a completed restore cannot be accepted twice");
+});
+
+test("disconnecting or switching accounts while a magic-link request is pending discards its session", async t => {
+  browser(t, memoryStorage());
+  for (const change of [() => clearJourneySessionToken(), () => setJourneySessionToken("account-b")]) {
+    setJourneySessionToken("account-a");
+    const gate = deferred();
+    const mock = t.mock.method(globalThis, "fetch", async () => { await gate.promise; return new Response('{"ok":true,"sessionToken":"restored-account"}'); });
+    const restore = beginCloudJourneyRestore("magic-token");
+    change();
+    const expected = getJourneySessionToken();
+    gate.resolve();
+    const payload = await restore.result;
+    assert.equal(restore.isCurrent(), false);
+    assert.equal(restore.accept(payload.sessionToken), false);
+    assert.equal(getJourneySessionToken(), expected);
+    mock.mock.restore();
+  }
+});
+
+test("disconnecting before an anonymous magic-link restore completes is respected", async t => {
+  browser(t, memoryStorage());
+  const gate = deferred();
+  t.mock.method(globalThis, "fetch", async () => { await gate.promise; return new Response('{"ok":true,"sessionToken":"restored-account"}'); });
+  const restore = beginCloudJourneyRestore("magic-token");
+  clearJourneySessionToken();
+  gate.resolve();
+  const payload = await restore.result;
+  assert.equal(restore.accept(payload.sessionToken), false, "a null-to-null disconnect still invalidates pending authentication");
+  assert.equal(getJourneySessionToken(), null);
+});
+
+test("session restores capture the requested account and reject changed browser storage", async t => {
+  const storage = memoryStorage();
+  browser(t, storage); setJourneySessionToken("account-a");
+  const gate = deferred();
+  t.mock.method(globalThis, "fetch", async (_url, init) => {
+    assert.equal(init.headers.get("authorization"), "Bearer account-a");
+    await gate.promise;
+    return new Response('{"ok":true,"journey":{"activeEntryId":"fragment-020"}}');
+  });
+  const restore = beginCloudJourneyRestore(null);
+  storage.setItem("sidtw:session-token", "account-b");
+  gate.resolve();
+  const payload = await restore.result;
+  assert.equal(restore.accept(payload.sessionToken), false);
+  assert.equal(getJourneySessionToken(), "account-b");
 });

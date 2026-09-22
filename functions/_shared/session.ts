@@ -127,6 +127,8 @@ export type JourneySnapshot = CloudJourneySnapshot;
 const encoder = new TextEncoder();
 const DEFAULT_SESSION_MAX_AGE_DAYS = 30;
 const DAY_MS = 24 * 60 * 60 * 1000;
+const SESSION_CLOCK_SKEW_MS = 60_000;
+const MAX_SESSION_TOKEN_LENGTH = 4_096;
 // Keep aligned with the client JOURNEY_HISTORY_LIMIT.
 const MAX_HISTORY = 512;
 const MAX_ENTRY_IDS = 66;
@@ -171,9 +173,8 @@ function resolveSessionMaxAgeMs(env: Env) {
   return safeDays * DAY_MS;
 }
 
-async function hmac(secret: string, payload: string) {
-  const key = await crypto.subtle.importKey("raw", encoder.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign", "verify"]);
-  return crypto.subtle.sign("HMAC", key, encoder.encode(payload));
+async function sessionKey(secret: string) {
+  return crypto.subtle.importKey("raw", encoder.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign", "verify"]);
 }
 
 export function hasPersistenceBindings(env: Env) {
@@ -197,25 +198,34 @@ export function persistenceUnavailable() {
 export async function signSession(env: Env, subject: string) {
   if (!env.MAGIC_LINK_SECRET) throw new Error("MAGIC_LINK_SECRET is not configured.");
   const payload = base64Url(encoder.encode(JSON.stringify({ sub: subject, iat: Date.now() })));
-  const signature = base64Url(await hmac(env.MAGIC_LINK_SECRET, payload));
+  const signature = base64Url(await crypto.subtle.sign("HMAC", await sessionKey(env.MAGIC_LINK_SECRET), encoder.encode(payload)));
   return `${payload}.${signature}`;
 }
 
 export async function verifySession(env: Env, token: string) {
-  if (!env.MAGIC_LINK_SECRET) return null;
+  if (!env.MAGIC_LINK_SECRET || token.length > MAX_SESSION_TOKEN_LENGTH) return null;
+  const parts = token.split(".");
+  if (parts.length !== 2) return null;
+  const [payload, signature] = parts;
+  if (!/^[A-Za-z0-9_-]+$/.test(payload) || !/^[A-Za-z0-9_-]{43}$/.test(signature)) return null;
 
-  const [payload, signature] = token.split(".");
-  if (!payload || !signature) return null;
+  try {
+    const signatureBytes = fromBase64Url(signature);
+    const payloadBytes = fromBase64Url(payload);
+    // Reject alternate encodings so a session has one unambiguous representation.
+    if (base64Url(signatureBytes) !== signature || base64Url(payloadBytes) !== payload) return null;
+    const verified = await crypto.subtle.verify("HMAC", await sessionKey(env.MAGIC_LINK_SECRET), signatureBytes, encoder.encode(payload));
+    if (!verified) return null;
 
-  const expected = base64Url(await hmac(env.MAGIC_LINK_SECRET, payload));
-  if (expected !== signature) return null;
-
-  const decoded = new TextDecoder().decode(fromBase64Url(payload));
-  const data = safeJsonParse<{ sub?: unknown; iat?: unknown }>(decoded);
-  if (!data || typeof data.sub !== "string" || typeof data.iat !== "number") return null;
-  if (!Number.isFinite(data.iat) || Date.now() - data.iat > resolveSessionMaxAgeMs(env)) return null;
-
-  return data.sub;
+    const decoded = new TextDecoder("utf-8", { fatal: true }).decode(payloadBytes);
+    const data = safeJsonParse<{ sub?: unknown; iat?: unknown }>(decoded);
+    if (!data || typeof data.sub !== "string" || !data.sub.trim() || data.sub.length > 254 || typeof data.iat !== "number") return null;
+    const now = Date.now();
+    if (!Number.isSafeInteger(data.iat) || data.iat < 0 || data.iat > now + SESSION_CLOCK_SKEW_MS || now - data.iat >= resolveSessionMaxAgeMs(env)) return null;
+    return data.sub;
+  } catch {
+    return null;
+  }
 }
 
 export function json(data: unknown, status = 200) {

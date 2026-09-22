@@ -126,3 +126,39 @@ test("session tokens verify only with the signing secret and reject tampering", 
   const [payload, signature] = token.split(".");
   assert.equal(await verifySession(env, `${payload}x.${signature}`), null);
 });
+
+async function signClaims(env, claims) {
+  const payload = Buffer.from(typeof claims === "string" ? claims : JSON.stringify(claims)).toString("base64url");
+  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(env.MAGIC_LINK_SECRET), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const signature = Buffer.from(await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(payload))).toString("base64url");
+  return `${payload}.${signature}`;
+}
+
+test("session verification rejects ambiguous framing and malformed encodings", async () => {
+  const env = { MAGIC_LINK_SECRET: "session-format-test-key" };
+  const token = await signSession(env, "reader@example.test");
+  const [payload, signature] = token.split(".");
+  for (const malformed of ["", "no-dot", token + ".ignored", token + ".", `${payload}=.${signature}`, `${payload}.${signature}=`, `!.${signature}`, `${payload}.!`, "x".repeat(4097)]) {
+    assert.equal(await verifySession(env, malformed), null, `must reject ${malformed.slice(0, 80)}`);
+  }
+  // Altering unused base64 bits must not provide a second spelling of a signature.
+  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+  const last = alphabet.indexOf(signature.at(-1));
+  assert.equal(await verifySession(env, `${payload}.${signature.slice(0, -1)}${alphabet[last + 1]}`), null);
+});
+
+test("session claims expire at the boundary and allow only small clock skew", async t => {
+  const now = 1_800_000_000_000;
+  t.mock.method(Date, "now", () => now);
+  const env = { MAGIC_LINK_SECRET: "session-clock-test-key", SESSION_MAX_AGE_DAYS: "1" };
+  for (const iat of [now, now + 60_000, now - 86_400_000 + 1]) {
+    assert.equal(await verifySession(env, await signClaims(env, { sub: "reader@example.test", iat })), "reader@example.test");
+  }
+  for (const iat of [now + 60_001, now - 86_400_000, -1, 0.5, "today", null]) {
+    assert.equal(await verifySession(env, await signClaims(env, { sub: "reader@example.test", iat })), null);
+  }
+  for (const sub of ["", "  ", "x".repeat(255), null, 42]) {
+    assert.equal(await verifySession(env, await signClaims(env, { sub, iat: now })), null);
+  }
+  assert.equal(await verifySession(env, await signClaims(env, "not-json")), null);
+});

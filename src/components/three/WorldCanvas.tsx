@@ -1,12 +1,9 @@
 import {
-  Component,
   memo,
   Suspense,
   useEffect,
   useMemo,
   useRef,
-  type ErrorInfo,
-  type ReactNode,
 } from "react";
 import { Html, OrbitControls, Stars } from "@react-three/drei";
 import { CuboidCollider, Physics, RigidBody } from "@react-three/rapier";
@@ -20,6 +17,8 @@ import { resolveEnvironmentalEffectsProfile, resolveNarrativeRenderScale, useRen
 import type { NarrativeWorldState, SceneProximityState, StorySceneControls, StorySceneMode } from "./StoryScene";
 import { resolveWorldVisualState } from "./worldVisualState";
 import type { WorldMemoryState } from "./worldMemory/WorldMemoryDirector";
+import { RenderRecoveryBoundary } from "../ui/RenderRecovery";
+import { requestTextJourney } from "../../lib/textJourney";
 
 type WorldCanvasProps = {
   entryId: string;
@@ -38,6 +37,7 @@ type WorldCanvasProps = {
   onPlayerProximityChange?: (state: SceneProximityState) => void;
   controls?: StorySceneControls;
   mode?: StorySceneMode;
+  onContinueTextJourney?: () => void;
 };
 
 const FALLBACK_STATE: NarrativeWorldState = {
@@ -54,35 +54,6 @@ const FALLBACK_STATE: NarrativeWorldState = {
   memoryPressure: 0,
   symbolicWeight: 0.5,
 };
-
-type WorldCanvasErrorBoundaryState = { hasError: boolean; message?: string };
-
-class WorldCanvasErrorBoundary extends Component<{ children: ReactNode }, WorldCanvasErrorBoundaryState> {
-  state: WorldCanvasErrorBoundaryState = { hasError: false };
-
-  static getDerivedStateFromError(error: Error): WorldCanvasErrorBoundaryState {
-    return { hasError: true, message: error.message };
-  }
-
-  componentDidCatch(error: Error, info: ErrorInfo) {
-    console.error("Slipper world render failed:", error, info.componentStack);
-  }
-
-  render() {
-    if (!this.state.hasError) return this.props.children;
-
-    return (
-      <div className="slipper-canvas-crash-fallback" role="alert">
-        <div className="slipper-canvas-crash-card">
-          <p className="slipper-canvas-crash-kicker">The wood failed to open</p>
-          <h1>Slipper in the Woods</h1>
-          <p>The 3D renderer hit a runtime error. Refresh once after the latest deployment finishes, or switch to Map/Read mode while assets settle.</p>
-          {this.state.message ? <code>{this.state.message}</code> : null}
-        </div>
-      </div>
-    );
-  }
-}
 
 function CanvasRendererController({
   narrativeWorldState,
@@ -203,6 +174,7 @@ export function WorldCanvas({
   onPlayerProximityChange,
   controls = "orbit",
   mode = "explore",
+  onContinueTextJourney = requestTextJourney,
 }: WorldCanvasProps) {
   const requestedQualityProfile = useRenderQualityProfile();
   const reducedEffects = useSettingsStore((state) => state.reducedEffects);
@@ -240,7 +212,7 @@ export function WorldCanvas({
   const shadowsEnabled = qualityProfile.enableMoonShadows || qualityProfile.enableLanternShadows;
 
   return (
-    <WorldCanvasErrorBoundary>
+    <RenderRecoveryBoundary onContinueTextJourney={onContinueTextJourney}>
       <Canvas
         className="slipper-world-canvas"
         camera={{ fov: 65, position: [0, 0, 0.1], near: 0.12, far: 520 }}
@@ -261,13 +233,9 @@ export function WorldCanvas({
         }}
         performance={{ min: 0.5, debounce: 260 }}
         fallback={
-          <div className="slipper-canvas-crash-fallback" role="alert">
-            <div className="slipper-canvas-crash-card">
-              <p className="slipper-canvas-crash-kicker">WebGL unavailable</p>
-              <h1>Slipper in the Woods</h1>
-              <p>Your browser could not start WebGL for the 3D scene. Try another browser or disable low-power/strict graphics mode.</p>
-            </div>
-          </div>
+          // R3F mounts this inside <canvas> even when WebGL works. Keep it
+          // passive; modal recovery belongs exclusively to the error boundary.
+          <p>Your browser cannot display the forest. Choose the text journey in settings.</p>
         }
       >
         <CanvasRendererController narrativeWorldState={narrativeWorldState} exposure={activeExposure} cinematicActive={mode === "explore"} />
@@ -309,7 +277,7 @@ export function WorldCanvas({
           )}
         </Suspense>
       </Canvas>
-    </WorldCanvasErrorBoundary>
+    </RenderRecoveryBoundary>
   );
 }
 

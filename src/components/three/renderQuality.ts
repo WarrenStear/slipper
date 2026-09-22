@@ -4,12 +4,12 @@ import {
   isRenderQuality, normalizeDevicePixelRatio, persistRenderQuality,
   RENDER_QUALITY_EVENT, RENDER_QUALITY_STORAGE_KEY, resolveInitialRenderQuality,
   type RenderQuality,
-} from "./renderPreferences";
+} from "./renderPreferences.ts";
 export {
   getStoredRenderQuality, isRenderQuality, RENDER_QUALITY_EVENT,
   RENDER_QUALITY_STORAGE_KEY, resolveInitialRenderQuality, setPreferredRenderQuality,
   type RenderQuality,
-} from "./renderPreferences";
+} from "./renderPreferences.ts";
 
 export type RenderQualityProfile = {
   quality: RenderQuality;

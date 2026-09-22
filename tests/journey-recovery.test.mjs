@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import test from "node:test";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
+import test, { after } from "node:test";
+import { build } from "vite";
 import {
   JOURNEY_BEAT_IDS_BY_ACT,
   JOURNEY_ENTRY_PROGRESS,
@@ -24,6 +28,214 @@ import { useBreadcrumbStore } from "../src/stores/useBreadcrumbStore.ts";
 
 const validIds = ["threshold", "clearing", "river", "return"];
 const fallbackEntryId = validIds[0];
+
+const journeyStorageKey = "sidtw:journey:v3";
+const canonicalEntryIds = Object.keys(JOURNEY_ENTRY_PROGRESS);
+const storeTestDirectory = mkdtempSync(join(tmpdir(), "sidtw-journey-tests-"));
+after(() => rmSync(storeTestDirectory, { recursive: true, force: true }));
+let storeBundle;
+let storeInstance = 0;
+
+async function loadJourneyStore(t, storage) {
+  // Use the app's bundler for extensionless imports and its import.meta.glob
+  // content boundary, then exercise a fresh instance of the actual store.
+  storeBundle ??= build({
+    configFile: false,
+    root: fileURLToPath(new URL("../", import.meta.url)),
+    logLevel: "silent",
+    define: { "process.env.NODE_ENV": '"test"' },
+    build: {
+      write: false,
+      minify: false,
+      lib: { entry: "src/stores/useJourneyStore.ts", formats: ["es"] },
+      rollupOptions: { output: { inlineDynamicImports: true } },
+    },
+  }).then((result) => {
+    const output = (Array.isArray(result) ? result[0] : result).output;
+    const chunk = output.find((item) => item.type === "chunk");
+    assert.ok(chunk);
+    const filename = join(storeTestDirectory, "journey-store.mjs");
+    writeFileSync(filename, chunk.code);
+    return pathToFileURL(filename).href;
+  });
+  const browser = {};
+  Object.defineProperty(browser, "localStorage", { configurable: true, get: () => storage() });
+  for (const [key, descriptor] of [
+    ["window", { configurable: true, value: browser }],
+    ["localStorage", { configurable: true, get: () => storage() }],
+  ]) {
+    const previous = Object.getOwnPropertyDescriptor(globalThis, key);
+    Object.defineProperty(globalThis, key, descriptor);
+    t.after(() => {
+      if (previous) Object.defineProperty(globalThis, key, previous);
+      else delete globalThis[key];
+    });
+  }
+  return (await import(`${await storeBundle}?instance=${++storeInstance}`)).useJourneyStore;
+}
+
+function memoryJourneyStorage(initial = []) {
+  const values = new Map(initial);
+  return {
+    getItem: (key) => values.get(key) ?? null,
+    setItem: (key, value) => { values.set(key, value); },
+    removeItem: (key) => { values.delete(key); },
+  };
+}
+
+function initializeStore(store, legacySnapshot) {
+  store.getState().initializeJourney({
+    fallbackEntryId: canonicalEntryIds[0],
+    validEntryIds: canonicalEntryIds,
+    legacySnapshot,
+  });
+}
+
+test("a missing modern save imports legacy navigation instead of replacing it with a fresh opening", async (t) => {
+  const storage = memoryJourneyStorage();
+  const store = await loadJourneyStore(t, () => storage);
+  assert.equal(store.getState().activeEntryId, "");
+  assert.equal(store.getState().hasLocalJourney, false);
+
+  initializeStore(store, {
+    activeEntryId: "fragment-008",
+    history: ["fragment-001", "fragment-003", "fragment-001"],
+    visitedEntryIds: ["fragment-001", "fragment-003", "fragment-008"],
+  });
+
+  assert.equal(store.getState().activeEntryId, "fragment-008");
+  assert.deepEqual(store.getState().history, ["fragment-001", "fragment-003", "fragment-001"]);
+  assert.equal(store.getState().inventory.lantern, true);
+  assert.equal(store.getState().hasLocalJourney, true);
+  assert.equal(JSON.parse(storage.getItem(journeyStorageKey)).state.activeEntryId, "fragment-008");
+});
+
+test("a valid modern journey takes priority over legacy navigation", async (t) => {
+  const storage = memoryJourneyStorage([[journeyStorageKey, JSON.stringify({
+    version: 6,
+    state: { schemaVersion: 2, activeEntryId: "fragment-008" },
+  })]]);
+  const store = await loadJourneyStore(t, () => storage);
+  initializeStore(store, { activeEntryId: "fragment-003" });
+  assert.equal(store.getState().activeEntryId, "fragment-008");
+  assert.equal(store.getState().hasLocalJourney, true);
+});
+
+test("synthesized opening state differs from intentional local progress and reset", async (t) => {
+  const storage = memoryJourneyStorage();
+  const store = await loadJourneyStore(t, () => storage);
+  initializeStore(store);
+  assert.equal(store.getState().hasLocalJourney, false);
+  assert.equal(store.getState().storyStarted, false);
+  store.getState().startStory();
+  assert.equal(store.getState().hasLocalJourney, true);
+  store.getState().resetJourney("fragment-001");
+  assert.equal(store.getState().storyStarted, false);
+  assert.equal(store.getState().hasLocalJourney, true);
+  assert.equal("hasLocalJourney" in store.getState().getSnapshot(), false);
+  assert.equal(JSON.parse(storage.getItem(journeyStorageKey)).state.hasLocalJourney, true);
+});
+
+test("resetting an untouched journey is an intentional local change", async (t) => {
+  const storage = memoryJourneyStorage();
+  const store = await loadJourneyStore(t, () => storage);
+  initializeStore(store);
+  assert.equal(store.getState().hasLocalJourney, false);
+  store.getState().resetJourney("fragment-001");
+  assert.equal(store.getState().storyStarted, false);
+  assert.equal(store.getState().hasLocalJourney, true);
+});
+
+test("generated opening provenance survives reload while an intentional reset stays authoritative", async (t) => {
+  const storage = memoryJourneyStorage();
+  await t.test("failed restore persists only a generated opening", async (subtest) => {
+    const store = await loadJourneyStore(subtest, () => storage);
+    initializeStore(store);
+    store.getState().setCloudState({ cloudStatus: "error", cloudMessage: "Offline" });
+    assert.equal(JSON.parse(storage.getItem(journeyStorageKey)).state.hasLocalJourney, false);
+  });
+  await t.test("reloading still permits recovery of an older cloud journey", async (subtest) => {
+    const store = await loadJourneyStore(subtest, () => storage);
+    initializeStore(store);
+    assert.equal(store.getState().hasLocalJourney, false);
+    store.getState().resetJourney("fragment-001");
+    assert.equal(JSON.parse(storage.getItem(journeyStorageKey)).state.hasLocalJourney, true);
+  });
+  await t.test("reloading an intentional reset preserves local precedence", async (subtest) => {
+    const store = await loadJourneyStore(subtest, () => storage);
+    initializeStore(store);
+    assert.equal(store.getState().hasLocalJourney, true);
+    assert.equal(store.getState().storyStarted, false);
+    assert.equal("hasLocalJourney" in store.getState().getSnapshot(), false);
+  });
+});
+
+test("malformed persisted objects cannot hide a valid legacy journey", async (t) => {
+  for (const [version, state] of [
+    [6, {}],
+    [5, {}],
+    [6, { schemaVersion: 2, activeEntryId: "unknown", history: ["unknown"] }],
+    [6, { schemaVersion: 2, activeEntryId: "fragment-001", hasLocalJourney: false }],
+  ]) {
+    await t.test(JSON.stringify({ version, state }), async (subtest) => {
+      const storage = memoryJourneyStorage([[journeyStorageKey, JSON.stringify({ version, state })]]);
+      const store = await loadJourneyStore(subtest, () => storage);
+      initializeStore(store, { activeEntryId: "fragment-008", history: ["fragment-001"] });
+      assert.equal(store.getState().activeEntryId, "fragment-008");
+      assert.equal(store.getState().hasLocalJourney, true);
+    });
+  }
+});
+
+test("blocked storage never interrupts journey actions or reset and saving can recover", async (t) => {
+  for (const failure of ["getter", "getItem", "setItem", "removeItem"]) {
+    await t.test(failure, async (subtest) => {
+      const storage = memoryJourneyStorage();
+      let blocked = true;
+      const failingStorage = Object.fromEntries(Object.entries(storage).map(([name, method]) => [
+        name,
+        (...args) => {
+          if (blocked && name === failure) throw new Error(`storage ${name} denied`);
+          return method(...args);
+        },
+      ]));
+      const store = await loadJourneyStore(subtest, () => {
+        if (blocked && failure === "getter") throw new Error("storage getter denied");
+        return failingStorage;
+      });
+
+      assert.doesNotThrow(() => {
+        initializeStore(store);
+        store.getState().startStory();
+        store.getState().witnessEntry("fragment-001");
+        store.getState().navigateToEntry("fragment-008");
+        store.getState().toggleBookmark("fragment-008");
+      });
+      assert.equal(store.getState().activeEntryId, "fragment-008");
+      assert.deepEqual(store.getState().witnessedEntryIds, ["fragment-001"]);
+      assert.deepEqual(store.getState().bookmarkedEntryIds, ["fragment-008"]);
+      assert.doesNotThrow(() => store.getState().resetJourney("fragment-001"));
+      assert.equal(store.getState().activeEntryId, "fragment-001");
+      assert.deepEqual(store.getState().bookmarkedEntryIds, []);
+      assert.deepEqual(store.getState().witnessedEntryIds, []);
+      assert.doesNotThrow(() => store.persist.clearStorage());
+
+      blocked = false;
+      store.getState().navigateToEntry("fragment-008");
+      assert.equal(JSON.parse(storage.getItem(journeyStorageKey)).state.activeEntryId, "fragment-008");
+    });
+  }
+});
+
+test("malformed saved JSON recovers without claiming an existing local journey", async (t) => {
+  const storage = memoryJourneyStorage([[journeyStorageKey, "{invalid"]]);
+  const store = await loadJourneyStore(t, () => storage);
+  initializeStore(store);
+  assert.equal(store.getState().activeEntryId, "fragment-001");
+  assert.equal(store.getState().hasLocalJourney, false);
+  store.getState().resetJourney("fragment-001");
+  assert.equal(JSON.parse(storage.getItem(journeyStorageKey)).state.activeEntryId, "fragment-001");
+});
 
 const storyOptions = {
   fallbackEntryId,

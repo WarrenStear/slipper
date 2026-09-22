@@ -65,5 +65,5 @@ test("renderer consumes the guarded preferences and keeps compatibility exports"
   assert.doesNotMatch(source, /localStorage/);
   assert.match(source, /persistRenderQuality\(quality\)/);
   assert.match(source, /normalizeDevicePixelRatio\(devicePixelRatio\)/);
-  assert.match(source, /setPreferredRenderQuality,[\s\S]*from "\.\/renderPreferences"/);
+  assert.match(source, /setPreferredRenderQuality,[\s\S]*from "\.\/renderPreferences\.ts"/);
 });

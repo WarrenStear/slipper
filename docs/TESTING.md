@@ -73,6 +73,25 @@ Browser binaries and system dependencies are installed by
 sandboxed browser execution, report that exact blocker; do not report the
 Playwright suite as passed.
 
+Focused recovery and restore qualification (after building):
+
+```bash
+npx playwright test e2e/resilient-experience.spec.ts e2e/cloud-journey-sync.spec.ts --project=chromium --project=mobile-chromium
+```
+
+The resilience suite injects scene-chunk and worker download failures, checks
+WebGL1 fallback, keyboard containment and focus handoff, and exercises quota
+failures against the real UI. Graphics-failure injection is limited to the two
+Chromium projects; text/settings checks also run on Firefox and WebKit. Cloud
+tests mock HTTP responses to check failed reads before writes, delayed results
+after disconnect, older remote saves on fresh devices, deliberate local reset
+priority, reload after failed restore, and magic-link acceptance. They do not
+prove live KV/email behavior. Keep `dist/` unchanged throughout a browser run.
+
+Journey recovery unit tests bundle the real store in memory through Vite and
+exercise persistence/rehydration with missing, malformed, denied, and full
+storage, including recovery after storage becomes available again.
+
 ## Continuous integration
 
 `.github/workflows/ci.yml` is read-only and non-deploying. Pull requests and

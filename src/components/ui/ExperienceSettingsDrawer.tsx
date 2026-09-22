@@ -20,6 +20,7 @@ import {
   resolveSlipperExperienceMode,
 } from "../../lib/experienceMode";
 import { activateNarrativeAudioFromGesture } from "../../lib/narrativeAudioActivation";
+import { requestTextJourney } from "../../lib/textJourney";
 import { useBreadcrumbStore } from "../../stores/useBreadcrumbStore";
 import { resetPlayerInput } from "../../stores/usePlayerInputStore";
 import {
@@ -214,6 +215,7 @@ export function ExperienceSettingsDrawer({ initialEntryId }: ExperienceSettingsD
     };
     const handleOpenRequest = () => setDrawerOpen(true);
     const handleShortcut = (event: KeyboardEvent) => {
+      if (event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey || event.isComposing) return;
       const target = event.target as HTMLElement | null;
       const isTyping =
         target?.tagName === "INPUT" ||
@@ -459,6 +461,18 @@ export function ExperienceSettingsDrawer({ initialEntryId }: ExperienceSettingsD
 
           <fieldset className="experience-settings-card">
             <legend>Display and reading</legend>
+            <div className="settings-toggle-list">
+              <button type="button" onClick={() => {
+                // The destination owns focus after this presentation handoff.
+                previousFocusRef.current = null;
+                closeDrawer();
+                requestTextJourney();
+              }}>
+                <span>Continue with text journey</span>
+                <strong>No 3D</strong>
+              </button>
+            </div>
+            <p className="settings-help">Follow the same story and choices through text. Your current place is kept.</p>
             <div className="settings-section-heading">
               <span>Render quality</span>
               <strong>{profile.label}</strong>

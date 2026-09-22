@@ -6,6 +6,10 @@ async function begin(page: Page, resume = false) {
   await expect(page.locator(".onboarding-gate")).toHaveAttribute("aria-busy", "false");
   await page.getByRole("button", { name: resume ? "Continue the Journey" : "Begin", exact: true }).click();
   await expect(page.locator("canvas").first()).toBeVisible({ timeout: 30_000 });
+  // Canvas fallback children mount even with working WebGL; an invisible modal
+  // there would make the rendered forest inert and swallow physical gestures.
+  await expect(page.locator("canvas dialog")).toHaveCount(0);
+  await expect(page.locator("dialog:modal")).toHaveCount(0);
 }
 
 async function stroke(page: Page, mobile: boolean) {

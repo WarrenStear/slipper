@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  beginCloudJourneyRestore,
   clearJourneySessionToken,
   getJourneySessionToken,
   getSessionSubject,
-  loadCloudJourney,
   saveCloudJourney,
-  verifyMagicLink,
 } from "../lib/cloudJourneyClient";
 import { JourneyHttpError } from "../lib/journeyTransport";
 import { useJourneyStore, type CloudJourneySnapshot } from "../stores/useJourneyStore";
@@ -32,6 +31,7 @@ function isNewer(remote: CloudJourneySnapshot, local: CloudJourneySnapshot) {
 export function useCloudJourneySync() {
   const isInitialized = useJourneyStore((state) => state.isInitialized);
   const updatedAt = useJourneyStore((state) => state.updatedAt);
+  const cloudSubject = useJourneyStore((state) => state.cloudSubject);
   const hydrateJourney = useJourneyStore((state) => state.hydrateJourney);
   const setCloudState = useJourneyStore((state) => state.setCloudState);
   const getSnapshot = useJourneyStore((state) => state.getSnapshot);
@@ -43,6 +43,9 @@ export function useCloudJourneySync() {
 
   const bootstrappedRef = useRef(false);
   const cloudReadyRef = useRef(false);
+  const connectedTokenRef = useRef<string | null>(null);
+  const bootstrapRequestRef = useRef<ReturnType<typeof beginCloudJourneyRestore> | null>(null);
+  const magicTokenRef = useRef<string | null | undefined>(undefined);
   const suppressNextSaveRef = useRef(false);
   const lastSavedSignatureRef = useRef("");
   const [bootstrapReady, setBootstrapReady] = useState(false);
@@ -55,87 +58,80 @@ export function useCloudJourneySync() {
   }, []);
 
   useEffect(() => {
-    if (!isInitialized || bootstrappedRef.current) return;
+    if (!isInitialized || cloudReadyRef.current) return;
     bootstrappedRef.current = true;
-
     let cancelled = false;
 
+    if (magicTokenRef.current === undefined) {
+      magicTokenRef.current = new URLSearchParams(window.location.search).get("sidtw_token");
+      // Keep retries in memory while removing the credential from history/referrers.
+      clearMagicLinkTokenFromUrl();
+    }
+    // Effect replay must subscribe to the same request, especially for one-use links.
+    const restore = bootstrapRequestRef.current ?? beginCloudJourneyRestore(magicTokenRef.current);
+    bootstrapRequestRef.current = restore;
+
+    if (!restore.magicToken && !restore.existingToken) {
+      setCloudState({ cloudStatus: "signed-out", cloudSubject: null, cloudMessage: "Cloud save is available after magic-link restore." });
+      cloudReadyRef.current = true;
+      setBootstrapReady(true);
+      return;
+    }
+
+    setCloudState({ cloudStatus: "loading", cloudMessage: restore.magicToken ? "Restoring your forest from the magic link…" : "Loading your saved forest…" });
+
     const bootstrapCloudSync = async () => {
-      const params = new URLSearchParams(window.location.search);
-      const magicToken = params.get("sidtw_token");
-      const existingToken = getJourneySessionToken();
-
-      if (!magicToken && !existingToken) {
-        setCloudState({ cloudStatus: "signed-out", cloudSubject: null, cloudMessage: "Cloud save is available after magic-link restore." });
-        cloudReadyRef.current = true;
-        if (!cancelled) setBootstrapReady(true);
-        return;
-      }
-
-      setCloudState({ cloudStatus: "loading", cloudMessage: magicToken ? "Restoring your forest from the magic link…" : "Loading your saved forest…" });
-
       try {
-        if (magicToken) {
-          const payload = await verifyMagicLink(magicToken);
-          clearMagicLinkTokenFromUrl();
-          if (cancelled) return;
-
-          const subject = getSessionSubject(payload.sessionToken);
-          if (payload.journey) {
-            suppressNextSaveRef.current = true;
-            hydrateJourney(payload.journey, { source: "cloud" });
-          }
-
-          setCloudState({
-            cloudStatus: "synced",
-            cloudSubject: subject,
-            cloudLoadedAt: new Date().toISOString(),
-            cloudMessage: payload.journey ? "Cloud journey restored." : "Magic link verified. This journey will now save to Cloudflare.",
-          });
-          cloudReadyRef.current = true;
+        const payload = await restore.result;
+        if (cancelled) return;
+        if (!restore.accept(payload.sessionToken)) {
+          bootstrapRequestRef.current = null;
           setBootstrapReady(true);
           return;
         }
 
-        const subject = getSessionSubject(existingToken);
-        const payload = await loadCloudJourney();
-        if (cancelled) return;
-
         const localSnapshot = getSnapshot();
-        if (payload?.journey && isNewer(payload.journey, localSnapshot)) {
+        if (payload.journey && (restore.magicToken || !useJourneyStore.getState().hasLocalJourney || isNewer(payload.journey, localSnapshot))) {
           suppressNextSaveRef.current = true;
           hydrateJourney(payload.journey, { source: "cloud" });
         }
 
+        magicTokenRef.current = null;
+        connectedTokenRef.current = payload.sessionToken;
+        cloudReadyRef.current = true;
         setCloudState({
           cloudStatus: "synced",
-          cloudSubject: subject,
+          cloudSubject: getSessionSubject(payload.sessionToken),
           cloudLoadedAt: new Date().toISOString(),
-          cloudMessage: payload?.journey ? "Cloud journey is connected." : "Cloud save connected. Your first journey state will be saved shortly.",
+          cloudMessage: payload.journey ? "Cloud journey is connected." : "Cloud save connected. Your first journey state will be saved shortly.",
         });
-        cloudReadyRef.current = true;
         setBootstrapReady(true);
       } catch (error) {
-        clearMagicLinkTokenFromUrl();
-        const message = error instanceof Error ? error.message : "Cloud journey sync failed.";
-        if (error instanceof JourneyHttpError && error.status === 401) clearJourneySessionToken();
-        if (!cancelled) {
-          setCloudState({ cloudStatus: "error", cloudSubject: null, cloudMessage: message });
-          cloudReadyRef.current = true;
+        if (cancelled) return;
+        bootstrapRequestRef.current = null;
+        if (!restore.isCurrent()) {
           setBootstrapReady(true);
+          return;
         }
+        const message = error instanceof Error ? error.message : "Cloud journey sync failed.";
+        if (error instanceof JourneyHttpError && error.status === 401) {
+          clearJourneySessionToken();
+          magicTokenRef.current = null;
+        }
+        // Local play may continue, but never overwrite a cloud save we failed to read.
+        // Reconnecting retries the restore before enabling any writes.
+        cloudReadyRef.current = false;
+        setCloudState({ cloudStatus: "error", cloudSubject: null, cloudMessage: message });
+        setBootstrapReady(true);
       }
     };
 
     void bootstrapCloudSync();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [getSnapshot, hydrateJourney, isInitialized, setCloudState]);
+    return () => { cancelled = true; };
+  }, [getSnapshot, hydrateJourney, isInitialized, retryRevision, setCloudState]);
 
   useEffect(() => {
-    if (!isInitialized || !bootstrapReady || !bootstrappedRef.current || !cloudReadyRef.current || !getJourneySessionToken()) return;
+    if (!isInitialized || !bootstrapReady || !bootstrappedRef.current || !cloudReadyRef.current || !cloudSubject || !getJourneySessionToken()) return;
 
     if (suppressNextSaveRef.current) {
       suppressNextSaveRef.current = false;
@@ -147,6 +143,7 @@ export function useCloudJourneySync() {
     if (signature === lastSavedSignatureRef.current) return;
 
     const token = getJourneySessionToken();
+    if (token !== connectedTokenRef.current) return;
     let cancelled = false;
     const timeout = window.setTimeout(() => {
       if (!token || getJourneySessionToken() !== token) return;
@@ -165,13 +162,14 @@ export function useCloudJourneySync() {
         .catch((error) => {
           if (cancelled || getJourneySessionToken() !== token) return;
           const message = error instanceof Error ? error.message : "Could not save journey to Cloudflare.";
-          if (error instanceof JourneyHttpError && error.status === 401) clearJourneySessionToken();
-          setCloudState({ cloudStatus: "error", cloudMessage: message });
+          const unauthorized = error instanceof JourneyHttpError && error.status === 401;
+          if (unauthorized) clearJourneySessionToken();
+          setCloudState({ cloudStatus: "error", cloudSubject: unauthorized ? null : undefined, cloudMessage: message });
         });
     }, SAVE_DEBOUNCE_MS);
 
     return () => { cancelled = true; window.clearTimeout(timeout); };
-  }, [bootstrapReady, getSnapshot, isInitialized, retryRevision, setCloudState, snapshot]);
+  }, [bootstrapReady, cloudSubject, getSnapshot, isInitialized, retryRevision, setCloudState, snapshot]);
 
   return { bootstrapReady } as const;
 }

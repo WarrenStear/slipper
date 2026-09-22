@@ -23,6 +23,12 @@ Legacy journey storage is read only for migration. Navigation, recovery,
 bookmarks, reader progress inputs, map status, and archive availability derive
 from the same journey record.
 
+Persistence uses a best-effort storage adapter: denied or full storage never
+interrupts in-memory journey actions. Missing or malformed modern saves still
+allow legacy recovery. The additive local `hasLocalJourney` field distinguishes
+a generated opening from existing progress or an explicit reset, including
+after a failed cloud restore and reload. It is excluded from cloud snapshots.
+
 ### Experience settings
 
 `src/stores/useSettingsStore.ts` is the authoritative persisted settings
@@ -74,6 +80,13 @@ map remains useful without revealing unread writing.
 map fallback scene. `StorySceneWithMasterLantern.tsx` preserves the master
 lantern/world-director layer around `StoryScene.tsx`.
 
+An eagerly imported `RenderRecoveryBoundary` surrounds lazy scene and map
+content, so chunk failures cannot remove recovery controls. The canvas uses
+the same recovery surface for rendering failures. Terrain and forest worker
+errors are raised during rendering to reach that boundary. Recovery is a
+native modal with contained focus and a text-journey handoff that preserves
+the live store. The capability probe requires WebGL2 and releases its context.
+
 The existing world finalizer remains part of `prebuild`:
 
 1. `final:world`
@@ -103,6 +116,24 @@ Cloudflare Pages serves the Vite output and optional Pages Functions under
 `/api/*`. Functions validate bearer sessions and journey payloads. KV bindings,
 the HMAC secret, and optional email sender are deployment configuration; local
 journey behavior does not require them.
+
+Cloud restore requests are staged until the current session accepts them;
+StrictMode effect replay shares the pending request. A failed initial read
+unblocks local play but keeps cloud writes disabled until a subsequent restore
+succeeds. Account changes invalidate pending restore results and queued writes.
+Existing local progress uses timestamp comparison, while a generated opening
+cannot override a real cloud save. Signed sessions use Web Crypto verification
+with bounded, canonical tokens and validated issuance/expiration claims.
+
+Restore endpoints distinguish an absent KV key from an unreadable saved record,
+including stored JSON `null`. Malformed or unsupported saves return HTTP 409
+without enabling writes or consuming a magic link, so the saved record can be
+repaired and restoration retried while the link remains valid.
+
+Magic-link consumption still uses separate KV read and delete operations.
+Because KV is eventually consistent and not transactional, this is not an
+atomic one-time-use guarantee across concurrent requests or locations. A
+transactional token store is required to establish that guarantee.
 
 `wrangler pages functions build` is used as a local/CI compilation check.
 Continuous integration has read-only repository permissions and does not
