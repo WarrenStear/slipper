@@ -1,3 +1,4 @@
+import { AuthoredNpcSilhouette } from "../environmentArt/AuthoredNpc";
 import { memo } from "react";
 import type { RenderQualityProfile } from "../renderQuality";
 import {
@@ -16,28 +17,7 @@ type SurrenderClearingProps = {
   resolved: boolean;
 };
 
-function RestingWolf() {
-  return (
-    <group name="surrendered-wolf" position={[-2.35, 0.2, 1.4]} rotation={[0, 0.52, 0]} scale={[1.1, 0.76, 1.1]}>
-      <mesh position={[0, 0.6, 0]} scale={[1.65, 0.56, 0.7]} castShadow>
-        <dodecahedronGeometry args={[0.82, 0]} />
-        <meshStandardMaterial color="#302b27" roughness={1} />
-      </mesh>
-      <mesh position={[1.24, 0.58, 0]} scale={[0.62, 0.46, 0.52]} castShadow>
-        <dodecahedronGeometry args={[0.72, 0]} />
-        <meshStandardMaterial color="#292521" roughness={1} />
-      </mesh>
-      <mesh position={[1.24, 0.98, -0.25]} rotation={[0, 0, -0.12]}>
-        <coneGeometry args={[0.15, 0.48, 4]} />
-        <meshStandardMaterial color="#211e1b" roughness={1} />
-      </mesh>
-      <mesh position={[1.24, 0.98, 0.25]} rotation={[0, 0, 0.12]}>
-        <coneGeometry args={[0.15, 0.48, 4]} />
-        <meshStandardMaterial color="#211e1b" roughness={1} />
-      </mesh>
-    </group>
-  );
-}
+function RestingWolf() { return <group name="surrendered-wolf" position={[-2.35, .2, 1.4]} rotation={[0, .52, 0]} scale={[1.1, .76, 1.1]}><group rotation={[0, Math.PI / 2, 0]} scale={1.4}><AuthoredNpcSilhouette kind="wolf" resting /></group></group>; }
 
 function SurrenderClearingComponent({
   qualityProfile,

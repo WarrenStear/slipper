@@ -12,8 +12,8 @@ test('low, medium and reduced effects omit micro-relief', () => {
     assert.equal(tactileDetailFor(q,false),['high','cinematic'].includes(q)?'relief':'base');
   }
 });
-test('all eight finishes provide both base and relief patterns', () => {
-  assert.equal(STORY_SURFACES.length,8);
+test('all fifteen finishes provide both base and relief patterns', () => {
+  assert.equal(STORY_SURFACES.length,15);
   for (const s of STORY_SURFACES) {
     assert.ok(TACTILE_BASE_PATTERNS[s]); assert.ok(TACTILE_PATTERNS[s]);
     assert.match(TACTILE_PATTERNS[s],/float storyHeight =/);
@@ -22,7 +22,7 @@ test('all eight finishes provide both base and relief patterns', () => {
 });
 test('surface/detail combinations have independent stable program keys', () => {
   const keys=STORY_SURFACES.flatMap(s=>['base','relief'].map(d=>tactileProgramKey(s,d)));
-  assert.equal(new Set(keys).size,16);
+  assert.equal(new Set(keys).size,STORY_SURFACES.length*2);
   assert.equal(tactileProgramKey('wood','base'),tactileProgramKey('wood','base'));
 });
 test('base compilation excludes normal-gradient work for every finish', () => {
@@ -90,7 +90,7 @@ test('shared stone paths use one instance batch with refreshed bounds', () => {
   const s=read('src/components/three/chapters/ChapterPrimitives.tsx').split('export const StonePath =')[1].split('export const ThornBranches =')[0];
   assert.equal((s.match(/<instancedMesh/g)||[]).length,1);assert.doesNotMatch(s,/<mesh[ >]/);
   assert.match(s,/computeBoundingSphere/);assert.match(s,/computeBoundingBox/);
-  assert.match(s,/<circleGeometry args=\{\[1, 8\]\}/);
+  assert.match(s,/createSteppingStoneGeometry/);assert.match(s,/geometry=\{geometry\}/);
 });
 
 test('folds pin the hanging edge and stay inside their depth budget', () => {

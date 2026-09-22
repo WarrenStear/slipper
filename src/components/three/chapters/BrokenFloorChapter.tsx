@@ -4,7 +4,10 @@ import * as THREE from "three";
 import { openingMotionDelta, openingRoomTarget, openingStage } from "../../../cinematics/openingPresentation";
 import { useSettingsStore } from "../../../stores/useSettingsStore";
 import { useWorldStore } from "../../../stores/useWorldStore";
-import { TactileMaterial } from "../storyEvents/TactileMaterial";
+import { createWornTimberGeometry } from "../environmentArt/authoredGeometry";
+import { StoneBasin, TimberAssembly } from "./ChapterArt";
+import { applyTactileShader, tactileProgramKey } from "../storyEvents/tactileShader";
+import { TactileMaterial, useTactileDetail } from "../storyEvents/TactileMaterial";
 import { useJourneyStore } from "../../../stores/useJourneyStore";
 import { BrokenRoomDetails } from "../environment/EnvironmentDressing";
 import { ChapterLightRig } from "../environment/ChapterLightRig";
@@ -22,6 +25,8 @@ import type { ChapterSceneProps } from "./types";
 /** Exact original board positions, one draw call instead of one per board. */
 function OpeningFloorboards({ count }: { count: number }) {
   const boards = useRef<THREE.InstancedMesh>(null);
+  const geometry = useMemo(() => createWornTimberGeometry([.96, .14, 16], 37), []);
+  useEffect(() => () => geometry.dispose(), [geometry]);
   useLayoutEffect(() => {
     if (!boards.current) return;
     const transform = new THREE.Object3D();
@@ -36,8 +41,7 @@ function OpeningFloorboards({ count }: { count: number }) {
     if (boards.current.instanceColor) boards.current.instanceColor.needsUpdate = true;
     boards.current.computeBoundingBox(); boards.current.computeBoundingSphere();
   }, [count]);
-  return <instancedMesh ref={boards} args={[undefined, undefined, count]} receiveShadow name="opening-original-floorboards">
-    <boxGeometry args={[.96, .14, 16]} />
+  return <instancedMesh ref={boards} geometry={geometry} args={[undefined, undefined, count]} receiveShadow name="opening-original-floorboards">
     <TactileMaterial surface="wood" color="#ffffff" roughness={.58} />
   </instancedMesh>;
 }
@@ -48,6 +52,7 @@ function BrokenFloorChapterComponent({
   reducedMotion,
   openingResolved: openingResolvedProp = true,
 }: ChapterSceneProps) {
+  const tactileDetail = useTactileDetail();
   const floorState = useJourneyStore((state) => state.storyObjectStates?.["broken-floor.reflection"]);
   const eventIds = useJourneyStore((state) => state.completedStoryEventIds ?? []);
   const openingResolved = openingResolvedProp || floorState === "inverted";
@@ -118,8 +123,11 @@ function BrokenFloorChapterComponent({
         <BrokenRoomDetails />
         <mesh name="broken-floor-room-shell" geometry={roomGeometry} position={[0, 3.18, 0]} receiveShadow>
           <meshStandardMaterial
+            key={tactileProgramKey("plaster", tactileDetail)}
             ref={roomMaterialRef}
-            color="#302a23"
+            onBeforeCompile={shader => applyTactileShader(shader, "plaster", tactileDetail)}
+            customProgramCacheKey={() => tactileProgramKey("plaster", tactileDetail)}
+            color="#4c4840"
             emissive="#21150d"
             emissiveIntensity={0.3}
             roughness={0.99}
@@ -132,25 +140,15 @@ function BrokenFloorChapterComponent({
       </group>
 
       <group ref={wallRemnantsRef} name="broken-floor-wall-remnants" visible={openingResolved} scale={[1, openingResolved ? 1 : 0.02, 1]}>
-        <mesh position={[-8.1, 2.1, -2.4]} receiveShadow>
-          <boxGeometry args={[0.34, 4.4, 11.8]} />
-          <meshStandardMaterial color="#24211d" roughness={0.98} />
-        </mesh>
-        <mesh position={[8.1, 2.1, -2.4]} receiveShadow>
-          <boxGeometry args={[0.34, 4.4, 11.8]} />
-          <meshStandardMaterial color="#24211d" roughness={0.98} />
-        </mesh>
-        <mesh position={[0, 2.1, -8.2]} receiveShadow>
-          <boxGeometry args={[16.4, 4.4, 0.34]} />
-          <meshStandardMaterial color="#292621" roughness={0.98} />
-        </mesh>
+        <TimberAssembly plaster color="#46433a" pieces={[
+          { position: [-8.1, 2.1, -2.4], size: [.34, 4.4, 11.8] },
+          { position: [8.1, 2.1, -2.4], size: [.34, 4.4, 11.8] },
+          { position: [0, 2.1, -8.2], size: [16.4, 4.4, .34] },
+        ]} />
       </group>
 
       <group position={[-4.8, 0, -4.1]}>
-        <mesh position={[0, 0.12, 0]}>
-          <cylinderGeometry args={[1.05, 0.86, 0.24, 28]} />
-          <meshStandardMaterial color="#5c5549" metalness={0.42} roughness={0.3} />
-        </mesh>
+        <StoneBasin position={[0, .12, 0]} radius={1.05} height={.24} color="#5c5549" metal />
         <mesh position={[0, 0.23, 0]} rotation={[-Math.PI / 2, 0, 0]}>
           <circleGeometry args={[0.8, 28]} />
           <meshPhysicalMaterial color="#283c48" metalness={0.48} roughness={0.08} />

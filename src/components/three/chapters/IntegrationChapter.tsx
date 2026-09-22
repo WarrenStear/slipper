@@ -1,6 +1,6 @@
+import { AuthoredNpcSilhouette } from "../environmentArt/AuthoredNpc";
 import { memo } from "react";
 import {
-  Beam,
   CandleField,
   MoonDisc,
   ReflectivePanel,
@@ -13,42 +13,14 @@ import type { ChapterSceneProps } from "./types";
 import { useJourneyStore } from "../../../stores/useJourneyStore";
 
 function WolfStone({ witnessed }: { witnessed: boolean }) {
-  return (
-    <group name="integration-wolf" position={[-5.4, 0.2, 1.8]} rotation={[0, 0.45, 0]}>
-      <mesh position={[0, 0.7, 0]} scale={[1.9, 0.75, 0.75]}>
-        <dodecahedronGeometry args={[1, 0]} />
-        <meshStandardMaterial color={witnessed ? "#4b3527" : "#2b2925"} emissive={witnessed ? "#6d3f22" : "#000000"} emissiveIntensity={witnessed ? 0.18 : 0} roughness={1} />
-      </mesh>
-      <mesh position={[1.55, 1.12, 0]} scale={[0.72, 0.66, 0.62]}>
-        <dodecahedronGeometry args={[1, 0]} />
-        <meshStandardMaterial color="#242321" roughness={1} />
-      </mesh>
-      <mesh position={[1.55, 1.88, -0.34]} rotation={[0, 0, -0.1]}>
-        <coneGeometry args={[0.2, 0.72, 4]} />
-        <meshStandardMaterial color="#242321" roughness={1} />
-      </mesh>
-      <mesh position={[1.55, 1.88, 0.34]} rotation={[0, 0, 0.1]}>
-        <coneGeometry args={[0.2, 0.72, 4]} />
-        <meshStandardMaterial color="#242321" roughness={1} />
-      </mesh>
-    </group>
-  );
+  return <group name="integration-wolf" position={[-5.4, .2, 1.8]} rotation={[0, .45, 0]} userData={{ witnessed }}>
+    <group rotation={[0, Math.PI / 2, 0]} scale={1.4}><AuthoredNpcSilhouette kind="wolf" /></group>
+  </group>;
 }
-
 function SwanStone({ witnessed }: { witnessed: boolean }) {
-  return (
-    <group name="integration-swan" position={[5.2, 0.15, 1.6]}>
-      <mesh position={[0, 0.52, 0]} scale={[1.6, 0.62, 0.9]}>
-        <sphereGeometry args={[0.72, 18, 12]} />
-        <meshStandardMaterial color={witnessed ? "#f0f2ed" : "#d9d9d1"} emissive={witnessed ? "#7896a6" : "#000000"} emissiveIntensity={witnessed ? 0.14 : 0} roughness={0.9} />
-      </mesh>
-      <Beam from={[0.8, 0.72, 0]} to={[1.05, 2.2, 0]} radius={0.14} color="#d9d9d1" />
-      <mesh position={[1.05, 2.35, 0]} scale={[0.48, 0.36, 0.38]}>
-        <sphereGeometry args={[0.6, 14, 9]} />
-        <meshStandardMaterial color="#e4e3db" roughness={0.88} />
-      </mesh>
-    </group>
-  );
+  return <group name="integration-swan" position={[5.2, .15, 1.6]} userData={{ witnessed }}>
+    <group rotation={[0, Math.PI / 2, 0]} scale={1.6}><AuthoredNpcSilhouette kind="swan" /></group>
+  </group>;
 }
 
 function IntegrationChapterComponent({
@@ -67,7 +39,7 @@ function IntegrationChapterComponent({
     <group name="wolf-swan-seer-integration" userData={{ swanWitnessed, wolfWitnessed, seerWitnessed, integrated: converged }}>
       <SceneGround radius={20} color="#26231d" />
       <TreeGrove qualityProfile={qualityProfile} reducedEffects={reducedEffects} tint="#323c32" radius={27} />
-      <WaterSurface position={[6, 0.015, 1]} size={[8.5, 10]} color="#20343e" opacity={0.82} circle />
+      <WaterSurface reducedMotion={reducedMotion} reducedEffects={reducedEffects} position={[6, 0.015, 1]} size={[8.5, 10]} color="#20343e" opacity={0.82} circle />
       <group name="integration-moon">
         <MoonDisc
           position={[8, 9, -12]}

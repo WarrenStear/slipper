@@ -1,5 +1,5 @@
 /** Shader-only surface policy. No scene, input, narrative or persistent state. */
-export const STORY_SURFACES = ["wood", "linen", "paper", "bark", "stone", "earth", "wax", "metal"] as const;
+export const STORY_SURFACES = ["wood", "linen", "paper", "bark", "stone", "earth", "wax", "metal", "wet-wood", "charred-wood", "painted-wood", "plaster", "velvet", "ash", "moss"] as const;
 export type StorySurface = typeof STORY_SURFACES[number];
 export type TactileDetail = "base" | "relief";
 export type TactileShader = { vertexShader: string; fragmentShader: string };
@@ -46,6 +46,13 @@ export const TACTILE_BASE_PATTERNS: Record<StorySurface, string> = {
   paper: `float grain = .98;`,
   wax: `float grain = .99 + sin(p.y * 16.0) * .01;`,
   metal: `float grain = .99;`,
+  "wet-wood": `float wet = storyNoise(p * 2.4); float grain = .76 + wet * .17;`,
+  "charred-wood": `float charcoal = storyNoise(p * 5.0); float grain = .82 + charcoal * .24;`,
+  "painted-wood": `float wear = smoothstep(.57, .79, storyNoise(p * 3.8)); float grain = .98 - wear * .18;`,
+  plaster: `float trowel = storyNoise(p * 2.7); float grain = .95 + (trowel - .5) * .13;`,
+  velvet: `float nap = sin(storyPlane.y * 7.0 + storyNoise(p * 3.0)); float grain = .93 + nap * .045;`,
+  ash: `float soot = storyNoise(p * 4.0); float grain = .88 + soot * .17;`,
+  moss: `float cushion = storyNoise(p * 4.7); float grain = .86 + cushion * .23;`,
 };
 
 /** Analytic height and a separate antialiasing filter; no displaced geometry. */
@@ -98,6 +105,48 @@ export const TACTILE_PATTERNS: Record<StorySurface, string> = {
     float grain = .99 + scratch * .012 * detail;
     float storyHeight = scratch * .000003;
     float storyReliefFilter = detail;`,
+  "wet-wood": `float wet = storyNoise(p * 2.4);
+    float channel = sin(storyPlane.x * 38.0 + sin(storyPlane.y * 4.0));
+    float grain = .82 + wet * .12 + channel * .012;
+    float storyHeight = channel * .00012;
+    float storyReliefFilter = 1.0 - smoothstep(.3, 1.3, fwidth(storyPlane.x * 38.0));`,
+  "charred-wood": `float charcoal = storyNoise(p * 5.0);
+    float split = pow(abs(sin(storyPlane.x * 48.0 + storyNoise(p * 7.0))), 12.0);
+    float grain = .82 + charcoal * .24 - split * .08;
+    float storyHeight = charcoal * .004 - split * .003;
+    float storyReliefFilter = 1.0 - smoothstep(.2, 1.1, length(fwidth(p * 48.0)));`,
+  "painted-wood": `float wear = smoothstep(.57, .79, storyNoise(p * 3.8));
+    float grain = .98 - wear * .18;
+    float storyHeight = (1.0 - wear) * .0015 + sin(storyPlane.x * 35.0) * .0002;
+    float storyReliefFilter = 1.0 - smoothstep(.25, 1.2, length(fwidth(p * 12.0)));`,
+  plaster: `float trowel = storyNoise(p * 2.7);
+    float aggregate = storyNoise(p * 42.0);
+    float grain = .95 + (trowel - .5) * .13;
+    float storyHeight = trowel * .002 + aggregate * .0003;
+    float storyReliefFilter = 1.0 - smoothstep(.25, 1.1, length(fwidth(p * 42.0)));`,
+  velvet: `float nap = sin(storyPlane.y * 7.0 + storyNoise(p * 3.0));
+    float grain = .93 + nap * .045;
+    float storyHeight = sin(storyPlane.x * 580.0) * sin(storyPlane.y * 590.0) * .000012;
+    float storyReliefFilter = 1.0 - smoothstep(.25, 1.3, length(fwidth(storyPlane * 590.0)));`,
+  ash: `float soot = storyNoise(p * 4.0);
+    float grain = .88 + soot * .17;
+    float storyHeight = soot * .0012 + storyNoise(p * 60.0) * .0003;
+    float storyReliefFilter = 1.0 - smoothstep(.25, 1.2, length(fwidth(p * 60.0)));`,
+  moss: `float cushion = storyNoise(p * 4.7);
+    float grain = .86 + cushion * .23;
+    float storyHeight = cushion * .006 + storyNoise(p * 34.0) * .001;
+    float storyReliefFilter = 1.0 - smoothstep(.25, 1.2, length(fwidth(p * 34.0)));`,
+};
+
+/** Surface identity includes broad roughness variation even on low quality. */
+export const TACTILE_ROUGHNESS: Partial<Record<StorySurface, string>> = {
+  "wet-wood": "roughnessFactor = clamp(roughnessFactor * (.87 + wet * .1), .7, .9);",
+  "charred-wood": "roughnessFactor = clamp(roughnessFactor + .09 + charcoal * .06, .88, 1.0);",
+  "painted-wood": "roughnessFactor = clamp(roughnessFactor * .77 + wear * .22, .35, .99);",
+  plaster: "roughnessFactor = clamp(roughnessFactor + trowel * .04, .88, 1.0);",
+  velvet: "roughnessFactor = clamp(roughnessFactor + .05 - nap * .035, .8, 1.0);",
+  ash: "roughnessFactor = clamp(roughnessFactor + .1, .96, 1.0);",
+  moss: "roughnessFactor = clamp(roughnessFactor + .06, .9, 1.0);",
 };
 
 export const TACTILE_RELIEF_NORMAL = `
@@ -115,7 +164,7 @@ export const TACTILE_RELIEF_NORMAL = `
 `;
 
 export function tactileProgramKey(surface: StorySurface, detail: TactileDetail) {
-  return `sidtw-tactile-${surface}-v4-${detail}`;
+  return `sidtw-tactile-${surface}-v5-${detail}`;
 }
 
 /** Extend the standard light/shadow/fog/colour pipeline, never replace it. */
@@ -135,7 +184,7 @@ export function applyTactileShader(shader: TactileShader, surface: StorySurface,
   shader.fragmentShader = shader.fragmentShader
     .replace("#include <common>", `#include <common>\nvarying vec3 vStoryPosition;\nvarying vec3 vStoryNormal;\n${SURFACE_NOISE}`)
     .replace("#include <color_fragment>", `#include <color_fragment>\n${SURFACE_COORDINATES}\n${detail === "relief" ? TACTILE_PATTERNS[surface] : TACTILE_BASE_PATTERNS[surface]}\ndiffuseColor.rgb *= grain;`)
-    .replace("#include <roughnessmap_fragment>", "#include <roughnessmap_fragment>\nroughnessFactor = clamp(roughnessFactor + (1.0 - grain) * .24, .08, 1.0);");
+    .replace("#include <roughnessmap_fragment>", `#include <roughnessmap_fragment>\n${TACTILE_ROUGHNESS[surface] ?? "roughnessFactor = clamp(roughnessFactor + (1.0 - grain) * .24, .08, 1.0);"}`);
   if (detail === "relief") shader.fragmentShader = shader.fragmentShader
     .replace("#include <normal_fragment_maps>", `#include <normal_fragment_maps>\n${TACTILE_RELIEF_NORMAL}`);
   return shader;

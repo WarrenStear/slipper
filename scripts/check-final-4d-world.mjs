@@ -5,6 +5,8 @@ const ROOT = process.cwd();
 
 const requiredFiles = [
   "src/components/three/StoryScene.tsx",
+  "src/components/three/environment/forestGeometry.ts",
+  "src/components/three/environment/ProceduralDome.tsx",
   "src/components/three/WorldCanvas.tsx",
   "src/components/three/StorySceneWithMasterLantern.tsx",
   "src/components/three/world/PerfectWorldGround.tsx",
@@ -48,6 +50,8 @@ if (missing.length > 0) {
 }
 
 const storyScene = read("src/components/three/StoryScene.tsx");
+const forestGeometry = read("src/components/three/environment/forestGeometry.ts");
+const proceduralDome = read("src/components/three/environment/ProceduralDome.tsx");
 const worldCanvas = read("src/components/three/WorldCanvas.tsx");
 const worldEngine = read("src/components/three/world/WorldEngineLayer.tsx");
 const renderQuality = read("src/components/three/renderQuality.ts");
@@ -77,7 +81,7 @@ if (perfectGround.includes("WorldGroundShader") || perfectGround.includes("<shad
 if (!/<Canvas\s+[\s\S]*?shadows=/.test(worldCanvas)) hardFailures.push("canvas shadow policy is missing");
 if (!worldLayout.includes("buildPhysicalStoryLinks")) hardFailures.push("authored physical maze topology is not mounted");
 if (!storyScene.includes("<EnvironmentalThreshold") || /<WorldGateway\b|<Portals\b|<PortalPathBeams\b/.test(storyScene)) hardFailures.push("generic journey portals were not replaced by environmental thresholds");
-if (!storyScene.includes("createForestTrunkGeometry") || !storyScene.includes("const rootAngles = [")) hardFailures.push("rooted forest trunk geometry is missing");
+if (!storyScene.includes("createForestTrunkGeometry") || !forestGeometry.includes("const rootAngles = [") || !storyScene.includes('from "./environment/forestGeometry"')) hardFailures.push("rooted forest trunk geometry is missing");
 if (terrainWorker.includes("tooCloseToPlayer") || terrainWorker.includes("playerPosition")) hardFailures.push("forest worker still cuts a player-relative tree hole");
 
 if (
@@ -102,16 +106,16 @@ if (!storyScene.includes("MOON_ALBEDO_PATH")) hardFailures.push("realistic moon 
 if (!storyScene.includes("FOREST_GROUND_ALBEDO_PATH") || storyScene.includes("applyNarrativeTextureBlend")) hardFailures.push("production ground material is missing or vertex tint is double-applied");
 if (!storyScene.includes("FIRST_WOOD_PANORAMA_PATH") || !storyScene.includes("<AtmosphericForestPanorama")) hardFailures.push("atmospheric forest panorama is missing");
 if (!storyScene.includes("FIRST_WOOD_DEPTH_PLATE_PATH") || !storyScene.includes("<CinematicForestDepthPlate")) hardFailures.push("cinematic forest depth plate is missing");
-if (!storyScene.includes("first-wood-panorama-v3.webp") || !storyScene.includes("forest-sky-horizon-v1.webp") || !storyScene.includes("skyFbm")) hardFailures.push("layered procedural sky or seam-safe horizon assets are missing");
+if (!storyScene.includes("first-wood-panorama-v3.webp") || !storyScene.includes("forest-sky-horizon-v1.webp") || !proceduralDome.includes("skyFbm") || !storyScene.includes('from "./environment/ProceduralDome"') || !storyScene.includes("<ProceduralDome")) hardFailures.push("layered procedural sky or seam-safe horizon assets are missing");
 if (!storyScene.includes("activeVisualState.showStars && qualityProfile.starMultiplier > 0")) hardFailures.push("reduced-effects star field is still mounted");
 if (!storyScene.includes("function DistantForestSilhouetteRing") || !storyScene.includes("<DistantForestSilhouetteRing")) hardFailures.push("single-pass distant forest skyline is missing");
 if (!storyScene.includes('showDepthPlate={visualState.biome === "firstWood" && qualityProfile.quality !== "low"}')) hardFailures.push("cinematic horizon plate is not First-Wood-only or low-tier gated");
-if (!storyScene.includes('qualityProfile.quality === "medium"') || !storyScene.includes("cloudDetail")) hardFailures.push("procedural cloud cost is not quality-tiered");
+if (!proceduralDome.includes('qualityProfile.quality === "medium"') || !proceduralDome.includes("cloudDetail")) hardFailures.push("procedural cloud cost is not quality-tiered");
 if (worldVisualState.includes("fireBias > 0.54") || !worldVisualState.includes("baseMoonColor")) hardFailures.push("Fire and River moon colour still hard-snaps");
 if (!storyScene.includes("MEMORY_BLOOM_TEXTURE_PATH") || !storyScene.includes("<MemoryBloomLandmark")) hardFailures.push("memory-bloom path landmark is missing");
 if (!storyScene.includes("<LivingPathMist")) hardFailures.push("living path mist is missing");
 if (!storyScene.includes("<LivingPathRibbon")) hardFailures.push("terrain-conforming guidance path is missing");
-if (!storyScene.includes("createOrganicCrownGeometry") || !storyScene.includes("mergeGeometries")) hardFailures.push("single-pass organic crown geometry is missing");
+if (!storyScene.includes("createOrganicCrownGeometry") || !forestGeometry.includes("function createOrganicCrownGeometry") || !forestGeometry.includes("mergeGeometries")) hardFailures.push("single-pass organic crown geometry is missing");
 if (/crownAccentRef|lowerCrownRef|upperCrownRef|sideCrownRef/.test(storyScene)) hardFailures.push("stacked duplicate canopy draw calls are mounted");
 if (!/decorationsPerCell: [1-9]/.test(mediumProfile) || !/groundDetailMultiplier: 0\.[1-9]/.test(mediumProfile)) hardFailures.push("medium quality does not restore budgeted world detail");
 if (!/enableMoonShadows: true/.test(cinematicProfile) || !/shadowMapSize: 1024/.test(cinematicProfile)) hardFailures.push("cinematic shadow budget is incomplete");

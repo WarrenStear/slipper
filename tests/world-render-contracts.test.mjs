@@ -62,11 +62,12 @@ test("the master lantern and canvas own their render responsibilities", () => {
   assert.match(scene, /<AtmosphericForestPanorama/);
   assert.match(scene, /first-wood-panorama-v3\.webp/);
   assert.match(scene, /forest-sky-horizon-v1\.webp/);
-  assert.match(scene, /function ProceduralDome[\s\S]*skyFbm/);
+  assert.match(scene, /from "\.\/environment\/ProceduralDome"/);
+  assert.match(read("src/components/three/environment/ProceduralDome.tsx"), /function ProceduralDome[\s\S]*skyFbm/);
   assert.match(scene, /activeVisualState\.showStars && qualityProfile\.starMultiplier > 0/);
   assert.match(scene, /function DistantForestSilhouetteRing[\s\S]*<DistantForestSilhouetteRing/);
   assert.match(scene, /showDepthPlate=\{visualState\.biome === "firstWood" && qualityProfile\.quality !== "low"\}/);
-  assert.match(scene, /qualityProfile\.quality === "medium"[\s\S]*cloudDetail/);
+  assert.match(read("src/components/three/environment/ProceduralDome.tsx"), /qualityProfile\.quality === "medium"[\s\S]*cloudDetail/);
   assert.doesNotMatch(visualState, /fireBias > 0\.54/);
   assert.match(lanternNarrative, /"distant"[\s\S]*"borrowed"[\s\S]*"released"/);
   assert.match(visualState, /const baseMoonColor = biome === "fireRiver"[\s\S]*mixColor/);
@@ -75,7 +76,8 @@ test("the master lantern and canvas own their render responsibilities", () => {
   assert.match(scene, /<MemoryBloomLandmark/);
   assert.match(scene, /<LivingPathMist/);
   assert.match(scene, /<LivingPathRibbon/);
-  assert.match(scene, /function createOrganicCrownGeometry/);
+  assert.match(scene, /from "\.\/environment\/forestGeometry"/);
+  assert.match(read("src/components/three/environment/forestGeometry.ts"), /function createOrganicCrownGeometry/);
   assert.match(scene, /mergeGeometries/);
   assert.doesNotMatch(scene, /crownAccentRef|lowerCrownRef|upperCrownRef|sideCrownRef/);
   assert.doesNotMatch(scene, /applyNarrativeTextureBlend/);
@@ -307,7 +309,7 @@ test("the prologue, story roles, and guidance express authored progression", () 
   assert.match(reflection, /<ReflectionApparition apparition/);
   assert.match(reflection, /<ReflectedPath/);
   assert.match(mirrorSurface, /uDistortion/);
-  assert.match(mirrorSurface, /still \? 0\.012/);
+  assert.match(mirrorSurface, /still \? 0\.004/);
   assert.match(reflectedPath, /name="reflection-only-hidden-text"/);
   assert.match(reflectedPath, /name="reflection-only-hidden-route"/);
   assert.match(waterReflection, /name="reflection-only-water-route"/);
@@ -330,10 +332,12 @@ test("forest trees use grounded rooted geometry and opaque instanced crowns", ()
   const scene = read("src/components/three/StoryScene.tsx");
   const worker = read("src/workers/forestWorker.ts");
 
-  assert.match(scene, /function createForestTrunkGeometry/);
-  assert.match(scene, /const rootAngles = \[/);
+  const geometry = read("src/components/three/environment/forestGeometry.ts");
+  assert.match(scene, /from "\.\/environment\/forestGeometry"/);
+  assert.match(geometry, /function createForestTrunkGeometry/);
+  assert.match(geometry, /const rootAngles = \[/);
   assert.match(scene, /groundYAt/);
-  assert.match(scene, /ORGANIC_CROWN_LOBES/);
+  assert.match(geometry, /ORGANIC_CROWN_LOBES/);
   assert.doesNotMatch(scene, /transparent\s+opacity=.*crown/i);
   assert.match(worker, /edgeWall/);
   assert.match(worker, /trunkWidth/);
@@ -528,8 +532,8 @@ test("the epilogue composes the travelled world from the current journey history
   assert.match(tableau, /formationReady=\{\(lanternPlaced && \(!eventDriven \|\| reverseComplete\)\) \|\| storyCompleted\}/);
   assert.match(tableau, /formationMode: reducedMotion \? "immediate" : "gradual"/);
   assert.match(tableau, /beginsAfter: "lantern-placement-or-story-completion"/);
-  assert.match(tableau, /uTime: \{ value: 0 \}/);
-  assert.match(tableau, /reducedMotion \? 0 : clock\.elapsedTime/);
+  assert.match(tableau, /<WaterSurface[\s\S]*flow=\{\.65\}/);
+  assert.match(tableau, /reducedMotion=\{reducedMotion\} reducedEffects=\{qualityProfile\.quality === "low"\}/);
   assert.match(tableau, /reducedEffects \? 8 : 12/);
   assert.match(scene, /function isIntegratedFinaleEntry/);
   assert.match(scene, /function usesAuthoredCausalComposition/);

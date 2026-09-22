@@ -23,6 +23,12 @@ The experience uses three plain-language modes:
 
 The forest supports the writing; it should never overwhelm it.
 
+The [production environment art notes](docs/PRODUCTION_ENVIRONMENT_ART.md) describe
+the shared construction toolkit, forest and surface upgrades, chapter application,
+quality gates, visual-review commands and remaining production asset work.
+The [validation record](docs/PRODUCTION_ART_VALIDATION.md) contains matched
+before/after renderer measurements, test results and the limits of the evidence.
+
 ## Current package status
 
 ```txt

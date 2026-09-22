@@ -1,5 +1,7 @@
-import { memo, useLayoutEffect, useMemo, useRef } from "react";
+import { createOrganicCrownGeometry } from "./forestGeometry";
+import { memo, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
+import { TimberInstances } from "../chapters/ChapterArt";
 import { TactileMaterial, type StorySurface } from "../storyEvents/TactileMaterial";
 import { environmentBudget, forestDepthLayout, shorelineLayout, type DressingForm, type EnvironmentQuality } from "./chapterEnvironment";
 import { THORNED_HOUSE_ROOM_MODULES, thornedHouseRoomCount, type ThornedHouseStage } from "../../../lib/thornedHouseArchitecture";
@@ -8,6 +10,19 @@ type FormsProps = { forms: readonly DressingForm[]; name: string; color: string;
 /** Static instance matrices are uploaded only when the authored layout changes. */
 export const Forms = memo(function Forms({ forms, name, color, kind = "box", wood = false, surface, shadows = false, roughness = .98 }: FormsProps) {
   const mesh = useRef<THREE.InstancedMesh>(null);
+  const organicGeometry = useMemo(() => {
+    if (kind === "crown") return createOrganicCrownGeometry(0);
+    if (kind !== "tree") return null;
+    const geometry = new THREE.CylinderGeometry(.23, .5, 1, 8, 3);
+    const position = geometry.getAttribute("position") as THREE.BufferAttribute;
+    for (let i = 0; i < position.count; i++) {
+      const y = position.getY(i), t = y + .5;
+      position.setXYZ(i, position.getX(i) + t * t * .13, y, position.getZ(i) + Math.sin(t * 4) * .045);
+    }
+    geometry.computeVertexNormals(); geometry.computeBoundingBox(); geometry.computeBoundingSphere();
+    return geometry;
+  }, [kind]);
+  useEffect(() => () => organicGeometry?.dispose(), [organicGeometry]);
   useLayoutEffect(() => {
     const target = mesh.current;
     if (!target) return;
@@ -24,8 +39,8 @@ export const Forms = memo(function Forms({ forms, name, color, kind = "box", woo
     if (target.instanceColor) target.instanceColor.needsUpdate = true;
     target.computeBoundingSphere(); target.computeBoundingBox();
   }, [forms]);
-  return <instancedMesh ref={mesh} name={name} args={[undefined, undefined, forms.length]} receiveShadow castShadow={shadows}>
-    {kind === "tree" ? <cylinderGeometry args={[.26, .5, 1, 8]} /> : kind === "stem" ? <cylinderGeometry args={[.025, .035, 1, 5]} /> : kind === "flower" ? <sphereGeometry args={[.11, 7, 5]} /> : kind === "branch" ? <cylinderGeometry args={[.46, .68, 1, 6]} /> : kind === "crown" ? <icosahedronGeometry args={[1, 1]} /> : kind === "stone" ? <icosahedronGeometry args={[1, 0]} /> : <boxGeometry args={[1, 1, 1]} />}
+  return <instancedMesh ref={mesh} name={name} args={[organicGeometry ?? undefined, undefined, forms.length]} receiveShadow castShadow={shadows}>
+    {organicGeometry ? null : kind === "stem" ? <cylinderGeometry args={[.025, .035, 1, 5]} /> : kind === "flower" ? <sphereGeometry args={[.11, 7, 5]} /> : kind === "branch" ? <cylinderGeometry args={[.46, .68, 1, 6]} /> : kind === "stone" ? <icosahedronGeometry args={[1, 0]} /> : <boxGeometry args={[1, 1, 1]} />}
     {(wood || surface) ? <TactileMaterial surface={surface ?? "wood"} color={color} roughness={wood ? .96 : roughness} /> : <meshStandardMaterial color={color} roughness={roughness} />}
   </instancedMesh>;
 });
@@ -88,9 +103,9 @@ export const HouseWallDetails = memo(function HouseWallDetails({ stage, detail, 
     return { trim, panels, floor };
   }, [stage, count]);
   return <group name="house-domestic-wall-joinery" userData={{ decorativeOnly: true, drawCallBudget: 3 }}>
-    <Forms forms={forms.panels} name="worn-wall-panelling" color="#3c3028" wood />
-    <Forms forms={forms.trim} name="wall-rails-and-stiles" color="#82664b" wood />
-    <Forms forms={forms.floor} name="worn-corridor-floorboards" color="#68513d" wood />
+    <TimberInstances forms={forms.panels} name="worn-wall-panelling" color="#514137" surface="painted-wood" />
+    <TimberInstances forms={forms.trim} name="wall-rails-and-stiles" color="#82664b" />
+    <TimberInstances forms={forms.floor} name="worn-corridor-floorboards" color="#68513d" />
   </group>;
 });
 
@@ -105,5 +120,5 @@ export const BrokenRoomDetails = memo(function BrokenRoomDetails() {
     for (const y of [.17, 5.9]) result.push({ position: [0, y, -8.24], scale: [16.1, .12, .13] });
     return result;
   }, []);
-  return <Forms forms={forms} name="damp-room-edge-joinery" color="#4c443b" wood />;
+  return <TimberInstances forms={forms} name="damp-room-edge-joinery" color="#6b6051" surface="wet-wood" />;
 });

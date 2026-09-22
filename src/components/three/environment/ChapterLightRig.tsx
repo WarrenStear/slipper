@@ -13,8 +13,8 @@ export const ChapterLightRig = memo(function ChapterLightRig({ family, reducedMo
   const light = useRef<THREE.SpotLight>(null), time = useRef(0);
   useFrame((_, delta) => {
     if (!light.current) return;
-    time.current = environmentTime(time.current, delta, !document.hidden, reducedMotion);
-    light.current.intensity = intensity * (reducedMotion ? 1 : 1 + Math.sin(time.current * .8) * .025);
+    time.current = environmentTime(time.current, delta, !document.hidden, reducedMotion || reducedEffects);
+    light.current.intensity = intensity * (reducedMotion || reducedEffects ? 1 : 1 + Math.sin(time.current * .8) * .025);
   });
   return <group name={`chapter-key:${family}`} userData={{ shadowMaps: 0, anchored: true }}>
     <primitive object={target} />

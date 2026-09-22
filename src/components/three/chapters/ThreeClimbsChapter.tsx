@@ -1,3 +1,4 @@
+import { BotanicalCluster } from "../environmentArt/EnvironmentArt";
 import { memo } from "react";
 import {
   Beam,
@@ -66,30 +67,7 @@ function HeartRoseMemory({ selected, reducedEffects }: { selected: boolean; redu
       }}
     >
       <MemoryPedestal selected={selected} />
-      <mesh position={[0, 1.08, 0]}>
-        <cylinderGeometry args={[0.035, 0.052, 1.44, 7]} />
-        <meshStandardMaterial color="#4f684d" roughness={0.96} />
-      </mesh>
-      {[-0.42, 0, 0.42, 0.84, 1.26].map((angle, index) => (
-        <mesh
-          key={angle}
-          position={[
-            Math.cos(angle * 5.1) * 0.19,
-            1.82 + (index % 2) * 0.08,
-            Math.sin(angle * 5.1) * 0.19,
-          ]}
-          scale={[0.32, 0.19, 0.28]}
-          rotation={[0.2, angle * 5.1, angle]}
-        >
-          <sphereGeometry args={[1, 10, 7]} />
-          <meshStandardMaterial
-            color={selected ? "#d49aa3" : "#a36f78"}
-            emissive={selected ? "#7e3e49" : "#000000"}
-            emissiveIntensity={selected ? 0.38 : 0}
-            roughness={0.88}
-          />
-        </mesh>
-      ))}
+      <BotanicalCluster kind="rose" position={[0, .36, 0]} scale={3.25} seed={41} color={selected ? "#d49aa3" : "#a36f78"} />
       {selected && !reducedEffects ? (
         <pointLight position={[0, 1.75, 0]} color="#d9a0a8" intensity={0.74} distance={5} />
       ) : null}
@@ -449,7 +427,7 @@ function ThreeClimbsChapterComponent({
           rotation={[0, arrivalHeading, 0]}
           userData={{ choiceCount: 3, selected: heartMemoryChosen, stagedTowardArrival: true }}
         >
-          <WaterSurface position={[0, 0.02, 5]} size={[12, 7]} color="#1e3543" opacity={0.84} />
+          <WaterSurface reducedMotion={reducedMotion} reducedEffects={reducedEffects} position={[0, 0.02, 5]} size={[12, 7]} color="#1e3543" opacity={0.84} />
           <MoonDisc
             position={[0, 9, 13]}
             radius={3.3}

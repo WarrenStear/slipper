@@ -9,19 +9,13 @@ import { getCurrentCinematicProfile } from "../../../cinematics/emotionalCinemat
 import { CINEMATIC_ACTOR_CUES, flockInstanceCount, sampleActorCue, sampleFlockPose, type ActorCueDefinition, type ActorPose, type FlockPose } from "../../../cinematics/cinematicCueRegistry";
 
 import { SwanModel } from "./SwanModel";
+import { AuthoredNpcSilhouette } from "../environmentArt/AuthoredNpc";
 
 const ORIGIN: Vector3Tuple = [0, 0, 0];
 const NO_CUES: readonly ActorCueDefinition[] = [];
 
 function WolfFigure({ resting }: { resting: boolean }) {
-  return <group scale={[0.8, 0.8, 0.8]} rotation={[0, Math.PI / 2, 0]}>
-    <mesh position={[0, resting ? 0.46 : 0.85, 0]} scale={[1.1, 0.52, 0.42]}><dodecahedronGeometry args={[0.8, 1]} /><meshStandardMaterial color="#42433e" roughness={1} /></mesh>
-    <mesh position={[0.92, resting ? 0.53 : 1.12, 0]} scale={[0.4, 0.38, 0.34]}><dodecahedronGeometry args={[0.8, 1]} /><meshStandardMaterial color="#353732" roughness={1} /></mesh>
-    <mesh position={[1.22, resting ? 0.48 : 1.02, 0]} scale={[0.42, 0.19, 0.22]}><sphereGeometry args={[0.7, 10, 6]} /><meshStandardMaterial color="#282d29" roughness={1} /></mesh>
-    {[-1, 1].map((side) => <mesh key={side} position={[0.88, resting ? 0.94 : 1.53, side * 0.19]}><coneGeometry args={[0.16, 0.4, 4]} /><meshStandardMaterial color="#282d29" roughness={1} /></mesh>)}
-    {[-0.7, 0.6].flatMap((x) => [-0.25, 0.25].map((z) => <mesh key={`${x}:${z}`} position={[x + (resting ? 0.2 : 0), resting ? 0.13 : 0.4, z]} rotation={[0, 0, resting ? Math.PI / 2 : 0]}><capsuleGeometry args={[0.095, 0.56, 3, 6]} /><meshStandardMaterial color="#353732" roughness={1} /></mesh>))}
-    <mesh position={[-1.1, resting ? 0.22 : 0.65, 0]} rotation={[0, 0, 1.2]}><capsuleGeometry args={[0.14, 0.72, 3, 6]} /><meshStandardMaterial color="#3a3e37" roughness={1} /></mesh>
-  </group>;
+  return <group scale={.8}><AuthoredNpcSilhouette kind="wolf" resting={resting} /></group>;
 }
 
 function SwanFigure() {

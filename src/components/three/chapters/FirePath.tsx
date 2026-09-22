@@ -1,3 +1,4 @@
+import { AuthoredNpcSilhouette } from "../environmentArt/AuthoredNpc";
 import { memo, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
@@ -116,6 +117,7 @@ function CharredThreshold({ active }: { active: boolean }) {
       {branches.map(([from, to], index) => (
         <Beam
           key={index}
+          surface="charred-wood"
           from={[...from]}
           to={[...to]}
           radius={0.105 + (index % 2) * 0.035}
@@ -134,26 +136,7 @@ function WolfGuardian({ resting }: { resting: boolean }) {
       rotation={resting ? [0, 0.62, 0.02] : [0, 0.52, 0]}
       scale={resting ? [1, 0.72, 1] : 1}
     >
-      <mesh position={[0, 0.78, 0]} scale={[1.55, 0.62, 0.66]} castShadow>
-        <dodecahedronGeometry args={[0.82, 0]} />
-        <meshStandardMaterial color="#25211e" roughness={0.98} />
-      </mesh>
-      <mesh position={[1.25, resting ? 0.82 : 1.12, 0]} scale={[0.58, 0.52, 0.5]} castShadow>
-        <dodecahedronGeometry args={[0.76, 0]} />
-        <meshStandardMaterial color="#201d1a" roughness={0.98} />
-      </mesh>
-      <mesh position={[1.23, resting ? 1.26 : 1.66, -0.28]} rotation={[0, 0, -0.12]}>
-        <coneGeometry args={[0.16, 0.54, 4]} />
-        <meshStandardMaterial color="#181614" roughness={1} />
-      </mesh>
-      <mesh position={[1.23, resting ? 1.26 : 1.66, 0.28]} rotation={[0, 0, 0.12]}>
-        <coneGeometry args={[0.16, 0.54, 4]} />
-        <meshStandardMaterial color="#181614" roughness={1} />
-      </mesh>
-      <mesh position={[1.59, resting ? 0.78 : 1.07, 0]} rotation={[0, 0, -Math.PI / 2]}>
-        <coneGeometry args={[0.22, 0.62, 5]} />
-        <meshStandardMaterial color="#1d1a18" roughness={1} />
-      </mesh>
+      <group rotation={[0, Math.PI / 2, 0]} scale={1.35}><AuthoredNpcSilhouette kind="wolf" resting={resting} /></group>
     </group>
   );
 }

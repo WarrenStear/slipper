@@ -2,7 +2,7 @@ import { chromium } from '@playwright/test';
 import { spawn, execFileSync } from 'node:child_process';
 import { mkdir, writeFile, readFile, symlink, rm } from 'node:fs/promises';
 
-const baseline = '7cb74739204fe153f7f0449e662478ec78c358e1';
+const baseline = process.env.VISUAL_REVIEW_BASELINE || '7cb74739204fe153f7f0449e662478ec78c358e1';
 const root = process.cwd(), out = '/tmp/slipper-cinematography-review';
 const beforeRoot = '/tmp/slipper-cinematography-baseline';
 const fixtureName = '.cinematography-review';

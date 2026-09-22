@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import {
   Beam,
   CandleField,
@@ -9,6 +9,10 @@ import {
   StonePath,
   WaterSurface,
 } from "./ChapterPrimitives";
+import { BotanicalBatch } from "../environmentArt/EnvironmentArt";
+import { TimberAssembly, Upholstery, StoneBasin, WindowJoinery, WritingDesk, ShelvedBooks } from "./ChapterArt";
+import { TactileMaterial } from "../storyEvents/TactileMaterial";
+import type { ConstructionPiece } from "./chapterArtGeometry";
 import type { ChapterSceneProps } from "./types";
 import { useJourneyStore } from "../../../stores/useJourneyStore";
 
@@ -28,117 +32,65 @@ function arrivalHeadingForScene(scene: ChapterSceneProps["scene"]) {
   return Math.atan2(Math.sin(localHeading), Math.cos(localHeading));
 }
 
-function Rose({ x, z, index }: { x: number; z: number; index: number }) {
-  return (
-    <group position={[x, 0.1, z]}>
-      <mesh position={[0, 0.32, 0]}>
-        <cylinderGeometry args={[0.025, 0.04, 0.65, 5]} />
-        <meshStandardMaterial color="#506241" roughness={1} />
-      </mesh>
-      <mesh position={[0, 0.7, 0]}>
-        <sphereGeometry args={[0.18, 8, 6]} />
-        <meshStandardMaterial color={index % 2 === 0 ? "#a8656b" : "#d0a3a2"} roughness={0.88} />
-      </mesh>
-    </group>
-  );
-}
+
 
 function LivingWaterFountain({ reducedEffects }: { reducedEffects: boolean }) {
-  return (
-    <group name="home-living-water-fountain" position={[-3.7, 0.08, 4.9]} userData={{ element: "water" }}>
-      <mesh position={[0, 0.28, 0]} receiveShadow>
-        <cylinderGeometry args={[1.5, 1.68, 0.45, 24]} />
-        <meshStandardMaterial color="#706756" roughness={0.78} metalness={0.12} />
-      </mesh>
-      <WaterSurface position={[0, 0.52, 0]} size={[2.62, 2.62]} circle color="#466d79" opacity={0.92} />
-      <mesh position={[0, 0.84, 0]}>
-        <cylinderGeometry args={[0.22, 0.34, 0.68, 14]} />
-        <meshStandardMaterial color="#726957" roughness={0.75} />
-      </mesh>
-      <mesh position={[0, 1.2, 0]}>
-        <sphereGeometry args={[0.18, 12, 8]} />
-        <meshBasicMaterial color="#9fc7d0" transparent opacity={0.72} toneMapped={false} />
-      </mesh>
-      {reducedEffects ? null : <pointLight position={[0, 1.1, 0]} color="#9bc1c7" intensity={0.44} distance={5} />}
-    </group>
-  );
+  return <group name="home-living-water-fountain" position={[-3.7, .08, 4.9]} userData={{ element: "water" }}>
+    <StoneBasin position={[0, .28, 0]} />
+    <WaterSurface position={[0, .52, 0]} size={[2.62, 2.62]} circle color="#304f57" opacity={.92} reducedEffects={reducedEffects} />
+    <StoneBasin position={[0, .89, 0]} radius={.34} height={.68} color="#726957" />
+    {reducedEffects ? null : <pointLight position={[0, 1.1, 0]} color="#9bc1c7" intensity={.44} distance={5} />}
+  </group>;
 }
 
 function BooksReadingAndWriting({ reducedEffects }: { reducedEffects: boolean }) {
-  const books = reducedEffects ? 6 : 11;
-  return (
-    <group name="home-books-reading-writing" position={[4.45, 0.08, 7.1]} userData={{ practices: ["reading", "writing"] }}>
-      <mesh position={[0, 2.08, 0.72]}>
-        <boxGeometry args={[2.6, 4.16, 0.42]} />
-        <meshStandardMaterial color="#493b31" roughness={0.96} />
+  const shelf = useMemo<ConstructionPiece[]>(() => [
+    { position: [0, 2.08, .72], size: [2.6, 4.16, .42] },
+    ...[.82, 1.78, 2.74, 3.7].map(y => ({ position: [0, y, .4] as [number, number, number], size: [2.55, .12, .74] as [number, number, number] })),
+    ...[-1.23, 1.23].map(x => ({ position: [x, 2.08, .3] as [number, number, number], size: [.12, 4.16, .66] as [number, number, number] })),
+  ], []);
+  return <group name="home-books-reading-writing" position={[4.45, .08, 7.1]} userData={{ practices: ["reading", "writing"] }}>
+    <TimberAssembly color="#62503e" pieces={shelf} />
+    <ShelvedBooks count={reducedEffects ? 6 : 11} />
+    <group name="home-writing-desk" position={[-.55, .78, -1.3]}>
+      <WritingDesk />
+      <mesh position={[-.24, .13, -.03]} rotation={[-Math.PI / 2, 0, -.1]}>
+        <planeGeometry args={[1.28, .82]} /><TactileMaterial surface="paper" color="#d4ccba" roughness={.95} side={2} />
       </mesh>
-      {[0.82, 1.78, 2.74, 3.7].map((y) => (
-        <mesh key={y} position={[0, y, 0.4]}>
-          <boxGeometry args={[2.55, 0.12, 0.74]} />
-          <meshStandardMaterial color="#62503e" roughness={0.94} />
-        </mesh>
-      ))}
-      {Array.from({ length: books }, (_, index) => (
-        <mesh key={index} position={[-0.98 + (index % 4) * 0.51, 1.15 + Math.floor(index / 4) * 0.96, 0.03]} rotation={[0, 0, (index % 3 - 1) * 0.05]}>
-          <boxGeometry args={[0.34, 0.62 + (index % 2) * 0.12, 0.46]} />
-          <meshStandardMaterial color={index % 3 === 0 ? "#78594e" : index % 3 === 1 ? "#536260" : "#8a744f"} roughness={0.9} />
-        </mesh>
-      ))}
-      <group name="home-writing-desk" position={[-0.55, 0.78, -1.3]}>
-        <mesh>
-          <boxGeometry args={[2.8, 0.18, 1.34]} />
-          <meshStandardMaterial color="#5f4938" roughness={0.92} />
-        </mesh>
-        {[-1.08, 1.08].map((x) => (
-          <Beam key={x} from={[x, -0.68, -0.42]} to={[x, 0, -0.42]} radius={0.09} color="#49372c" />
-        ))}
-        <mesh position={[-0.24, 0.13, -0.03]} rotation={[-Math.PI / 2, 0, -0.1]}>
-          <planeGeometry args={[1.28, 0.82]} />
-          <meshStandardMaterial color="#d4ccba" roughness={0.95} side={2} />
-        </mesh>
-        <Beam from={[0.38, 0.22, 0.05]} to={[0.82, 0.84, 0.08]} radius={0.025} color="#51433a" />
-      </group>
+      <Beam from={[.38, .22, .05]} to={[.82, .84, .08]} radius={.025} color="#51433a" />
     </group>
-  );
+  </group>;
 }
 
 function VelvetReadingNook({ reducedMotion }: { reducedMotion: boolean }) {
-  return (
-    <group name="home-velvet-reading-nook" position={[-4.4, 0.08, 8.2]} userData={{ fabric: "velvet" }}>
-      <mesh position={[0, 0.48, 0]} scale={[1.45, 0.58, 1.1]}>
-        <sphereGeometry args={[0.8, 16, 10]} />
-        <meshStandardMaterial color="#6e3948" roughness={0.88} />
-      </mesh>
-      <mesh position={[0, 1.22, 0.52]} scale={[1.38, 1.18, 0.4]}>
-        <sphereGeometry args={[0.76, 16, 10]} />
-        <meshStandardMaterial color="#633443" roughness={0.9} />
-      </mesh>
-      <FabricVeil position={[-1.18, 2.32, 0.55]} size={[1.55, 3.45]} color="#7b4151" opacity={0.68} reducedMotion={reducedMotion} phase={0.7} />
-      <mesh position={[1.18, 0.34, -0.48]} rotation={[-Math.PI / 2, 0, 0.22]}>
-        <planeGeometry args={[1.05, 0.72]} />
-        <meshStandardMaterial color="#d0c4aa" roughness={0.96} side={2} />
-      </mesh>
-    </group>
-  );
+  return <group name="home-velvet-reading-nook" position={[-4.4, .08, 8.2]} userData={{ fabric: "velvet" }}>
+    <TimberAssembly color="#493d31" pieces={[
+      { position: [0, .25, 0], size: [2.2, .18, 1.5] },
+      ...[-1, 1].flatMap(x => [-1, 1].map(z => ({ position: [x * .92, .14, z * .54] as [number, number, number], size: [.15, .28, .15] as [number, number, number] }))),
+    ]} />
+    <Upholstery position={[0, .48, 0]} size={[2.25, .38, 1.57]} color="#6e3948" />
+    <Upholstery position={[0, 1.22, .52]} rotation={[-.08, 0, 0]} size={[2.05, 1.6, .53]} color="#633443" />
+    <Upholstery position={[-1, .85, 0]} size={[.24, .58, 1.45]} color="#673745" />
+    <Upholstery position={[1, .85, 0]} size={[.24, .58, 1.45]} color="#673745" />
+    <FabricVeil position={[-1.18, 2.32, .55]} size={[1.55, 3.45]} color="#7b4151" opacity={.68} reducedMotion={reducedMotion} phase={.7} />
+    <mesh position={[1.18, .34, -.48]} rotation={[-Math.PI / 2, 0, .22]}>
+      <planeGeometry args={[1.05, .72]} /><TactileMaterial surface="paper" color="#d0c4aa" roughness={.96} side={2} />
+    </mesh>
+  </group>;
 }
 
 function ProtectedChildSpace({ reducedMotion }: { reducedMotion: boolean }) {
-  return (
-    <group name="home-protected-child-space" position={[0.6, 0.08, 8.55]} userData={{ protected: true }}>
-      <mesh position={[0, 0.4, 0]} scale={[1.55, 0.42, 1.04]}>
-        <sphereGeometry args={[0.72, 16, 9]} />
-        <meshStandardMaterial color="#a97f72" roughness={0.98} />
-      </mesh>
-      <mesh position={[0, 0.73, 0]} scale={[1.24, 0.18, 0.78]}>
-        <sphereGeometry args={[0.72, 14, 8]} />
-        <meshStandardMaterial color="#cfb8a1" roughness={1} />
-      </mesh>
-      <Beam from={[-1.18, 0, 0]} to={[-0.82, 2.85, 0]} radius={0.09} color="#5e4e40" />
-      <Beam from={[1.18, 0, 0]} to={[0.82, 2.85, 0]} radius={0.09} color="#5e4e40" />
-      <Beam from={[-0.82, 2.85, 0]} to={[0.82, 2.85, 0]} radius={0.075} color="#5e4e40" />
-      <FabricVeil position={[0, 2.04, 0.04]} size={[2.05, 1.55]} color="#d2c0a1" opacity={0.54} reducedMotion={reducedMotion} phase={1.9} />
-    </group>
-  );
+  return <group name="home-protected-child-space" position={[.6, .08, 8.55]} userData={{ protected: true }}>
+    <TimberAssembly color="#725749" pieces={[
+      { position: [0, .37, 0], size: [2.1, .23, 1.35] },
+      ...[-1, 1].map(x => ({ position: [x * 1.02, .5, 0] as [number, number, number], size: [.1, .58, 1.35] as [number, number, number] })),
+    ]} />
+    <Upholstery position={[0, .64, 0]} size={[1.98, .2, 1.22]} color="#cfb8a1" />
+    <Beam from={[-1.18, 0, 0]} to={[-.82, 2.85, 0]} radius={.09} color="#5e4e40" />
+    <Beam from={[1.18, 0, 0]} to={[.82, 2.85, 0]} radius={.09} color="#5e4e40" />
+    <Beam from={[-.82, 2.85, 0]} to={[.82, 2.85, 0]} radius={.075} color="#5e4e40" />
+    <FabricVeil position={[0, 2.04, .04]} size={[2.05, 1.55]} color="#d2c0a1" opacity={.54} reducedMotion={reducedMotion} phase={1.9} />
+  </group>;
 }
 
 function IntentionallyUnusedSpace() {
@@ -146,11 +98,11 @@ function IntentionallyUnusedSpace() {
     <group name="home-intentionally-unused-space" position={[3.75, 0.11, 3.45]} userData={{ intentionallyEmpty: true, reservedFor: "what-may-come", furnished: false }}>
       <mesh rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[1.62, 1.69, 48]} />
-        <meshBasicMaterial color="#ddc58b" transparent opacity={0.34} toneMapped={false} />
+        <TactileMaterial surface="wood" color="#897b61" roughness={.93} />
       </mesh>
       <mesh position={[0, 0.012, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <circleGeometry args={[1.58, 48]} />
-        <meshStandardMaterial color="#756b55" emissive="#816d42" emissiveIntensity={0.08} roughness={0.98} />
+        <TactileMaterial surface="wood" color="#7e7159" roughness={.96} />
       </mesh>
       <pointLight position={[0, 2.4, 0]} color="#f7daa2" intensity={0.4} distance={5.5} />
     </group>
@@ -158,30 +110,23 @@ function IntentionallyUnusedSpace() {
 }
 
 function KylieProtectiveShell() {
-  return (
-    <group name="home-open-front-architecture" userData={{ openFront: true, enclosure: "protective-not-confining" }}>
-      <mesh position={[0, 3.1, 10.9]} castShadow receiveShadow>
-        <boxGeometry args={[14, 6.2, 0.34]} />
-        <meshStandardMaterial color="#81735d" roughness={0.96} />
-      </mesh>
-      {[-7, 7].map((x) => (
-        <mesh key={x} position={[x, 3.1, 6]} castShadow receiveShadow>
-          <boxGeometry args={[0.34, 6.2, 10]} />
-          <meshStandardMaterial color="#81735d" roughness={0.96} />
-        </mesh>
-      ))}
-      {[-1, 1].map((side) => (
-        <mesh key={side} position={[side * 3.15, 7.35, 6]} rotation={[0, 0, side * -0.43]} castShadow>
-          <boxGeometry args={[8.3, 0.34, 10.7]} />
-          <meshStandardMaterial color="#45433b" roughness={0.97} />
-        </mesh>
-      ))}
-      <mesh position={[0, 0.025, 6]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-        <planeGeometry args={[13.55, 9.55]} />
-        <meshStandardMaterial color="#75684f" roughness={0.98} side={2} />
-      </mesh>
-    </group>
-  );
+  const walls = useMemo<ConstructionPiece[]>(() => [
+    { position: [0, 3.1, 10.9], size: [14, 6.2, .34] },
+    ...[-7, 7].map(x => ({ position: [x, 3.1, 6] as [number, number, number], size: [.34, 6.2, 10] as [number, number, number] })),
+  ], []);
+  const roof = useMemo<ConstructionPiece[]>(() => [-1, 1].map(side => ({ position: [side * 3.15, 7.35, 6], rotation: [0, 0, side * -.43], size: [8.3, .34, 10.7] })), []);
+  const joinery = useMemo<ConstructionPiece[]>(() => [
+    ...[-6.8, 0, 6.8].map(x => ({ position: [x, 3.1, 10.62] as [number, number, number], size: [.22, 6.2, .16] as [number, number, number] })),
+    ...[-1, 1].flatMap(side => [2, 6, 10].map(z => ({ position: [side * 3.15, 7.15, z] as [number, number, number], rotation: [0, 0, side * -.43] as [number, number, number], size: [8.2, .22, .19] as [number, number, number] }))),
+    ...[-6.8, 6.8].map(x => ({ position: [x, .14, 6] as [number, number, number], size: [.16, .25, 9.7] as [number, number, number] })),
+  ], []);
+  const floor = useMemo<ConstructionPiece[]>(() => Array.from({ length: 18 }, (_, i) => ({ position: [-6.397 + i * .752, -.017, 6], size: [.74, .084, 9.55] })), []);
+  return <group name="home-open-front-architecture" userData={{ openFront: true, enclosure: "protective-not-confining" }}>
+    <TimberAssembly pieces={walls} plaster color="#a7987c" />
+    <TimberAssembly pieces={roof} color="#45433b" />
+    <TimberAssembly pieces={joinery} color="#675543" />
+    <TimberAssembly pieces={floor} color="#8a795c" />
+  </group>;
 }
 
 function KylieInnerHome({ qualityProfile, reducedEffects, reducedMotion, sovereign, arrivalHeading }: Pick<ChapterSceneProps, "qualityProfile" | "reducedEffects" | "reducedMotion"> & { sovereign: boolean; arrivalHeading: number }) {
@@ -201,10 +146,10 @@ function KylieInnerHome({ qualityProfile, reducedEffects, reducedMotion, soverei
       </group>
       <group name="home-open-light-windows" userData={{ atmosphere: "open-light" }}>
         {[-4.2, 4.2].map((x) => (
-          <mesh key={x} position={[x, 3.25, 10.82]}>
-            <planeGeometry args={[2.05, 2.45]} />
-            <meshBasicMaterial color="#f4d49c" transparent opacity={0.68} toneMapped={false} />
-          </mesh>
+          <group key={x} position={[x, 3.25, 10.67]}>
+            <mesh rotation={[0, Math.PI, 0]}><planeGeometry args={[2.05, 2.45]} /><meshBasicMaterial color="#d5c4a2" transparent opacity={.48} toneMapped={false} /></mesh>
+            <WindowJoinery width={2.05} height={2.45} />
+          </group>
         ))}
         <pointLight position={[0, 5.2, 4.6]} color="#ffe0a8" intensity={reducedEffects ? 0.62 : 1.04} distance={15} />
       </group>
@@ -221,7 +166,7 @@ function KylieInnerHome({ qualityProfile, reducedEffects, reducedMotion, soverei
       <IntentionallyUnusedSpace />
       <group name="home-candles-and-roses">
         <CandleField qualityProfile={qualityProfile} reducedEffects={reducedEffects} count={12} radius={6.15} color="#ffd18b" />
-        {ROSES.slice(0, roseCount).map((rose, index) => <Rose key={index} x={rose.x} z={rose.z} index={index} />)}
+        <BotanicalBatch kind="rose" seed={41} placements={ROSES.slice(0, roseCount).map(rose => ({ position: [rose.x, .1, rose.z], scale: 1.5 }))} color="#c69398" />
       </group>
     </group>
   );

@@ -137,7 +137,7 @@ function ForkChapterComponent({
           userData={{ letGo, declined, departed, deleted }}
         >
           <group name="fork-verb-let-go-moving-water">
-            <WaterSurface position={[-5.2, 0.03, -4]} size={[4.8, 4.8]} color="#243c43" opacity={0.8} circle />
+            <WaterSurface reducedMotion={reducedMotion} reducedEffects={reducedEffects} position={[-5.2, 0.03, -4]} size={[4.8, 4.8]} color="#243c43" opacity={0.8} circle />
             {!letGo ? (
               <mesh position={[-5.2, 0.48, -4]} castShadow>
                 <dodecahedronGeometry args={[0.32, 0]} />

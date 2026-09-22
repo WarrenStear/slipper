@@ -40,5 +40,5 @@ export function useForestKtx2Textures() {
   return { bark, crown, marsh };
 }
 
-useGLTF.preload("/models/wolf.glb", DRACO_DECODER_PATH);
-useGLTF.preload("/models/phantom.glb", DRACO_DECODER_PATH);
+// KTX2 support is detected from the renderer before the first model load.
+// Eager preload without that loader can cache a failed compressed-asset request.

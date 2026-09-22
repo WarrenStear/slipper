@@ -8,6 +8,14 @@ import {
 import { useTexture } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
+import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
+import { createTaperedBranchGeometry, createWaxCandleGeometry, createFlameGeometry } from "../environmentArt/authoredGeometry";
+import { NarrativeWater } from "../environment/SanctuaryWater";
+import { createOrganicCrownGeometry } from "../environment/forestGeometry";
+import { MirrorMemorySurface } from "../reflections/MirrorMemorySurface";
+import { useSettingsStore } from "../../../stores/useSettingsStore";
+import { TimberAssembly } from "./ChapterArt";
+import { createSteppingStoneGeometry, createFlightSilhouetteGeometry, type ConstructionPiece } from "./chapterArtGeometry";
 import { stonePathLayout, veilFoldDepth } from "./surfaceGeometry";
 import { TactileMaterial, useTactileDetail, type StorySurface } from "../storyEvents/TactileMaterial";
 import type { NarrativeChapterId } from "../../../data/journeyWorldLayout.ts";
@@ -141,33 +149,18 @@ export const SceneGround = memo(function SceneGround({
 });
 
 export const WaterSurface = memo(function WaterSurface({
-  position = [0, 0.02, 0],
-  size = [12, 10],
-  color = "#182b39",
-  opacity = 0.82,
-  circle = false,
+  position = [0, .02, 0], size = [12, 10], color = "#182b39", opacity = .82,
+  circle = false, flow = 0, reducedMotion, reducedEffects,
 }: {
-  position?: Vec3;
-  size?: [number, number];
-  color?: string;
-  opacity?: number;
-  circle?: boolean;
+  position?: Vec3; size?: [number, number]; color?: string; opacity?: number;
+  circle?: boolean; flow?: number; reducedMotion?: boolean; reducedEffects?: boolean;
 }) {
-  return (
-    <mesh position={position} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-      {circle ? <circleGeometry args={[size[0] * 0.5, 48]} /> : <planeGeometry args={size} />}
-      <meshPhysicalMaterial
-        color={color}
-        roughness={0.14}
-        metalness={0.34}
-        clearcoat={0.7}
-        clearcoatRoughness={0.16}
-        transparent
-        opacity={opacity}
-        depthWrite={opacity >= 0.95}
-      />
-    </mesh>
-  );
+  const motionPreference = useSettingsStore(state => state.reducedMotion);
+  const effectsPreference = useSettingsStore(state => state.reducedEffects);
+  return <group position={position}>
+    <NarrativeWater width={size[0]} depth={size[1]} color={color} opacity={opacity} circle={circle} flow={flow}
+      reducedMotion={reducedMotion ?? motionPreference} reducedEffects={reducedEffects ?? effectsPreference} />
+  </group>;
 });
 
 export const MoonDisc = memo(function MoonDisc({
@@ -403,6 +396,8 @@ export const TreeGrove = memo(function TreeGrove({
   const count = reducedEffects ? 8 : 12 + detail * 4;
   const trunkRef = useRef<THREE.InstancedMesh>(null);
   const crownRef = useRef<THREE.InstancedMesh>(null);
+  const crownGeometry = useMemo(() => createOrganicCrownGeometry(detail >= 2 && !reducedEffects ? 1 : 0), [detail, reducedEffects]);
+  useEffect(() => () => crownGeometry.dispose(), [crownGeometry]);
 
   useLayoutEffect(() => {
     const dummy = new THREE.Object3D();
@@ -430,8 +425,7 @@ export const TreeGrove = memo(function TreeGrove({
         <cylinderGeometry args={[0.3, 0.46, 1, 7]} />
         <TactileMaterial surface="bark" color={trunk} roughness={1} />
       </instancedMesh>
-      <instancedMesh ref={crownRef} args={[undefined, undefined, count]} receiveShadow>
-        <dodecahedronGeometry args={[1, 1]} />
+      <instancedMesh ref={crownRef} geometry={crownGeometry} args={[undefined, undefined, count]} receiveShadow>
         <meshStandardMaterial color={tint} roughness={0.98} />
       </instancedMesh>
     </group>
@@ -458,6 +452,9 @@ export const CandleField = memo(function CandleField({
     : Math.min(count, 8 + qualityStep(qualityProfile) * 5);
   const waxRef = useRef<THREE.InstancedMesh>(null);
   const flameRef = useRef<THREE.InstancedMesh>(null);
+  const waxGeometry = useMemo(() => createWaxCandleGeometry(.065, 1, 8), []);
+  const flameGeometry = useMemo(() => createFlameGeometry(.065, .19), []);
+  useEffect(() => () => { waxGeometry.dispose(); flameGeometry.dispose(); }, [waxGeometry, flameGeometry]);
 
   useLayoutEffect(() => {
     const dummy = new THREE.Object3D();
@@ -476,18 +473,16 @@ export const CandleField = memo(function CandleField({
       dummy.updateMatrix();
       flameRef.current?.setMatrixAt(index, dummy.matrix);
     }
-    if (waxRef.current) waxRef.current.instanceMatrix.needsUpdate = true;
-    if (flameRef.current) flameRef.current.instanceMatrix.needsUpdate = true;
+    if (waxRef.current) { waxRef.current.instanceMatrix.needsUpdate = true; waxRef.current.computeBoundingSphere(); waxRef.current.computeBoundingBox(); }
+    if (flameRef.current) { flameRef.current.instanceMatrix.needsUpdate = true; flameRef.current.computeBoundingSphere(); flameRef.current.computeBoundingBox(); }
   }, [radius, visibleCount, y]);
 
   return (
     <group>
-      <instancedMesh ref={waxRef} args={[undefined, undefined, visibleCount]}>
-        <cylinderGeometry args={[0.055, 0.065, 1, 8]} />
+      <instancedMesh ref={waxRef} geometry={waxGeometry} args={[undefined, undefined, visibleCount]}>
         <TactileMaterial surface="wax" color="#e5dbc8" roughness={0.82} />
       </instancedMesh>
-      <instancedMesh ref={flameRef} args={[undefined, undefined, visibleCount]}>
-        <sphereGeometry args={[0.075, 8, 6]} />
+      <instancedMesh ref={flameRef} geometry={flameGeometry} args={[undefined, undefined, visibleCount]}>
         <meshBasicMaterial color={color} toneMapped={false} />
       </instancedMesh>
     </group>
@@ -607,7 +602,14 @@ export const FloatingMotes = memo(function FloatingMotes({
       <bufferGeometry>
         <bufferAttribute attach="attributes-position" args={[positions, 3]} />
       </bufferGeometry>
-      <pointsMaterial color={color} size={0.075} transparent opacity={0.72} depthWrite={false} sizeAttenuation />
+      <pointsMaterial color={color} size={0.075} transparent opacity={0.72} depthWrite={false} sizeAttenuation
+        customProgramCacheKey={() => "sidtw-soft-mote-v1"}
+        onBeforeCompile={shader => { shader.fragmentShader = shader.fragmentShader.replace("#include <map_particle_fragment>", `#include <map_particle_fragment>
+          float moteRadius = length(gl_PointCoord - .5);
+          diffuseColor.a *= 1. - smoothstep(.2, .5, moteRadius);
+          if (diffuseColor.a < .01) discard;
+        `); }}
+      />
     </points>
   );
 });
@@ -660,28 +662,24 @@ export const DoorFrame = memo(function DoorFrame({
   color?: string;
   open?: boolean;
 }) {
-  return (
-    <group position={position}>
-      <mesh position={[-width * 0.5, height * 0.5, 0]} castShadow receiveShadow>
-        <boxGeometry args={[0.42, height, depth]} />
-        <TactileMaterial surface="wood" color={color} roughness={0.9} />
-      </mesh>
-      <mesh position={[width * 0.5, height * 0.5, 0]} castShadow receiveShadow>
-        <boxGeometry args={[0.42, height, depth]} />
-        <TactileMaterial surface="wood" color={color} roughness={0.9} />
-      </mesh>
-      <mesh position={[0, height, 0]} castShadow receiveShadow>
-        <boxGeometry args={[width + 0.42, 0.45, depth]} />
-        <TactileMaterial surface="wood" color={color} roughness={0.9} />
-      </mesh>
-      {open ? null : (
-        <mesh position={[0, height * 0.48, 0.04]}>
-          <boxGeometry args={[width - 0.32, height - 0.5, 0.2]} />
-          <TactileMaterial surface="wood" color="#30251f" roughness={0.92} />
-        </mesh>
-      )}
-    </group>
-  );
+  const frame = useMemo<ConstructionPiece[]>(() => [
+    { position: [-width * .5, height * .5, 0], size: [.42, height, depth] },
+    { position: [width * .5, height * .5, 0], size: [.42, height, depth] },
+    { position: [0, height, 0], size: [width + .42, .45, depth] },
+    // Shallow rebates give the opening a finished edge inside its existing jambs.
+    ...[-1, 1].map(side => ({ position: [side * width * .5, height * .5, -depth * .43] as Vec3, size: [.29, height - .12, .045] as Vec3 })),
+  ], [width, height, depth]);
+  const door = useMemo<ConstructionPiece[]>(() => {
+    const w = width - .32, h = height - .5;
+    return [
+      ...Array.from({ length: 5 }, (_, i) => ({ position: [-w * .4 + i * w * .2, height * .48, .04] as Vec3, size: [w / 5 - .012, h, .17] as Vec3 })),
+      ...[-1, 1].map(side => ({ position: [0, height * .48 + side * h * .32, -.047] as Vec3, size: [w * .91, .13, .025] as Vec3 })),
+    ];
+  }, [width, height]);
+  return <group position={position}>
+    <TimberAssembly name="worn-rebated-door-frame" pieces={frame} color={color} />
+    {open ? null : <TimberAssembly name="joined-door-leaf" pieces={door} color="#44372e" />}
+  </group>;
 });
 
 export const ReflectivePanel = memo(function ReflectivePanel({
@@ -697,17 +695,18 @@ export const ReflectivePanel = memo(function ReflectivePanel({
   cracked?: boolean;
   warm?: boolean;
 }) {
-  const glass = warm ? "#6d5146" : "#6e8492";
+  const reducedMotion = useSettingsStore(state => state.reducedMotion);
+  const reducedEffects = useSettingsStore(state => state.reducedEffects);
+  const [width, height] = size;
+  const frame = useMemo<ConstructionPiece[]>(() => [
+    ...[-1, 1].map(side => ({ position: [side * (width / 2 + .085), 0, .055] as Vec3, size: [.17, height + .34, .18] as Vec3 })),
+    ...[-1, 1].map(side => ({ position: [0, side * (height / 2 + .085), .055] as Vec3, size: [width, .17, .18] as Vec3 })),
+  ], [width, height]);
   return (
     <group position={position} rotation={rotation}>
-      <mesh>
-        <boxGeometry args={[size[0] + 0.34, size[1] + 0.34, 0.18]} />
-        <meshStandardMaterial color="#25201c" metalness={0.64} roughness={0.38} />
-      </mesh>
-      <mesh position={[0, 0, 0.12]}>
-        <planeGeometry args={size} />
-        <meshPhysicalMaterial color={glass} metalness={0.64} roughness={0.09} clearcoat={0.8} />
-      </mesh>
+      <TimberAssembly pieces={frame} color={warm ? "#6b5642" : "#45403b"} />
+      <mesh><planeGeometry args={size} /><meshStandardMaterial color="#202827" metalness={.35} roughness={.24} /></mesh>
+      <MirrorMemorySurface width={width} height={height} warm={warm} reducedMotion={reducedMotion} reducedEffects={reducedEffects} />
       {cracked ? (
         <group position={[0, 0, 0.17]}>
           <Beam from={[-0.15, 2.1, 0]} to={[0.12, 0.2, 0]} radius={0.018} color="#d4c9b4" />
@@ -721,45 +720,38 @@ export const ReflectivePanel = memo(function ReflectivePanel({
 });
 
 export const HouseShell = memo(function HouseShell({
-  position = [0, 0, 0],
-  size = [8, 4.8, 6],
-  wallColor = "#5a4938",
-  roofColor = "#28231e",
-  openFront = true,
+  position = [0, 0, 0], size = [8, 4.8, 6], wallColor = "#5a4938",
+  roofColor = "#28231e", openFront = true, rearOpening = 0,
 }: {
-  position?: Vec3;
-  size?: Vec3;
-  wallColor?: string;
-  roofColor?: string;
-  openFront?: boolean;
+  position?: Vec3; size?: Vec3; wallColor?: string; roofColor?: string;
+  openFront?: boolean; rearOpening?: number;
 }) {
   const [width, height, depth] = size;
-  return (
-    <group position={position}>
-      <mesh position={[0, height, 0]} rotation={[0, 0, Math.PI / 4]} castShadow>
-        <boxGeometry args={[width * 0.74, width * 0.74, depth + 0.7]} />
-        <TactileMaterial surface="wood" color={roofColor} roughness={0.96} />
-      </mesh>
-      <mesh position={[-width * 0.5, height * 0.5, 0]} castShadow receiveShadow>
-        <boxGeometry args={[0.35, height, depth]} />
-        <TactileMaterial surface="wood" color={wallColor} roughness={0.95} />
-      </mesh>
-      <mesh position={[width * 0.5, height * 0.5, 0]} castShadow receiveShadow>
-        <boxGeometry args={[0.35, height, depth]} />
-        <TactileMaterial surface="wood" color={wallColor} roughness={0.95} />
-      </mesh>
-      <mesh position={[0, height * 0.5, depth * 0.5]} castShadow receiveShadow>
-        <boxGeometry args={[width, height, 0.35]} />
-        <TactileMaterial surface="wood" color={wallColor} roughness={0.95} />
-      </mesh>
-      {openFront ? null : (
-        <mesh position={[0, height * 0.5, -depth * 0.5]}>
-          <boxGeometry args={[width, height, 0.3]} />
-          <TactileMaterial surface="wood" color={wallColor} roughness={0.95} />
-        </mesh>
-      )}
-    </group>
-  );
+  const architecture = useMemo(() => {
+    const walls: ConstructionPiece[] = [
+      { position: [-width * .5, height * .5, 0], size: [.35, height, depth] },
+      { position: [width * .5, height * .5, 0], size: [.35, height, depth] },
+    ];
+    const gap = Math.min(width - .7, Math.max(0, rearOpening));
+    if (gap > 0) for (const side of [-1, 1]) walls.push({ position: [side * (width + gap) / 4, height / 2, depth / 2], size: [(width - gap) / 2, height, .35] });
+    else walls.push({ position: [0, height / 2, depth / 2], size: [width, height, .35] });
+    if (!openFront) walls.push({ position: [0, height / 2, -depth / 2], size: [width, height, .3] });
+    const run = width * .525, rise = width * .46, pitch = Math.atan2(rise, run);
+    const roof: ConstructionPiece[] = [-1, 1].map(side => ({ position: [side * run / 2, height + rise / 2, 0], size: [Math.hypot(run, rise), .17, depth + .7], rotation: [0, 0, -side * pitch] }));
+    const timber: ConstructionPiece[] = [];
+    for (const side of [-1, 1]) {
+      for (const z of [-depth / 2, depth / 2]) timber.push({ position: [side * (width / 2 - .11), height / 2, z], size: [.18, height, .18] });
+      timber.push({ position: [side * width / 2, height - .08, 0], size: [.25, .23, depth + .4] });
+      for (const z of [-depth / 2 - .24, depth / 2 + .24]) timber.push({ position: [side * run / 2, height + rise / 2 - .09, z], size: [Math.hypot(run, rise), .16, .15], rotation: [0, 0, -side * pitch] });
+    }
+    timber.push({ position: [0, height + rise - .08, 0], size: [.22, .22, depth + .7] });
+    return { walls, roof, timber };
+  }, [width, height, depth, rearOpening, openFront]);
+  return <group position={position} name="constructed-plaster-and-timber-shell">
+    <TimberAssembly pieces={architecture.walls} plaster color={wallColor} />
+    <TimberAssembly pieces={architecture.roof} color={roofColor} />
+    <TimberAssembly pieces={architecture.timber} color="#493b2e" />
+  </group>;
 });
 
 export const KeyProp = memo(function KeyProp({
@@ -794,6 +786,8 @@ export const StonePath = memo(function StonePath({
 }: { color?: string; count?: number; length?: number; fork?: number; y?: number }) {
   const forms = useMemo(() => stonePathLayout(count, length, fork, y), [count, length, fork, y]);
   const mesh = useRef<THREE.InstancedMesh>(null);
+  const geometry = useMemo(createSteppingStoneGeometry, []);
+  useEffect(() => () => geometry.dispose(), [geometry]);
   useLayoutEffect(() => {
     const target = mesh.current;
     if (!target) return;
@@ -806,8 +800,7 @@ export const StonePath = memo(function StonePath({
     target.computeBoundingSphere(); target.computeBoundingBox();
   }, [forms]);
   if (forms.length === 0) return null;
-  return <instancedMesh ref={mesh} name="shared-stone-path" args={[undefined, undefined, forms.length]} receiveShadow>
-    <circleGeometry args={[1, 8]} />
+  return <instancedMesh ref={mesh} name="shared-stone-path" geometry={geometry} args={[undefined, undefined, forms.length]} receiveShadow>
     <TactileMaterial surface="stone" color={color} roughness={0.98} />
   </instancedMesh>;
 });
@@ -827,13 +820,17 @@ export const ThornBranches = memo(function ThornBranches({
     { from: [-4, 0.4, 5] as Vec3, to: [3, 4.2, 4] as Vec3 },
     { from: [5, 0.3, -5] as Vec3, to: [-1, 3.7, -3] as Vec3 },
   ].slice(0, Math.max(2, Math.round(6 * density)));
-  return (
-    <group>
-      {branches.map((branch, index) => (
-        <Beam surface="bark" key={index} from={branch.from} to={branch.to} radius={0.08 + (index % 2) * 0.035} color={color} />
-      ))}
-    </group>
-  );
+  const geometry = useMemo(() => {
+    const parts = branches.map((branch, index) => createTaperedBranchGeometry([
+      branch.from,
+      [(branch.from[0] + branch.to[0]) * .5, (branch.from[1] + branch.to[1]) * .5 + .22, (branch.from[2] + branch.to[2]) * .5 + .16],
+      branch.to,
+    ], .08 + index % 2 * .035, index));
+    const merged = mergeGeometries(parts, false)!;
+    parts.forEach(part => part.dispose()); return merged;
+  }, [density]);
+  useEffect(() => () => geometry.dispose(), [geometry]);
+  return <mesh geometry={geometry} name="swept-thorn-branches"><TactileMaterial surface="bark" color={color} roughness={.97} /></mesh>;
 });
 
 export const BirdSwarm = memo(function BirdSwarm({
@@ -845,31 +842,28 @@ export const BirdSwarm = memo(function BirdSwarm({
   color?: string;
   dispersed?: boolean;
 }) {
-  return (
-    <group position={[0, 5.4, -2]}>
-      {Array.from({ length: count }, (_, index) => {
-        const angle = index * 2.27;
-        const radius = dispersed ? 2.4 + index * 0.27 : 0.8 + (index % 5) * 0.22;
-        const position: Vec3 = [
-          Math.cos(angle) * radius,
-          Math.sin(index * 1.7) * 1.1 + index * 0.07,
-          Math.sin(angle) * radius * 0.55,
-        ];
-        return (
-          <group key={index} position={position} rotation={[0, -angle, Math.sin(index) * 0.22]} scale={0.42}>
-            <mesh position={[-0.3, 0, 0]} rotation={[0, 0, -0.35]}>
-              <coneGeometry args={[0.16, 0.72, 3]} />
-              <meshBasicMaterial color={color} />
-            </mesh>
-            <mesh position={[0.3, 0, 0]} rotation={[0, 0, 0.35]}>
-              <coneGeometry args={[0.16, 0.72, 3]} />
-              <meshBasicMaterial color={color} />
-            </mesh>
-          </group>
-        );
-      })}
-    </group>
-  );
+  const mesh = useRef<THREE.InstancedMesh>(null);
+  const geometry = useMemo(createFlightSilhouetteGeometry, []);
+  const visibleCount = Number.isFinite(count) ? Math.min(80, Math.max(0, Math.floor(count))) : 0;
+  useEffect(() => () => geometry.dispose(), [geometry]);
+  useLayoutEffect(() => {
+    if (!mesh.current) return;
+    const object = new THREE.Object3D();
+    for (let index = 0; index < visibleCount; index++) {
+      const angle = index * 2.27;
+      const radius = dispersed ? 2.4 + index * .27 : .8 + index % 5 * .22;
+      object.position.set(Math.cos(angle) * radius, Math.sin(index * 1.7) * 1.1 + index * .07, Math.sin(angle) * radius * .55);
+      object.rotation.set(0, -angle, Math.sin(index) * .22); object.scale.setScalar(.42); object.updateMatrix();
+      mesh.current.setMatrixAt(index, object.matrix);
+    }
+    mesh.current.instanceMatrix.needsUpdate = true;
+    mesh.current.computeBoundingSphere(); mesh.current.computeBoundingBox();
+  }, [visibleCount, dispersed]);
+  return <group position={[0, 5.4, -2]}>
+    <instancedMesh name="shared-departing-bird-silhouettes" ref={mesh} geometry={geometry} args={[undefined, undefined, visibleCount]}>
+      <meshStandardMaterial color={color} roughness={1} side={THREE.DoubleSide} />
+    </instancedMesh>
+  </group>;
 });
 
 export const ConstellationField = memo(function ConstellationField({

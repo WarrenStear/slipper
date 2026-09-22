@@ -1,39 +1,59 @@
-import { memo, useCallback, useMemo, useRef } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { environmentTime } from "./chapterEnvironment";
-type Shader = Parameters<THREE.MeshStandardMaterial["onBeforeCompile"]>[0];
+import { useTactileDetail } from "../storyEvents/TactileMaterial";
+import { applyWaterShader } from "./waterShader";
 
-/** One opaque lit surface replaces the previous translucent water plane.
- * No reflection render target, framebuffer copies, transmission or extra pass. */
-export const SanctuaryWater = memo(function SanctuaryWater({ reducedMotion, reducedEffects }: { reducedMotion: boolean; reducedEffects: boolean }) {
+type Shader = Parameters<THREE.MeshStandardMaterial["onBeforeCompile"]>[0];
+export type NarrativeWaterProps = {
+  width?: number; depth?: number; color?: string; opacity?: number;
+  circle?: boolean; flow?: number; warm?: boolean;
+  reducedMotion?: boolean; reducedEffects?: boolean;
+};
+
+/** One lit, opaque dielectric surface. Reflected sky is an approximation;
+ * there is no scene capture, transmission, framebuffer copy, or extra pass. */
+export const NarrativeWater = memo(function NarrativeWater({
+  width = 20, depth = 17, color = "#1b3540", opacity = .9,
+  circle = false, flow = 0, warm = false, reducedMotion = false, reducedEffects = false,
+}: NarrativeWaterProps) {
+  const detail = useTactileDetail();
   const time = useRef(0);
-  // Keep the compiled shader attached to the same uniform objects when settings change.
+  // Never replace a compiled material's uniform objects when settings change.
   const uniforms = useMemo(() => ({ waterTime: { value: 0 }, waterDetail: { value: 1 } }), []);
+  const appearance = useMemo(() => ({
+    waterSize: { value: new THREE.Vector2() },
+    waterFlow: { value: 0 }, waterFine: { value: 0 }, waterCircle: { value: 0 },
+    waterDepth: { value: .9 }, waterSky: { value: new THREE.Color() },
+  }), []);
+  useEffect(() => {
+    appearance.waterSize.value.set(Math.max(.1, width), Math.max(.1, circle ? width : depth));
+    appearance.waterFlow.value = THREE.MathUtils.clamp(flow, -1, 1);
+    appearance.waterFine.value = reducedEffects || detail === "base" ? 0 : detail === "relief" ? 1 : .5;
+    appearance.waterCircle.value = circle ? 1 : 0;
+    // The legacy opacity control now describes depth; the water remains opaque.
+    appearance.waterDepth.value = THREE.MathUtils.clamp(opacity, 0, 1);
+    appearance.waterSky.value.set(warm ? "#baa08c" : "#a1bbc2");
+  }, [appearance, circle, depth, detail, flow, opacity, reducedEffects, warm, width]);
   const compile = useCallback((shader: Shader) => {
-    Object.assign(shader.uniforms, uniforms);
-    shader.vertexShader = shader.vertexShader.replace("#include <common>", "#include <common>\nvarying vec2 vWaterUv;")
-      .replace("#include <begin_vertex>", "#include <begin_vertex>\nvWaterUv=uv;");
-    shader.fragmentShader = shader.fragmentShader.replace("#include <common>", "#include <common>\nvarying vec2 vWaterUv; uniform float waterTime; uniform float waterDetail;")
-      .replace("#include <color_fragment>", `#include <color_fragment>
-        vec2 waterP=vWaterUv*vec2(20.,17.);
-        float ripples=sin(waterP.x*2.8+waterP.y*.7+waterTime*.24)*sin(waterP.y*3.4-waterTime*.18);
-        float bank=smoothstep(.02,.18,min(vWaterUv.x,1.-vWaterUv.x));
-        diffuseColor.rgb*=mix(.57,1.,bank)*(1.+ripples*.035*waterDetail);`)
-      .replace("#include <normal_fragment_maps>", `#include <normal_fragment_maps>
-        float waterSlopeX=cos(vWaterUv.x*56.+vWaterUv.y*12.+waterTime*.24)*.055*waterDetail;
-        float waterSlopeY=sin(vWaterUv.y*58.-waterTime*.18)*.035*waterDetail;
-        vec3 waterTangent=normalize(dFdx(vViewPosition));
-        vec3 waterBitangent=normalize(dFdy(vViewPosition));
-        normal=normalize(normal+waterTangent*waterSlopeX+waterBitangent*waterSlopeY);`);
-  }, [uniforms]);
+    Object.assign(shader.uniforms, uniforms, appearance);
+    applyWaterShader(shader);
+  }, [appearance, uniforms]);
   useFrame((_, delta) => {
-    time.current = environmentTime(time.current, delta, !document.hidden, reducedMotion);
-    uniforms.waterTime.value = reducedMotion ? 0 : time.current;
+    time.current = environmentTime(time.current, delta, !document.hidden, reducedMotion || reducedEffects);
+    uniforms.waterTime.value = reducedMotion || reducedEffects ? 0 : time.current;
     uniforms.waterDetail.value = reducedEffects ? .5 : 1;
   });
-  return <mesh name="moonlit-sanctuary-water" position={[0, .01, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-    <planeGeometry args={[20, 17]} />
-    <meshStandardMaterial color="#234453" roughness={.26} metalness={.3} onBeforeCompile={compile} customProgramCacheKey={() => "sidtw-sanctuary-water-v1"} />
+  return <mesh name={flow ? "directional-river-water" : "still-reflective-water"} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+    {circle ? <circleGeometry args={[width * .5, 48]} /> : <planeGeometry args={[width, depth]} />}
+    <meshStandardMaterial color={color} roughness={.24} metalness={0}
+      onBeforeCompile={compile} customProgramCacheKey={() => "sidtw-narrative-water-v2"} />
   </mesh>;
+});
+
+export const SanctuaryWater = memo(function SanctuaryWater({ reducedMotion, reducedEffects }: { reducedMotion: boolean; reducedEffects: boolean }) {
+  return <group name="moonlit-sanctuary-water" position={[0, .01, 0]}>
+    <NarrativeWater reducedMotion={reducedMotion} reducedEffects={reducedEffects} />
+  </group>;
 });

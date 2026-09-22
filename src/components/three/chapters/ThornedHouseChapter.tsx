@@ -2,8 +2,13 @@ import { HouseWallDetails } from "../environment/EnvironmentDressing";
 import { ChapterLightRig } from "../environment/ChapterLightRig";
 import { TactileMaterial } from "../storyEvents/TactileMaterial";
 import { CuboidCollider, RigidBody } from "@react-three/rapier";
-import { memo, useLayoutEffect, useRef } from "react";
+import { memo, useLayoutEffect, useRef, useMemo, useEffect } from "react";
 import * as THREE from "three";
+import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
+import { BotanicalBatch, TimberPiece } from "../environmentArt/EnvironmentArt";
+import { createWornTimberGeometry, createTaperedBranchGeometry } from "../environmentArt/authoredGeometry";
+import { TimberAssembly, Upholstery, WindowJoinery } from "./ChapterArt";
+import type { ConstructionPiece } from "./chapterArtGeometry";
 import {
   THORNED_HOUSE_MEMORY_OBJECTS as MEMORY_OBJECTS,
   THORNED_HOUSE_MEMORY_SURFACES as MEMORY_SURFACES,
@@ -68,31 +73,20 @@ function ModularRooms({ stage, detail, reducedEffects }: { stage: HouseStage; de
   const count = thornedHouseRoomCount(detail, reducedEffects);
   const compression = stage === "bedroom" ? 1 : stage === "garden" ? 0.42 : 0.68;
 
-  return (
-    <group name="thorned-house-modular-rooms">
-      {ROOM_MODULES.slice(0, count).map((room, index) => {
-        const width = room.width - compression * index * 0.22;
-        const height = room.height - compression * index * 0.1;
-        const sideDepth = index === 0 ? 1.65 : 1.2;
-        return (
-          <group key={room.z} position={[room.offset * compression, 0, room.z]}>
-            <mesh position={[-width * 0.5, height * 0.5, 0]} castShadow receiveShadow>
-              <boxGeometry args={[0.26, height, sideDepth]} />
-              <TactileMaterial surface="wood" color={index % 2 === 0 ? "#594438" : "#49382f"} roughness={0.97} />
-            </mesh>
-            <mesh position={[width * 0.5, height * 0.5, 0]} castShadow receiveShadow>
-              <boxGeometry args={[0.26, height, sideDepth]} />
-              <TactileMaterial surface="wood" color={index % 2 === 0 ? "#594438" : "#49382f"} roughness={0.97} />
-            </mesh>
-            <mesh position={[0, height, 0]} castShadow receiveShadow>
-              <boxGeometry args={[width + 0.26, 0.22, sideDepth]} />
-              <meshStandardMaterial color="#382c27" roughness={1} />
-            </mesh>
-          </group>
-        );
-      })}
-    </group>
-  );
+  const pieces = useMemo(() => {
+    const walls: ConstructionPiece[] = [], lintels: ConstructionPiece[] = [];
+    ROOM_MODULES.slice(0, count).forEach((room, index) => {
+      const width = room.width - compression * index * .22, height = room.height - compression * index * .1;
+      const depth = index === 0 ? 1.65 : 1.2;
+      for (const side of [-1, 1]) walls.push({ position: [room.offset * compression + side * width / 2, height / 2, room.z], size: [.26, height, depth], color: index % 2 ? "#89786b" : "#b3a18b" });
+      lintels.push({ position: [room.offset * compression, height, room.z], size: [width + .26, .22, depth] });
+    });
+    return { walls, lintels };
+  }, [count, compression]);
+  return <group name="thorned-house-modular-rooms">
+    <TimberAssembly pieces={pieces.walls} plaster color="#746251" />
+    <TimberAssembly pieces={pieces.lintels} color="#493a30" />
+  </group>;
 }
 
 function RepeatingHall({ stage, detail, reducedEffects }: { stage: HouseStage; detail: number; reducedEffects: boolean }) {
@@ -139,6 +133,8 @@ function RefilledSurfaces({
   reorganisationReleased: boolean;
 }) {
   const clutterRef = useRef<THREE.InstancedMesh>(null);
+  const clutterGeometry = useMemo(() => createWornTimberGeometry([1, 1, 1], 81), []);
+  useEffect(() => () => clutterGeometry.dispose(), [clutterGeometry]);
   const surfaceCount = thornedHouseSurfaceCount(stage, reducedEffects);
   const clutterCount = thornedHouseClutterCount({
     stage,
@@ -163,17 +159,14 @@ function RefilledSurfaces({
       dummy.updateMatrix();
       clutterRef.current?.setMatrixAt(index, dummy.matrix);
     }
-    if (clutterRef.current) clutterRef.current.instanceMatrix.needsUpdate = true;
+    if (clutterRef.current) { clutterRef.current.instanceMatrix.needsUpdate = true; clutterRef.current.computeBoundingSphere(); clutterRef.current.computeBoundingBox(); }
   }, [clutterCount, reorganisationReleased, stage]);
 
   return (
     <group name="thorned-house-refilled-surfaces">
       {MEMORY_SURFACES.slice(0, surfaceCount).map((surface, index) => (
         <group key={surface.position.join(":")}>
-          <mesh position={surface.position} castShadow receiveShadow>
-            <boxGeometry args={surface.size} />
-            <meshStandardMaterial color={index % 2 === 0 ? "#614738" : "#49362d"} roughness={0.96} />
-          </mesh>
+          <TimberPiece position={surface.position} size={surface.size} seed={index} color={index % 2 === 0 ? "#614738" : "#49362d"} />
           <Beam
             from={[surface.position[0] - surface.size[0] * 0.36, 0, surface.position[2]]}
             to={[surface.position[0] - surface.size[0] * 0.36, surface.position[1], surface.position[2]]}
@@ -188,8 +181,7 @@ function RefilledSurfaces({
           />
         </group>
       ))}
-      <instancedMesh ref={clutterRef} args={[undefined, undefined, clutterCount]} castShadow={!reducedEffects} receiveShadow>
-        <boxGeometry args={[1, 1, 1]} />
+      <instancedMesh ref={clutterRef} geometry={clutterGeometry} args={[undefined, undefined, clutterCount]} castShadow={!reducedEffects} receiveShadow>
         <meshStandardMaterial color={stage === "bedroom" ? "#312722" : "#4a392f"} roughness={0.99} />
       </instancedMesh>
       {WALL_MEMORY_MARKS.slice(0, reducedEffects ? 2 : 3 + Math.min(2, detail)).map((memory, index) => (
@@ -265,30 +257,19 @@ function ArchitecturalThorns({ stage, detail, reducedEffects }: { stage: HouseSt
     .slice(0, count)
     .filter((branch) => stage !== "leaving" || !("blocksExit" in branch && branch.blocksExit));
 
-  return (
-    <group name="thorned-house-invasive-thorns">
-      {branches.map((branch, index) => (
-        <group key={`${branch.from.join(":")}:${branch.to.join(":")}`}>
-          <Beam
-            from={branch.from}
-            to={branch.to}
-            radius={0.075 + (index % 3) * 0.018}
-            color={stage === "leaving" ? "#49382e" : "#251916"}
-            radialSegments={reducedEffects ? 5 : 7}
-          />
-          {index < (reducedEffects ? 2 : 3 + detail) ? (
-            <Beam
-              from={branch.to}
-              to={[branch.to[0] + (index % 2 ? -0.62 : 0.62), branch.to[1] - 0.78, branch.to[2] + 0.34]}
-              radius={0.036}
-              color="#2a1b18"
-              radialSegments={5}
-            />
-          ) : null}
-        </group>
-      ))}
-    </group>
-  );
+  const geometry = useMemo(() => {
+    const pieces: THREE.BufferGeometry[] = [];
+    branches.forEach((branch, index) => {
+      const midpoint: Vec3 = [(branch.from[0] + branch.to[0]) / 2, (branch.from[1] + branch.to[1]) / 2 + .2, (branch.from[2] + branch.to[2]) / 2 + .12];
+      pieces.push(createTaperedBranchGeometry([branch.from, midpoint, branch.to], .075 + index % 3 * .018, index));
+      if (index < (reducedEffects ? 2 : 3 + detail)) pieces.push(createTaperedBranchGeometry([branch.to, [branch.to[0] + (index % 2 ? -.62 : .62), branch.to[1] - .78, branch.to[2] + .34]], .036, index));
+    });
+    const merged = mergeGeometries(pieces, false)!; pieces.forEach(piece => piece.dispose()); return merged;
+  }, [stage, detail, reducedEffects]);
+  useEffect(() => () => geometry.dispose(), [geometry]);
+  return <group name="thorned-house-invasive-thorns">
+    <mesh geometry={geometry}><TactileMaterial surface="bark" color={stage === "leaving" ? "#49382e" : "#251916"} roughness={.96} /></mesh>
+  </group>;
 }
 
 function ExitThreshold({ stage, reducedEffects }: { stage: ExitStage; reducedEffects: boolean }) {
@@ -309,10 +290,10 @@ function ExitThreshold({ stage, reducedEffects }: { stage: ExitStage; reducedEff
       <DoorFrame width={4.25} height={4.9} depth={0.54} color="#5a4436" />
       {stage === "open" ? null : (
         <group position={[-1.72, 2.18, -0.1]} rotation={[0, -openAmount, 0]}>
-          <mesh position={[1.72, 0, 0]} castShadow>
-            <boxGeometry args={[3.44, 4.34, 0.2]} />
-            <meshStandardMaterial color="#30241f" roughness={0.94} />
-          </mesh>
+          <TimberAssembly color="#4c3d31" pieces={[
+            ...Array.from({ length: 6 }, (_, i) => ({ position: [.286 + i * .5733, 0, 0] as Vec3, size: [.56, 4.34, .17] as Vec3 })),
+            ...[-1.42, 1.42].map(y => ({ position: [1.72, y, -.087] as Vec3, size: [3.38, .18, .026] as Vec3 })),
+          ]} />
           <mesh position={[3.1, 0, -0.15]}>
             <sphereGeometry args={[0.09, 8, 6]} />
             <meshStandardMaterial color="#b38a4f" metalness={0.72} roughness={0.3} />
@@ -335,15 +316,7 @@ function LockedGarden({ reducedEffects, entryOpen }: { reducedEffects: boolean; 
   return (
     <group name="thorned-house-locked-garden">
       <DoorFrame position={[0, 0, -3.62]} width={4.2} height={5.05} depth={0.55} color="#49372d" open={entryOpen} />
-      {GARDEN_FLOWERS.slice(0, reducedEffects ? 5 : GARDEN_FLOWERS.length).map((position, index) => (
-        <group key={position.join(":")} position={position as Vec3}>
-          <Beam from={[0, -0.16, 0]} to={[0, 0.27, 0]} radius={0.018} color="#43513a" radialSegments={5} />
-          <mesh position={[0, 0.34, 0]}>
-            <sphereGeometry args={[0.19 + (index % 3) * 0.025, 8, 6]} />
-            <meshStandardMaterial color={index % 2 === 0 ? "#7b4550" : "#a16b70"} roughness={0.94} />
-          </mesh>
-        </group>
-      ))}
+      <BotanicalBatch kind="rose" seed={43} color="#965e67" placements={GARDEN_FLOWERS.slice(0, reducedEffects ? 5 : GARDEN_FLOWERS.length).map(position => ({ position: [position[0], position[1] - .16, position[2]], scale: 1.1 }))} />
     </group>
   );
 }
@@ -351,14 +324,12 @@ function LockedGarden({ reducedEffects, entryOpen }: { reducedEffects: boolean; 
 function OldMemoryBedroom({ reducedEffects }: { reducedEffects: boolean }) {
   return (
     <group name="thorned-house-old-memory-bedroom" position={[-3.22, 0.36, 2.72]}>
-      <mesh position={[0, 0.42, 0]} receiveShadow castShadow>
-        <boxGeometry args={[4.05, 0.84, 2.62]} />
-        <meshStandardMaterial color="#594136" roughness={0.97} />
-      </mesh>
-      <mesh position={[0, 0.9, -0.08]}>
-        <boxGeometry args={[3.9, 0.14, 2.48]} />
-        <meshStandardMaterial color="#765650" roughness={1} />
-      </mesh>
+      <TimberAssembly color="#594136" pieces={[
+        ...[-1, 1].map(side => ({ position: [0, .5, side * 1.24] as Vec3, size: [4.05, .38, .14] as Vec3 })),
+        ...[-1, 1].map(side => ({ position: [side * 1.94, .42, 0] as Vec3, size: [.16, .84, 2.62] as Vec3 })),
+        ...[-1, 1].flatMap(x => [-1, 1].map(z => ({ position: [x * 1.86, .21, z * 1.16] as Vec3, size: [.18, .42, .18] as Vec3 }))),
+      ]} />
+      <Upholstery position={[0, .9, -.08]} size={[3.9, .14, 2.48]} color="#765650" />
       {MEMORY_OBJECTS.slice(14, reducedEffects ? 17 : 20).map((_, index) => (
         <mesh key={index} position={[-1.25 + index * 0.68, 0.12 + (index % 2) * 0.06, 1.68 + (index % 3) * 0.32]} rotation={[0, index * 0.56, 0]}>
           <boxGeometry args={[0.54 + (index % 2) * 0.18, 0.22 + (index % 3) * 0.08, 0.7]} />
@@ -375,10 +346,10 @@ function DarkeningWindows({ stage }: { stage: HouseStage }) {
   return (
     <group name="thorned-house-darkening-windows">
       {[-1, 1].map((side) => (
-        <mesh key={side} position={[side * 5.65, 2.55, 1.1]} rotation={[0, side * -Math.PI / 2, 0]}>
-          <planeGeometry args={[1.35, 2.1]} />
-          <meshStandardMaterial color={color} emissive={color} emissiveIntensity={emissiveIntensity} roughness={0.72} side={THREE.DoubleSide} />
-        </mesh>
+        <group key={side} position={[side * 5.65, 2.55, 1.1]} rotation={[0, side * -Math.PI / 2, 0]}>
+          <mesh><planeGeometry args={[1.35, 2.1]} /><meshStandardMaterial color={color} emissive={color} emissiveIntensity={emissiveIntensity} roughness={.72} side={THREE.DoubleSide} /></mesh>
+          <group rotation={[0, Math.PI, 0]}><WindowJoinery width={1.35} height={2.1} color="#584535" /></group>
+        </group>
       ))}
     </group>
   );
@@ -427,7 +398,7 @@ function ThornedHouseChapterComponent({
   return (
     <group name={`thorned-house:${stage}`}>
       <SceneGround radius={17} color="#30251e" />
-      <HouseShell position={[0, 0, 2.35]} size={shellSize} wallColor={stage === "bedroom" ? "#44352e" : "#4f3d31"} roofColor="#211b18" />
+      <HouseShell rearOpening={4.6} position={[0, 0, 2.35]} size={shellSize} wallColor={stage === "bedroom" ? "#44352e" : "#4f3d31"} roofColor="#211b18" />
       <ThornedHouseCollisionArchitecture
         stage={stage}
         exitStage={exitStage}

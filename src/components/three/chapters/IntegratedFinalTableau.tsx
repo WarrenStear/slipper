@@ -1,3 +1,6 @@
+import { AuthoredNpcSilhouette } from "../environmentArt/AuthoredNpc";
+import { TimberAssembly, Upholstery, WritingDesk, ShelvedBooks } from "./ChapterArt";
+import { TactileMaterial } from "../storyEvents/TactileMaterial";
 import { FinalWoodlandDetails } from "../environment/WoodlandDetails";
 import { ChapterLightRig } from "../environment/ChapterLightRig";
 import { ReverseMemoryLights } from "../storyEvents/ReverseMemoryLights";
@@ -24,6 +27,7 @@ import {
   SceneGround,
   StonePath,
   ThornBranches,
+  WaterSurface,
   qualityStep,
   type Vec3,
 } from "./ChapterPrimitives";
@@ -504,110 +508,20 @@ function RestingWolf({ reducedMotion }: { reducedMotion: boolean }) {
   const breathRef = useRef<THREE.Group>(null);
   useFrame(({ clock }) => {
     if (!breathRef.current || reducedMotion) return;
-    breathRef.current.scale.y = 1 + Math.sin(clock.elapsedTime * 1.25) * 0.018;
+    breathRef.current.scale.y = 1.3 * (1 + Math.sin(clock.elapsedTime * 1.25) * 0.018);
   });
-  return (
-    <group name="resting-wolf" position={[-2.8, 1.02, -6.25]} rotation={[0, 0.52, 0]} scale={0.55}>
-      <mesh position={[0, -0.66, 0]} scale={[1.9, 0.35, 1.22]} receiveShadow>
-        <dodecahedronGeometry args={[1, 0]} />
-        <meshStandardMaterial color="#4c4840" roughness={1} />
-      </mesh>
-      <group ref={breathRef}>
-        <mesh position={[0, 0.62, 0]} scale={[1.45, 0.58, 0.68]} castShadow>
-          <dodecahedronGeometry args={[1, 1]} />
-          <meshStandardMaterial color="#393934" roughness={1} />
-        </mesh>
-        <mesh position={[1.2, 0.72, 0.12]} scale={[0.62, 0.48, 0.5]} castShadow>
-          <dodecahedronGeometry args={[1, 0]} />
-          <meshStandardMaterial color="#30312f" roughness={1} />
-        </mesh>
-      </group>
-      <mesh position={[1.68, 0.38, 0.13]} scale={[0.5, 0.22, 0.38]} rotation={[0, 0, -0.18]}>
-        <sphereGeometry args={[1, 12, 8]} />
-        <meshStandardMaterial color="#292b29" roughness={1} />
-      </mesh>
-      {[-0.25, 0.25].map((z) => (
-        <mesh key={z} position={[1.35, 1.42, z]} rotation={[0.05, 0, z < 0 ? -0.18 : 0.18]}>
-          <coneGeometry args={[0.22, 0.72, 4]} />
-          <meshStandardMaterial color="#292b29" roughness={1} />
-        </mesh>
-      ))}
-      <mesh position={[-1.28, 0.36, 0]} rotation={[Math.PI / 2, 0, 0.22]}>
-        <torusGeometry args={[0.72, 0.16, 8, 24, Math.PI * 1.55]} />
-        <meshStandardMaterial color="#333532" roughness={1} />
-      </mesh>
-      {[-0.32, 0.32].map((z) => (
-        <mesh key={z} position={[0.92, 0.18, z]} rotation={[0, 0, Math.PI / 2]}>
-          <capsuleGeometry args={[0.12, 0.82, 4, 8]} />
-          <meshStandardMaterial color="#30312f" roughness={1} />
-        </mesh>
-      ))}
+  return <group name="resting-wolf" position={[-2.8, 1.02, -6.25]} rotation={[0, .52, 0]} scale={.55}>
+    <group ref={breathRef} position={[0, -.35, 0]} rotation={[0, Math.PI / 2, 0]} scale={1.3}>
+      <AuthoredNpcSilhouette kind="wolf" resting />
     </group>
-  );
+  </group>;
 }
 
 function MovingRiver({ qualityProfile, reducedMotion }: Pick<FinalTableauProps, "qualityProfile" | "reducedMotion">) {
-  const materialRef = useRef<THREE.ShaderMaterial>(null);
-  const detail = qualityStep(qualityProfile);
-  const uniforms = useMemo(
-    () => ({
-      uTime: { value: 0 },
-      uDeep: { value: new THREE.Color("#142936") },
-      uLight: { value: new THREE.Color("#537d91") },
-      uMoon: { value: new THREE.Color("#bed6e2") },
-    }),
-    [],
-  );
-
-  useFrame(({ clock }) => {
-    if (materialRef.current) materialRef.current.uniforms.uTime.value = reducedMotion ? 0 : clock.elapsedTime;
-  });
-
-  return (
-    <mesh name="living-final-river" position={[3.85, 0.04, -6.4]} rotation={[-Math.PI / 2, 0, -0.08]} receiveShadow>
-      <planeGeometry args={[4.3, 13.5, 14 + detail * 7, 24 + detail * 9]} />
-      <shaderMaterial
-        ref={materialRef}
-        uniforms={uniforms}
-        transparent
-        opacity={0.92}
-        side={THREE.DoubleSide}
-        depthWrite={false}
-        vertexShader={`
-          uniform float uTime;
-          varying vec2 vWaterUv;
-          varying float vWave;
-          void main() {
-            vWaterUv = uv;
-            vec3 transformed = position;
-            float wave = sin(position.y * 1.4 - uTime * 1.15) * 0.065;
-            wave += sin(position.x * 2.7 + position.y * 0.62 + uTime * 0.8) * 0.032;
-            transformed.z += wave;
-            vWave = wave;
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(transformed, 1.0);
-          }
-        `}
-        fragmentShader={`
-          uniform float uTime;
-          uniform vec3 uDeep;
-          uniform vec3 uLight;
-          uniform vec3 uMoon;
-          varying vec2 vWaterUv;
-          varying float vWave;
-          void main() {
-            float flow = sin(vWaterUv.y * 42.0 - uTime * 2.1 + sin(vWaterUv.x * 13.0) * 1.3);
-            float ribbon = smoothstep(0.72, 1.0, flow * 0.5 + 0.5);
-            float bank = smoothstep(0.0, 0.18, vWaterUv.x) * smoothstep(1.0, 0.82, vWaterUv.x);
-            vec3 colour = mix(uDeep, uLight, 0.28 + ribbon * 0.22 + vWave * 1.4);
-            colour = mix(colour, uMoon, ribbon * 0.19);
-            gl_FragColor = vec4(colour, bank * 0.9);
-            #include <tonemapping_fragment>
-            #include <colorspace_fragment>
-          }
-        `}
-      />
-    </mesh>
-  );
+  return <group name="living-final-river" position={[3.85, .04, -6.4]} rotation={[0, -.08, 0]}>
+    <WaterSurface position={[0, 0, 0]} size={[4.3, 13.5]} flow={.65} color="#243e46" opacity={.92}
+      reducedMotion={reducedMotion} reducedEffects={qualityProfile.quality === "low"} />
+  </group>;
 }
 
 function SwanOnWater({ reducedMotion }: { reducedMotion: boolean }) {
@@ -635,51 +549,17 @@ function SwanOnWater({ reducedMotion }: { reducedMotion: boolean }) {
           </mesh>
         ))}
       </group>
-      <group ref={swanRef} position={[0, 0.45, 0]}>
-        <mesh scale={[1.18, 0.48, 0.68]} castShadow>
-          <sphereGeometry args={[0.7, 18, 12]} />
-          <meshStandardMaterial color="#dddeda" roughness={0.72} />
-        </mesh>
-        <Beam from={[0.56, 0.17, 0]} to={[0.82, 1.2, 0]} radius={0.105} color="#e7e7e2" />
-        <mesh position={[0.83, 1.34, 0]} scale={[0.36, 0.29, 0.3]}>
-          <sphereGeometry args={[0.62, 14, 9]} />
-          <meshStandardMaterial color="#e8e8e3" roughness={0.72} />
-        </mesh>
-        <mesh position={[1.12, 1.31, 0]} rotation={[0, 0, -Math.PI / 2]}>
-          <coneGeometry args={[0.09, 0.36, 5]} />
-          <meshStandardMaterial color="#aa7650" roughness={0.82} />
-        </mesh>
-        <mesh position={[-0.35, 0.28, 0.46]} rotation={[0.1, -0.38, -0.18]} scale={[0.85, 0.18, 0.48]}>
-          <sphereGeometry args={[0.8, 12, 8]} />
-          <meshStandardMaterial color="#cfd2cf" roughness={0.82} />
-        </mesh>
+      <group ref={swanRef} position={[0, .45, 0]} rotation={[0, Math.PI / 2, 0]}>
+        <AuthoredNpcSilhouette kind="swan" />
       </group>
     </group>
   );
 }
 
 function QuietSeer() {
-  return (
-    <group name="quiet-seer" position={[5.15, 0.46, -6.05]} rotation={[0, -0.5, 0]} scale={0.6}>
-      <mesh position={[0, 0.82, 0]} scale={[0.72, 1.2, 0.64]} castShadow>
-        <coneGeometry args={[0.78, 1.8, 9]} />
-        <meshStandardMaterial color="#343746" roughness={0.96} />
-      </mesh>
-      <mesh position={[0, 1.92, 0]}>
-        <sphereGeometry args={[0.35, 14, 10]} />
-        <meshStandardMaterial color="#9e8272" roughness={0.93} />
-      </mesh>
-      <mesh position={[-0.12, 2.04, -0.08]} scale={[0.86, 1.12, 0.74]}>
-        <sphereGeometry args={[0.39, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.58]} />
-        <meshStandardMaterial color="#262a34" roughness={1} side={THREE.DoubleSide} />
-      </mesh>
-      <Beam from={[0.72, 0, 0]} to={[0.66, 2.3, 0]} radius={0.045} color="#7e694e" />
-      <mesh position={[0, 0.12, 0.6]} rotation={[-Math.PI / 2, 0, 0]}>
-        <circleGeometry args={[0.6, 22]} />
-        <meshStandardMaterial color="#7b6c5e" roughness={1} />
-      </mesh>
-    </group>
-  );
+  return <group name="quiet-seer" position={[5.15, .46, -6.05]} rotation={[0, -.5, 0]} scale={.6}>
+    <AuthoredNpcSilhouette kind="phantom" />
+  </group>;
 }
 
 function EmberFire({ reducedEffects, reducedMotion }: Pick<FinalTableauProps, "reducedEffects" | "reducedMotion">) {
@@ -815,27 +695,11 @@ function SelfOwnedHome({ reducedEffects }: { reducedEffects: boolean }) {
   return (
     <group name="self-owned-home" position={[0.7, 0.08, -7.25]} scale={0.43}>
       <group rotation={[0, Math.PI, 0]}>
-        <mesh position={[0, 2.25, 2.9]} castShadow receiveShadow>
-          <boxGeometry args={[8.4, 4.5, 0.28]} />
-          <meshStandardMaterial color="#716450" roughness={0.96} />
-        </mesh>
-        {[-4.2, 4.2].map((x) => (
-          <mesh key={`home-side-wall:${x}`} position={[x, 2.25, 0]} castShadow receiveShadow>
-            <boxGeometry args={[0.28, 4.5, 5.8]} />
-            <meshStandardMaterial color="#716450" roughness={0.96} />
-          </mesh>
-        ))}
-        {[-1, 1].map((side) => (
-          <mesh
-            key={`home-roof:${side}`}
-            position={[side * 1.85, 5.08, 0]}
-            rotation={[0, 0, side * -0.52]}
-            castShadow
-          >
-            <boxGeometry args={[4.9, 0.3, 6.35]} />
-            <meshStandardMaterial color="#353530" roughness={0.96} />
-          </mesh>
-        ))}
+        <TimberAssembly plaster color="#8b7e69" pieces={[
+          { position: [0, 2.25, 2.9], size: [8.4, 4.5, .28] },
+          ...[-4.2, 4.2].map(x => ({ position: [x, 2.25, 0] as Vec3, size: [.28, 4.5, 5.8] as Vec3 })),
+        ]} />
+        <TimberAssembly color="#48463d" pieces={[-1, 1].map(side => ({ position: [side * 1.85, 5.08, 0], rotation: [0, 0, side * -.52], size: [4.9, .3, 6.35] }))} />
         <DoorFrame position={[0, 0, -3.08]} width={3.6} height={3.8} depth={0.28} color="#5c4d3f" open />
         <mesh name="self-owned-home-interior-floor" position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
           <planeGeometry args={[7.7, 5.3]} />
@@ -852,30 +716,16 @@ function SelfOwnedHome({ reducedEffects }: { reducedEffects: boolean }) {
               <meshStandardMaterial color="#66503c" roughness={0.94} />
             </mesh>
           ))}
-          {Array.from({ length: bookCount }, (_, index) => (
-            <mesh key={index} position={[-0.72 + (index % 4) * 0.45, 1.04 + Math.floor(index / 4) * 0.76, 0.08]}>
-              <boxGeometry args={[0.28, 0.52 + (index % 2) * 0.1, 0.34]} />
-              <meshStandardMaterial color={index % 3 === 0 ? "#7d594c" : index % 3 === 1 ? "#4d6260" : "#8b724a"} roughness={0.92} />
-            </mesh>
-          ))}
-          <mesh position={[0.48, 0.78, -0.72]}>
-            <boxGeometry args={[2.2, 0.14, 0.92]} />
-            <meshStandardMaterial color="#594333" roughness={0.94} />
-          </mesh>
+          <ShelvedBooks count={bookCount} spacing={.45} rowHeight={.76} startX={-.72} startY={1.04} z={.08} scale={.82} />
+          <group position={[.48, .78, -.72]}><WritingDesk width={2.2} depth={.92} /></group>
           <mesh position={[0.24, 0.87, -0.75]} rotation={[-Math.PI / 2, 0, 0.08]}>
             <planeGeometry args={[0.9, 0.56]} />
             <meshStandardMaterial color="#d1c8b3" roughness={0.98} side={THREE.DoubleSide} />
           </mesh>
         </group>
         <group name="final-home-velvet-reading-nook" position={[2.7, 0.1, 1]} userData={{ fabric: "velvet" }}>
-          <mesh position={[0, 0.52, 0]} scale={[1.25, 0.5, 0.92]}>
-            <sphereGeometry args={[0.72, 14, 9]} />
-            <meshStandardMaterial color="#653645" roughness={0.9} />
-          </mesh>
-          <mesh position={[0, 1.18, 0.36]} scale={[1.08, 1.05, 0.38]}>
-            <sphereGeometry args={[0.68, 14, 9]} />
-            <meshStandardMaterial color="#733d4e" roughness={0.9} />
-          </mesh>
+          <Upholstery position={[0, .52, 0]} size={[1.8, .5, 1.2]} color="#653645" />
+          <Upholstery position={[0, 1.18, .36]} size={[1.45, 1.3, .45]} color="#733d4e" />
           <mesh position={[-0.82, 0.36, -0.54]} rotation={[-Math.PI / 2, 0, -0.18]}>
             <planeGeometry args={[0.82, 0.54]} />
             <meshStandardMaterial color="#cbbfa8" roughness={0.98} side={THREE.DoubleSide} />
@@ -898,11 +748,11 @@ function SelfOwnedHome({ reducedEffects }: { reducedEffects: boolean }) {
         >
           <mesh rotation={[-Math.PI / 2, 0, 0]}>
             <ringGeometry args={[1.05, 1.1, 40]} />
-            <meshBasicMaterial color="#dfc890" transparent opacity={0.36} toneMapped={false} />
+            <TactileMaterial surface="wood" color="#99886a" roughness={.95} />
           </mesh>
           <mesh position={[0, 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
             <circleGeometry args={[1.02, 40]} />
-            <meshStandardMaterial color="#75684e" emissive="#79643d" emissiveIntensity={0.08} roughness={0.98} />
+            <TactileMaterial surface="wood" color="#75684e" roughness={.98} />
           </mesh>
         </group>
         {[-2.82, 2.82].map((x) => (

@@ -1,7 +1,7 @@
+import { AuthoredNpcSilhouette } from "../environmentArt/AuthoredNpc";
 import { memo } from "react";
 import type { RenderQualityProfile } from "../renderQuality";
 import {
-  Beam,
   FabricVeil,
   MoonDisc,
   StonePath,
@@ -17,29 +17,7 @@ type RiverPathProps = {
   resolved: boolean;
 };
 
-function SwanGuardian() {
-  return (
-    <group name="river-swan-guardian" position={[2.45, 0.18, 4.8]} rotation={[0, -0.5, 0]}>
-      <mesh position={[0, 0.56, 0]} scale={[1.35, 0.58, 0.82]} castShadow>
-        <sphereGeometry args={[0.68, 18, 12]} />
-        <meshStandardMaterial color="#cbd2d2" roughness={0.82} />
-      </mesh>
-      <Beam from={[0.7, 0.72, 0]} to={[0.98, 2.05, 0]} radius={0.12} color="#dbe0df" />
-      <mesh position={[1, 2.18, 0]} scale={[0.42, 0.34, 0.36]}>
-        <sphereGeometry args={[0.62, 14, 9]} />
-        <meshStandardMaterial color="#e0e3df" roughness={0.78} />
-      </mesh>
-      <mesh position={[1.38, 2.15, 0]} rotation={[0, 0, -Math.PI / 2]}>
-        <coneGeometry args={[0.11, 0.52, 5]} />
-        <meshStandardMaterial color="#9b8267" roughness={0.8} />
-      </mesh>
-      <mesh position={[-0.12, 0.85, -0.58]} rotation={[0.26, 0, -0.2]} scale={[1.15, 0.25, 0.68]}>
-        <sphereGeometry args={[0.62, 14, 8]} />
-        <meshStandardMaterial color="#e1e3df" roughness={0.86} />
-      </mesh>
-    </group>
-  );
-}
+function SwanGuardian() { return <group name="river-swan-guardian" position={[2.45, .18, 4.8]} rotation={[0, -.5, 0]}><group rotation={[0, Math.PI / 2, 0]} scale={1.55}><AuthoredNpcSilhouette kind="swan" /></group></group>; }
 
 function RiverRipples({ active, resolved }: Pick<RiverPathProps, "active" | "resolved">) {
   const colors = active
@@ -81,7 +59,7 @@ function RiverPathComponent({
       userData={{ storyRoute: "river", ritual: "wash-what-still-aches", active, resolved }}
     >
       <StonePath color={active ? "#8a9698" : "#647075"} count={10} length={17} fork={0.28} y={0.055} />
-      <WaterSurface
+      <WaterSurface reducedMotion={reducedMotion} reducedEffects={reducedEffects} flow={.65}
         position={[0, 0.018, 3.4]}
         size={[7.8, 15.5]}
         color={resolved ? "#294a57" : active ? "#1d4458" : "#193441"}

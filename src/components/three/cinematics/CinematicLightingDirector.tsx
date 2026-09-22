@@ -10,9 +10,10 @@ export function CinematicLightingDirector() {
   // Authored local rigs provide the key; keep this existing camera
   // light only as a low-intensity readability fill in those chapters.
   const localKey = environmentFamily(sceneId) !== null;
+  const enclosed = sceneId === "broken-floor.confession" || sceneId.startsWith("thorned.");
   const key = useRef<PointLight>(null);
   const fill = useRef<HemisphereLight>(null);
-  const colors = useMemo(() => ({ cool: new Color("#b6cad9"), warm: new Color("#e1bd91"), tint: new Color() }), []);
+  const colors = useMemo(() => ({ cool: new Color("#b6cad9"), warm: new Color("#e1bd91"), tint: new Color(), earth: new Color("#44382e"), night: new Color("#20292b") }), []);
   useFrame(({ camera, gl }) => {
     const profile = getCurrentCinematicProfile();
     gl.toneMappingExposure = profile.exposure;
@@ -23,7 +24,10 @@ export function CinematicLightingDirector() {
     }
     if (fill.current) {
       fill.current.color.copy(colors.tint);
-      fill.current.intensity = profile.fillIntensity / profile.contrast;
+      // A restrained ground bounce reveals bevels and joinery in enclosed
+      // rooms without lifting the background or adding another light source.
+      fill.current.groundColor.copy(enclosed ? colors.earth : colors.night);
+      fill.current.intensity = Math.max(enclosed ? .2 : .1, profile.fillIntensity / profile.contrast);
     }
   });
   return <group name="CinematicLightingDirector"><hemisphereLight ref={fill} args={["#c6d0d3", "#151717", 0.16]} /><pointLight ref={key} distance={28} decay={2} intensity={0.38} castShadow={false} /></group>;

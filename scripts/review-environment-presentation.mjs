@@ -3,16 +3,21 @@ import { spawn, execFileSync } from 'node:child_process';
 import { mkdir, writeFile, rm } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
-const baseline = '475b16cbe5533178f8fc3ee5fb7620ab4205b3ec';
+const baseline = process.env.VISUAL_REVIEW_BASELINE || '475b16cbe5533178f8fc3ee5fb7620ab4205b3ec';
 const out = '/tmp/slipper-environment-review', fixture = resolve('.environment-review');
 const originals = [
   'chapters/BrokenFloorChapter', 'chapters/BlueMoonSanctuaryChapter', 'chapters/ThornedHouseChapter',
   'storyEvents/WetFloorReveal', 'cinematics/CinematicAtmosphereDirector', 'cinematics/CinematicLightingDirector',
 ];
-const copies = originals.map(path => [`src/components/three/${path}.tsx`, `src/components/three/${path.replace(/([^/]+)$/, 'Baseline$1')}.tsx`]);
+const copies = originals.map(path => [`src/components/three/${path}.tsx`, `src/components/three/${path.replace(/([^/]+)$/, 'EnvironmentBaseline$1')}.tsx`]);
 const report = { candidate: execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(), baseline, method: 'Same-camera reduced-motion chapter fixtures with settled authored profiles and 25 rendered warm-up frames; production entry controls. Not full gameplay or real-device FPS certification.', captures: [], failures: [] };
 const processes = []; let browser;
 async function server(args, port) {
+  if (args[0] !== 'preview') {
+    const config = fixture + '/vite.config.ts';
+    await writeFile(config, `import original from '../vite.config.ts';\nexport default { ...original, cacheDir: ${JSON.stringify(fixture + '/vite-cache')}, optimizeDeps: { ...original.optimizeDeps, entries: ['.environment-review/index.html'] } };\n`);
+    args = ['--config', config];
+  }
   const child = spawn(process.execPath,['node_modules/vite/bin/vite.js',...args,'--host','127.0.0.1','--port',String(port),'--strictPort'],{stdio:['ignore','pipe','pipe']});
   processes.push(child); let log='';child.stdout.on('data',b=>log+=b);child.stderr.on('data',b=>log+=b);
   for(let i=0;i<120;i++){if(child.exitCode!==null)throw new Error(log);try{if((await fetch(`http://127.0.0.1:${port}`)).ok)return;}catch{}await new Promise(r=>setTimeout(r,250));}
@@ -21,15 +26,15 @@ async function server(args, port) {
 const stage = `import React,{Suspense,useLayoutEffect,useRef} from 'react';
 import {createRoot} from 'react-dom/client';import {Canvas,useFrame,useThree} from '@react-three/fiber';import {Physics} from '@react-three/rapier';
 import {BrokenFloorChapter} from '../src/components/three/chapters/BrokenFloorChapter';
-import {BrokenFloorChapter as BeforeBroken} from '../src/components/three/chapters/BaselineBrokenFloorChapter';
+import {BrokenFloorChapter as BeforeBroken} from '../src/components/three/chapters/EnvironmentBaselineBrokenFloorChapter';
 import {BlueMoonSanctuaryChapter} from '../src/components/three/chapters/BlueMoonSanctuaryChapter';
-import {BlueMoonSanctuaryChapter as BeforeBlue} from '../src/components/three/chapters/BaselineBlueMoonSanctuaryChapter';
+import {BlueMoonSanctuaryChapter as BeforeBlue} from '../src/components/three/chapters/EnvironmentBaselineBlueMoonSanctuaryChapter';
 import {ThornedHouseChapter} from '../src/components/three/chapters/ThornedHouseChapter';
-import {ThornedHouseChapter as BeforeHouse} from '../src/components/three/chapters/BaselineThornedHouseChapter';
+import {ThornedHouseChapter as BeforeHouse} from '../src/components/three/chapters/EnvironmentBaselineThornedHouseChapter';
 import {CinematicAtmosphereDirector} from '../src/components/three/cinematics/CinematicAtmosphereDirector';
-import {CinematicAtmosphereDirector as BeforeFog} from '../src/components/three/cinematics/BaselineCinematicAtmosphereDirector';
+import {CinematicAtmosphereDirector as BeforeFog} from '../src/components/three/cinematics/EnvironmentBaselineCinematicAtmosphereDirector';
 import {CinematicLightingDirector} from '../src/components/three/cinematics/CinematicLightingDirector';
-import {CinematicLightingDirector as BeforeLight} from '../src/components/three/cinematics/BaselineCinematicLightingDirector';
+import {CinematicLightingDirector as BeforeLight} from '../src/components/three/cinematics/EnvironmentBaselineCinematicLightingDirector';
 import {StoryObjectModel} from '../src/components/three/storyEvents/StoryObjectModel';
 import {getJourneySceneLayout} from '../src/data/journeyWorldLayout';import {objectsForScene} from '../src/storyEvents/storyEventRegistry';
 import {RENDER_QUALITY_PROFILES} from '../src/components/three/renderQuality';import {useJourneyStore} from '../src/stores/useJourneyStore';import {useSettingsStore} from '../src/stores/useSettingsStore';import {useWorldStore} from '../src/stores/useWorldStore';
@@ -61,7 +66,7 @@ async function entry(width,height){const ctx=await browser.newContext({viewport:
  catch(e){report.failures.push({name,error:String(e),errors});}finally{await ctx.close();await writeFile(out+'/review.json',JSON.stringify(report,null,2));}}
 try{
  await mkdir(out,{recursive:true});await mkdir(fixture,{recursive:true});
- for(const [original,copy] of copies){let text=execFileSync('git',['show',baseline+':'+original],{encoding:'utf8'});if(original.endsWith('BrokenFloorChapter.tsx'))text=text.replace('../storyEvents/WetFloorReveal','../storyEvents/BaselineWetFloorReveal');await writeFile(copy,text);}
+ for(const [original,copy] of copies){let text=execFileSync('git',['show',baseline+':'+original],{encoding:'utf8'});if(original.endsWith('BrokenFloorChapter.tsx'))text=text.replace('../storyEvents/WetFloorReveal','../storyEvents/EnvironmentBaselineWetFloorReveal');await writeFile(copy,text);}
  await writeFile(fixture+'/index.html','<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>Environment component comparison</title><style>html,body,#root{width:100%;height:100%;margin:0;overflow:hidden}</style></head><body><div id="root"></div><script type="module" src="./stage.tsx"></script></body></html>');await writeFile(fixture+'/stage.tsx',stage);
  await server(['preview'],4183);await server(['--config','vite.config.ts'],4184);
  browser=await chromium.launch({args:['--enable-webgl','--ignore-gpu-blocklist','--use-angle=swiftshader']});

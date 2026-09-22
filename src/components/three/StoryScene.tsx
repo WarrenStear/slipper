@@ -1,15 +1,24 @@
+import { claimForestBuild } from "../../lib/forestBuildSchedule";
+import { useCompressedGLTF } from "../../lib/assets/gltfLoaders";
+import { cloneNpcPresentation, isPlaceholderNpcAsset } from "../../lib/assets/npcAssetPolicy";
+import { AuthoredNpcSilhouette } from "./environmentArt/AuthoredNpc";
+import { forestCrownHabit } from "../../lib/forestArt";
 import { useJourneyStore } from "../../stores/useJourneyStore";
 import { getCurrentCinematicProfile } from "../../cinematics/emotionalCinematography";
 import { getAuthoredSceneArrival } from "../../cinematics/sceneArrival";
 import { EmotionalCinematographyDirector } from "./cinematics/EmotionalCinematographyDirector";
 import { SpatialProseDirector } from "./storyText/SpatialProseDirector";
 import { Component, memo, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ErrorInfo, type ReactNode } from "react";
-import { Float, Html, OrbitControls, Sparkles, Stars, useGLTF, useTexture } from "@react-three/drei";
+import { Float, Html, OrbitControls, Sparkles, Stars, useTexture } from "@react-three/drei";
 import { BallCollider, CapsuleCollider, CuboidCollider, InstancedRigidBodies, RigidBody, TrimeshCollider, useRapier, type RapierRigidBody } from "@react-three/rapier";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
+import { createForestTrunkGeometry, createOrganicCrownGeometry } from "./environment/forestGeometry";
+import { ForestSurfaceMaterial } from "./environment/ForestSurfaceMaterial";
+import { ProceduralDome } from "./environment/ProceduralDome";
+import { PhysicalPathRibbon } from "./environment/LivingPathRibbon";
 import type { EulerTuple, Slipper3DEntry, Slipper3DVisual, Vector3Tuple } from "../../data/slipper3dTypes";
 import {
   getJourneyChapterForEntry,
@@ -193,11 +202,7 @@ const FIRST_WOOD_DEPTH_PLATE_PATH = "/textures/environment/forest-sky-horizon-v1
 const MOON_ALBEDO_PATH = "/textures/environment/moon-albedo-v1.png";
 const MEMORY_BLOOM_TEXTURE_PATH = "/textures/forest/memory-bloom-v1.png";
 
-// Proactively warm the drei GLTF cache so NPC encounters do not suspend the entire
-// world canvas the first time the player approaches a loaded story node.
-useGLTF.preload(NPC_MODEL_PATHS.wolf);
-useGLTF.preload(NPC_MODEL_PATHS.phantom);
-useGLTF.preload(NPC_MODEL_PATHS.swan);
+// NPCs load through the configured model loader at their encounter boundary.
 useTexture.preload(FOREST_GROUND_ALBEDO_PATH);
 useTexture.preload(FIRST_WOOD_PANORAMA_PATH);
 useTexture.preload(MOON_ALBEDO_PATH);
@@ -257,155 +262,6 @@ function fract(value: number) {
 
 function worldSeededUnit(x: number, z: number, salt = 0) {
   return fract(Math.sin(x * 127.1 + z * 311.7 + salt * 74.7) * 43758.5453123);
-}
-
-type OrganicCrownLobe = {
-  position: Vector3Tuple;
-  rotation: Vector3Tuple;
-  scale: Vector3Tuple;
-  phase: number;
-};
-
-const ORGANIC_CROWN_LOBES: OrganicCrownLobe[] = [
-  { position: [0, -0.1, 0.02], rotation: [0.04, 0.2, -0.03], scale: [0.9, 0.56, 0.84], phase: 0.4 },
-  { position: [0.12, 0.48, -0.1], rotation: [-0.08, -0.34, 0.08], scale: [0.62, 0.54, 0.58], phase: 1.7 },
-  { position: [-0.58, 0.08, 0.18], rotation: [0.12, 0.48, -0.14], scale: [0.56, 0.4, 0.62], phase: 3.1 },
-  { position: [0.58, 0.12, -0.08], rotation: [-0.06, -0.42, 0.12], scale: [0.57, 0.43, 0.55], phase: 4.6 },
-  { position: [-0.08, 0.04, -0.55], rotation: [0.1, 0.18, 0.05], scale: [0.52, 0.36, 0.6], phase: 6.2 },
-  { position: [0.12, 0.02, 0.5], rotation: [-0.11, -0.12, -0.08], scale: [0.5, 0.34, 0.54], phase: 7.8 },
-  { position: [-0.3, 0.42, 0.14], rotation: [0.06, 0.56, -0.12], scale: [0.43, 0.36, 0.44], phase: 9.4 },
-  { position: [0.34, -0.3, 0.24], rotation: [-0.04, 0.32, 0.08], scale: [0.56, 0.28, 0.5], phase: 10.8 },
-  { position: [-0.28, -0.26, -0.26], rotation: [0.08, -0.28, -0.06], scale: [0.52, 0.3, 0.54], phase: 12.1 },
-];
-
-function createOrganicCrownGeometry(detail: 0 | 1 = 0) {
-  const lobes = ORGANIC_CROWN_LOBES.map((specification) => {
-    // Distant trees use detail 0; the clearing ring uses detail 1. Both remain
-    // one merged instanced geometry, so nearby crowns gain a softer deciduous
-    // silhouette without adding draw calls across the continuous forest.
-    const geometry = new THREE.IcosahedronGeometry(1, detail);
-    const position = geometry.getAttribute("position") as THREE.BufferAttribute;
-
-    for (let index = 0; index < position.count; index += 1) {
-      const x = position.getX(index);
-      const y = position.getY(index);
-      const z = position.getZ(index);
-      const lowFrequency = Math.sin(x * 3.7 + y * 4.9 + z * 3.1 + specification.phase) * 0.055;
-      const highFrequency = Math.sin(x * 8.3 - y * 6.1 + z * 7.7 + specification.phase * 1.9) * 0.025;
-      const contour = 1 + lowFrequency + highFrequency;
-      position.setXYZ(index, x * contour, y * contour, z * contour);
-    }
-
-    position.needsUpdate = true;
-    // IcosahedronGeometry is non-indexed, so computeVertexNormals() preserves
-    // one normal per triangle and makes moonlit crowns read as crystals. A
-    // radial field keeps the same low triangle budget while letting the nine
-    // deformed lobes shade as one soft mass of leaves.
-    const smoothNormals = new Float32Array(position.count * 3);
-    for (let index = 0; index < position.count; index += 1) {
-      const x = position.getX(index);
-      const y = position.getY(index);
-      const z = position.getZ(index);
-      const inverseLength = 1 / Math.max(0.0001, Math.hypot(x, y, z));
-      smoothNormals[index * 3] = x * inverseLength;
-      smoothNormals[index * 3 + 1] = y * inverseLength;
-      smoothNormals[index * 3 + 2] = z * inverseLength;
-    }
-    geometry.setAttribute("normal", new THREE.Float32BufferAttribute(smoothNormals, 3));
-    geometry.scale(...specification.scale);
-    geometry.rotateX(specification.rotation[0]);
-    geometry.rotateY(specification.rotation[1]);
-    geometry.rotateZ(specification.rotation[2]);
-    geometry.translate(...specification.position);
-    return geometry;
-  });
-  const merged = mergeGeometries(lobes, false);
-  lobes.forEach((geometry) => geometry.dispose());
-
-  if (!merged) return new THREE.IcosahedronGeometry(1, 1);
-  merged.computeBoundingBox();
-  merged.computeBoundingSphere();
-  return merged;
-}
-
-function createForestTrunkGeometry() {
-  // Every tree still occupies one instanced draw call. The extra silhouette is
-  // baked into this shared low-poly geometry: a tapered, furrowed bole, four
-  // buttress roots, and three rising limbs. This gives nearby trees believable
-  // structure without creating a mesh (or React node) per branch.
-  const parts: THREE.BufferGeometry[] = [];
-  const trunk = new THREE.CylinderGeometry(0.56, 1.36, 1, 10, 4, false);
-  const trunkPositions = trunk.getAttribute("position") as THREE.BufferAttribute;
-  for (let index = 0; index < trunkPositions.count; index += 1) {
-    const x = trunkPositions.getX(index);
-    const y = trunkPositions.getY(index);
-    const z = trunkPositions.getZ(index);
-    const angle = Math.atan2(z, x);
-    const height = y + 0.5;
-    const furrow = 1 + Math.sin(angle * 3 + height * 5.2) * 0.055 + Math.sin(angle * 7 - height * 3.6) * 0.025;
-    const centerlineX = height * height * 0.72;
-    const centerlineZ = Math.sin(height * Math.PI * 1.25) * height * 0.18;
-    trunkPositions.setXYZ(index, x * furrow + centerlineX, y, z * furrow + centerlineZ);
-  }
-  trunkPositions.needsUpdate = true;
-  trunk.computeVertexNormals();
-  parts.push(trunk);
-
-  const rootAngles = [0.18, 1.74, 3.28, 4.86];
-  rootAngles.forEach((angle, rootIndex) => {
-    const root = new THREE.BoxGeometry(1, 1, 1);
-    const positions = root.getAttribute("position") as THREE.BufferAttribute;
-    const length = 3.5 + (rootIndex % 2) * 0.48;
-    for (let index = 0; index < positions.count; index += 1) {
-      const sourceX = positions.getX(index);
-      const sourceY = positions.getY(index);
-      const sourceZ = positions.getZ(index);
-      const progress = sourceX + 0.5;
-      const radial = 0.68 + progress * length;
-      const width = (0.88 - progress * 0.62) * sourceZ;
-      const localY = -0.485 + sourceY * (0.038 - progress * 0.018) + Math.sin(progress * Math.PI) * 0.012;
-      const localX = Math.cos(angle) * radial - Math.sin(angle) * width;
-      const localZ = Math.sin(angle) * radial + Math.cos(angle) * width;
-      positions.setXYZ(index, localX, localY, localZ);
-    }
-    positions.needsUpdate = true;
-    root.computeVertexNormals();
-    parts.push(root);
-  });
-
-  const branchSpecs = [
-    { angle: 0.54, baseY: 0.05, length: 4.9, rise: 0.13 },
-    { angle: 2.68, baseY: 0.16, length: 4.2, rise: 0.1 },
-    { angle: 4.52, baseY: 0.27, length: 3.6, rise: 0.08 },
-  ];
-  branchSpecs.forEach((specification) => {
-    const branch = new THREE.CylinderGeometry(0.5, 0.9, 1, 5, 1, false);
-    branch.rotateZ(Math.PI / 2);
-    const positions = branch.getAttribute("position") as THREE.BufferAttribute;
-    for (let index = 0; index < positions.count; index += 1) {
-      const sourceX = positions.getX(index);
-      const sourceY = positions.getY(index);
-      const sourceZ = positions.getZ(index);
-      const progress = sourceX + 0.5;
-      const radial = 0.46 + progress * specification.length;
-      const cross = sourceZ * (0.68 - progress * 0.3);
-      const localY = specification.baseY + progress * specification.rise + sourceY * (0.017 - progress * 0.006);
-      const localX = Math.cos(specification.angle) * radial - Math.sin(specification.angle) * cross;
-      const localZ = Math.sin(specification.angle) * radial + Math.cos(specification.angle) * cross;
-      positions.setXYZ(index, localX, localY, localZ);
-    }
-    positions.needsUpdate = true;
-    branch.computeVertexNormals();
-    parts.push(branch);
-  });
-
-  const merged = mergeGeometries(parts, false);
-  parts.forEach((geometry) => geometry.dispose());
-  if (!merged) return new THREE.CylinderGeometry(0.56, 1.36, 1, 10, 4, false);
-  merged.computeVertexNormals();
-  merged.computeBoundingBox();
-  merged.computeBoundingSphere();
-  return merged;
 }
 
 const CHAPTER_FIRST_WOOD = "The First Wood";
@@ -1687,230 +1543,6 @@ function DistantForestSilhouetteRing({
   );
 }
 
-function ProceduralDome({
-  entry,
-  visualState,
-  radius,
-  narrativeWorldState = ZERO_STATE,
-  qualityProfile,
-}: {
-  entry: Slipper3DEntry;
-  visualState: WorldVisualState;
-  radius: number;
-  narrativeWorldState?: NarrativeWorldState;
-  qualityProfile: RenderQualityProfile;
-}) {
-  const materialRef = useRef<THREE.ShaderMaterial>(null);
-  const meshRef = useRef<THREE.Mesh>(null);
-  const { camera } = useThree();
-  const targetZenithRef = useRef(new THREE.Color(visualState.backgroundColor));
-  const targetUpperRef = useRef(new THREE.Color(visualState.palette.fog));
-  const targetHorizonRef = useRef(new THREE.Color(visualState.fogColor));
-  const targetCloudRef = useRef(new THREE.Color(visualState.moonColor));
-  const targetSkyOpennessRef = useRef(visualState.director.skyOpenness);
-  const targetCloudAmountRef = useRef(0.48);
-  const targetCloudDetailRef = useRef(0);
-  const targetMoodWeightRef = useRef(visualState.domeOpacity);
-  const [authoredLow, authoredMid, authoredHigh = visualState.moonColor] = entry.engine3d.environmentGradient ?? [
-    visualState.backgroundColor,
-    visualState.palette.fog,
-    visualState.moonColor,
-  ];
-  const uniforms = useMemo(
-    () => ({
-      colorZenith: { value: new THREE.Color(visualState.backgroundColor) },
-      colorUpper: { value: new THREE.Color(visualState.palette.fog) },
-      colorHorizon: { value: new THREE.Color(visualState.fogColor) },
-      cloudColor: { value: new THREE.Color(visualState.moonColor) },
-      skyOpenness: { value: visualState.director.skyOpenness },
-      cloudAmount: { value: 0.48 },
-      cloudDetail: { value: 0 },
-      moodWeight: { value: visualState.domeOpacity },
-      journeyDepth: { value: narrativeWorldState.explorationDepth },
-      fireWaterBalance: { value: narrativeWorldState.fireWaterBalance },
-      memoryPressure: { value: narrativeWorldState.memoryPressure },
-      time: { value: 0 },
-    }),
-    [],
-  );
-
-  useEffect(() => {
-    targetZenithRef.current
-      .set(visualState.backgroundColor)
-      .lerp(new THREE.Color(authoredLow), 0.26)
-      .multiplyScalar(0.74);
-    targetUpperRef.current
-      .set(visualState.palette.fog)
-      .lerp(new THREE.Color(authoredMid), 0.24)
-      .lerp(new THREE.Color(visualState.backgroundColor), 0.34);
-    targetHorizonRef.current
-      .set(visualState.fogColor)
-      .lerp(new THREE.Color(authoredHigh), 0.075)
-      .lerp(new THREE.Color(visualState.moonColor), 0.04 + visualState.director.skyOpenness * 0.03);
-    targetCloudRef.current.set(visualState.moonColor).multiplyScalar(0.62);
-    targetSkyOpennessRef.current = visualState.director.skyOpenness;
-    targetCloudAmountRef.current = THREE.MathUtils.clamp(
-      0.34 + visualState.weatherIntensity * 0.34 + (1 - visualState.director.skyOpenness) * 0.14,
-      0.3,
-      0.72,
-    );
-    targetCloudDetailRef.current =
-      qualityProfile.particleMultiplier <= 0 || qualityProfile.quality === "low"
-        ? 0
-        : qualityProfile.quality === "medium"
-          ? 0.55
-          : 1;
-    targetMoodWeightRef.current = visualState.domeOpacity;
-  }, [
-    authoredHigh,
-    authoredLow,
-    authoredMid,
-    qualityProfile.particleMultiplier,
-    qualityProfile.quality,
-    visualState.backgroundColor,
-    visualState.director.skyOpenness,
-    visualState.domeOpacity,
-    visualState.fogColor,
-    visualState.moonColor,
-    visualState.palette.fog,
-    visualState.weatherIntensity,
-  ]);
-
-  useFrame(({ clock }, delta) => {
-    if (meshRef.current) meshRef.current.position.copy(camera.position);
-    const lerpSpeed = 1 - Math.exp(-Math.min(delta, 0.05) * 1.35);
-    uniforms.colorZenith.value.lerp(targetZenithRef.current, lerpSpeed);
-    uniforms.colorUpper.value.lerp(targetUpperRef.current, lerpSpeed);
-    uniforms.colorHorizon.value.lerp(targetHorizonRef.current, lerpSpeed);
-    uniforms.cloudColor.value.lerp(targetCloudRef.current, lerpSpeed);
-    uniforms.skyOpenness.value = THREE.MathUtils.lerp(uniforms.skyOpenness.value, targetSkyOpennessRef.current, lerpSpeed);
-    uniforms.cloudAmount.value = THREE.MathUtils.lerp(uniforms.cloudAmount.value, targetCloudAmountRef.current, lerpSpeed);
-    uniforms.cloudDetail.value = THREE.MathUtils.lerp(uniforms.cloudDetail.value, targetCloudDetailRef.current, lerpSpeed);
-    uniforms.moodWeight.value = THREE.MathUtils.lerp(uniforms.moodWeight.value, targetMoodWeightRef.current, lerpSpeed);
-    uniforms.journeyDepth.value = THREE.MathUtils.lerp(uniforms.journeyDepth.value, narrativeWorldState.explorationDepth, lerpSpeed);
-    uniforms.fireWaterBalance.value = THREE.MathUtils.lerp(uniforms.fireWaterBalance.value, narrativeWorldState.fireWaterBalance, lerpSpeed);
-    uniforms.memoryPressure.value = THREE.MathUtils.lerp(uniforms.memoryPressure.value, narrativeWorldState.memoryPressure, lerpSpeed);
-    uniforms.time.value = qualityProfile.particleMultiplier > 0 ? clock.elapsedTime : 0;
-  });
-
-  return (
-    <mesh ref={meshRef} renderOrder={-40} frustumCulled={false}>
-      <sphereGeometry args={[radius, 40, 20]} />
-      <shaderMaterial
-        ref={materialRef}
-        side={THREE.BackSide}
-        depthWrite={false}
-        depthTest={false}
-        toneMapped
-        uniforms={uniforms}
-        vertexShader={`
-          varying vec3 vSkyDirection;
-          void main() {
-            vSkyDirection = normalize(position);
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-          }
-        `}
-        fragmentShader={`
-          uniform vec3 colorZenith;
-          uniform vec3 colorUpper;
-          uniform vec3 colorHorizon;
-          uniform vec3 cloudColor;
-          uniform float skyOpenness;
-          uniform float cloudAmount;
-          uniform float cloudDetail;
-          uniform float moodWeight;
-          uniform float journeyDepth;
-          uniform float fireWaterBalance;
-          uniform float memoryPressure;
-          uniform float time;
-          varying vec3 vSkyDirection;
-
-          float skyHash(vec2 point) {
-            point = fract(point * vec2(123.34, 456.21));
-            point += dot(point, point + 45.32);
-            return fract(point.x * point.y);
-          }
-
-          float skyNoise(vec2 point) {
-            vec2 cell = floor(point);
-            vec2 local = fract(point);
-            local = local * local * (3.0 - 2.0 * local);
-            return mix(
-              mix(skyHash(cell), skyHash(cell + vec2(1.0, 0.0)), local.x),
-              mix(skyHash(cell + vec2(0.0, 1.0)), skyHash(cell + vec2(1.0, 1.0)), local.x),
-              local.y
-            );
-          }
-
-          float skyFbmLow(vec2 point) {
-            float value = skyNoise(point) * 0.62;
-            value += skyNoise(point * 2.03 + vec2(7.13, 3.71)) * 0.3;
-            return value;
-          }
-
-          float skyFbmHigh(vec2 point) {
-            float value = 0.0;
-            float amplitude = 0.56;
-            for (int octave = 0; octave < 4; octave++) {
-              value += skyNoise(point) * amplitude;
-              point = point * 2.03 + vec2(7.13, 3.71);
-              amplitude *= 0.48;
-            }
-            return value;
-          }
-
-          void main() {
-            vec3 direction = normalize(vSkyDirection);
-            float height = direction.y;
-            float horizon = exp(-abs(height + 0.025) * 8.8);
-            float upperBlend = smoothstep(-0.12, 0.38, height);
-            float zenithBlend = smoothstep(0.2, 0.94, height);
-            vec3 sky = mix(colorHorizon, colorUpper, upperBlend);
-            sky = mix(sky, colorZenith, zenithBlend * (0.82 + skyOpenness * 0.12));
-
-            vec3 fireTint = vec3(1.0, 0.36, 0.16);
-            vec3 waterTint = vec3(0.22, 0.48, 0.76);
-            vec3 memoryTint = vec3(0.42, 0.32, 0.62);
-            float axis = fireWaterBalance * 0.5 + 0.5;
-            vec3 axisTint = mix(waterTint, fireTint, clamp(axis, 0.0, 1.0));
-
-            if (cloudDetail > 0.01) {
-              vec2 cloudUv =
-                direction.xz * (3.5 + max(height, 0.0) * 1.4) +
-                vec2(height * 1.25, -height * 0.68) +
-                vec2(time * 0.0017, time * 0.00042);
-              float cloudNoise = skyFbmLow(cloudUv);
-              if (cloudDetail > 0.78) {
-                cloudNoise = skyFbmHigh(cloudUv) * 0.76 + skyFbmHigh(cloudUv * vec2(1.82, 2.34) + 8.4) * 0.24;
-              }
-              float cloudThreshold = 0.77 - cloudAmount * 0.3;
-              float clouds = smoothstep(cloudThreshold, cloudThreshold + 0.18, cloudNoise);
-              float cloudZone = smoothstep(-0.1, 0.08, height) * (1.0 - smoothstep(0.64, 0.94, height));
-              float cloudStrata = 0.76 + 0.24 * sin((height + cloudNoise * 0.05) * 42.0);
-              clouds *= cloudZone * cloudStrata;
-              vec3 litCloud = mix(colorUpper, cloudColor, 0.46 + horizon * 0.24);
-              sky = mix(sky, litCloud, clouds * (0.09 + cloudAmount * 0.15));
-            }
-
-            float horizonVeil = horizon * (0.1 + (1.0 - skyOpenness) * 0.13);
-            sky = mix(sky, colorHorizon, horizonVeil);
-            sky = mix(sky, axisTint, abs(fireWaterBalance) * journeyDepth * 0.075);
-            sky = mix(sky, memoryTint, memoryPressure * 0.055);
-            sky *= 1.0 - journeyDepth * (0.025 + moodWeight * 0.035);
-
-            float dither = (skyHash(gl_FragCoord.xy) - 0.5) / 255.0;
-            sky += dither;
-
-            gl_FragColor = vec4(sky, 1.0);
-            #include <tonemapping_fragment>
-            #include <colorspace_fragment>
-          }
-        `}
-      />
-    </mesh>
-  );
-}
-
 function MemoryShrine({ visual, entry }: { visual: Slipper3DVisual; entry: Slipper3DEntry }) {
   const texture = useTexture(visual.src);
   const isSquare = visual.orientation === "square";
@@ -2998,7 +2630,7 @@ function createSafeCanvasTexture(kind: "bark" | "crown" | "marsh" | "ruin") {
 
   if (ctx) {
     const palettes: Record<typeof kind, [string, string, string]> = {
-      bark: ["#73553c", "#3c2b21", "#ad815d"],
+      bark: ["#817b68", "#47473d", "#b0a28a"],
       crown: ["#58725a", "#354a3b", "#8ba184"],
       marsh: ["#20251f", "#101510", "#516055"],
       ruin: ["#625e56", "#302e2a", "#958b7c"],
@@ -3113,12 +2745,14 @@ function HillyForestGround({
   narrativeWorldState,
   visualState,
   textures,
+  qualityProfile,
 }: {
   entries: Slipper3DEntry[];
   pathSegments: MazePathSegment[];
   narrativeWorldState: NarrativeWorldState;
   visualState: WorldVisualState;
   textures: ForestTexturePack;
+  qualityProfile: RenderQualityProfile;
 }) {
   const geometry = useMemo(() => {
     const geometry = new THREE.PlaneGeometry(
@@ -3140,6 +2774,7 @@ function HillyForestGround({
     const colors = new THREE.BufferAttribute(colorValues, 3);
     colors.setUsage(THREE.DynamicDrawUsage);
     geometry.setAttribute("color", colors);
+    geometry.setAttribute("terrainHabitat", new THREE.BufferAttribute(new Float32Array(positions.count * 4), 4));
     geometry.computeVertexNormals();
     geometry.computeBoundingBox();
     geometry.computeBoundingSphere();
@@ -3176,6 +2811,7 @@ function HillyForestGround({
     positions: Float32Array.from(
       (geometry.getAttribute("position") as THREE.BufferAttribute).array,
     ),
+    habitat: new Float32Array((geometry.getAttribute("position") as THREE.BufferAttribute).count * 4),
     colors: Float32Array.from(
       (geometry.getAttribute("color") as THREE.BufferAttribute).array,
     ),
@@ -3232,6 +2868,9 @@ function HillyForestGround({
 
     positionAttribute.array.set(terrainSurface.positions);
     colorAttribute.array.set(terrainSurface.colors);
+    const habitat = geometry.getAttribute("terrainHabitat") as THREE.BufferAttribute;
+    habitat.array.set(terrainSurface.habitat);
+    habitat.needsUpdate = true;
     positionAttribute.needsUpdate = true;
     colorAttribute.needsUpdate = true;
     geometry.computeVertexNormals();
@@ -3290,15 +2929,7 @@ function HillyForestGround({
         />
       ) : null}
       <mesh geometry={geometry} receiveShadow>
-        <meshStandardMaterial
-          map={textures.marshMap}
-          normalMap={textures.marshNormalMap}
-          roughnessMap={textures.marshRoughnessMap}
-          vertexColors
-          color="#ffffff"
-          roughness={0.78}
-          metalness={0.025}
-        />
+        <ForestSurfaceMaterial finish="ground" qualityProfile={qualityProfile} map={textures.marshMap} vertexColors color="#ffffff" />
       </mesh>
     </RigidBody>
   );
@@ -3414,10 +3045,11 @@ function ClearingForestFrame({
         tree.z + Math.cos(tree.yaw) * tree.crownRadius * 0.08,
       );
       dummy.rotation.set(tree.lean * 0.36, tree.yaw, -tree.lean * 0.26);
+      const habit = forestCrownHabit(seededUnit(seed, index + 467));
       dummy.scale.set(
-        tree.crownRadius * 1.12,
-        Math.max(tree.crownRadius * 0.76, tree.crownHeight * 0.82),
-        tree.crownRadius * 1.08,
+        tree.crownRadius * 1.12 * habit[0],
+        Math.max(tree.crownRadius * 0.76, tree.crownHeight * 0.82) * habit[1],
+        tree.crownRadius * 1.08 * habit[2],
       );
       dummy.updateMatrix();
       crown.setMatrixAt(index, dummy.matrix);
@@ -3457,10 +3089,10 @@ function ClearingForestFrame({
         ))}
       </RigidBody>
       <instancedMesh ref={trunkRef} args={[trunkGeometry, undefined, requestedCount]} castShadow={castShadow} receiveShadow>
-        <meshStandardMaterial map={textures.barkMap} normalMap={textures.barkNormalMap} roughnessMap={textures.barkRoughnessMap} color="#81756d" emissive={visualState.palette.trunk} emissiveIntensity={0.055} roughness={0.9} metalness={0.01} />
+        <ForestSurfaceMaterial finish="bark" qualityProfile={qualityProfile} map={textures.barkMap} color="#81756d" emissive={visualState.palette.trunk} emissiveIntensity={0.025} />
       </instancedMesh>
       <instancedMesh ref={crownRef} args={[crownGeometry, undefined, requestedCount]} castShadow={castShadow} receiveShadow>
-        <meshStandardMaterial map={textures.crownMap} vertexColors color="#e2e8e2" emissive={visualState.palette.leaf} emissiveIntensity={0.045} roughness={0.88} />
+        <ForestSurfaceMaterial finish="canopy" qualityProfile={qualityProfile} map={textures.crownMap} vertexColors color="#d4ded1" emissive={visualState.palette.leaf} emissiveIntensity={0.025} />
       </instancedMesh>
     </group>
   );
@@ -3488,8 +3120,8 @@ function ContinuousForestBed({
   const marshRef = useRef<THREE.InstancedMesh>(null);
   const ruinRef = useRef<THREE.InstancedMesh>(null);
   const trunkGeometry = useMemo(() => createForestTrunkGeometry(), []);
-  const crownGeometry = useMemo(() => createOrganicCrownGeometry(0), []);
-  const clearingCrownGeometry = useMemo(() => createOrganicCrownGeometry(1), []);
+  const crownGeometry = useMemo(() => createOrganicCrownGeometry(qualityProfile.quality === "high" || qualityProfile.quality === "cinematic" ? 2 : 0), [qualityProfile.quality]);
+  const clearingCrownGeometry = useMemo(() => createOrganicCrownGeometry(qualityProfile.quality === "low" ? 0 : 1), [qualityProfile.quality]);
 
   const workerRef = useRef<Worker | null>(null);
   const [workerError, setWorkerError] = useState<Error | null>(null);
@@ -3566,11 +3198,9 @@ function ContinuousForestBed({
     pathSegments,
   ]);
 
-  useEffect(() => () => {
-    trunkGeometry.dispose();
-    crownGeometry.dispose();
-    clearingCrownGeometry.dispose();
-  }, [clearingCrownGeometry, crownGeometry, trunkGeometry]);
+  useEffect(() => () => trunkGeometry.dispose(), [trunkGeometry]);
+  useEffect(() => () => crownGeometry.dispose(), [crownGeometry]);
+  useEffect(() => () => clearingCrownGeometry.dispose(), [clearingCrownGeometry]);
 
   useEffect(() => {
     for (const mesh of [trunkRef.current, crownRef.current, marshRef.current, ruinRef.current]) {
@@ -3671,29 +3301,11 @@ function ContinuousForestBed({
     const quality = qualityProfile.quality;
     const forestDensity = Math.round(visualState.director.forestDensity * 100);
     const pathClarity = Math.round(visualState.pathClarity * 100);
-    const last = lastCellRef.current;
-
-    if (
-      last.cellX === cellX &&
-      last.cellZ === cellZ &&
-      last.depth === depth &&
-      last.pressure === pressure &&
-      last.entryCount === entryCount &&
-      last.quality === quality &&
-      last.forestDensity === forestDensity &&
-      last.pathClarity === pathClarity
-    ) {
-      return;
-    }
-
-    last.cellX = cellX;
-    last.cellZ = cellZ;
-    last.depth = depth;
-    last.pressure = pressure;
-    last.entryCount = entryCount;
-    last.quality = quality;
-    last.forestDensity = forestDensity;
-    last.pathClarity = pathClarity;
+    // A frame may precede passive effects; only a ready worker can claim a cell.
+    if (!claimForestBuild(
+      workerRef.current !== null, lastCellRef.current,
+      cellX, cellZ, depth, pressure, entryCount, quality, forestDensity, pathClarity,
+    )) return;
 
     requestForestBuild(cellX, cellZ);
   });
@@ -3708,7 +3320,7 @@ function ContinuousForestBed({
         ))}
       </RigidBody>
 
-      <HillyForestGround entries={entries} pathSegments={pathSegments} narrativeWorldState={narrativeWorldState} visualState={visualState} textures={forestTextures} />
+      <HillyForestGround qualityProfile={qualityProfile} entries={entries} pathSegments={pathSegments} narrativeWorldState={narrativeWorldState} visualState={visualState} textures={forestTextures} />
       {showClearingFrame ? (
         <ClearingForestFrame
           center={activePosition}
@@ -3722,12 +3334,12 @@ function ContinuousForestBed({
           groundYAt={forestGroundYAt}
         />
       ) : null}
-      <instancedMesh ref={trunkRef} args={[trunkGeometry, undefined, FOREST_INSTANCE_COUNT]} frustumCulled castShadow receiveShadow>
-        <meshStandardMaterial map={forestTextures.barkMap} normalMap={forestTextures.barkNormalMap} roughnessMap={forestTextures.barkRoughnessMap} vertexColors color="#948579" emissive={visualState.palette.trunk} emissiveIntensity={0.045 + visualState.silhouetteContrast * 0.025} roughness={0.88} metalness={0.01} />
+      <instancedMesh name="continuous-forest-trunks" ref={trunkRef} args={[trunkGeometry, undefined, FOREST_INSTANCE_COUNT]} frustumCulled castShadow={qualityProfile.enableMoonShadows} receiveShadow>
+        <ForestSurfaceMaterial finish="bark" qualityProfile={qualityProfile} map={forestTextures.barkMap} vertexColors color="#948579" emissive={visualState.palette.trunk} emissiveIntensity={0.03} />
       </instancedMesh>
 
-      <instancedMesh ref={crownRef} args={[crownGeometry, undefined, FOREST_INSTANCE_COUNT]} frustumCulled castShadow receiveShadow>
-        <meshStandardMaterial map={forestTextures.crownMap} normalMap={forestTextures.crownNormalMap} roughnessMap={forestTextures.crownRoughnessMap} vertexColors color="#e8eee8" emissive={visualState.palette.leaf} emissiveIntensity={0.055 + visualState.silhouetteContrast * 0.025} roughness={0.88} metalness={0.01} />
+      <instancedMesh name="continuous-forest-crowns" ref={crownRef} args={[crownGeometry, undefined, FOREST_INSTANCE_COUNT]} frustumCulled castShadow={qualityProfile.enableMoonShadows} receiveShadow>
+        <ForestSurfaceMaterial finish="canopy" qualityProfile={qualityProfile} map={forestTextures.crownMap} vertexColors color="#dce4d8" emissive={visualState.palette.leaf} emissiveIntensity={0.03} />
       </instancedMesh>
 
       <instancedMesh ref={marshRef} args={[undefined, undefined, FOREST_INSTANCE_COUNT]} frustumCulled receiveShadow>
@@ -3873,91 +3485,42 @@ function selectNPCEncounter(entry: Slipper3DEntry): NPCEncounterConfig | null {
   };
 }
 
-function cloneTransparentModel(sourceScene: THREE.Group, baseOpacity: number) {
-  const clone = sourceScene.clone(true);
-  const materials: THREE.Material[] = [];
-
-  clone.traverse((object) => {
-    const mesh = object as THREE.Mesh;
-    if (!mesh.isMesh) return;
-
-    mesh.castShadow = true;
-    mesh.receiveShadow = true;
-    mesh.frustumCulled = false;
-
-    const cloneMaterial = (material: THREE.Material) => {
-      const cloned = material.clone();
-      cloned.transparent = true;
-      cloned.opacity = baseOpacity;
-      cloned.depthWrite = false;
-      materials.push(cloned);
-      return cloned;
-    };
-
-    if (Array.isArray(mesh.material)) {
-      mesh.material = mesh.material.map(cloneMaterial);
-    } else if (mesh.material) {
-      mesh.material = cloneMaterial(mesh.material);
-    }
-  });
-
-  return { scene: clone, materials };
-}
-
-function npcFallbackColor(kind: NPCEncounterKind) {
-  if (kind === "wolf") return "#8f7560";
-  if (kind === "phantom") return "#c9c2df";
-  return "#f2ead2";
-}
-
 function ProceduralNPCFallback({ config }: { config: NPCEncounterConfig }) {
   const { camera } = useThree();
+  const reducedMotion = useSettingsStore((state) => state.reducedMotion);
+  const reducedEffects = useSettingsStore((state) => state.reducedEffects);
   const groupRef = useRef<THREE.Group>(null);
-  const materialRef = useRef<THREE.MeshBasicMaterial>(null);
+  const materialsRef = useRef<THREE.Material[]>([]);
   const worldPositionRef = useRef(new THREE.Vector3());
   const opacityRef = useRef(config.baseOpacity * 0.72);
-  const color = npcFallbackColor(config.kind);
+
+  useLayoutEffect(() => {
+    const materials: THREE.Material[] = [];
+    groupRef.current?.traverse((object) => {
+      if (!(object instanceof THREE.Mesh)) return;
+      const entries = Array.isArray(object.material) ? object.material : [object.material];
+      for (const material of entries) if (!materials.includes(material)) materials.push(material);
+    });
+    materialsRef.current = materials;
+  }, [config.kind, reducedEffects]);
 
   useFrame((_, delta) => {
     if (!groupRef.current) return;
-
     groupRef.current.getWorldPosition(worldPositionRef.current);
     const dx = camera.position.x - worldPositionRef.current.x;
     const dz = camera.position.z - worldPositionRef.current.z;
-    const playerDistance = Math.sqrt(dx * dx + dz * dz);
-    const fade = THREE.MathUtils.smoothstep(playerDistance, config.fadeNear, config.fadeFar);
+    const distance = Math.sqrt(dx * dx + dz * dz);
+    const fade = THREE.MathUtils.smoothstep(distance, config.fadeNear, config.fadeFar);
     opacityRef.current = THREE.MathUtils.lerp(opacityRef.current, config.baseOpacity * 0.72 * fade, 1 - Math.exp(-delta * 4.2));
-
-    if (materialRef.current) materialRef.current.opacity = opacityRef.current;
+    for (const material of materialsRef.current) material.opacity = opacityRef.current;
     groupRef.current.visible = opacityRef.current > 0.025;
   });
 
-  return (
-    <Float speed={0.95} rotationIntensity={0.07} floatIntensity={0.26} floatingRange={[-0.04, 0.13]}>
-      <group ref={groupRef} position={config.position} rotation={config.rotation} scale={config.scale}>
-        <mesh position={[0, 0.8, 0]}>
-          {config.kind === "swan" ? <sphereGeometry args={[0.42, 24, 16]} /> : config.kind === "wolf" ? <coneGeometry args={[0.48, 1.1, 5]} /> : <sphereGeometry args={[0.46, 24, 16]} />}
-          <meshBasicMaterial ref={materialRef} color={color} transparent opacity={config.baseOpacity * 0.72} depthWrite={false} />
-        </mesh>
-        {config.kind === "swan" ? (
-          <>
-            <mesh position={[-0.42, 0.72, 0]} rotation={[0, 0, -0.34]}>
-              <planeGeometry args={[0.72, 0.28]} />
-              <meshBasicMaterial color={color} transparent opacity={0.28} depthWrite={false} side={THREE.DoubleSide} />
-            </mesh>
-            <mesh position={[0.42, 0.72, 0]} rotation={[0, 0, 0.34]}>
-              <planeGeometry args={[0.72, 0.28]} />
-              <meshBasicMaterial color={color} transparent opacity={0.28} depthWrite={false} side={THREE.DoubleSide} />
-            </mesh>
-          </>
-        ) : null}
-        <mesh position={[0, 0.12, 0]} rotation={[Math.PI / 2, 0, 0]}>
-          <circleGeometry args={[1.2, 56]} />
-          <meshBasicMaterial color="#fff4d2" transparent opacity={0.06} depthWrite={false} side={THREE.DoubleSide} />
-        </mesh>
-      </group>
-    </Float>
-  );
+  return <Float enabled={!reducedMotion && !reducedEffects} speed={0.6} rotationIntensity={0.025} floatIntensity={config.kind === "phantom" ? 0.12 : 0.025} floatingRange={[-0.02, 0.06]}>
+    <group ref={groupRef} position={config.position} rotation={config.rotation} scale={config.scale}>
+      <AuthoredNpcSilhouette kind={config.kind} opacity={config.baseOpacity * 0.72} />
+    </group>
+  </Float>;
 }
 
 type NPCEncounterErrorBoundaryState = { hasError: boolean };
@@ -3991,18 +3554,29 @@ class NPCEncounterErrorBoundary extends Component<
 }
 
 function NPCEncounterModel({ config }: { config: NPCEncounterConfig }) {
+  const gltf = useCompressedGLTF(config.src);
+  return isPlaceholderNpcAsset(gltf) ? <ProceduralNPCFallback config={config} /> : <LoadedNPCEncounterModel config={config} source={gltf.scene} />;
+}
+
+function LoadedNPCEncounterModel({ config, source }: { config: NPCEncounterConfig; source: THREE.Group }) {
   const { camera } = useThree();
+  const reducedMotion = useSettingsStore((state) => state.reducedMotion);
+  const reducedEffects = useSettingsStore((state) => state.reducedEffects);
   const groupRef = useRef<THREE.Group>(null);
   const worldPositionRef = useRef(new THREE.Vector3());
   const opacityRef = useRef(config.baseOpacity);
-  const gltf = useGLTF(config.src) as { scene: THREE.Group };
-  const model = useMemo(() => cloneTransparentModel(gltf.scene, config.baseOpacity), [gltf.scene, config.baseOpacity]);
+  const model = useMemo(() => {
+    const owned = cloneNpcPresentation(source, config.baseOpacity);
+    const surfaces: { material: THREE.Material; opacity: number }[] = [];
+    owned.scene.traverse((object) => {
+      if (!(object instanceof THREE.Mesh)) return;
+      const materials = Array.isArray(object.material) ? object.material : [object.material];
+      for (const material of materials) if (!surfaces.some((surface) => surface.material === material)) surfaces.push({ material, opacity: material.opacity });
+    });
+    return { ...owned, surfaces };
+  }, [source, config.baseOpacity]);
 
-  useEffect(() => {
-    return () => {
-      for (const material of model.materials) material.dispose();
-    };
-  }, [model.materials]);
+  useEffect(() => () => model.dispose(), [model]);
 
   useFrame((_, delta) => {
     if (!groupRef.current) return;
@@ -4015,15 +3589,15 @@ function NPCEncounterModel({ config }: { config: NPCEncounterConfig }) {
     const targetOpacity = config.baseOpacity * fade;
     opacityRef.current = THREE.MathUtils.lerp(opacityRef.current, targetOpacity, 1 - Math.exp(-delta * 4.2));
 
-    for (const material of model.materials) {
-      material.opacity = opacityRef.current;
+    for (const surface of model.surfaces) {
+      surface.material.opacity = surface.opacity * opacityRef.current / config.baseOpacity;
     }
 
     groupRef.current.visible = opacityRef.current > 0.025;
   });
 
   return (
-    <Float speed={1.05} rotationIntensity={0.08} floatIntensity={0.34} floatingRange={[-0.06, 0.16]}>
+    <Float enabled={!reducedMotion && !reducedEffects} speed={1.05} rotationIntensity={0.08} floatIntensity={0.34} floatingRange={[-0.06, 0.16]}>
       <group ref={groupRef} position={config.position} rotation={config.rotation} scale={config.scale}>
         <primitive object={model.scene} />
         <mesh position={[0, 0.12, 0]} rotation={[Math.PI / 2, 0, 0]}>
@@ -6000,156 +5574,15 @@ function guidedPathSegment(
   );
 }
 
-function createLivingPathTexture() {
-  const canvas = document.createElement("canvas");
-  canvas.width = 128;
-  canvas.height = 256;
-  const context = canvas.getContext("2d");
-  if (!context) return new THREE.CanvasTexture(canvas);
-
-  const edgeFade = context.createLinearGradient(0, 0, canvas.width, 0);
-  edgeFade.addColorStop(0, "rgba(39, 55, 35, 0)");
-  edgeFade.addColorStop(0.12, "rgba(43, 62, 39, 0.16)");
-  edgeFade.addColorStop(0.27, "rgba(75, 72, 45, 0.3)");
-  edgeFade.addColorStop(0.5, "rgba(145, 109, 61, 0.64)");
-  edgeFade.addColorStop(0.73, "rgba(75, 72, 45, 0.3)");
-  edgeFade.addColorStop(0.88, "rgba(43, 62, 39, 0.16)");
-  edgeFade.addColorStop(1, "rgba(39, 55, 35, 0)");
-  context.fillStyle = edgeFade;
-  context.fillRect(0, 0, canvas.width, canvas.height);
-
-  for (let index = 0; index < 72; index += 1) {
-    const x = 10 + seededUnit(9281, index * 3 + 1) * 108;
-    const y = seededUnit(9281, index * 3 + 2) * canvas.height;
-    const radiusX = 0.7 + seededUnit(9281, index * 3 + 3) * 2.9;
-    const radiusY = 1.1 + seededUnit(9281, index * 3 + 4) * 4.2;
-    const light = seededUnit(9281, index * 3 + 5) > 0.56;
-    context.beginPath();
-    context.ellipse(x, y, radiusX, radiusY, seededUnit(9281, index + 149) * Math.PI, 0, Math.PI * 2);
-    context.fillStyle = light
-      ? "rgba(225, 190, 112, 0.34)"
-      : "rgba(34, 48, 30, 0.42)";
-    context.fill();
-  }
-
-  context.strokeStyle = "rgba(227, 193, 123, 0.12)";
-  context.lineWidth = 6.5;
-  context.beginPath();
-  context.moveTo(64, 0);
-  context.bezierCurveTo(55, 72, 72, 168, 61, canvas.height);
-  context.stroke();
-  context.strokeStyle = "rgba(36, 38, 25, 0.17)";
-  context.lineWidth = 2.1;
-  context.beginPath();
-  context.moveTo(68, 0);
-  context.bezierCurveTo(60, 78, 69, 178, 65, canvas.height);
-  context.stroke();
-
-  context.globalCompositeOperation = "destination-in";
-  const endFade = context.createLinearGradient(0, 0, 0, canvas.height);
-  endFade.addColorStop(0, "rgba(255,255,255,0.24)");
-  endFade.addColorStop(0.12, "rgba(255,255,255,0.86)");
-  endFade.addColorStop(0.88, "rgba(255,255,255,0.86)");
-  endFade.addColorStop(1, "rgba(255,255,255,0.24)");
-  context.fillStyle = endFade;
-  context.fillRect(0, 0, canvas.width, canvas.height);
-
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.colorSpace = THREE.SRGBColorSpace;
-  texture.wrapS = THREE.ClampToEdgeWrapping;
-  texture.wrapT = THREE.RepeatWrapping;
-  texture.repeat.set(1, 3.4);
-  texture.minFilter = THREE.LinearFilter;
-  texture.magFilter = THREE.LinearFilter;
-  texture.needsUpdate = true;
-  return texture;
-}
-
-function LivingPathRibbon({
-  pathSegments,
-  activeEntry,
-  navigationTargetId,
-  narrativeWorldState,
-  sampleGroundY,
-}: {
-  pathSegments: MazePathSegment[];
-  activeEntry: Slipper3DEntry;
-  navigationTargetId: string | null;
-  narrativeWorldState: NarrativeWorldState;
-  sampleGroundY: (x: number, z: number) => number;
+function LivingPathRibbon({ pathSegments, activeEntry, navigationTargetId, narrativeWorldState, sampleGroundY, qualityProfile }: {
+  pathSegments: MazePathSegment[]; activeEntry: Slipper3DEntry; navigationTargetId: string | null;
+  narrativeWorldState: NarrativeWorldState; sampleGroundY: (x: number, z: number) => number; qualityProfile: RenderQualityProfile;
 }) {
-  const texture = useMemo(
-    () => (typeof document === "undefined" ? null : createLivingPathTexture()),
-    [],
-  );
-  const geometry = useMemo(() => {
+  const curve = useMemo(() => {
     const segment = guidedPathSegment(pathSegments, activeEntry.id, navigationTargetId);
-    if (!segment) return null;
-
-    const pointCount = 49;
-    const positions = new Float32Array(pointCount * 2 * 3);
-    const uvs = new Float32Array(pointCount * 2 * 2);
-    const indices: number[] = [];
-    const morph = {
-      memoryPressure: narrativeWorldState.memoryPressure,
-      explorationDepth: narrativeWorldState.explorationDepth,
-    };
-    const seed = hashString(`${segment.key}:living-path`);
-
-    for (let index = 0; index < pointCount; index += 1) {
-      const t = index / (pointCount - 1);
-      const point = curvedPathPointAt(segment, t, morph);
-      const tangent = curvedPathTangentAt(segment, t, morph);
-      const normal = new THREE.Vector2(-tangent.y, tangent.x).normalize();
-      const width = 0.84 + seededUnit(seed, index + 19) * 0.22;
-
-      for (let sideIndex = 0; sideIndex < 2; sideIndex += 1) {
-        const side = sideIndex === 0 ? -1 : 1;
-        const x = point.x + normal.x * width * side;
-        const z = point.y + normal.y * width * side;
-        const vertexIndex = index * 2 + sideIndex;
-        positions[vertexIndex * 3] = x;
-        positions[vertexIndex * 3 + 1] = sampleGroundY(x, z) + 0.055;
-        positions[vertexIndex * 3 + 2] = z;
-        uvs[vertexIndex * 2] = sideIndex;
-        uvs[vertexIndex * 2 + 1] = t;
-      }
-
-      if (index < pointCount - 1) {
-        const left = index * 2;
-        indices.push(left, left + 2, left + 1, left + 1, left + 2, left + 3);
-      }
-    }
-
-    const nextGeometry = new THREE.BufferGeometry();
-    nextGeometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-    nextGeometry.setAttribute("uv", new THREE.BufferAttribute(uvs, 2));
-    nextGeometry.setIndex(indices);
-    nextGeometry.computeBoundingBox();
-    nextGeometry.computeBoundingSphere();
-    return nextGeometry;
-  }, [activeEntry.id, narrativeWorldState.explorationDepth, narrativeWorldState.memoryPressure, navigationTargetId, pathSegments, sampleGroundY]);
-
-  useEffect(() => () => geometry?.dispose(), [geometry]);
-  useEffect(() => () => texture?.dispose(), [texture]);
-
-  if (!geometry || !texture) return null;
-
-  return (
-    <mesh geometry={geometry} frustumCulled renderOrder={4}>
-      <meshBasicMaterial
-        map={texture}
-        color="#d2b078"
-        transparent
-        opacity={0.58}
-        depthWrite={false}
-        side={THREE.DoubleSide}
-        polygonOffset
-        polygonOffsetFactor={-2}
-        toneMapped={false}
-      />
-    </mesh>
-  );
+    return segment ? terrainCurveSeedFor(segment) : null;
+  }, [pathSegments, activeEntry.id, navigationTargetId]);
+  return <PhysicalPathRibbon curve={curve} morph={narrativeWorldState} sampleGroundY={sampleGroundY} qualityProfile={qualityProfile} />;
 }
 
 function createPathUnderstoryGeometry() {
@@ -7735,7 +7168,7 @@ export function StoryScene({
       <NarrativeLightingRig visualState={visualState} qualityProfile={qualityProfile} />
       {openingResolved ? (
         <>
-          <LivingPathRibbon pathSegments={pathSegments} activeEntry={entry} navigationTargetId={navigationTargetId} narrativeWorldState={narrativeWorldState} sampleGroundY={sampleGroundY} />
+          <LivingPathRibbon qualityProfile={qualityProfile} pathSegments={pathSegments} activeEntry={entry} navigationTargetId={navigationTargetId} narrativeWorldState={narrativeWorldState} sampleGroundY={sampleGroundY} />
           <MoonlitPathUnderstory pathSegments={pathSegments} activeEntry={entry} navigationTargetId={navigationTargetId} narrativeWorldState={narrativeWorldState} qualityProfile={qualityProfile} sampleGroundY={sampleGroundY} />
           {reducedEffects ? null : (
             <PathLightMotes pathSegments={pathSegments} activeEntry={entry} navigationTargetId={navigationTargetId} visualState={visualState} narrativeWorldState={narrativeWorldState} qualityProfile={qualityProfile} sampleGroundY={sampleGroundY} />

@@ -19,6 +19,7 @@ type TactileMaterialProps = {
   color: string;
   roughness?: number;
   metalness?: number;
+  vertexColors?: boolean;
   side?: THREE.Side;
   transparent?: boolean;
   opacity?: number;

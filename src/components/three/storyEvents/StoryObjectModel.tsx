@@ -2,9 +2,12 @@ import { memo, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import type { StoryObjectKind } from "../../../storyEvents/storyEventTypes";
-import { Beam, DoorFrame, KeyProp, LanternProp } from "../chapters/ChapterPrimitives";
+import { DoorFrame, KeyProp, LanternProp } from "../chapters/ChapterPrimitives";
 import { ClothboundBook, DomesticChair, FoldedPaperBird, MemoryFeather, MemoryRose, StoryLinen, StoryPaper } from "./StoryHeroProps";
 import { TactileMaterial } from "./TactileMaterial";
+import { TimberPiece } from "../environmentArt/EnvironmentArt";
+import { AuthoredCandle, PerchedStoryBird, StorySeed, WovenNest } from "../environmentArt/HeroObjects";
+import { AuthoredNpcSilhouette } from "../environmentArt/AuthoredNpc";
 
 function TactileDoor({ open, reducedMotion }: { open: boolean; reducedMotion: boolean }) {
   const hinge = useRef<THREE.Group>(null);
@@ -14,7 +17,7 @@ function TactileDoor({ open, reducedMotion }: { open: boolean; reducedMotion: bo
   return <group name="touchable-hinged-door">
     <DoorFrame width={1.5} height={2} depth={.18} open />
     <group ref={hinge} position={[-.72, 0, 0]} rotation={[0, open ? -1.32 : 0, 0]}>
-      <mesh position={[.68, .95, 0]}><boxGeometry args={[1.33, 1.86, .09]} /><TactileMaterial surface="wood" color="#66503d" roughness={.84} /></mesh>
+      <TimberPiece position={[.68, .95, 0]} size={[1.33, 1.86, .09]} color="#66503d" seed={12} />
       <mesh position={[1.17, .93, -.075]}><sphereGeometry args={[.045, 8, 6]} /><meshStandardMaterial color="#b4a17c" metalness={.7} roughness={.35} /></mesh>
     </group>
   </group>;
@@ -52,10 +55,8 @@ export const StoryObjectModel = memo(function StoryObjectModel({ kind, state = "
   if (kind === "book") return <ClothboundBook open={state === "open"} burnt={burnt} />;
   if (kind === "letter" || kind === "page") return <StoryPaper letter={kind === "letter"} burnt={burnt} />;
   if (kind === "chair") return <DomesticChair />;
-  if (kind === "birds" || kind === "swan") return <group>
-    <mesh scale={[.35, .12, .22]}><octahedronGeometry args={[1, 0]} /><meshStandardMaterial color={kind === "birds" ? "#15191b" : cream} roughness={.91} /></mesh>
-    <Beam from={[.16, 0, 0]} to={[.25, .35, 0]} radius={.045} color={cream} />
-  </group>;
+  if (kind === "birds") return <PerchedStoryBird />;
+  if (kind === "swan") return <group scale={.3}><AuthoredNpcSilhouette kind="swan" /></group>;
   if (kind === "mirror" || kind === "frame") return <group>
     <mesh position={[0, .72, 0]}><boxGeometry args={[1.1, 1.5, .13]} /><TactileMaterial surface="wood" color="#66503d" roughness={.82} /></mesh>
     <mesh position={[0, .72, -.08]}><planeGeometry args={[.85, 1.24]} /><meshStandardMaterial color={kind === "mirror" ? "#77949d" : "#2b2926"} metalness={kind === "mirror" ? .8 : 0} roughness={kind === "mirror" ? .15 : .9} side={2} /></mesh>
@@ -67,18 +68,9 @@ export const StoryObjectModel = memo(function StoryObjectModel({ kind, state = "
     <mesh rotation={[-Math.PI / 2, 0, 0]}><circleGeometry args={[.95, 32]} /><meshStandardMaterial color={kind === "water" ? "#294653" : "#46332b"} metalness={kind === "water" ? .55 : .1} roughness={.2} /></mesh>
     {kind === "fire" ? <mesh position={[0, .42, 0]} scale={[.4, .9, .4]}><octahedronGeometry args={[.7, 1]} /><meshStandardMaterial color="#c87d45" emissive="#ad5027" emissiveIntensity={1.1} transparent opacity={.65} /></mesh> : null}
   </group>;
-  if (kind === "candle") return <group>
-    <mesh position={[0, .2, 0]}><cylinderGeometry args={[.07, .085, .4, 12]} /><meshStandardMaterial color={cream} /></mesh>
-    {state === "lit" || state === "awakened" ? <mesh position={[0, .45, 0]} scale={[.7, 1.6, .7]}><sphereGeometry args={[.05, 8, 6]} /><meshBasicMaterial color="#ffe0a1" /></mesh> : null}
-  </group>;
-  if (kind === "basket" || kind === "nest") return <group>
-    <mesh><torusGeometry args={[.38, .11, 7, 24]} /><meshStandardMaterial color="#7c6550" roughness={1} /></mesh>
-    <mesh rotation={[-Math.PI / 2, 0, 0]}><circleGeometry args={[.38, 18]} /><meshStandardMaterial color="#cab69b" roughness={1} side={2} /></mesh>
-  </group>;
-  if (kind === "seed") return <group>
-    <mesh scale={[.6, 1, .6]}><sphereGeometry args={[.14, 10, 7]} /><meshStandardMaterial color="#826243" roughness={1} /></mesh>
-    {state === "planted" || state === "grown" ? <><Beam from={[0, 0, 0]} to={[0, .65, 0]} radius={.018} color="#53684c" /><mesh position={[.1, .55, 0]} scale={[.2, .07, .12]}><sphereGeometry args={[1, 8, 6]} /><meshStandardMaterial color="#768368" /></mesh></> : null}
-  </group>;
+  if (kind === "candle") return <AuthoredCandle lit={state === "lit" || state === "awakened"} color={cream} />;
+  if (kind === "basket" || kind === "nest") return <WovenNest />;
+  if (kind === "seed") return <StorySeed grown={state === "planted" || state === "grown"} />;
   if (kind === "path") return <mesh rotation={[-Math.PI / 2, 0, 0]}><planeGeometry args={[1.1, 2.8]} /><meshStandardMaterial color="#777263" transparent opacity={.26} roughness={1} /></mesh>;
   return <mesh scale={[.3, .45, .18]}><dodecahedronGeometry args={[1, 0]} /><meshStandardMaterial color={cream} roughness={.95} /></mesh>;
 });

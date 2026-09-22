@@ -1,9 +1,11 @@
 import { ForestDepth } from "../environment/EnvironmentDressing";
 import { ChapterLightRig } from "../environment/ChapterLightRig";
 import { SanctuaryWater } from "../environment/SanctuaryWater";
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import { SwanModel } from "../storyEvents/SwanModel";
-import { TactileMaterial } from "../storyEvents/TactileMaterial";
+import { BotanicalBatch } from "../environmentArt/EnvironmentArt";
+import { TimberAssembly } from "./ChapterArt";
+import type { ConstructionPiece } from "./chapterArtGeometry";
 import {
   Beam,
   CandleField,
@@ -24,6 +26,23 @@ const LILIES = Array.from({ length: 16 }, (_, index) => ({
   z: -5 + (index * 3.7) % 10,
   scale: 0.45 + (index % 4) * 0.08,
 }));
+
+function WornSanctuaryBridge() {
+  const boards = useMemo<ConstructionPiece[]>(() => BRIDGE_PLANKS.map(index => ({
+    position: [0, Math.sin(index * .45) * .08, -7.2 + index * 1.2], size: [3.8, .2, .92],
+    color: index % 2 ? "#9b8976" : "#bfaa8c",
+  })), []);
+  const supports = useMemo<ConstructionPiece[]>(() => [-1, 1].flatMap(side => [
+    { position: [side * 1.65, -.24, 0] as [number, number, number], size: [.16, .3, 15.4] as [number, number, number] },
+    ...[-6, 0, 6].map(z => ({ position: [side * 2.1, .24 + (z + 8) / 15.4 * .65, z] as [number, number, number], size: [.14, .85, .14] as [number, number, number] })),
+  ]), []);
+  return <group position={[0, .3, 0]} name="weathered-sanctuary-bridge">
+    <TimberAssembly pieces={boards} color="#685441" surface="wet-wood" />
+    <TimberAssembly pieces={supports} color="#3c332a" surface="wet-wood" />
+    <Beam from={[-2.1, .1, -8]} to={[-2.1, .75, 7.4]} radius={.1} color="#302b27" surface="wet-wood" />
+    <Beam from={[2.1, .1, -8]} to={[2.1, .75, 7.4]} radius={.1} color="#302b27" surface="wet-wood" />
+  </group>;
+}
 
 function SanctuaryMoon({
   qualityProfile,
@@ -80,31 +99,8 @@ function BlueMoonSanctuaryChapterComponent({
         reducedMotion={reducedMotion}
       />
 
-      <group position={[0, 0.3, 0]}>
-        {BRIDGE_PLANKS.map((index) => (
-          <mesh key={index} position={[0, Math.sin(index * 0.45) * 0.08, -7.2 + index * 1.2]} receiveShadow>
-            <boxGeometry args={[3.8, 0.2, 0.92]} />
-            <TactileMaterial surface="wood" color={index % 2 === 0 ? "#685441" : "#594939"} roughness={0.84} />
-          </mesh>
-        ))}
-        <Beam from={[-2.1, 0.1, -8]} to={[-2.1, 0.75, 7.4]} radius={0.1} color="#302b27" />
-        <Beam from={[2.1, 0.1, -8]} to={[2.1, 0.75, 7.4]} radius={0.1} color="#302b27" />
-      </group>
-
-      {LILIES.slice(0, lilyCount).map((lily, index) => (
-        <group key={index} position={[lily.x, 0.1, lily.z]} scale={lily.scale}>
-          <mesh rotation={[-Math.PI / 2, 0, index * 0.7]}>
-            <circleGeometry args={[0.72, 12, 0, Math.PI * 1.82]} />
-            <meshStandardMaterial color="#50694d" roughness={0.9} />
-          </mesh>
-          {index % 3 === 0 ? (
-            <mesh position={[0, 0.16, 0]}>
-              <sphereGeometry args={[0.22, 8, 6]} />
-              <meshStandardMaterial color="#d5c8cf" roughness={0.8} />
-            </mesh>
-          ) : null}
-        </group>
-      ))}
+      <WornSanctuaryBridge />
+      <BotanicalBatch kind="lily" seed={23} color="#d5c8cf" placements={LILIES.slice(0, lilyCount).map((lily, index) => ({ position: [lily.x, .1, lily.z], scale: lily.scale * 1.4, rotation: [0, index * .7, 0] }))} />
 
       {!eventDriven ? <group name="blue-moon-candle-path" position={[-4.2, 0, -2]}>
         {candlesLit ? (
@@ -137,16 +133,13 @@ function BlueMoonSanctuaryChapterComponent({
         <group>
           {!eventDriven ? <SanctuarySwan position={[-4.2, 0.15, 3.2]} /> : null}
           <group name="blue-moon-flower-table" position={[3.6, 0, 4.8]}>
-            <mesh position={[0, 0.55, 0]}>
-              <cylinderGeometry args={[0.72, 0.88, 1.1, 10]} />
-              <TactileMaterial surface="wood" color="#655644" roughness={0.95} />
-            </mesh>
-            {flowersPlaced ? [-0.32, 0, 0.3].map((x, index) => (
-              <mesh key={x} position={[x, 1.18 + index * 0.04, 0]}>
-                <sphereGeometry args={[0.18, 8, 6]} />
-                <meshStandardMaterial color={index === 1 ? "#e1cbd0" : "#c9959d"} roughness={0.84} />
-              </mesh>
-            )) : null}
+            <TimberAssembly color="#655644" pieces={[
+              { position: [0, 1.02, 0], size: [1.44, .16, 1.25] },
+              { position: [0, .48, 0], size: [.2, .94, .2] },
+              { position: [0, .09, 0], size: [1.25, .12, .16] },
+              { position: [0, .09, 0], size: [.16, .12, 1.12] },
+            ]} />
+            {flowersPlaced ? <BotanicalBatch kind="rose" seed={7} color="#c9959d" placements={[-.32, 0, .3].map((x, index) => ({ position: [x, 1.1, 0], rotation: [0, index, .3], scale: .58 }))} /> : null}
           </group>
           <DoorFrame position={[0, 0.15, 5.8]} width={3.1} height={4.8} depth={0.46} color="#716257" open={beautifulDoorOpen} />
           <ObservedSanctuaryReflection delayed={waterTouched} reducedMotion={reducedMotion} />
@@ -176,10 +169,7 @@ function BlueMoonSanctuaryChapterComponent({
               <meshStandardMaterial color="#6f6b61" metalness={0.6} roughness={0.38} />
             </mesh>
           ))}
-          <mesh position={[0, -0.2, 0]} rotation={[0, 0, Math.PI / 2]}>
-            <coneGeometry args={[0.45, 1.35, 4]} />
-            <meshStandardMaterial color="#ece9df" roughness={0.9} />
-          </mesh>
+          <group position={[0, -.65, 0]} scale={.65}><SwanModel /></group>
         </group>
       ) : null}
 

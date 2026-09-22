@@ -1,3 +1,4 @@
+import { forestCrownHabit } from "../lib/forestArt.ts";
 import type {
   BuildForestWorkerRequest,
   BuildForestWorkerResponse,
@@ -139,13 +140,14 @@ function hexToRgb01(value: string): [number, number, number] {
   ];
 }
 
-function generateTerrain(request: GenerateTerrainWorkerRequest): GenerateTerrainWorkerResponse {
+export function generateTerrain(request: GenerateTerrainWorkerRequest): GenerateTerrainWorkerResponse {
   const config = request.config;
   const grid = Math.max(1, Math.floor(config.terrainSegments));
   const vertexSide = grid + 1;
   const vertexCount = vertexSide * vertexSide;
   const positions = new Float32Array(vertexCount * 3);
   const colors = new Float32Array(vertexCount * 3);
+  const habitat = new Float32Array(vertexCount * 4);
   const [baseR, baseG, baseB] = hexToRgb01(config.groundColor);
   const half = config.terrainSize * 0.5;
   const step = config.terrainSize / grid;
@@ -168,11 +170,17 @@ function generateTerrain(request: GenerateTerrainWorkerRequest): GenerateTerrain
       colors[offset + 0] = clamp((0.9 + baseR * 0.1) * shade + walkable * 0.01, 0, 1);
       colors[offset + 1] = clamp((0.9 + baseG * 0.1) * shade + walkable * 0.007, 0, 1);
       colors[offset + 2] = clamp((0.9 + baseB * 0.1) * shade + walkable * 0.004, 0, 1);
+      const biome = nearestClearingBiome(x, z, config);
+      const moisture = biome === "mirror" ? .82 : biome === "fireRiver" ? .35 : .56;
+      habitat[cursor * 4] = walkable;
+      habitat[cursor * 4 + 1] = moisture;
+      habitat[cursor * 4 + 2] = biome === "fireRiver" ? .15 : biome === "crowned" ? .5 : .82;
+      habitat[cursor * 4 + 3] = biome === "fireRiver" ? .6 : 0;
       cursor += 1;
     }
   }
 
-  return { type: "TERRAIN_READY", requestId: request.requestId, positions, colors };
+  return { type: "TERRAIN_READY", requestId: request.requestId, positions, colors, habitat };
 }
 
 function writeHiddenMatrix(target: Float32Array, index: number) {
@@ -472,7 +480,8 @@ export function buildForest(request: BuildForestWorkerRequest): BuildForestWorke
             trunkCount += 1;
           }
           if (crownCount < instanceCapacity) {
-            writeMatrix(crownMatrices, crownCount, x, groundY + trunkHeight * 0.8 + crownScale * 0.32, z, lean * 0.28, yawB, -lean * 0.28, crownScale * 1.04, crownScale * 1.18, crownScale);
+            const habit = forestCrownHabit(randomB);
+            writeMatrix(crownMatrices, crownCount, x, groundY + trunkHeight * 0.8 + crownScale * 0.32, z, lean * 0.28, yawB, -lean * 0.28, crownScale * 1.04 * habit[0], crownScale * 1.18 * habit[1], crownScale * habit[2]);
             writeColor(
               crownColors,
               crownCount,
@@ -584,7 +593,7 @@ if (typeof self !== "undefined") self.onmessage = (event: MessageEvent<ForestWor
 
   if (message.type === "GENERATE_TERRAIN") {
     const response = generateTerrain(message);
-    const transferList = [response.positions.buffer, response.colors.buffer] as unknown as Transferable[];
+    const transferList = [response.positions.buffer, response.colors.buffer, response.habitat.buffer] as unknown as Transferable[];
     (self as unknown as { postMessage: (message: unknown, transfer: Transferable[]) => void }).postMessage(response, transferList);
   }
 };

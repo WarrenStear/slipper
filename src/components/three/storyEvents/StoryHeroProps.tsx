@@ -2,6 +2,9 @@ import { memo, useEffect, useMemo } from "react";
 import * as THREE from "three";
 import { makeStorySheet, paperBirdPositions, type SheetKind } from "./visualGeometry";
 import { TactileMaterial } from "./TactileMaterial";
+import { BotanicalCluster } from "../environmentArt/EnvironmentArt";
+import { createChairGeometry } from "../environmentArt/heroGeometry.ts";
+import { createWornTimberGeometry, mergeArtGeometries } from "../environmentArt/authoredGeometry.ts";
 
 function useSheet(kind: SheetKind) {
   const geometry = useMemo(() => {
@@ -16,25 +19,8 @@ function useSheet(kind: SheetKind) {
   return geometry;
 }
 
-const PETALS = Array.from({ length: 12 }, (_, index) => ({
-  angle: index * 2.39996,
-  size: index < 5 ? 1 : index < 9 ? .75 : .48,
-  lift: index < 5 ? 0 : index < 9 ? .022 : .038,
-}));
-
 export const MemoryRose = memo(function MemoryRose({ burnt = false }: { burnt?: boolean }) {
-  const petal = useSheet("petal");
-  return <group name="tactile-memory-rose">
-    <mesh position={[0, .22, 0]}><cylinderGeometry args={[.012, .018, .44, 7]} /><meshStandardMaterial color={burnt ? "#302924" : "#43513a"} roughness={.94} /></mesh>
-    <group position={[0, .22, 0]} rotation={[0, .4, -.7]}>
-      <mesh position={[.055, .025, 0]} scale={[.095, .032, .037]}><sphereGeometry args={[1, 10, 6]} /><meshStandardMaterial color={burnt ? "#302924" : "#59634b"} roughness={.94} /></mesh>
-    </group>
-    <group position={[0, .435, 0]} rotation={[.1, 0, -.12]}>
-      {PETALS.map((item, index) => <mesh key={index} geometry={petal} position={[0, item.lift, 0]} rotation={[0, item.angle, 0]} scale={item.size}>
-        <meshStandardMaterial color={burnt ? "#3a302b" : index < 5 ? "#c9959d" : index < 9 ? "#bb818e" : "#aa697d"} roughness={.84} side={THREE.DoubleSide} />
-      </mesh>)}
-    </group>
-  </group>;
+  return <group name="tactile-memory-rose"><BotanicalCluster kind="rose" position={[0, 0, 0]} burnt={burnt} /></group>;
 });
 
 export const MemoryFeather = memo(function MemoryFeather({ burnt = false }: { burnt?: boolean }) {
@@ -89,25 +75,30 @@ export const StoryPaper = memo(function StoryPaper({ letter = false, burnt = fal
 
 export const ClothboundBook = memo(function ClothboundBook({ open = false, burnt = false }: { open?: boolean; burnt?: boolean }) {
   const cover = burnt ? "#312720" : "#534340";
+  const shapes = useMemo(() => {
+    const lower = createWornTimberGeometry([.68, .016, .45], 19); lower.translate(0, .003, 0);
+    const spine = createWornTimberGeometry([.025, .087, .45], 3); spine.translate(-.327, .043, 0);
+    const pages = createWornTimberGeometry([.61, .064, .405], 11); pages.translate(0, .042, 0);
+    const lid = createWornTimberGeometry([.68, .016, .45], 23); lid.translate(.327, 0, 0);
+    const inlay: THREE.BufferGeometry[] = [];
+    for (const z of [-.16, .16]) { const piece = createWornTimberGeometry([.51, .0015, .003], 3); piece.translate(.327, .009, z); inlay.push(piece); }
+    for (const x of [.073, .581]) { const piece = createWornTimberGeometry([.003, .0015, .32], 4); piece.translate(x, .009, 0); inlay.push(piece); }
+    return { lower: mergeArtGeometries([lower, spine]), pages, lid, inlay: mergeArtGeometries(inlay) };
+  }, []);
+  useEffect(() => () => { for (const geometry of Object.values(shapes)) geometry.dispose(); }, [shapes]);
   return <group name="tactile-clothbound-book" rotation={[0, .14, 0]}>
-    <mesh position={[0, .042, 0]}><boxGeometry args={[.61, .064, .405]} /><TactileMaterial surface="paper" color={burnt ? "#382e26" : "#cfc5b1"} roughness={1} /></mesh>
-    <mesh position={[0, .003, 0]}><boxGeometry args={[.68, .016, .45]} /><TactileMaterial surface="linen" color={cover} /></mesh>
-    <mesh position={[-.327, .043, 0]}><boxGeometry args={[.025, .087, .45]} /><TactileMaterial surface="linen" color={cover} /></mesh>
+    <mesh geometry={shapes.pages}><TactileMaterial surface="paper" color={burnt ? "#382e26" : "#cfc5b1"} roughness={1} /></mesh>
+    <mesh geometry={shapes.lower}><TactileMaterial surface="linen" color={cover} /></mesh>
     <group position={[-.327, .086, 0]} rotation={[0, 0, open ? 2.65 : 0]}>
-      <mesh position={[.327, 0, 0]}><boxGeometry args={[.68, .016, .45]} /><TactileMaterial surface="linen" color={cover} /></mesh>
-      {[-.16, .16].map(z => <mesh key={z} position={[.327, .009, z]}><boxGeometry args={[.51, .0015, .003]} /><meshStandardMaterial color={burnt ? cover : "#a38c67"} metalness={.35} roughness={.65} /></mesh>)}
-      {[.073, .581].map(x => <mesh key={x} position={[x, .009, 0]}><boxGeometry args={[.003, .0015, .32]} /><meshStandardMaterial color={burnt ? cover : "#a38c67"} metalness={.35} roughness={.65} /></mesh>)}
+      <mesh geometry={shapes.lid}><TactileMaterial surface="linen" color={cover} /></mesh>
+      <mesh geometry={shapes.inlay}><TactileMaterial surface="metal" color={burnt ? cover : "#a38c67"} metalness={.35} roughness={.65} /></mesh>
     </group>
     <mesh position={[.20, .034, -.239]}><boxGeometry args={[.03, .004, .064]} /><TactileMaterial surface="linen" color={burnt ? cover : "#956c63"} /></mesh>
   </group>;
 });
 
 export const DomesticChair = memo(function DomesticChair() {
-  return <group name="tactile-domestic-chair">
-    <mesh position={[0, .5, 0]}><boxGeometry args={[.65, .085, .6]} /><TactileMaterial surface="wood" color="#76604d" roughness={.76} /></mesh>
-    <mesh position={[0, 1.14, .26]}><boxGeometry args={[.65, .19, .08]} /><TactileMaterial surface="wood" color="#695442" roughness={.8} /></mesh>
-    {[-.26, -.09, .09, .26].map(x => <mesh key={x} position={[x, .85, .26]}><cylinderGeometry args={[.016, .023, .48, 8]} /><TactileMaterial surface="wood" color="#5c493b" /></mesh>)}
-    {[-.26, .26].flatMap(x => [-.24, .24].map(z => <mesh key={`${x}:${z}`} position={[x, .24, z]} rotation={[z * .14, 0, -x * .12]}><cylinderGeometry args={[.034, .025, .49, 8]} /><TactileMaterial surface="wood" color="#584536" /></mesh>))}
-    {[-.25, .25].map(x => <mesh key={x} position={[x, .21, 0]} rotation={[Math.PI / 2, 0, 0]}><cylinderGeometry args={[.013, .013, .48, 6]} /><TactileMaterial surface="wood" color="#594838" /></mesh>)}
-  </group>;
+  const geometry = useMemo(() => createChairGeometry(), []);
+  useEffect(() => () => geometry.dispose(), [geometry]);
+  return <group name="tactile-domestic-chair"><mesh geometry={geometry} receiveShadow><TactileMaterial surface="wood" color="#695442" roughness={.8} /></mesh></group>;
 });

@@ -1,13 +1,18 @@
 import { memo, useMemo } from "react";
+import { BotanicalBatch } from "../environmentArt/EnvironmentArt";
 import { Forms } from "./EnvironmentDressing";
 import { finalWoodlandForms, meadowFlowerForms } from "./woodlandSceneLayout";
 import type { Point3 } from "./chapterEnvironment";
 
 export const MeadowFlowers = memo(function MeadowFlowers({ reducedEffects }: { reducedEffects: boolean }) {
   const forms = useMemo(() => meadowFlowerForms(reducedEffects), [reducedEffects]);
+  const placements = useMemo(() => forms.flowers.map((flower, index) => ({
+    position: [flower.position[0], flower.position[1] - .435, flower.position[2]] as Point3,
+    rotation: [0, index * 2.4, 0] as Point3,
+    color: flower.color,
+  })), [forms]);
   return <group name="meadow-flower-batches" userData={{ decorativeOnly: true, drawCallBudget: 2 }}>
-    <Forms forms={forms.stems} name="meadow-stems" color="#465b3f" kind="stem" roughness={1} />
-    <Forms forms={forms.flowers} name="meadow-blossoms" color="#ffffff" kind="flower" roughness={.86} />
+    <BotanicalBatch kind="rose" name="meadow" mergeFoliage seed={51} placements={placements} color="#ffffff" />
   </group>;
 });
 

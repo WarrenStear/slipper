@@ -48,7 +48,7 @@ function EnchantedWoodChapterComponent({
 
       {isMeadow ? (
         <>
-          <WaterSurface position={[-4.8, 0.02, 1.4]} size={[5.5, 5.5]} color="#263d43" opacity={0.82} circle />
+          <WaterSurface reducedMotion={reducedMotion} reducedEffects={reducedEffects} position={[-4.8, 0.02, 1.4]} size={[5.5, 5.5]} color="#263d43" opacity={0.82} circle />
           <MeadowFlowers reducedEffects={reducedEffects} />
         </>
       ) : (

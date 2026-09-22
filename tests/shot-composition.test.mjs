@@ -90,7 +90,7 @@ test('camera consumer retains a single owner, explicit scene, multi-pointer inpu
 test('bark, stone and wood detail remains on lit, derivative-filtered materials',()=>{
   const s=(source('src/components/three/storyEvents/TactileMaterial.tsx') + source('src/components/three/storyEvents/tactileShader.ts'));
   assert.match(s,/bark:/);assert.match(s,/stone:/);assert.match(s,/fwidth/);
-  assert.match(s,/roughnessFactor = clamp/);assert.match(s,/sidtw-tactile-\$\{surface\}-v4/);
+  assert.match(s,/roughnessFactor = clamp/);assert.match(s,/sidtw-tactile-\$\{surface\}-v5/);
   assert.doesNotMatch(s,/TextureLoader|WebGLRenderTarget|requestAnimationFrame|useFrame/);
 });
 test('existing environment batches receive material detail without new instance batches',()=>{
@@ -136,8 +136,8 @@ test('the camera consumes recent-input holding and yields on interrupted frames'
 });
 test('every material provides analytic height and a separate relief filter', () => {
   const s = (source('src/components/three/storyEvents/TactileMaterial.tsx') + source('src/components/three/storyEvents/tactileShader.ts'));
-  assert.equal((s.match(/float storyHeight =/g) ?? []).length, 8);
-  assert.equal((s.match(/float storyReliefFilter =/g) ?? []).length, 8);
+  assert.equal((s.match(/float storyHeight =/g) ?? []).length, 15);
+  assert.equal((s.match(/float storyReliefFilter =/g) ?? []).length, 15);
   for (const line of s.split('\n').filter(line => line.includes('float storyHeight =')))
     assert.doesNotMatch(line, /fwidth|dFdx|dFdy|filtered|detail|grain/);
 });

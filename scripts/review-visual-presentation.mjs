@@ -7,7 +7,7 @@ import { resolve } from 'node:path';
 // imported by the app or included in the production dist. Fixture screenshots
 // establish appearance, not journey completion, collision, or performance QA.
 const out = '/tmp/slipper-visual-review';
-const baseline = 'a7b61f01858af8e9f07530d0d782fd1d2253b959';
+const baseline = process.env.VISUAL_REVIEW_BASELINE || 'a7b61f01858af8e9f07530d0d782fd1d2253b959';
 const fixture = resolve('.visual-review');
 const modelPath = 'src/components/three/storyEvents/StoryObjectModel.tsx';
 const floorPath = 'src/components/three/storyEvents/WetFloorReveal.tsx';

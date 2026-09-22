@@ -4,7 +4,7 @@ import { mkdir, writeFile, rm } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
 // A fixed, previously reviewed reference. Fixtures never enter the production build.
-const baseline = '47a3451a38b085de09d73257ccaa3bdfc11fadee';
+const baseline = process.env.VISUAL_REVIEW_BASELINE || '47a3451a38b085de09d73257ccaa3bdfc11fadee';
 const out = '/tmp/slipper-woodland-review', fixture = resolve('.woodland-review');
 const originals = [
   'chapters/EnchantedWoodChapter.tsx', 'chapters/IntegratedFinalTableau.tsx',
@@ -97,7 +97,10 @@ try{
     await writeFile(copy,text);
   }
   await writeFile(fixture+'/index.html','<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>Woodland component comparison</title><style>html,body,#root{width:100%;height:100%;margin:0;overflow:hidden}</style></head><body><div id="root"></div><script type="module" src="./stage.tsx"></script></body></html>');
-  await writeFile(fixture+'/stage.tsx',stage);await server(['preview'],4193);await server(['--config','vite.config.ts'],4194);
+  await writeFile(fixture+'/stage.tsx',stage);
+  // Other review harnesses share dependencies, never Vite's mutable prebundle cache.
+  await writeFile(fixture+'/vite.config.ts', `import original from '../vite.config.ts'; export default { ...original, cacheDir: ${JSON.stringify(fixture+'/vite-cache')}, optimizeDeps: { ...original.optimizeDeps, entries: [${JSON.stringify(fixture+'/index.html')}] } };`);
+  await server(['preview'],4193);await server(['--config',fixture+'/vite.config.ts'],4194);
   browser=await chromium.launch({args:['--enable-webgl','--ignore-gpu-blocklist','--use-angle=swiftshader']});
   await entry(1280,800);await entry(390,844);
   for(const which of ['meadow','rabbit','ending']){

@@ -8,6 +8,8 @@ import { resolveEnvironmentalChoreography, type EnvironmentalCueState } from "..
 import { getCurrentCinematicProfile } from "../../../cinematics/emotionalCinematography";
 import { StoryObjectModel } from "./StoryObjectModel";
 import { Beam, DoorFrame, FabricVeil, WaterSurface } from "../chapters/ChapterPrimitives";
+import { createFlameGeometry, createWaxCandleGeometry } from "../environmentArt/authoredGeometry.ts";
+import { TactileMaterial } from "./TactileMaterial";
 
 type ChoreographyProps = { sceneId: JourneySceneId; reducedMotion: boolean; reducedEffects: boolean; qualityProfile: RenderQualityProfile };
 
@@ -17,6 +19,8 @@ function CandleChain({ lit, reducedMotion, count }: { lit: boolean; reducedMotio
   const light = useRef<THREE.PointLight>(null);
   const time = useRef(lit ? 12 : 0);
   const dummy = useMemo(() => new THREE.Object3D(), []);
+  const geometry = useMemo(() => ({ wax: createWaxCandleGeometry(.085, .5, 5), flame: createFlameGeometry(.055, .13) }), []);
+  useEffect(() => () => { geometry.wax.dispose(); geometry.flame.dispose(); }, [geometry]);
   useFrame((_, delta) => {
     if (lit) time.current = Math.min(12, time.current + Math.min(delta, 0.05));
     for (let index = 0; index < count; index += 1) {
@@ -32,8 +36,8 @@ function CandleChain({ lit, reducedMotion, count }: { lit: boolean; reducedMotio
     if (light.current) light.current.intensity += ((lit ? 1.5 : 0) - light.current.intensity) * Math.min(delta, 0.05);
   });
   return <group name="candle-chain-response" userData={{ lit }}>
-    <instancedMesh ref={wax} args={[undefined, undefined, count]}><cylinderGeometry args={[0.075, 0.085, 0.5, 8]} /><meshStandardMaterial color="#cec2a7" roughness={0.94} /></instancedMesh>
-    <instancedMesh ref={flames} args={[undefined, undefined, count]}><sphereGeometry args={[0.06, 8, 6]} /><meshBasicMaterial color="#efcf91" /></instancedMesh>
+    <instancedMesh ref={wax} geometry={geometry.wax} args={[undefined, undefined, count]}><TactileMaterial surface="wax" color="#cec2a7" roughness={0.82} /></instancedMesh>
+    <instancedMesh ref={flames} geometry={geometry.flame} args={[undefined, undefined, count]}><meshBasicMaterial color="#efcf91" /></instancedMesh>
     <pointLight ref={light} position={[-3.1, 0.9, 2]} color="#e4bd83" intensity={0} distance={11} decay={2} />
   </group>;
 }

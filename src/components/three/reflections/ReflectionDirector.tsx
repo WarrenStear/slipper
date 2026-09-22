@@ -1,4 +1,4 @@
-import { memo, useEffect, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { useStillnessState } from "../../../hooks/useStillnessState";
@@ -8,6 +8,7 @@ import { MirrorMemorySurface } from "./MirrorMemorySurface";
 import { ReflectedPath } from "./ReflectedPath";
 import { ReflectionApparition } from "./ReflectionApparition";
 import { ASSISTED_STILLNESS_EVENT } from "../rituals/RitualInteraction";
+import { TactileMaterial } from "../storyEvents/TactileMaterial";
 
 export type ReflectionDirectorProps = {
   sceneId: string;
@@ -50,6 +51,19 @@ function ReflectionDirectorComponent({
   const isWarning = sceneId === "sunset.warning-grove";
   const isTruthful = sceneId === "sunset.true-mirror";
   const isStillnessScene = sceneId === "sunset.stillness";
+  const frameGeometry = useMemo(() => {
+    const outline = new THREE.Shape();
+    outline.moveTo(-2.88, -3.18); outline.lineTo(2.88, -3.18);
+    outline.lineTo(2.83, 3.15); outline.lineTo(-2.86, 3.18); outline.closePath();
+    const opening = new THREE.Path();
+    opening.moveTo(-2.69, -2.99); opening.lineTo(-2.69, 2.99);
+    opening.lineTo(2.69, 2.99); opening.lineTo(2.69, -2.99); opening.closePath();
+    outline.holes.push(opening);
+    const geometry = new THREE.ExtrudeGeometry(outline, { depth: .11, bevelEnabled: true, bevelThickness: .024, bevelSize: .026, bevelSegments: 2, steps: 1, curveSegments: 1 });
+    geometry.computeBoundingBox(); geometry.computeBoundingSphere();
+    return geometry;
+  }, []);
+  useEffect(() => () => frameGeometry.dispose(), [frameGeometry]);
   const isPlayerStill = useStillnessState({ stillSpeed: 0.025, requiredSeconds: 2.4 });
   const [assistedStillnessActive, setAssistedStillnessActive] = useState(false);
   useEffect(() => {
@@ -109,10 +123,13 @@ function ReflectionDirectorComponent({
   });
 
   return (
-    <group ref={rootRef} name="memory-reflection-director" position={[0, 3.15, 5.4]}>
+    <group ref={rootRef} name="memory-reflection-director" position={[0, 3.15, 5.4]} rotation={[0, Math.PI, 0]}>
       <mesh>
         <boxGeometry args={[5.76, 6.36, 0.18]} />
         <meshStandardMaterial color="#25201c" metalness={0.58} roughness={0.42} />
+      </mesh>
+      <mesh name="worn-joined-mirror-frame" geometry={frameGeometry} position={[0, 0, .11]}>
+        <TactileMaterial surface="metal" color="#766d5a" metalness={.72} roughness={.48} />
       </mesh>
 
       <group name="reflected-past-and-future" position={[0, 0, 0.155]}>

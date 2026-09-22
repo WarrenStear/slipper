@@ -127,6 +127,8 @@ export type GenerateTerrainWorkerResponse = {
   requestId: number;
   positions: Float32Array;
   colors: Float32Array;
+  /** Compression, moisture, moss, and ash; shading only, never terrain height. */
+  habitat: Float32Array;
 };
 
 export type ForestWorkerResponse = BuildForestWorkerResponse | GenerateTerrainWorkerResponse;
