@@ -78,7 +78,10 @@ test("stillness rituals retain immersion by default and expose a deliberate assi
   assert.match(journeyDirectorSource, /mode !== "explore" \|\| controls !== "walk"/);
   assert.match(journeyDirectorSource, /getJourneyEntryWorldPosition\(storyActionScene\.keystoneEntryId\)/);
   assert.match(ritualSource, /ASSISTED_STILLNESS_EVENT/);
-  assert.match(reflectionSource, /isPlayerStill \|\| assistedStillnessActive/);
+  const directorSource = readFileSync(new URL("../src/components/three/artDirection/SceneLookDirector.tsx", import.meta.url), "utf8");
+  assert.match(directorSource, /mirrorStill: measuredStillness \|\| assisted/);
+  assert.match(reflectionSource, /presentation\?\.look.stillness/);
+  assert.doesNotMatch(reflectionSource, /useStillnessState|ASSISTED_STILLNESS_EVENT/);
   assert.doesNotMatch(ritualSource, /\{Math\.round\(progress \* 100\)\}/);
   assert.doesNotMatch(storyMomentSource, /\{Math\.round\(progress \* 100\)\}/);
 });

@@ -319,30 +319,22 @@ function ProtectedCreationSpace({
         return (
           <Beam
             key={index}
-            from={[Math.cos(angle) * 3.65, 0, Math.sin(angle) * 2]}
-            to={[Math.cos(angle) * 1.05, 4.05, Math.sin(angle) * 0.7]}
+            from={[Math.cos(angle) * 4.65, 0, Math.sin(angle) * 3]}
+            to={[Math.cos(angle) * 3.8, 2.5, Math.sin(angle) * 2.5]}
             radius={0.075}
             color="#7a6446"
           />
         );
       })}
       <FabricVeil
-        position={[0, 2.1, 0]}
+        position={[0, 1.75, 2.7]}
         rotation={[0, 0, 0]}
-        size={[5.4, 2.75]}
+        size={[5.4, 1.6]}
         color="#d8c6a2"
         opacity={chosen ? 0.48 : 0.26}
         reducedMotion={reducedMotion}
       />
-      <mesh position={[0, 0.18, 0]} scale={[0.9, 1, 0.8]}>
-        <cylinderGeometry args={[2.8, 3.2, 0.36, 18]} />
-        <meshStandardMaterial
-          color={chosen ? "#8f774f" : "#67563f"}
-          emissive={chosen ? "#5b3b18" : "#000000"}
-          emissiveIntensity={chosen ? 0.28 : 0}
-          roughness={0.98}
-        />
-      </mesh>
+
     </group>
   );
 }
@@ -394,9 +386,9 @@ function ThreeClimbsChapterComponent({
     <group>
       {isMind || isHeart || isWomb ? <group rotation={[0, arrivalHeading, 0]}><ClimbLandscape kind={isMind ? "mind" : isHeart ? "heart" : "womb"} released={questionsReleased} /></group> : null}
       <SceneGround radius={19} color={isWomb ? "#64583f" : "#373936"} />
-      <group rotation={[-0.16, 0, 0]} position={[0, 0.3, 0]}>
+      {isWomb ? null : <group rotation={[-0.16, 0, 0]} position={[0, 0.3, 0]}>
         <StonePath color={isHeart ? "#777e81" : "#66645d"} count={12} length={19} />
-      </group>
+      </group>}
       {scenicBoulderIndices.map((index) => (
         <mesh key={index} position={[(index % 2 === 0 ? -1 : 1) * (4.8 + (index % 3)), index * 0.58, -6 + index * 2.6]}>
           <dodecahedronGeometry args={[1.3 + (index % 2) * 0.45, 0]} />

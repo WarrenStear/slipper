@@ -315,11 +315,14 @@ export function StoryEventDirector({ sceneId, reducedMotion, enabled = true }: {
       // placed light is rendered by the object system.
       if (object.kind === "lantern" && !(object.id === "lantern.master" && state === "placed")) return null;
       if (object.id === "thorn-house.threshold") return null;
+      // Sunset's monumental mirror owns the image. Keep this semantic pose for
+      // gaze, stillness and guidance without placing a second mirror in front.
+      const chapterOwnsVisual = sceneId.startsWith("sunset.") && object.kind === "mirror";
       const placement = state === "reset" || state === "resting" ? undefined : object.targets?.find(item => item.id === placements[object.id]);
       const preservedAt = state === "preserved" ? object.targets?.[0]?.localPosition : undefined;
       const location: [number, number, number] = preservedAt ? [preservedAt[0] + .8, preservedAt[1] + .2, preservedAt[2]] : placement?.localPosition ?? object.localPosition;
       return <StoryObjectPose key={object.id} object={object} state={state} position={location} placementId={placements[object.id]} reducedMotion={reducedMotion}>
-        <StoryObjectModel kind={object.kind} state={state ?? (object.id === "fork.door" ? "open" : undefined)} reducedMotion={reducedMotion} />
+        {chapterOwnsVisual ? null : <StoryObjectModel kind={object.kind} state={state ?? (object.id === "fork.door" ? "open" : undefined)} reducedMotion={reducedMotion} />}
       </StoryObjectPose>;
     })}
     {surfaces.map(surface => <group key={surface.id} name={`story-placement:${surface.id}`} position={surface.localPosition} userData={{ targetId: surface.id }}>

@@ -183,3 +183,5 @@ boundaries, archive privacy, and validation layers.
 Cloud journey persistence is disabled unless the bindings and secrets described
 in `wrangler.toml` are configured. The local journey, reader, map, archive, and
 mobile controls remain usable without those optional cloud bindings.
+
+The latest renderer integration, scene refinements, quality budgets and remaining art requirements are documented in [Final visual production](docs/FINAL_VISUAL_PRODUCTION.md).

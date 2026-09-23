@@ -28,10 +28,13 @@ function CapturedSurface({ kind, size, position, rotation, settled }: Required<P
     material.uniforms.uTime = { value: 0 }; material.uniforms.uDisturbance = { value: 0 };
     material.uniforms.uWater = { value: kind === "moonwater" ? 1 : 0 };
     material.uniforms.color.value = new Color(kind === "moonwater" ? "#07131b" : "#202c31");
-    material.fragmentShader = `uniform vec3 color;uniform sampler2D tDiffuse;uniform float uTime,uDisturbance,uWater;varying vec4 vUv;
+    material.vertexShader = material.vertexShader.replace("varying vec4 vUv;", "varying vec4 vUv;varying vec3 vSurfaceView;varying vec3 vSurfaceNormal;").replace("vUv = textureMatrix", "vSurfaceView=-(modelViewMatrix*vec4(position,1.)).xyz;vSurfaceNormal=normalMatrix*normal;vUv = textureMatrix");
+    material.fragmentShader = `uniform vec3 color;uniform sampler2D tDiffuse;uniform float uTime,uDisturbance,uWater;varying vec4 vUv;varying vec3 vSurfaceView;varying vec3 vSurfaceNormal;
       void main(){vec4 uv=vUv;uv.xy+=vec2(sin(uv.y*32.+uTime),cos(uv.x*27.-uTime*.7))*uDisturbance*uv.w;
       vec3 reflected=texture2DProj(tDiffuse,uv).rgb;
-      gl_FragColor=vec4(mix(color,reflected,uWater>.5?.72:.88),1.);
+      float grazing=pow(1.-abs(dot(normalize(vSurfaceNormal),normalize(vSurfaceView))),3.);
+      float reflectance=uWater>.5?mix(.14,.78,grazing):.9;
+      gl_FragColor=vec4(mix(color,reflected,reflectance),1.);
       #include <tonemapping_fragment>
       #include <colorspace_fragment>
       }`;
@@ -46,7 +49,9 @@ function CapturedSurface({ kind, size, position, rotation, settled }: Required<P
       camera.copy(sourceCamera); camera.far = Math.min(sourceCamera.far, presentation.look.budget.reflectionFar); camera.updateProjectionMatrix();
       material.uniforms.uTime.value = presentation.time.water;
       const disturbance = settledRef.current || presentation.motion.water === 0 ? 0 : kind === "mirror" ? .004 : .0015;
-      material.uniforms.uDisturbance.value += (disturbance - material.uniforms.uDisturbance.value) * .08;
+      // Follow the eased transition, then share its exact stopping point.
+      material.uniforms.uDisturbance.value = presentation.motion.water === 0 ? 0
+        : material.uniforms.uDisturbance.value + (disturbance - material.uniforms.uDisturbance.value) * .08;
       if (!renderer.extensions.has("EXT_color_buffer_float")) mirror.getRenderTarget().texture.type = UnsignedByteType;
       const previousTarget = renderer.getRenderTarget(), xr = renderer.xr.enabled, shadows = renderer.shadowMap.autoUpdate;
       capturing.add(renderer);

@@ -1,3 +1,4 @@
+import { HeroAssetSlot } from "../actors/HeroAssetSlot";
 import { memo, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { TactileMaterial, type StorySurface } from "../storyEvents/TactileMaterial";
@@ -39,14 +40,14 @@ export const TimberInstances = memo(function TimberInstances({ forms, color, nam
   </instancedMesh>;
 });
 
-export const Upholstery = memo(function Upholstery({ position, rotation, size, color }: {
-  position: ArtVector; rotation?: ArtVector; size: ArtVector; color: string;
+export const Upholstery = memo(function Upholstery({ position, rotation, size, color, surface = "velvet" }: {
+  position: ArtVector; rotation?: ArtVector; size: ArtVector; color: string; surface?: StorySurface;
 }) {
   const [width, height, depth] = size;
   const geometry = useMemo(() => createUpholsteryGeometry([width, height, depth]), [width, height, depth]);
   useEffect(() => () => geometry.dispose(), [geometry]);
   return <mesh geometry={geometry} position={position} rotation={rotation} castShadow receiveShadow>
-    <TactileMaterial surface="velvet" color={color} roughness={.97} />
+    <TactileMaterial surface={surface} color={color} roughness={.97} />
   </mesh>;
 });
 
@@ -78,12 +79,16 @@ export const WritingDesk = memo(function WritingDesk({ width = 2.8, depth = 1.34
   width?: number; depth?: number; height?: number; color?: string;
 }) {
   const pieces = useMemo<ConstructionPiece[]>(() => [
-    { position: [0, 0, 0], size: [width, .18, depth] },
+    ...[-1, 0, 1].map(i => ({ position: [0, 0, i * depth / 3] as ArtVector, size: [width, .15, depth / 3 - .007] as ArtVector })),
     ...[-1, 1].flatMap(x => [-1, 1].map(z => ({ position: [x * width * .386, -height * .47, z * depth * .313] as ArtVector, size: [.14, height * .87, .14] as ArtVector }))),
     ...[-1, 1].map(z => ({ position: [0, -.19, z * depth * .313] as ArtVector, size: [width * .8, .24, .09] as ArtVector })),
     ...[-1, 1].map(x => ({ position: [x * width * .386, -.19, 0] as ArtVector, size: [.09, .24, depth * .67] as ArtVector })),
   ], [width, depth, height]);
-  return <TimberAssembly name="joined-writing-desk" pieces={pieces} color={color} />;
+  return <HeroAssetSlot id="writing-desk"><group name="joined-writing-desk">
+    <TimberAssembly pieces={pieces} color={color} />
+    <TimberAssembly color="#68513b" pieces={[-1,0,1].map(i=>({position:[i*width*.265,-.19,-depth*.337],size:[width*.25,.2,.065]}))} />
+    <TimberAssembly surface="metal" color="#8b7655" pieces={[-1,0,1].map(i=>({position:[i*width*.265,-.19,-depth*.375],size:[.13,.024,.033]}))} />
+  </group></HeroAssetSlot>;
 });
 
 /** Covers and inset paper edges retain individual spines in two material batches. */

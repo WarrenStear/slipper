@@ -110,6 +110,8 @@ type PlayerSpatialWindow = {
 };
 
 export type StorySceneProps = {
+  /** Global presentation layers share the canonical director and its clocks. */
+  children?: ReactNode;
   entryId: string;
   entries: Slipper3DEntry[];
   visuals: Slipper3DVisual[];
@@ -6758,6 +6760,7 @@ function thresholdRotationForNode(
 }
 
 export function StoryScene({
+  children,
   entryId,
   entries,
   visuals,
@@ -7085,6 +7088,8 @@ export function StoryScene({
         onPlayerProximityChange={onPlayerProximityChange}
         onPlayerSpatialChange={setPlayerSpatial}
       />
+      {/* FALLBACK PRESENTATION ONLY: canonical atmosphere, fill, sky and finishing
+          are owned by SceneLookDirector below. These legacy rigs must stay gated. */}
       {narrativeScene ? null : <SceneAtmosphere entry={entry} entries={entries} narrativeWorldState={narrativeWorldState} qualityProfile={qualityProfile} />}
       {reducedEffects || narrativeScene ? null : (
         <BiomeWeatherField activeEntry={entry} narrativeWorldState={narrativeWorldState} visualState={visualState} qualityProfile={qualityProfile} />
@@ -7170,9 +7175,11 @@ export function StoryScene({
       {showDebugOverlay ? <SceneDebugOverlay entry={entry} narrativeWorldState={narrativeWorldState} qualityProfile={qualityProfile} visualState={visualState} nodes={spatialNodes} /> : null}
     </>
   );
+  // Include wrapper-provided WorldEngineLayer/MasterPlayerLantern under this same
+  // owner. Keeping origin/camera resolution here avoids a second scene-state tree.
   return narrativeScene ? <SceneLookDirector sceneId={narrativeScene.id} quality={qualityProfile.quality} reducedEffects={reducedEffects} reducedMotion={reducedMotion}
     cameraAssistance={mode === "explore" && cameraAssistance} origin={authoredSceneOrigin} heading={getJourneySceneLayout(narrativeScene.id).anchor.headingRadians}
-    focusPosition={cameraGuidanceTarget} bloomIntensity={visualState.bloomIntensity} vignetteIntensity={visualState.vignetteIntensity}>{world}</SceneLookDirector> : world;
+    focusPosition={cameraGuidanceTarget} bloomIntensity={visualState.bloomIntensity} vignetteIntensity={visualState.vignetteIntensity}>{children}{world}</SceneLookDirector> : <>{children}{world}</>;
 }
 
 export default memo(StoryScene);

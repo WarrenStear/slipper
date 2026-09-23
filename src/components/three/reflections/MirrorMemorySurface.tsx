@@ -69,7 +69,7 @@ const MIRROR_FRAGMENT_SHADER = /* glsl */ `
       color+=scratch*.035*uDetail*(.25+edgeAge);
     }
     // Disturbance changes the reflected bands; stillness leaves aged glass,
-    // rather than switching to a different material or a live scene capture.
+    // over the optional live scene capture, without changing material identity.
     color+=vec3(.022,.027,.03)*vWave*uDistortion;
     float edge = smoothstep(0.0, 0.11, vUv.x)
       * smoothstep(0.0, 0.11, 1.0 - vUv.x)
@@ -93,7 +93,7 @@ export type MirrorMemorySurfaceProps = {
 /**
  * A translucent, GPU-distorted mirror skin. Its instability quietens in the
  * Stillness scene only after measured player stillness, so the story
- * consequence is readable without adding a live reflection render pass.
+ * consequence remains readable on fallback tiers and over the live hero view.
  */
 function MirrorMemorySurfaceComponent({
   width = 5.4,
@@ -108,7 +108,7 @@ function MirrorMemorySurfaceComponent({
   const materialRef = useRef<THREE.ShaderMaterial>(null);
   const time = useRef(0);
   const detail = useTactileDetail();
-  const targetDistortion = reducedMotion || reducedEffects ? 0 : still ? 0.004 : warm ? 0.065 : 0.04;
+  const targetDistortion = reducedMotion || reducedEffects ? 0 : still ? 0 : warm ? 0.065 : 0.04;
   const uniforms = useMemo(
     () => ({
       ...THREE.UniformsUtils.clone(THREE.UniformsLib.fog),
@@ -126,7 +126,7 @@ function MirrorMemorySurfaceComponent({
     const material = materialRef.current;
     if (!material) return;
     time.current = environmentTime(time.current, delta, !document.hidden, reducedMotion || reducedEffects);
-    material.uniforms.uTime.value = reducedMotion || reducedEffects ? 0 : time.current;
+    material.uniforms.uTime.value = reducedMotion || reducedEffects ? 0 : presentation ? presentation.time.water : time.current;
     material.uniforms.uDistortion.value = THREE.MathUtils.damp(
       material.uniforms.uDistortion.value,
       targetDistortion,

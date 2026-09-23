@@ -71,6 +71,7 @@ export const StoryObjectModel = memo(function StoryObjectModel({ kind, state = "
   if (kind === "candle") return <AuthoredCandle lit={state === "lit" || state === "awakened"} color={cream} />;
   if (kind === "basket" || kind === "nest") return <WovenNest />;
   if (kind === "seed") return <StorySeed grown={state === "planted" || state === "grown"} />;
+  if (kind === "marker") return <group name="scraped-timber-path-marker"><TimberPiece position={[0,.26,0]} size={[.42,.85,.085]} rotation={[0,.08,-.055]} color={state === "erased" ? "#635947" : "#554b3b"} seed={37}/>{state === "erased" ? null : <TimberPiece position={[0,.32,-.045]} size={[.24,.022,.005]} color="#bab09a" seed={19}/>}</group>;
   if (kind === "path") return <mesh rotation={[-Math.PI / 2, 0, 0]}><planeGeometry args={[1.1, 2.8]} /><meshStandardMaterial color="#777263" transparent opacity={.26} roughness={1} /></mesh>;
   return <mesh scale={[.3, .45, .18]}><dodecahedronGeometry args={[1, 0]} /><meshStandardMaterial color={cream} roughness={.95} /></mesh>;
 });

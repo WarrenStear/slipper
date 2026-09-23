@@ -8,11 +8,14 @@ import { CinematicCameraDirector } from "../cinematics/CinematicCameraDirector";
 import type { JourneySceneId } from "../../../lib/storyJourneyState";
 import { resolveSceneLook, type LookPoint, type LookQuality } from "./SceneLookRegistry";
 import { SceneLookContext, type ScenePresentation } from "./SceneLookContext";
+import { AuthoredLightShafts } from "./VolumetricLightShaft";
 import { SceneLighting } from "./SceneLighting";
 import { SceneAtmosphere } from "./SceneAtmosphere";
 import { ScenePostProcessing } from "./ScenePostProcessing";
 import { useStillnessState } from "../../../hooks/useStillnessState";
 import { ASSISTED_STILLNESS_EVENT } from "../rituals/RitualInteraction";
+
+const MOTION_CHANNELS = ["vegetation", "cloth", "water", "particles", "flame"] as const;
 
 /** The sole presentation owner in a canonical world. It never writes story facts. */
 export function SceneLookDirector({ sceneId, quality, reducedEffects, reducedMotion, cameraAssistance, origin = [0, 0, 0], heading = 0, focusPosition, bloomIntensity = .6, vignetteIntensity = .1, children }: {
@@ -41,16 +44,16 @@ export function SceneLookDirector({ sceneId, quality, reducedEffects, reducedMot
     nestBurdenResting: objects["nest.responsibility"] === "placed",
     mirrorStill: measuredStillness || assisted,
   }), [sceneId, quality, reducedEffects, flags, objects, measuredStillness, assisted]);
-  const presentation = useRef<ScenePresentation>({ look: target, reducedMotion, motion: { ...target.motion }, time: { vegetation: 0, cloth: 0, water: 0, particles: 0, flame: 0 } });
-  const context = useMemo<ScenePresentation>(() => ({ look: target, reducedMotion, motion: presentation.current.motion, time: presentation.current.time }), [target, reducedMotion]);
+  const presentation = useRef<ScenePresentation>({ look: target, reducedMotion, reducedEffects, motion: { ...target.motion }, time: { vegetation: 0, cloth: 0, water: 0, particles: 0, flame: 0 } });
+  const context = useMemo<ScenePresentation>(() => ({ look: target, reducedMotion, reducedEffects, motion: presentation.current.motion, time: presentation.current.time }), [target, reducedMotion, reducedEffects]);
   presentation.current = context;
   useEffect(() => activateCinematicProfile(), []);
   useFrame((_, delta) => {
     const active = !document.hidden && !useSettingsStore.getState().drawerOpen && useWorldStore.getState().mode === "explore";
     const dt = active && Number.isFinite(delta) ? Math.max(0, Math.min(.05, delta)) : 0;
     advanceCinematicProfile(target.emotional, dt);
-    const alpha = reducedMotion ? 1 : 1 - Math.exp(-dt * 1.3);
-    for (const key of Object.keys(target.motion) as (keyof ScenePresentation["motion"])[]) {
+    const alpha = reducedMotion || reducedEffects ? 1 : 1 - Math.exp(-dt * 1.3);
+    for (const key of MOTION_CHANNELS) {
       const value = reducedMotion || reducedEffects ? 0 : target.motion[key];
       presentation.current.motion[key] += (value - presentation.current.motion[key]) * alpha;
       // Snap the last imperceptible tail to actual stillness, not an endless loop.
@@ -60,10 +63,10 @@ export function SceneLookDirector({ sceneId, quality, reducedEffects, reducedMot
   }, -3);
   return <SceneLookContext.Provider value={context}>
     <group name="scene-look-authority" userData={{ sceneId, hero: target.composition.heroLandmark, quality }}>
-      <SceneAtmosphere />
-      <group position={origin} rotation={[0, heading, 0]}><SceneLighting /></group>
+      <SceneAtmosphere heading={heading} />
+      <group position={origin} rotation={[0, heading, 0]}><SceneLighting /><AuthoredLightShafts /></group>
       <CinematicCameraDirector sceneId={sceneId} reducedMotion={reducedMotion} cameraAssistance={cameraAssistance} focusPosition={focusPosition} />
-      {target.budget.finishing ? <ScenePostProcessing bloomIntensity={bloomIntensity} vignetteIntensity={vignetteIntensity} /> : null}
+      {target.budget.edgeSmoothing ? <ScenePostProcessing bloomIntensity={bloomIntensity} vignetteIntensity={vignetteIntensity} /> : null}
     </group>
     {children}
   </SceneLookContext.Provider>;

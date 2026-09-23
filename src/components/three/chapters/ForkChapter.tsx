@@ -1,3 +1,5 @@
+import { StoryLinen } from "../storyEvents/StoryHeroProps";
+import { TimberAssembly } from "./ChapterArt";
 import { ForkLandscape } from "../environment/ForkLandscape";
 import { memo } from "react";
 import {
@@ -80,10 +82,7 @@ function ForkChapterComponent({
           <group name="fork-verb-let-go-moving-water">
             <WaterSurface reducedMotion={reducedMotion} reducedEffects={reducedEffects} position={[-5.2, 0.03, -4]} size={[4.8, 4.8]} color="#243c43" opacity={0.8} circle />
             {!letGo ? (
-              <mesh position={[-5.2, 0.48, -4]} castShadow>
-                <dodecahedronGeometry args={[0.32, 0]} />
-                <meshStandardMaterial color="#9a7557" roughness={0.94} />
-              </mesh>
+              <group position={[-5.2, .3, -4]} scale={1.1}><StoryLinen /></group>
             ) : null}
           </group>
           <group name="fork-verb-decline-familiar-door">
@@ -98,15 +97,12 @@ function ForkChapterComponent({
               reducedMotion={reducedMotion}
             />
           </group>
-          <mesh name="fork-verb-delete-obsolete-marker" position={[6.2, 1.15, 3.5]}>
-            <boxGeometry args={[0.2, 2.3, 1.5]} />
-            <meshStandardMaterial
-              color={deleted ? "#242420" : "#5c5143"}
-              emissive={deleted ? "#000000" : "#49331f"}
-              emissiveIntensity={deleted ? 0 : 0.24}
-              roughness={0.94}
-            />
-          </mesh>
+          <group name="fork-verb-delete-obsolete-marker" position={[6.2, 0, 3.5]} rotation={[0,.12,-.04]}>
+            <TimberAssembly color={deleted ? "#554d40" : "#655442"} pieces={[
+              {position:[0,.8,0],size:[.12,1.6,.12]}, {position:[0,1.2,0],size:[1.2,.3,.09]},
+              {position:[.03,.8,0],size:[.8,.22,.095]},
+            ]} />
+          </group>
         </group>
       ) : null}
 

@@ -1,3 +1,5 @@
+import { useSceneLook } from "./artDirection/SceneLookContext";
+import { HeroAssetSlot } from "./actors/HeroAssetSlot";
 import { getCurrentCinematicProfile, isCinematicProfileActive } from "../../cinematics/emotionalCinematography";
 import { useSettingsStore } from "../../stores/useSettingsStore";
 import { useEffect, useMemo, useRef } from "react";
@@ -41,6 +43,7 @@ export function MasterPlayerLantern({
   enabled = true,
   reducedEffects = false,
 }: MasterPlayerLanternProps) {
+  const presentation = useSceneLook();
   const { camera, size } = useThree();
   const reducedMotion = useSettingsStore(state => state.reducedMotion);
   const rootRef = useRef<THREE.Group>(null);
@@ -226,7 +229,7 @@ export function MasterPlayerLantern({
     const target = targetRef.current;
     if (!root || !target) return;
 
-    const elapsed = state.clock.elapsedTime;
+    const elapsed = presentation?.time.flame ?? state.clock.elapsedTime;
     const step = Math.min(delta, 0.05);
     const pressure = clamp01(narrativeWorldState.memoryPressure);
     const depth = clamp01(narrativeWorldState.explorationDepth);
@@ -240,8 +243,8 @@ export function MasterPlayerLantern({
     const instability = clamp01(director.instability * 0.58 + (1 - phaseStability) * 0.42);
     const steadiness = clamp01(director.steadiness * 0.72 + phaseStability * 0.28);
     const air = isCinematicProfileActive() ? getCurrentCinematicProfile().airMovement : 1;
-    const environmentalMotion = air < .01 ? 0 : Math.min(1, air * 5);
-    const motionScale = environmentalMotion * (reducedMotion ? 0 : reducedEffects ? 0.12 : 1) * (0.38 + phaseMovement * 0.62);
+    const environmentalMotion = presentation ? Math.min(1, presentation.motion.flame * 5) : air < .01 ? 0 : Math.min(1, air * 5);
+    const motionScale = environmentalMotion * (reducedMotion || reducedEffects ? 0 : 1) * (0.38 + phaseMovement * 0.62);
     const baseX = compactPortrait ? 0.14 : BASE_LOCAL_POSITION.x;
     const baseY = compactPortrait ? -0.28 : BASE_LOCAL_POSITION.y;
     const baseZ = compactPortrait ? -1.12 : BASE_LOCAL_POSITION.z;
@@ -270,6 +273,12 @@ export function MasterPlayerLantern({
     velocityRef.current.addScaledVector(springDeltaRef.current, spring * step);
     velocityRef.current.multiplyScalar(1 - damping * 0.78);
     currentLocalRef.current.addScaledVector(velocityRef.current, step);
+    // Once the shared easing reaches zero, remove the spring's residual tail.
+    // Camera-following and deliberate navigation remain responsive.
+    if (environmentalMotion === 0 || reducedMotion || reducedEffects) {
+      currentLocalRef.current.copy(desiredLocalRef.current);
+      velocityRef.current.set(0, 0, 0);
+    }
 
     root.position.copy(camera.position);
     root.quaternion.copy(camera.quaternion);
@@ -281,7 +290,7 @@ export function MasterPlayerLantern({
 
     currentColorRef.current.lerp(director.color, 1 - Math.exp(-step * 4.4));
 
-    materials.flame.color.copy(currentColorRef.current);
+    materials.flame.color.copy(currentColorRef.current).multiplyScalar(3.2);
     materials.glass.color.copy(currentColorRef.current);
     materials.glass.emissive.copy(currentColorRef.current);
     materials.glow.uniforms.glowColor.value.copy(currentColorRef.current);
@@ -305,7 +314,7 @@ export function MasterPlayerLantern({
       spotLight.angle = THREE.MathUtils.lerp(0.5, 0.32, Number(guideActive) * 0.68);
       spotLight.penumbra = 0.82;
       spotLight.decay = 2.08;
-      spotLight.castShadow = Boolean(enabled && director.shadows);
+      spotLight.castShadow = Boolean(!presentation && enabled && director.shadows);
     }
 
     const pointLight = pointLightRef.current;
@@ -375,8 +384,8 @@ export function MasterPlayerLantern({
 
       <group ref={bodyRef}>
         <mesh ref={glowRef} geometry={geometries.glow} material={materials.glow} position={[0, 0.01, 0.035]} renderOrder={59} />
-        <mesh geometry={geometries.metal} material={materials.metal} renderOrder={60} />
-        <mesh ref={flameRef} geometry={geometries.flame} material={materials.flame} position={[0, -0.005, 0]} renderOrder={61} />
+        <HeroAssetSlot id="master-lantern" assetPosition={[0, -.208, 0]} assetScale={.44}><mesh geometry={geometries.metal} material={materials.metal} renderOrder={60} /></HeroAssetSlot>
+        <mesh name="master-lantern-flame" ref={flameRef} geometry={geometries.flame} material={materials.flame} position={[0, -0.005, 0]} renderOrder={61} />
         <mesh ref={glassRef} geometry={geometries.glass} material={materials.glass} renderOrder={62} />
       </group>
     </group>

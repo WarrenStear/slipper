@@ -1,3 +1,4 @@
+import { useSceneLook } from "../artDirection/SceneLookContext";
 import { useEffect, useMemo, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
@@ -55,6 +56,7 @@ function buildPathRibbonGeometry(width = 0.58, segments = 42) {
 }
 
 function NavigationRibbon({ navigationTargetPosition, visualState, narrativeWorldState, qualityProfile, enabled }: PerfectWorldGroundProps) {
+  const presentation = useSceneLook();
   const { camera } = useThree();
   const meshRef = useRef<THREE.Mesh>(null);
   const materialRef = useRef<THREE.MeshBasicMaterial>(null);
@@ -112,7 +114,7 @@ function NavigationRibbon({ navigationTargetPosition, visualState, narrativeWorl
       direction,
     );
     meshRef.current.quaternion.setFromRotationMatrix(rotationMatrixRef.current);
-    const pulse = qualityProfile.particleMultiplier > 0 ? 1 + Math.sin(clock.elapsedTime * 1.2) * 0.035 : 1;
+    const pulse = qualityProfile.particleMultiplier > 0 ? 1 + Math.sin((presentation?.time.vegetation ?? clock.elapsedTime) * 1.2) * 0.035 : 1;
     meshRef.current.scale.set(
       THREE.MathUtils.lerp(meshRef.current.scale.x, pulse, smoothing),
       THREE.MathUtils.lerp(meshRef.current.scale.y, 1, smoothing),
@@ -138,6 +140,7 @@ function NavigationRibbon({ navigationTargetPosition, visualState, narrativeWorl
 }
 
 function ClearingBreathRings({ worldDirector, visualState, narrativeWorldState, qualityProfile, navigationTargetPosition, enabled }: PerfectWorldGroundProps) {
+  const presentation = useSceneLook();
   const groupRef = useRef<THREE.Group>(null);
   const innerRef = useRef<THREE.MeshBasicMaterial>(null);
   const outerRef = useRef<THREE.MeshBasicMaterial>(null);
@@ -167,9 +170,9 @@ function ClearingBreathRings({ worldDirector, visualState, narrativeWorldState, 
     }
     groupRef.current.position.lerp(destination, smoothing);
     const ambientMotionEnabled = qualityProfile.particleMultiplier > 0;
-    groupRef.current.rotation.z = ambientMotionEnabled ? clock.elapsedTime * 0.035 : 0;
+    groupRef.current.rotation.z = ambientMotionEnabled ? (presentation?.time.vegetation ?? clock.elapsedTime) * 0.035 : 0;
     const breath = ambientMotionEnabled
-      ? 1 + Math.sin(clock.elapsedTime * 0.78) * (0.025 + clamp01(narrativeWorldState.memoryPressure) * 0.02)
+      ? 1 + Math.sin((presentation?.time.vegetation ?? clock.elapsedTime) * 0.78) * (0.025 + clamp01(narrativeWorldState.memoryPressure) * 0.02)
       : 1;
     groupRef.current.scale.setScalar(breath);
 
@@ -186,7 +189,7 @@ function ClearingBreathRings({ worldDirector, visualState, narrativeWorldState, 
   if (!enabled) return null;
 
   return (
-    <group ref={groupRef}>
+    <group name="scene-clearing-breath" ref={groupRef}>
       <mesh rotation={[-Math.PI / 2, 0, 0]} renderOrder={6}>
         <ringGeometry args={[3.1, 3.22, 120]} />
         <meshBasicMaterial ref={innerRef} color={visualState.palette.accent} transparent opacity={targetOpacity} depthWrite={false} side={THREE.DoubleSide} />

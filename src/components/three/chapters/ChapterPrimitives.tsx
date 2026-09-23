@@ -1,3 +1,5 @@
+import { HeroAssetSlot } from "../actors/HeroAssetSlot";
+import { createKeyGeometry, createLanternHousingGeometry } from "../environmentArt/heroGeometry";
 import { useSceneLook } from "../artDirection/SceneLookContext";
 import {
   memo,
@@ -588,7 +590,8 @@ export const FloatingMotes = memo(function FloatingMotes({
 }) {
   const presentation = useSceneLook();
   const points = useRef<THREE.Points>(null);
-  const count = reducedEffects ? 0 : 18 + qualityStep(qualityProfile) * 18;
+  // Canonical airborne matter belongs to WorldEnvironmentParticles/SceneLook.
+  const count = presentation || reducedEffects ? 0 : 18 + qualityStep(qualityProfile) * 18;
   const positions = useMemo(() => {
     const result = new Float32Array(count * 3);
     for (let index = 0; index < count; index += 1) {
@@ -609,7 +612,7 @@ export const FloatingMotes = memo(function FloatingMotes({
 
   if (count === 0) return null;
   return (
-    <points ref={points}>
+    <points name="legacy-floating-motes" ref={points}>
       <bufferGeometry>
         <bufferAttribute attach="attributes-position" args={[positions, 3]} />
       </bufferGeometry>
@@ -638,19 +641,14 @@ export const LanternProp = memo(function LanternProp({
   reducedMotion: boolean;
   light?: boolean;
 }) {
+  const housing = useMemo(createLanternHousingGeometry, []);
+  const coreColor = useMemo(() => new THREE.Color(color).multiplyScalar(3.2), [color]);
+  useEffect(() => () => housing.dispose(), [housing]);
   return (
-    <group position={position} scale={scale}>
-      {[0.08, 0.84].map((y) => <mesh key={y} position={[0, y, 0]}>
-        <cylinderGeometry args={[0.3, 0.33, 0.12, 8]} />
-        <meshStandardMaterial color="#29231b" metalness={0.65} roughness={0.34} />
-      </mesh>)}
-      {[-1, 1].flatMap(x => [-1, 1].map(z => <Beam key={`${x}:${z}`} from={[x * .18, .12, z * .18]} to={[x * .18, .83, z * .18]} radius={.022} color="#332a20" />))}
-      <mesh position={[0, 0.46, 0]}>
-        <cylinderGeometry args={[0.22, 0.22, 0.62, 12]} />
-        <meshBasicMaterial color={color} transparent opacity={0.72} toneMapped={false} />
-      </mesh>
-      <Beam from={[-0.22, 0.88, 0]} to={[0, 1.18, 0]} radius={0.025} color="#1c1914" />
-      <Beam from={[0.22, 0.88, 0]} to={[0, 1.18, 0]} radius={0.025} color="#1c1914" />
+    <group position={position} scale={scale} name="authored-master-lantern-prop">
+      <HeroAssetSlot id="master-lantern"><mesh geometry={housing} castShadow><TactileMaterial surface="metal" color="#483b29" metalness={.68} roughness={.5} memory={{ wear: .8, damage: .15 }} /></mesh></HeroAssetSlot>
+      <mesh position={[0, .46, 0]}><cylinderGeometry args={[.19, .2, .58, 16, 1, true]} /><meshStandardMaterial color="#d1c19e" transparent opacity={.15} roughness={.2} metalness={0} depthWrite={false} /></mesh>
+      <mesh position={[0, .41, 0]} scale={[.055, .19, .055]}><sphereGeometry args={[1, 10, 8]} /><meshBasicMaterial color={coreColor} toneMapped={false} /></mesh>
       {light ? (
         <FlickerLight position={[0, 0.64, 0]} color={color} intensity={1.8} distance={9} reducedMotion={reducedMotion} />
       ) : null}
@@ -774,22 +772,11 @@ export const KeyProp = memo(function KeyProp({
   color?: string;
   scale?: number;
 }) {
-  return (
-    <group position={position} rotation={[Math.PI / 2, 0, 0.18]} scale={scale}>
-      <mesh>
-        <torusGeometry args={[0.34, 0.07, 8, 20]} />
-        <TactileMaterial surface="metal" color={color} metalness={0.72} roughness={0.28} />
-      </mesh>
-      <mesh position={[0.68, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
-        <cylinderGeometry args={[0.065, 0.065, 0.92, 8]} />
-        <TactileMaterial surface="metal" color={color} metalness={0.72} roughness={0.28} />
-      </mesh>
-      <mesh position={[1.04, -0.16, 0]}>
-        <boxGeometry args={[0.12, 0.36, 0.12]} />
-        <TactileMaterial surface="metal" color={color} metalness={0.72} roughness={0.28} />
-      </mesh>
-    </group>
-  );
+  const geometry = useMemo(createKeyGeometry, []);
+  useEffect(() => () => geometry.dispose(), [geometry]);
+  return <group position={position} rotation={[Math.PI / 2, 0, .18]} scale={scale}>
+    <HeroAssetSlot id="key"><mesh name="worn-warded-key" geometry={geometry} castShadow><TactileMaterial surface="metal" color={color} metalness={.72} roughness={.38} memory={{ wear: .72, damage: .12 }} /></mesh></HeroAssetSlot>
+  </group>;
 });
 
 export const StonePath = memo(function StonePath({

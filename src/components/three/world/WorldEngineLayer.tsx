@@ -1,3 +1,4 @@
+import { useSceneLook } from "../artDirection/SceneLookContext";
 import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
@@ -31,6 +32,7 @@ function PathGuidancePool({
   navigationTargetPosition,
   enabled,
 }: WorldEngineLayerProps) {
+  const presentation = useSceneLook();
   const groupRef = useRef<THREE.Group>(null);
   const ringMaterialRef = useRef<THREE.MeshBasicMaterial>(null);
   const moteMaterialRef = useRef<THREE.MeshBasicMaterial>(null);
@@ -58,8 +60,9 @@ function PathGuidancePool({
     }
     group.position.lerp(destination, smoothing);
     const ambientMotionEnabled = qualityProfile.particleMultiplier > 0;
-    group.rotation.z = ambientMotionEnabled ? clock.elapsedTime * (0.09 + pressure * 0.035) : 0;
-    const breathing = ambientMotionEnabled ? 1 + Math.sin(clock.elapsedTime * 1.35) * 0.035 : 1;
+    const time = presentation?.time.vegetation ?? clock.elapsedTime;
+    group.rotation.z = ambientMotionEnabled ? time * (0.09 + pressure * 0.035) : 0;
+    const breathing = ambientMotionEnabled ? 1 + Math.sin(time * 1.35) * 0.035 : 1;
     group.scale.setScalar(breathing);
 
     if (ringMaterialRef.current) {
@@ -76,7 +79,7 @@ function PathGuidancePool({
   if (!enabled) return null;
 
   return (
-    <group ref={groupRef}>
+    <group ref={groupRef} name="scene-path-guidance">
       <mesh rotation={[-Math.PI / 2, 0, 0]} renderOrder={14}>
         <ringGeometry args={[1.05, 1.34, 96]} />
         <meshBasicMaterial
@@ -97,6 +100,7 @@ function PathGuidancePool({
 }
 
 function BoundaryVeil({ worldDirector, visualState, narrativeWorldState, qualityProfile, enabled }: WorldEngineLayerProps) {
+  const presentation = useSceneLook();
   const materialRef = useRef<THREE.MeshBasicMaterial>(null);
   const rotationRef = useRef<THREE.Mesh>(null);
   const pressure = clamp01(narrativeWorldState.memoryPressure);
@@ -113,7 +117,7 @@ function BoundaryVeil({ worldDirector, visualState, narrativeWorldState, quality
   useFrame(({ clock }, delta) => {
     if (!enabled) return;
     const smoothing = 1 - Math.exp(-Math.min(delta, 0.05) * 1.7);
-    if (rotationRef.current) rotationRef.current.rotation.z = clock.elapsedTime * 0.011;
+    if (rotationRef.current) rotationRef.current.rotation.z = (presentation?.time.vegetation ?? clock.elapsedTime) * 0.011;
     if (materialRef.current) {
       materialRef.current.color.lerp(targetFogColor, smoothing);
       materialRef.current.opacity = THREE.MathUtils.lerp(materialRef.current.opacity, boundaryOpacity, smoothing);
@@ -123,7 +127,7 @@ function BoundaryVeil({ worldDirector, visualState, narrativeWorldState, quality
   if (!enabled) return null;
 
   return (
-    <mesh ref={rotationRef} position={[0, -1.18, 0]} rotation={[-Math.PI / 2, 0, 0]} renderOrder={1}>
+    <mesh name="scene-boundary-veil" ref={rotationRef} position={[0, -1.18, 0]} rotation={[-Math.PI / 2, 0, 0]} renderOrder={1}>
       <ringGeometry args={[68, 86, 160]} />
       <meshBasicMaterial
         ref={materialRef}
@@ -138,6 +142,7 @@ function BoundaryVeil({ worldDirector, visualState, narrativeWorldState, quality
 }
 
 function StillnessBreathField({ worldDirector, visualState, narrativeWorldState, enabled }: WorldEngineLayerProps) {
+  const presentation = useSceneLook();
   const materialRef = useRef<THREE.MeshBasicMaterial>(null);
   const meshRef = useRef<THREE.Mesh>(null);
   const pressure = clamp01(narrativeWorldState.memoryPressure);
@@ -151,7 +156,7 @@ function StillnessBreathField({ worldDirector, visualState, narrativeWorldState,
   useFrame(({ clock }, delta) => {
     if (!enabled) return;
     const smoothing = 1 - Math.exp(-Math.min(delta, 0.05) * 1.9);
-    const breath = 1 + Math.sin(clock.elapsedTime * 0.52) * (0.018 + pressure * 0.012);
+    const breath = 1 + Math.sin((presentation?.time.vegetation ?? clock.elapsedTime) * 0.52) * (0.018 + pressure * 0.012);
     if (meshRef.current) meshRef.current.scale.setScalar(breath);
     if (materialRef.current) {
       materialRef.current.color.lerp(targetEmissiveColor, smoothing);
@@ -162,7 +167,7 @@ function StillnessBreathField({ worldDirector, visualState, narrativeWorldState,
   if (!enabled) return null;
 
   return (
-    <mesh ref={meshRef} position={[0, -1.06, 0]} rotation={[-Math.PI / 2, 0, 0]} renderOrder={2}>
+    <mesh name="scene-breath-field" ref={meshRef} position={[0, -1.06, 0]} rotation={[-Math.PI / 2, 0, 0]} renderOrder={2}>
       <circleGeometry args={[32, 128]} />
       <meshBasicMaterial
         ref={materialRef}
@@ -177,8 +182,10 @@ function StillnessBreathField({ worldDirector, visualState, narrativeWorldState,
 }
 
 export function WorldEngineLayer(props: WorldEngineLayerProps) {
-  const { worldDirector, visualState, qualityProfile, enabled = true } = props;
-  const ambientEffectsEnabled = enabled && qualityProfile.particleMultiplier > 0;
+  const presentation = useSceneLook();
+  const { worldDirector, visualState, qualityProfile, enabled: requested = true } = props;
+  const enabled = requested && presentation?.look.sceneId !== "epilogue.constellation";
+  const ambientEffectsEnabled = enabled && !presentation?.reducedEffects && qualityProfile.particleMultiplier > 0;
 
   return (
     <>

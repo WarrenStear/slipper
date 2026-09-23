@@ -72,6 +72,23 @@ export const SCENE_LOOKS = {
   "epilogue.constellation": image("epilogue", "the actual remembered route lit in reverse", [0, 5, -15], .94, .1, 1),
 } satisfies Record<JourneySceneId, Readonly<AuthoredLook>>;
 
+/** Airborne matter is authored per place; no universal sparkle field. */
+export function sceneParticleProfile(sceneId: JourneySceneId) {
+  if (sceneId.startsWith("enchanted.")) return { kind: "pollen", count: 42, color: "#b7b8a0", size: 1.7, opacity: .24, drift: .2 };
+  if (sceneId.startsWith("blue-moon.")) return { kind: "moisture", count: 18, color: "#8aabb9", size: 2.3, opacity: .1, drift: .07 };
+  if (sceneId.startsWith("nest.") || sceneId.startsWith("crowned.")) return { kind: "dust", count: 30, color: "#c8bba0", size: 1.3, opacity: .2, drift: .08 };
+  if (sceneId === "fire.boundary") return { kind: "ash", count: 40, color: "#b1a193", size: 1.5, opacity: .32, drift: .45 };
+  if (sceneId.startsWith("river.")) return { kind: "spray", count: 22, color: "#a7bdc4", size: 2, opacity: .13, drift: .12 };
+  return { kind: "none", count: 0, color: "#ffffff", size: 1, opacity: 0, drift: 0 };
+}
+
+function fillFloor(sceneId: JourneySceneId) {
+  if (sceneId === "broken-floor.confession" || sceneId === "thorned.old-memory-bedroom" || sceneId === "fire.boundary") return .055;
+  if (sceneId.startsWith("blue-moon.") || sceneId.startsWith("epilogue.")) return .09;
+  if (sceneId.startsWith("crowned.")) return .32;
+  return .17;
+}
+
 export function sceneRenderBudget(quality: LookQuality, reducedEffects = false) {
   const high = !reducedEffects && (quality === "high" || quality === "cinematic");
   const cinematic = !reducedEffects && quality === "cinematic";
@@ -81,6 +98,8 @@ export function sceneRenderBudget(quality: LookQuality, reducedEffects = false) 
     maxHeroCaptures: high ? 1 : 0,
     reflectionFar: 64,
     finishing: cinematic,
+    edgeSmoothing: high,
+    shafts: high,
     finishingMaxDimension: 1920,
     samples: cinematic ? 4 : 0,
   };
@@ -88,15 +107,16 @@ export function sceneRenderBudget(quality: LookQuality, reducedEffects = false) 
 
 export function resolveSceneLook(sceneId: JourneySceneId, quality: LookQuality = "medium", reducedEffects = false, state: CinematicStoryState & { mirrorStill?: boolean } = {}) {
   const authored = SCENE_LOOKS[sceneId];
-  const emotional = resolveCinematicProfile(sceneId, state);
+  const emotional = resolveCinematicProfile(sceneId, sceneId === "thorned.self-owned-world" ? { ...state, compression: 0 } : state);
   const quiet = (sceneId === "river.release-surrender" && state.surrenderComplete) || (sceneId === "sunset.stillness" && state.mirrorStill);
   return {
     sceneId, emotional, stillness: Boolean(quiet), budget: sceneRenderBudget(quality, reducedEffects),
-    lighting: { source: authored.source, color: authored.keyColor, position: authored.keyPosition, intensity: authored.keyIntensity, fill: emotional.fillIntensity, shadowProfile: quality === "cinematic" && !reducedEffects },
+    lighting: { source: authored.source, color: authored.keyColor, position: authored.keyPosition, intensity: authored.keyIntensity, fill: emotional.fillIntensity, fillFloor: fillFloor(sceneId), shadowProfile: quality === "cinematic" && !reducedEffects },
     atmosphere: { sky: authored.sky, horizon: authored.horizon, fog: authored.fog, density: Math.min(.025, emotional.fogDensity * Math.min(1.3, 90 / emotional.visibility)), visibility: emotional.visibility },
     grade: { exposure: emotional.exposure, contrast: 1 + (emotional.contrast - 1) * .16, saturation: authored.saturation, warmth: emotional.warmth, vignette: reducedEffects ? 0 : .09, grain: reducedEffects ? 0 : .0012 },
-    materials: { wetness: authored.wetness, roughnessBias: quiet ? .03 : 0, environmentalWear: authored.wear },
+    materials: { damage: sceneId.startsWith("crowned.") && state.surrenderComplete ? .18 : 0, reintegrated: sceneId.startsWith("crowned."), wetness: authored.wetness, roughnessBias: quiet ? .03 : 0, environmentalWear: authored.wear },
     composition: authored.composition,
+    particles: sceneParticleProfile(sceneId),
     palette: { ground: authored.ground, leaf: authored.leaf },
     reflection: { mode: authored.reflection },
     motion: { vegetation: quiet ? 0 : emotional.airMovement, cloth: quiet ? 0 : emotional.airMovement, water: quiet ? 0 : emotional.airMovement, particles: reducedEffects || quiet ? 0 : emotional.particleActivity, flame: quiet ? 0 : emotional.airMovement },

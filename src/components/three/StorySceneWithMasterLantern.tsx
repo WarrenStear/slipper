@@ -1,6 +1,6 @@
 import { openingEnclosed } from "../../cinematics/openingPresentation";
 import { useJourneyStore } from "../../stores/useJourneyStore";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, type ReactNode } from "react";
 import type { Slipper3DEntry, Slipper3DVisual } from "../../data/slipper3dTypes";
 import StoryScene, {
   type NarrativeWorldState,
@@ -18,6 +18,7 @@ import WorldEngineLayer from "./world/WorldEngineLayer";
 import type { WorldMemoryState } from "./worldMemory/WorldMemoryDirector";
 
 type StorySceneWithMasterLanternProps = {
+  children?: ReactNode;
   entryId: string;
   entries: Slipper3DEntry[];
   visuals: Slipper3DVisual[];
@@ -54,6 +55,7 @@ const FALLBACK_WORLD_STATE: NarrativeWorldState = {
 };
 
 export function StorySceneWithMasterLantern({
+  children,
   narrativeWorldState = FALLBACK_WORLD_STATE,
   controls = "orbit",
   mode = "explore",
@@ -123,8 +125,19 @@ export function StorySceneWithMasterLantern({
     [narrativeWorldState, navigationTargetPosition, qualityProfile, visualState],
   );
 
+  // StoryScene resolves the canonical scene's authored origin and heading, then
+  // mounts these children inside its single SceneLookDirector. The legacy world
+  // and lantern directors provide geometry/navigation inputs, not a second look.
   return (
-    <>
+    <StoryScene
+      {...props}
+      controls={controls}
+      mode={mode}
+      narrativeWorldState={narrativeWorldState}
+      qualityProfile={qualityProfile}
+      reducedEffects={reducedEffects}
+      onPlayerProximityChange={handlePlayerProximityChange}
+    >
       <WorldEngineLayer
         worldDirector={worldDirector}
         visualState={visualState}
@@ -148,16 +161,8 @@ export function StorySceneWithMasterLantern({
         narrativeWorldState={narrativeWorldState}
         enabled={shouldShowDebugOverlay()}
       />
-      <StoryScene
-        {...props}
-        controls={controls}
-        mode={mode}
-        narrativeWorldState={narrativeWorldState}
-        qualityProfile={qualityProfile}
-        reducedEffects={reducedEffects}
-        onPlayerProximityChange={handlePlayerProximityChange}
-      />
-    </>
+      {children}
+    </StoryScene>
   );
 }
 

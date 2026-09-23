@@ -23,9 +23,10 @@ export const WovenNest = memo(function WovenNest() {
 });
 
 export const AuthoredCandle = memo(function AuthoredCandle({ lit = false, color = "#d5cdbd" }: { lit?: boolean; color?: string }) {
+  const flameColor = useMemo(() => new THREE.Color("#ffe0a1").multiplyScalar(3.2), []);
   const shapes = useMemo(() => ({ wax: createWaxCandleGeometry(.085, .4, 8), flame: createFlameGeometry(.035, .16) }), []);
   useEffect(() => () => { shapes.wax.dispose(); shapes.flame.dispose(); }, [shapes]);
-  return <group name="melted-wax-memory-candle"><mesh geometry={shapes.wax} position={[0, .2, 0]}><TactileMaterial surface="wax" color={color} roughness={.74} /></mesh>{lit ? <mesh geometry={shapes.flame} position={[0, .46, 0]}><meshBasicMaterial color="#ffe0a1" /></mesh> : null}</group>;
+  return <group name="melted-wax-memory-candle"><mesh geometry={shapes.wax} position={[0, .2, 0]}><TactileMaterial surface="wax" color={color} roughness={.74} /></mesh>{lit ? <mesh geometry={shapes.flame} position={[0, .46, 0]}><meshBasicMaterial color={flameColor} /></mesh> : null}</group>;
 });
 
 export const StorySeed = memo(function StorySeed({ grown = false }: { grown?: boolean }) {

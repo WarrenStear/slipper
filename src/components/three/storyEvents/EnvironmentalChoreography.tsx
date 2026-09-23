@@ -1,3 +1,4 @@
+import { TimberAssembly } from "../chapters/ChapterArt";
 import { useSceneLook } from "../artDirection/SceneLookContext";
 import { memo, useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
@@ -15,6 +16,7 @@ import { TactileMaterial } from "./TactileMaterial";
 type ChoreographyProps = { sceneId: JourneySceneId; reducedMotion: boolean; reducedEffects: boolean; qualityProfile: RenderQualityProfile };
 
 function CandleChain({ lit, reducedMotion, count }: { lit: boolean; reducedMotion: boolean; count: number }) {
+  const flameColor = useMemo(() => new THREE.Color("#efcf91").multiplyScalar(3.2), []);
   const flames = useRef<THREE.InstancedMesh>(null);
   const wax = useRef<THREE.InstancedMesh>(null);
   const light = useRef<THREE.PointLight>(null);
@@ -38,7 +40,7 @@ function CandleChain({ lit, reducedMotion, count }: { lit: boolean; reducedMotio
   });
   return <group name="candle-chain-response" userData={{ lit }}>
     <instancedMesh ref={wax} geometry={geometry.wax} args={[undefined, undefined, count]}><TactileMaterial surface="wax" color="#cec2a7" roughness={0.82} /></instancedMesh>
-    <instancedMesh ref={flames} geometry={geometry.flame} args={[undefined, undefined, count]}><meshBasicMaterial color="#efcf91" /></instancedMesh>
+    <instancedMesh ref={flames} geometry={geometry.flame} args={[undefined, undefined, count]}><meshBasicMaterial color={flameColor} /></instancedMesh>
     <pointLight ref={light} position={[-3.1, 0.9, 2]} color="#e4bd83" intensity={0} distance={11} decay={2} />
   </group>;
 }
@@ -87,6 +89,8 @@ function CageResponse({ physical, reflected }: { physical: boolean; reflected: b
 }
 
 function DomesticResponse({ state, house, reducedMotion, reducedEffects }: { state: EnvironmentalCueState; house: boolean; reducedMotion: boolean; reducedEffects: boolean }) {
+  const presentation = useSceneLook();
+  const ceiling = useRef<THREE.Group>(null);
   const windowLight = useRef<THREE.PointLight>(null);
   const walls = useRef<THREE.Group>(null);
   const clutter = useRef<THREE.InstancedMesh>(null);
@@ -94,22 +98,27 @@ function DomesticResponse({ state, house, reducedMotion, reducedEffects }: { sta
   const amount = useRef(house ? state.houseCompression : Number(state.daysCompressed));
   const count = reducedEffects ? 8 : 20;
   useFrame(({ clock }, delta) => {
-    const target = house ? state.houseCompression : Number(state.daysCompressed);
+    const released = house && presentation?.look.sceneId === "thorned.self-owned-world";
+    const target = released ? 0 : house ? state.houseCompression : Number(state.daysCompressed);
+    if (ceiling.current) ceiling.current.position.y = 4.6 - amount.current * 1.35;
     amount.current += (target - amount.current) * (1 - Math.exp(-Math.min(delta, 0.05) * 0.5));
     if (walls.current) walls.current.children.forEach((child, index) => { child.position.x = (index ? 1 : -1) * (4.3 - amount.current * 1.2); });
     for (let index = 0; index < count; index += 1) {
       const visible = index < 3 + amount.current * (count - 3);
-      dummy.position.set((index % 2 ? -1 : 1) * (2.8 + index % 3 * 0.35), 0.18 + Math.floor(index / 8) * 0.22, 0.5 + index % 5 * 0.92);
+      dummy.position.set((index % 2 ? -1 : 1) * (3.25 - amount.current * .45 + index % 3 * 0.35), 0.18 + Math.floor(index / 8) * 0.22, 0.5 + index % 5 * 0.92);
       dummy.rotation.set(0.05 * (index % 3), index * 0.84, 0.06);
       dummy.scale.set(visible ? 0.5 : 0, visible ? 0.22 : 0, visible ? 0.4 : 0); dummy.updateMatrix(); clutter.current?.setMatrixAt(index, dummy.matrix);
     }
     if (clutter.current) clutter.current.instanceMatrix.needsUpdate = true;
     if (windowLight.current) {
-      const cycle = state.daysCompressed && !reducedMotion ? 0.75 + Math.sin(clock.elapsedTime * 0.7) * 0.35 : 1;
+      const cycle = state.daysCompressed && !reducedMotion ? 0.75 + Math.sin((presentation?.time.vegetation ?? clock.elapsedTime) * 0.7) * 0.35 : 1;
       windowLight.current.intensity = house ? 0.65 * (1 - amount.current * 0.8) : cycle;
     }
   });
   return <group name={house ? "house-refill-compression" : "nest-time-and-weight"} userData={{ handsOccupied: state.handsOccupied, compressed: state.daysCompressed, compression: state.houseCompression }}>
+    {house ? <group ref={ceiling} name="house-lowering-overhead-joinery" position={[0,4.6,2.4]}>
+      <TimberAssembly color="#51402f" pieces={[-1.5,1,3.5].map(z=>({position:[0,0,z],size:[6.6,.24,.48]}))} />
+    </group> : null}
     <pointLight ref={windowLight} position={[0, 4, 4]} color="#d7c5a0" intensity={0.8} distance={13} decay={2} />
     <instancedMesh ref={clutter} args={[undefined, undefined, count]}><boxGeometry args={[1, 1, 1]} /><meshStandardMaterial color={house ? "#685340" : "#8e7760"} roughness={1} /></instancedMesh>
     {house ? <group ref={walls}>{[-1, 1].map(side => <group key={side} position={[side * 4.3, 0, 1]}><mesh position={[0, 1.7, 0]}><boxGeometry args={[0.3, 3.4, 7.5]} /><meshStandardMaterial color="#564638" roughness={0.98} /></mesh><mesh position={[-side * 0.2, 2, -1]}><boxGeometry args={[0.08, 1.3, 0.9]} /><meshStandardMaterial color="#2b2c28" roughness={0.95} /></mesh></group>)}</group> : <group name="child-space-remains-protected" position={[-1, 0, 3.5]}><pointLight position={[0, 1.4, 0]} color="#f0d2a5" intensity={1.2} distance={5} decay={2} /><mesh position={[0, 0.13, 0]}><cylinderGeometry args={[0.9, 1, 0.25, 24]} /><meshStandardMaterial color="#ad937a" roughness={1} /></mesh><group position={[0, 0.29, 0]} scale={1.5}><StoryObjectModel kind="fabric" reducedMotion={reducedMotion} /></group></group>}

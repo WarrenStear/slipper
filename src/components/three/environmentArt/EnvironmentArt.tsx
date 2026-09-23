@@ -1,3 +1,4 @@
+import { HeroAssetSlot } from "../actors/HeroAssetSlot";
 import { memo, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { TactileMaterial, useTactileDetail, type StorySurface } from "../storyEvents/TactileMaterial";
@@ -63,5 +64,8 @@ export const BotanicalBatch = memo(function BotanicalBatch({ kind, placements, s
 
 export const BotanicalCluster = memo(function BotanicalCluster({ kind, position = ZERO, rotation = ZERO, scale = 1, seed, color, burnt }: Partial<BotanicalPlacement> & { kind: BotanicalKind; seed?: number; color?: string; burnt?: boolean }) {
   const placements = useMemo(() => [{ position, rotation, scale }], [position, rotation, scale]);
-  return <BotanicalBatch kind={kind} placements={placements} seed={seed} color={color} burnt={burnt} />;
+  const fallback = <BotanicalBatch kind={kind} placements={placements} seed={seed} color={color} burnt={burnt} />;
+  return !burnt && (kind === "rose" || kind === "lily") ? <group position={position} rotation={rotation} scale={scale}>
+    <HeroAssetSlot id={kind === "rose" ? "roses" : "lilies"}><BotanicalBatch kind={kind} placements={[{ position: ZERO }]} seed={seed} color={color} /></HeroAssetSlot>
+  </group> : fallback;
 });

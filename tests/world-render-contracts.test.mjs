@@ -301,17 +301,17 @@ test("the prologue, story roles, and guidance express authored progression", () 
   assert.match(sunsetSeer, /<ReflectionDirector/);
   assert.match(sunsetSeer, /<WaterMemoryReflection/);
   assert.match(reflection, /samplesRef/);
-  assert.match(reflection, /useStillnessState\(\{ stillSpeed: 0\.025, requiredSeconds: 2\.4 \}\)/);
+  assert.doesNotMatch(reflection, /useStillnessState|addEventListener/);
   assert.match(
     reflection,
-    /reflectionSettled = isStillnessScene && \(isPlayerStill \|\| assistedStillnessActive\)/,
+    /reflectionSettled = isStillnessScene && Boolean\(presentation\?\.look.stillness\)/,
   );
   assert.match(reflection, /sampleCount = reducedMotion \? 1 : reflectionSettled \? 2/);
   assert.match(reflection, /name="reflected-past-and-future"/);
   assert.match(reflection, /<ReflectionApparition apparition/);
   assert.match(reflection, /<ReflectedPath/);
   assert.match(mirrorSurface, /uDistortion/);
-  assert.match(mirrorSurface, /still \? 0\.004/);
+  assert.match(mirrorSurface, /still \? 0 : warm/);
   assert.match(reflectedPath, /name="reflection-only-hidden-text"/);
   assert.match(reflectedPath, /name="reflection-only-hidden-route"/);
   assert.match(waterReflection, /name="reflection-only-water-route"/);

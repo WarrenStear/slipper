@@ -1,3 +1,4 @@
+import { useSceneLook } from "../artDirection/SceneLookContext";
 import { memo, useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
@@ -69,6 +70,7 @@ function AuthoredActor({ definition, reducedMotion }: { definition: ActorCueDefi
 export const InstancedStoryFlock = memo(function InstancedStoryFlock({ qualityProfile, reducedEffects, reducedMotion, released, origami = false, awakened = false }: {
   qualityProfile: RenderQualityProfile; reducedEffects: boolean; reducedMotion: boolean; released: boolean; origami?: boolean; awakened?: boolean;
 }) {
+  const presentation = useSceneLook();
   const mesh = useRef<THREE.InstancedMesh>(null);
   const elapsed = useRef(0);
   const release = useRef(released ? 1 : 0);
@@ -87,7 +89,9 @@ export const InstancedStoryFlock = memo(function InstancedStoryFlock({ qualityPr
   useEffect(() => () => geometry.dispose(), [geometry]);
   useFrame((_, delta) => {
     if (!mesh.current) return;
-    if (!origami || awakened) elapsed.current += Math.min(delta, 0.05);
+    // Idle flight obeys scene stillness; the finite release remains a story action.
+    const ambientMotion = reducedEffects || reducedMotion ? 0 : presentation ? Math.min(1, presentation.motion.vegetation * 5) : 1;
+    if (!origami || awakened) elapsed.current += Math.min(delta, 0.05) * ambientMotion;
     if (released) release.current = Math.min(1, release.current + Math.min(delta, 0.05) / (reducedMotion ? 3 : 14));
     for (let index = 0; index < count; index += 1) {
       const pose = sampleFlockPose(index, elapsed.current, origami ? (awakened ? 0.18 : 0) : release.current, origami, reducedMotion, scratch.pose);

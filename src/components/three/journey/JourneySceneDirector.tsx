@@ -66,7 +66,7 @@ function mutablePoint(point: WorldPoint3): Vec3 {
   return [point[0], point[1], point[2]];
 }
 
-function ActiveStoryActors({ sceneId, qualityProfile, reducedEffects, reducedMotion }: { sceneId: JourneySceneId; qualityProfile: RenderQualityProfile; reducedEffects: boolean; reducedMotion: boolean }) {
+export function ActiveStoryActors({ sceneId, qualityProfile, reducedEffects, reducedMotion }: { sceneId: JourneySceneId; qualityProfile: RenderQualityProfile; reducedEffects: boolean; reducedMotion: boolean }) {
   const lanternOwned = useJourneyStore(state => state.worldFlags["lantern.owned"] === true || ["carried", "placed"].includes(state.storyObjectStates["lantern.master"]));
   const lanternPlaced = useJourneyStore(state => state.storyObjectStates["lantern.master"] === "placed");
   const birdsReleased = useJourneyStore(state => state.storyObjectStates["river.birds"] === "released");

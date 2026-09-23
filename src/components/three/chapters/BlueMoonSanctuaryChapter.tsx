@@ -1,9 +1,10 @@
+import { HeroAssetSlot } from "../actors/HeroAssetSlot";
 import { ForestDepth } from "../environment/EnvironmentDressing";
 import { ChapterLightRig } from "../environment/ChapterLightRig";
 import { SanctuaryWater } from "../environment/SanctuaryWater";
 import { memo, useMemo } from "react";
 import { SwanModel } from "../storyEvents/SwanModel";
-import { BotanicalBatch } from "../environmentArt/EnvironmentArt";
+import { BotanicalBatch, BotanicalCluster } from "../environmentArt/EnvironmentArt";
 import { TimberAssembly } from "./ChapterArt";
 import type { ConstructionPiece } from "./chapterArtGeometry";
 import {
@@ -29,7 +30,7 @@ const LILIES = Array.from({ length: 16 }, (_, index) => ({
 
 function WornSanctuaryBridge() {
   const boards = useMemo<ConstructionPiece[]>(() => BRIDGE_PLANKS.map(index => ({
-    position: [0, Math.sin(index * .45) * .08, -7.2 + index * 1.2], size: [3.8, .2, .92],
+    position: [0, Math.sin(index * .45) * .08, -7.2 + index * 1.2], size: [3.8, .2, 1.08],
     color: index % 2 ? "#9b8976" : "#bfaa8c",
   })), []);
   const supports = useMemo<ConstructionPiece[]>(() => [-1, 1].flatMap(side => [
@@ -100,9 +101,10 @@ function BlueMoonSanctuaryChapterComponent({
         reducedMotion={reducedMotion}
       />
 
-      <WornSanctuaryBridge />
-      <BotanicalBatch kind="lily" seed={23} color="#d5c8cf" placements={LILIES.slice(0, lilyCount).map((lily, index) => ({ position: [lily.x, .1, lily.z], scale: lily.scale * 1.4, rotation: [0, index * .7, 0] }))} />
+      <HeroAssetSlot id="moon-bridge"><WornSanctuaryBridge /></HeroAssetSlot>
+      <BotanicalBatch kind="lily" seed={23} color="#d5c8cf" placements={LILIES.slice(1, lilyCount).map((lily, index) => ({ position: [lily.x, .1, lily.z], scale: lily.scale * 1.4, rotation: [0, index * .7, 0] }))} />
 
+      <BotanicalCluster kind="lily" position={[-7, .1, -5]} scale={.63} seed={23} />
       {!eventDriven ? <group name="blue-moon-candle-path" position={[-4.2, 0, -2]}>
         {candlesLit ? (
           <CandleField qualityProfile={qualityProfile} reducedEffects={reducedEffects} count={22} radius={8.2} color="#ffd49a" />

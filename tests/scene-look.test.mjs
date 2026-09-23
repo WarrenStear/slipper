@@ -70,3 +70,22 @@ test('production assets require both an explicit review and the hero namespace',
   assert.equal(productionHeroUrl({ ...asset, url: 'https://example.com/wolf.glb' }), null);
   assert.equal(productionHeroUrl({ ...asset, url: null }), null);
 });
+
+test('airborne matter and fill follow scene intent with bounded quality gates', () => {
+  for (const id of JOURNEY_SCENE_IDS) {
+    const look = resolveSceneLook(id, 'cinematic');
+    assert.ok(look.particles.count <= 56 && look.particles.count >= 0);
+    assert.ok(look.lighting.fillFloor >= 0 && look.lighting.fillFloor <= .32);
+  }
+  assert.equal(resolveSceneLook('thorned.old-memory-bedroom').particles.count, 0);
+  assert.equal(resolveSceneLook('epilogue.constellation').particles.count, 0);
+  assert.equal(resolveSceneLook('fire.boundary').particles.kind, 'ash');
+  assert.ok(resolveSceneLook('crowned.home').lighting.fillFloor > resolveSceneLook('broken-floor.confession').lighting.fillFloor);
+  for (const quality of ['low', 'medium', 'high', 'cinematic']) {
+    assert.equal(sceneRenderBudget(quality, true).edgeSmoothing, false);
+    assert.equal(sceneRenderBudget(quality, true).shafts, false);
+    assert.equal(resolveSceneLook('fire.boundary', quality).lighting.shadowProfile, quality === 'cinematic');
+  }
+  assert.equal(sceneRenderBudget('high').edgeSmoothing, true);
+  assert.equal(sceneRenderBudget('high').finishing, false);
+});

@@ -23,18 +23,21 @@ export function SceneLighting() {
     }
     if (fill.current) {
       fill.current.color.lerp(colors.sky, alpha); fill.current.groundColor.lerp(colors.ground, alpha);
-      fill.current.intensity = MathUtils.lerp(fill.current.intensity, Math.max(.24, profile.fillIntensity * 1.8), alpha);
+      fill.current.intensity = MathUtils.lerp(fill.current.intensity, Math.max(look.lighting.fillFloor, profile.fillIntensity * 1.05), alpha);
     }
   }, -1);
   const common = { position: look.lighting.position, color: look.lighting.color, intensity: look.lighting.intensity, ref: key };
   return <group name={`motivated-light:${look.lighting.source}`}>
     <primitive object={target} />
-    <hemisphereLight ref={fill} args={[look.lighting.color, look.palette.ground, Math.max(.24, look.lighting.fill * 1.8)]} />
-    {look.lighting.source === "domestic" ? <spotLight {...common} target={target} angle={1.05} penumbra={.9} distance={19} decay={2} castShadow={false} />
-      : look.lighting.source === "fire" ? <pointLight {...common} distance={21} decay={2} castShadow={false} />
-        : <directionalLight {...common} target={target} castShadow={look.lighting.shadowProfile}
-          shadow-mapSize-width={1024} shadow-mapSize-height={1024} shadow-camera-left={-16} shadow-camera-right={16}
-          shadow-camera-top={16} shadow-camera-bottom={-16} shadow-camera-near={.5} shadow-camera-far={85}
-          shadow-bias={-.0003} shadow-normalBias={.035} />}
+    <hemisphereLight ref={fill} args={[look.lighting.color, look.palette.ground, Math.max(look.lighting.fillFloor, look.lighting.fill * 1.05)]} />
+    {look.lighting.source === "domestic" || look.lighting.source === "fire" ? <spotLight {...common} target={target}
+      angle={look.lighting.source === "fire" ? 1.24 : 1.05} penumbra={.95} distance={21} decay={2}
+      castShadow={look.lighting.shadowProfile} shadow-mapSize-width={1024} shadow-mapSize-height={1024}
+      shadow-camera-near={.35} shadow-camera-far={21} shadow-bias={-.0003} shadow-normalBias={.025} />
+      : <directionalLight {...common} target={target} castShadow={look.lighting.shadowProfile}
+        shadow-mapSize-width={1024} shadow-mapSize-height={1024} shadow-camera-left={-16} shadow-camera-right={16}
+        shadow-camera-top={16} shadow-camera-bottom={-16} shadow-camera-near={.5} shadow-camera-far={85}
+        shadow-bias={-.0003} shadow-normalBias={.035} />}
+
   </group>;
 }

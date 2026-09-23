@@ -9,7 +9,7 @@ export type HeroAsset = {
 // Placeholder /models/*.glb files deliberately do not opt into production.
 // Review silhouette, licence, textures and coordinate contract before changing status.
 export const HERO_ASSETS: Record<HeroAssetId, Readonly<HeroAsset>> = {
-  "master-lantern": { status: "authored-fallback", url: null, contract: "Base at origin, handle up, warm core; retain external light and ownership motion." },
+  "master-lantern": { status: "authored-fallback", url: null, contract: "Housing only, base Y=0, handle Y=1.18, radius .29m. Core, glass, light and ownership motion remain external; carried housing scales .44 at Y=-.208." },
   wolf: { status: "authored-fallback", url: null, contract: "Feet on Y=0, forward +Z; external cue owns translation and visibility." },
   "wolf-resting": { status: "authored-fallback", url: null, contract: "Resting pose at origin; do not substitute the standing model." },
   swan: { status: "authored-fallback", url: null, contract: "Waterline Y=0, forward +Z; cue owns water displacement." },

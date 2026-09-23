@@ -39,7 +39,7 @@ test('mirror skin keeps view-dependent ageing and controlled stillness without l
   for (const chunk of ['fog_pars_vertex', 'fog_vertex', 'fog_pars_fragment', 'fog_fragment']) assert.ok(source.includes(`#include <${chunk}>`));
   assert.match(source, /UniformsUtils.clone\(THREE.UniformsLib.fog\)/);
   assert.match(source, /fwidth\(scratchP.x\)/);
-  assert.match(source, /still \? 0.004/);
+  assert.match(source, /still \? 0 : warm/);
   assert.match(source, /reducedMotion \|\| reducedEffects \? 0/);
   assert.doesNotMatch(source, /WebGLRenderTarget|Reflector|useFBO|dispatchStoryEvent/);
   const director = read('../src/components/three/reflections/ReflectionDirector.tsx');

@@ -1,5 +1,7 @@
 # Scene-directed world presentation
 
+This records the earlier architecture pass. For the subsequent global-layer integration, high-tier FXAA, multiscale bloom, expanded asset adapters and final production validation, see [Final visual production](FINAL_VISUAL_PRODUCTION.md).
+
 This implementation follows `STORY_VISUAL_BIBLE.md`, `EMOTIONAL_CINEMATOGRAPHY_BIBLE.md`, `CINEMATIC_LIVED_STORY.md` and the existing journey architecture. It changes presentation, not canonical prose, scene order, saved story facts or interaction requirements. It is an implemented renderer upgrade, not a claim that the procedural fallback art is final production art.
 
 ## Ownership
