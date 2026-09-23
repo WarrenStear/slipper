@@ -1,3 +1,4 @@
+import { useSceneLook } from "../artDirection/SceneLookContext";
 import { AuthoredNpcSilhouette } from "../environmentArt/AuthoredNpc";
 import { memo, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
@@ -36,6 +37,7 @@ function EmberAndAsh({
   active,
   resolved,
 }: Pick<FirePathProps, "qualityProfile" | "reducedEffects" | "reducedMotion" | "active" | "resolved">) {
+  const presentation = useSceneLook();
   const emberRef = useRef<THREE.Points>(null);
   const ashRef = useRef<THREE.Points>(null);
   const count = reducedEffects ? 8 : 16 + qualityStep(qualityProfile) * 10;
@@ -66,14 +68,18 @@ function EmberAndAsh({
   }, [count]);
 
   useFrame(({ clock }, delta) => {
+    const activity = presentation ? Math.min(1, presentation.motion.particles * 4) : 1;
+    const time = presentation?.time.particles ?? clock.elapsedTime;
+    if (emberRef.current) (emberRef.current.material as THREE.PointsMaterial).opacity = (active ? .65 : .35) * activity;
+    if (ashRef.current) (ashRef.current.material as THREE.PointsMaterial).opacity = .24 * activity;
     if (reducedMotion) return;
     if (emberRef.current) {
-      emberRef.current.rotation.y += Math.min(delta, 0.05) * (active ? 0.22 : 0.08);
-      emberRef.current.position.y = Math.sin(clock.elapsedTime * 0.8) * 0.08;
+      emberRef.current.rotation.y += Math.min(delta, 0.05) * activity * (active ? 0.22 : 0.08);
+      emberRef.current.position.y = Math.sin(time * 0.8) * 0.08;
     }
     if (ashRef.current) {
-      ashRef.current.rotation.y -= Math.min(delta, 0.05) * 0.035;
-      ashRef.current.position.y = Math.sin(clock.elapsedTime * 0.24 + 1.2) * 0.12;
+      ashRef.current.rotation.y -= Math.min(delta, 0.05) * activity * 0.035;
+      ashRef.current.position.y = Math.sin(time * 0.24 + 1.2) * 0.12;
     }
   });
 

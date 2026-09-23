@@ -1,9 +1,8 @@
+import { LegacyChapterLight } from "../artDirection/LegacyChapterLight";
 import { memo } from "react";
 import {
-  Beam,
   FabricVeil,
   FloatingMotes,
-  ReflectivePanel,
   SceneGround,
   StonePath,
   TreeGrove,
@@ -18,10 +17,8 @@ function SunsetSeerChapterComponent({
   reducedEffects,
   reducedMotion,
 }: ChapterSceneProps) {
-  const isWarning = scene.id === "sunset.warning-grove";
   const isTruthful = scene.id === "sunset.true-mirror";
   const isStillness = scene.id === "sunset.stillness";
-  const sideMirrorCount = reducedEffects ? 1 : qualityProfile.quality === "low" ? 2 : 4;
 
   return (
     <group>
@@ -36,20 +33,6 @@ function SunsetSeerChapterComponent({
         reducedEffects={reducedEffects}
         reducedMotion={reducedMotion}
       />
-      {Array.from({ length: sideMirrorCount }, (_, index) => {
-        const side = index % 2 === 0 ? -1 : 1;
-        const row = Math.floor(index / 2);
-        return (
-          <ReflectivePanel
-            key={index}
-            position={[side * (6.2 + row * 1.4), 2.2 + row * 0.25, 0.7 - row * 3.1]}
-            rotation={[0, side * -0.34, 0]}
-            size={[2.1, 4.1]}
-            warm={isWarning}
-          />
-        );
-      })}
-
       {!isStillness ? (
         <FabricVeil
           position={[-5.2, 3.1, -1.2]}
@@ -68,9 +51,8 @@ function SunsetSeerChapterComponent({
         radius={10}
         height={6}
       />
-      <Beam from={[-9, 0.18, -4]} to={[9, 0.18, -4]} radius={0.025} color="#d88b5a" opacity={0.48} />
-      <directionalLight position={[10, 4, -8]} color="#ef945d" intensity={reducedEffects ? 0.48 : 0.88} />
-      <pointLight position={[0, 4, 4]} color="#9fb7cd" intensity={isStillness ? 1.05 : 0.6} distance={19} />
+      <LegacyChapterLight><directionalLight position={[10, 4, -8]} color="#ef945d" intensity={reducedEffects ? 0.48 : 0.88} /></LegacyChapterLight>
+
     </group>
   );
 }

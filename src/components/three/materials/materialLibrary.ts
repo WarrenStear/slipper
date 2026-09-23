@@ -1,0 +1,35 @@
+import type { StorySurface } from "../storyEvents/tactileShader.ts";
+
+/** Durable material identity; chapter state changes weathering, never the asset. */
+export const MATERIAL_LIBRARY = {
+  wornTimber: { surface: "wood", roughness: .86, metalness: 0 },
+  wetTimber: { surface: "wet-wood", roughness: .48, metalness: 0 },
+  agedMirrorFrame: { surface: "metal", roughness: .48, metalness: .72 },
+  linen: { surface: "linen", roughness: .96, metalness: 0 },
+  readingVelvet: { surface: "velvet", roughness: .98, metalness: 0 },
+  charredWood: { surface: "charred-wood", roughness: .97, metalness: 0 },
+  riverStone: { surface: "stone", roughness: .9, metalness: 0 },
+  livedPlaster: { surface: "plaster", roughness: .95, metalness: 0 },
+  bark: { surface: "bark", roughness: .94, metalness: 0 },
+  moss: { surface: "moss", roughness: .98, metalness: 0 },
+  dampSoil: { surface: "earth", roughness: .9, metalness: 0 },
+  ash: { surface: "ash", roughness: 1, metalness: 0 },
+  oxidisedBrass: { surface: "metal", roughness: .62, metalness: .74 },
+  agedPaper: { surface: "paper", roughness: .96, metalness: 0 },
+  candleWax: { surface: "wax", roughness: .82, metalness: 0 },
+} satisfies Record<string, { surface: StorySurface; roughness: number; metalness: number }>;
+
+export type MaterialMemory = { wetness?: number; wear?: number; damage?: number; reintegrated?: boolean };
+const unit = (value = 0) => Number.isFinite(value) ? Math.min(1, Math.max(0, value)) : 0;
+const WETTABLE = new Set<StorySurface>(["wood", "wet-wood", "bark", "stone", "earth", "moss", "painted-wood"]);
+
+export function resolveMaterialMemory(surface: StorySurface, roughness: number, memory: MaterialMemory = {}) {
+  const wetness = WETTABLE.has(surface) ? unit(memory.wetness) : 0;
+  const wear = unit(memory.wear), damage = unit(memory.damage);
+  return {
+    // Reintegrated objects retain their scars; they are not replaced with pristine props.
+    surface, wetness, wear, damage,
+    roughness: Math.max(.28, Math.min(1, unit(roughness) - wetness * .18 + damage * .04)),
+    brightness: 1 - wetness * .12 - damage * .1 + (memory.reintegrated ? .015 : 0),
+  };
+}

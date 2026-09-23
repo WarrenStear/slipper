@@ -1,3 +1,4 @@
+import { LegacyChapterLight } from "../artDirection/LegacyChapterLight";
 import { HouseWallDetails } from "../environment/EnvironmentDressing";
 import { ChapterLightRig } from "../environment/ChapterLightRig";
 import { TactileMaterial } from "../storyEvents/TactileMaterial";
@@ -444,7 +445,7 @@ function ThornedHouseChapterComponent({
         color="#e5aa68"
       />
       <ChapterLightRig family="thorned-house" reducedMotion={reducedMotion} />
-      <hemisphereLight args={[stage === "leaving" ? "#b9b6a3" : "#8b7460", "#1a1210", reducedEffects ? 0.14 : 0.24]} />
+      <LegacyChapterLight><hemisphereLight args={[stage === "leaving" ? "#b9b6a3" : "#8b7460", "#1a1210", reducedEffects ? 0.14 : 0.24]} /></LegacyChapterLight>
     </group>
   );
 }

@@ -214,8 +214,10 @@ test("persistent world memory renders authored multi-stage consequences within f
   assert.match(fireRiver, /resolved=\{riverResolved\}/);
   assert.doesNotMatch(fireRiver, /fireResolved = atRiver \|\| surrendered/);
 
-  assert.match(fork, /name="fork-past-path-overgrowth"/);
-  assert.match(fork, /name="fork-future-path-established"/);
+  const forkLandscape = read("src/components/three/environment/ForkLandscape.tsx");
+  assert.match(fork, /<ForkLandscape overgrown=\{pastPathOvergrown\} established=\{futurePathEstablished\}/);
+  assert.match(forkLandscape, /name="fork-past-path-overgrowth"/);
+  assert.match(forkLandscape, /name="fork-future-path-established"/);
   assert.match(fork, /rememberFourVerbs = fourVerbs \|\| letGo \|\| declined \|\| departed \|\| deleted/);
   assert.match(fork, /rememberOwnership = ownershipScene \|\| oldHopeRelinquished \|\| lanternOwned/);
 

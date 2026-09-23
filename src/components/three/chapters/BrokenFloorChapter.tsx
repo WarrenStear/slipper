@@ -163,10 +163,10 @@ function BrokenFloorChapterComponent({
         opacity={0.64}
         reducedMotion={reducedMotion}
       />
-      <group ref={lanternRef} name="distant-light-recedes-into-wood" position={[0, 0, openingResolved ? 10.4 : 5.6]}>
+      <group ref={lanternRef} visible={revealStage >= 1} name="distant-light-recedes-into-wood" position={[0, 0, openingResolved ? 10.4 : 5.6]}>
         <LanternProp position={[0, 0.1, 0]} scale={0.78} reducedMotion={reducedMotion} />
       </group>
-      {!openingResolved ? (
+      {!openingResolved && revealStage >= 1 ? (
         <FlickerLight
           position={[0, 1.5, 5.6]}
           color="#f1b86a"

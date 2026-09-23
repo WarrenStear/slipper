@@ -1,3 +1,4 @@
+import { CinematicFrameOverlay } from "./artDirection/LegacyFrameOverlay";
 import { claimForestBuild } from "../../lib/forestBuildSchedule";
 import { useCompressedGLTF } from "../../lib/assets/gltfLoaders";
 import { cloneNpcPresentation, isPlaceholderNpcAsset } from "../../lib/assets/npcAssetPolicy";
@@ -6,7 +7,7 @@ import { forestCrownHabit } from "../../lib/forestArt";
 import { useJourneyStore } from "../../stores/useJourneyStore";
 import { getCurrentCinematicProfile } from "../../cinematics/emotionalCinematography";
 import { getAuthoredSceneArrival } from "../../cinematics/sceneArrival";
-import { EmotionalCinematographyDirector } from "./cinematics/EmotionalCinematographyDirector";
+import { SceneLookDirector } from "./artDirection/SceneLookDirector";
 import { SpatialProseDirector } from "./storyText/SpatialProseDirector";
 import { Component, memo, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ErrorInfo, type ReactNode } from "react";
 import { Float, Html, OrbitControls, Sparkles, Stars, useTexture } from "@react-three/drei";
@@ -3714,78 +3715,6 @@ function NarrativeWeather({
   );
 }
 
-function createVignetteTexture() {
-  const texture = new THREE.CanvasTexture(document.createElement("canvas"));
-  const canvas = texture.image as HTMLCanvasElement;
-  canvas.width = 512;
-  canvas.height = 512;
-
-  const ctx = canvas.getContext("2d");
-  if (ctx) {
-    const gradient = ctx.createRadialGradient(256, 256, 72, 256, 256, 256);
-    gradient.addColorStop(0, "rgba(0,0,0,0)");
-    gradient.addColorStop(0.48, "rgba(0,0,0,0)");
-    gradient.addColorStop(0.72, "rgba(0,0,0,0.38)");
-    gradient.addColorStop(1, "rgba(0,0,0,0.92)");
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, 512, 512);
-  }
-
-  texture.colorSpace = THREE.SRGBColorSpace;
-  texture.needsUpdate = true;
-  return texture;
-}
-
-function CinematicFrameOverlay({
-  visualState,
-  narrativeWorldState,
-  qualityProfile,
-}: {
-  visualState: WorldVisualState;
-  narrativeWorldState: NarrativeWorldState;
-  qualityProfile: RenderQualityProfile;
-}) {
-  const { camera } = useThree();
-  const groupRef = useRef<THREE.Group>(null);
-  const materialRef = useRef<THREE.MeshBasicMaterial>(null);
-  const opacityRef = useRef(0);
-  const vignetteTexture = useMemo(() => (typeof document === "undefined" ? null : createVignetteTexture()), []);
-
-  useEffect(() => () => vignetteTexture?.dispose(), [vignetteTexture]);
-
-  useFrame((_, delta) => {
-    const group = groupRef.current;
-    if (!group || !qualityProfile.enableCinematicVignette) return;
-
-    group.position.copy(camera.position);
-    group.quaternion.copy(camera.quaternion);
-
-    const qualityLift = qualityProfile.quality === "cinematic" ? 1.08 : qualityProfile.quality === "high" ? 0.92 : 0.72;
-    const targetOpacity = visualState.vignetteIntensity * qualityLift * (0.82 + clamp01(narrativeWorldState.memoryPressure) * 0.22);
-    opacityRef.current = THREE.MathUtils.lerp(opacityRef.current, targetOpacity, 1 - Math.exp(-delta * 3.4));
-    if (materialRef.current) materialRef.current.opacity = opacityRef.current;
-  });
-
-  if (!qualityProfile.enableCinematicVignette || !vignetteTexture) return null;
-
-  return (
-    <group ref={groupRef} renderOrder={1000}>
-      <mesh position={[0, 0, -0.72]} scale={[1.84, 1.08, 1]}>
-        <planeGeometry args={[1, 1, 1, 1]} />
-        <meshBasicMaterial
-          ref={materialRef}
-          map={vignetteTexture}
-          transparent
-          opacity={opacityRef.current || visualState.vignetteIntensity * 0.72}
-          depthTest={false}
-          depthWrite={false}
-          toneMapped={false}
-        />
-      </mesh>
-    </group>
-  );
-}
-
 type WeatherLayerConfig = {
   key: string;
   color: string;
@@ -6850,7 +6779,6 @@ export function StoryScene({
 }: StorySceneProps) {
   const cameraReadyRef = useRef(false);
   const cameraAssistance = useSettingsStore((state) => state.cameraAssistance);
-  const eventObjects = useJourneyStore((state) => state.storyObjectStates);
   const eventFlags = useJourneyStore((state) => state.worldFlags);
   const eventIds = useJourneyStore((state) => state.completedStoryEventIds);
   const reducedMotion = useSettingsStore((state) => state.reducedMotion);
@@ -7098,9 +7026,9 @@ export function StoryScene({
 
   const activeRadius = entry.engine3d.environmentRadius ?? DEFAULT_ENVIRONMENT_RADIUS;
 
-  return (
+  const world = (
     <>
-      {reducedEffects ? null : (
+      {reducedEffects || narrativeScene ? null : (
         <CinematicFrameOverlay visualState={visualState} narrativeWorldState={narrativeWorldState} qualityProfile={qualityProfile} />
       )}
       <AnimatedSceneCamera
@@ -7137,10 +7065,6 @@ export function StoryScene({
         }
       />
       {narrativeScene && mode === "explore" ? <>
-        <EmotionalCinematographyDirector sceneId={narrativeScene.id} reducedMotion={reducedMotion} cameraAssistance={cameraAssistance}
-          focusPosition={cameraGuidanceTarget} lanternOwned={eventFlags["lantern.owned"]}
-          surrenderComplete={eventObjects["river.white-fabric"] === "raised"} compression={["refilled-twice", "waiting-again"].includes(eventObjects["thorn-house.table"]) ? 1 : eventObjects["thorn-house.table"] === "refilled" ? .5 : 0}
-          mindReleased={eventObjects["mind.questions"] === "behind"} creationComplete={Boolean(eventObjects["womb.creation"])} />
         <SpatialProseDirector entry={entry} scene={narrativeScene} position={authoredSceneOrigin} headingRadians={getJourneySceneLayout(narrativeScene.id).anchor.headingRadians} active witnessed={visitedEntryIds.includes(entry.id)} reducedMotion={reducedMotion}
           suppressed={narrativeScene.id === "broken-floor.confession" && !eventIds.includes("broken-floor.first-wipe")} />
       </> : null}
@@ -7161,19 +7085,19 @@ export function StoryScene({
         onPlayerProximityChange={onPlayerProximityChange}
         onPlayerSpatialChange={setPlayerSpatial}
       />
-      <SceneAtmosphere cinematicActive={mode === "explore"} entry={entry} entries={entries} narrativeWorldState={narrativeWorldState} qualityProfile={qualityProfile} />
-      {reducedEffects ? null : (
+      {narrativeScene ? null : <SceneAtmosphere entry={entry} entries={entries} narrativeWorldState={narrativeWorldState} qualityProfile={qualityProfile} />}
+      {reducedEffects || narrativeScene ? null : (
         <BiomeWeatherField activeEntry={entry} narrativeWorldState={narrativeWorldState} visualState={visualState} qualityProfile={qualityProfile} />
       )}
-      <NarrativeLightingRig visualState={visualState} qualityProfile={qualityProfile} />
+      {narrativeScene ? null : <NarrativeLightingRig visualState={visualState} qualityProfile={qualityProfile} />}
       {openingResolved ? (
         <>
           <LivingPathRibbon qualityProfile={qualityProfile} pathSegments={pathSegments} activeEntry={entry} navigationTargetId={navigationTargetId} narrativeWorldState={narrativeWorldState} sampleGroundY={sampleGroundY} />
           <MoonlitPathUnderstory pathSegments={pathSegments} activeEntry={entry} navigationTargetId={navigationTargetId} narrativeWorldState={narrativeWorldState} qualityProfile={qualityProfile} sampleGroundY={sampleGroundY} />
-          {reducedEffects ? null : (
+          {reducedEffects || narrativeScene ? null : (
             <PathLightMotes pathSegments={pathSegments} activeEntry={entry} navigationTargetId={navigationTargetId} visualState={visualState} narrativeWorldState={narrativeWorldState} qualityProfile={qualityProfile} sampleGroundY={sampleGroundY} />
           )}
-          {reducedEffects ? null : (
+          {reducedEffects || narrativeScene ? null : (
             <LivingPathMist pathSegments={pathSegments} activeEntry={entry} navigationTargetId={navigationTargetId} narrativeWorldState={narrativeWorldState} qualityProfile={qualityProfile} sampleGroundY={sampleGroundY} />
           )}
           {usesAuthoredCausalComposition(entry.id) ? null : (
@@ -7186,18 +7110,19 @@ export function StoryScene({
           </> : null}
         </>
       ) : null}
-      <ProceduralDome
+      {narrativeScene ? null : <ProceduralDome
         entry={entry}
         visualState={visualState}
         radius={Math.max(232, activeRadius * 4.8)}
         narrativeWorldState={narrativeWorldState}
         qualityProfile={qualityProfile}
       />
-      <AtmosphericForestPanorama
+      }
+      {narrativeScene ? null : <AtmosphericForestPanorama
         radius={Math.max(182, activeRadius * 3.8)}
         visualState={visualState}
         showDepthPlate={visualState.biome === "firstWood" && qualityProfile.quality !== "low"}
-      />
+      />}
       <DistantForestSilhouetteRing visualState={visualState} qualityProfile={qualityProfile} />
       {fallbackEnvironmentSrc ? <EnvironmentSphere src={fallbackEnvironmentSrc} radius={activeRadius * 0.98} /> : null}
       {openingResolved ? (
@@ -7208,8 +7133,8 @@ export function StoryScene({
           {reducedEffects ? null : (
             <NarrativeGroundDetailField entries={entries} pathSegments={pathSegments} activeEntry={entry} narrativeWorldState={narrativeWorldState} qualityProfile={qualityProfile} />
           )}
-          <SemanticObjectPathing entries={entries} pathSegments={pathSegments} narrativeWorldState={narrativeWorldState} activeEntry={entry} qualityProfile={qualityProfile} visitedEntryIds={visitedEntryIds} navigationTargetId={navigationTargetId} />
-          {reducedEffects ? null : (
+          {narrativeScene ? null : <SemanticObjectPathing entries={entries} pathSegments={pathSegments} narrativeWorldState={narrativeWorldState} activeEntry={entry} qualityProfile={qualityProfile} visitedEntryIds={visitedEntryIds} navigationTargetId={navigationTargetId} />}
+          {reducedEffects || narrativeScene ? null : (
             <NarrativeWhisperField entry={entry} narrativeWorldState={narrativeWorldState} qualityProfile={qualityProfile} />
           )}
           {visibleStoryNodes.map((node) => (
@@ -7245,6 +7170,9 @@ export function StoryScene({
       {showDebugOverlay ? <SceneDebugOverlay entry={entry} narrativeWorldState={narrativeWorldState} qualityProfile={qualityProfile} visualState={visualState} nodes={spatialNodes} /> : null}
     </>
   );
+  return narrativeScene ? <SceneLookDirector sceneId={narrativeScene.id} quality={qualityProfile.quality} reducedEffects={reducedEffects} reducedMotion={reducedMotion}
+    cameraAssistance={mode === "explore" && cameraAssistance} origin={authoredSceneOrigin} heading={getJourneySceneLayout(narrativeScene.id).anchor.headingRadians}
+    focusPosition={cameraGuidanceTarget} bloomIntensity={visualState.bloomIntensity} vignetteIntensity={visualState.vignetteIntensity}>{world}</SceneLookDirector> : world;
 }
 
 export default memo(StoryScene);

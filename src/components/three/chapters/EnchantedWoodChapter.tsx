@@ -1,3 +1,4 @@
+import { LegacyChapterLight } from "../artDirection/LegacyChapterLight";
 import { memo } from "react";
 import {
   CandleField,
@@ -67,7 +68,7 @@ function EnchantedWoodChapterComponent({
       ) : null}
       <LanternProp position={[0.4, 0.15, 7.6]} scale={0.78} reducedMotion={reducedMotion} />
       <ChapterLightRig family="enchanted-wood" reducedMotion={reducedMotion} reducedEffects={reducedEffects} />
-      <hemisphereLight args={["#b6c3ad", "#15160f", reducedEffects ? 0.18 : 0.34]} />
+      <LegacyChapterLight><hemisphereLight args={["#b6c3ad", "#15160f", reducedEffects ? 0.18 : 0.34]} /></LegacyChapterLight>
     </group>
   );
 }

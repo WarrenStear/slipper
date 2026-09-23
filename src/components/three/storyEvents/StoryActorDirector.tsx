@@ -10,16 +10,17 @@ import { CINEMATIC_ACTOR_CUES, flockInstanceCount, sampleActorCue, sampleFlockPo
 
 import { SwanModel } from "./SwanModel";
 import { AuthoredNpcSilhouette } from "../environmentArt/AuthoredNpc";
+import { HeroAssetSlot } from "../actors/HeroAssetSlot";
 
 const ORIGIN: Vector3Tuple = [0, 0, 0];
 const NO_CUES: readonly ActorCueDefinition[] = [];
 
 function WolfFigure({ resting }: { resting: boolean }) {
-  return <group scale={.8}><AuthoredNpcSilhouette kind="wolf" resting={resting} /></group>;
+  return <group scale={.8}><HeroAssetSlot id={resting ? "wolf-resting" : "wolf"}><AuthoredNpcSilhouette kind="wolf" resting={resting} /></HeroAssetSlot></group>;
 }
 
 function SwanFigure() {
-  return <SwanModel />;
+  return <HeroAssetSlot id="swan"><SwanModel /></HeroAssetSlot>;
 }
 
 function ReflectedSeer() {
@@ -110,8 +111,10 @@ export type StoryActorDirectorProps = {
 
 export function StoryActorDirector({ sceneId, position = ORIGIN, qualityProfile, reducedEffects, reducedMotion, lanternOwned = false, lanternPlaced = false, birdsReleased = false, origamiAwakened = false }: StoryActorDirectorProps) {
   const cues = CINEMATIC_ACTOR_CUES[sceneId] ?? NO_CUES;
+  // The Sunset chapter owns its one monumental mirror and its local apparition.
+  const chapterOwnsSeer = sceneId.startsWith("sunset.");
   return <group position={position} name="StoryActorDirector">
-    {cues.filter((definition) => definition.actor !== "lantern" || (!lanternOwned && !lanternPlaced)).map((definition) => <AuthoredActor key={`${sceneId}:${definition.actor}`} definition={definition} reducedMotion={reducedMotion} />)}
+    {cues.filter((definition) => !(chapterOwnsSeer && definition.actor === "seer") && (definition.actor !== "lantern" || (!lanternOwned && !lanternPlaced))).map((definition) => <AuthoredActor key={`${sceneId}:${definition.actor}`} definition={definition} reducedMotion={reducedMotion} />)}
     {sceneId === "river.release-surrender" ? <InstancedStoryFlock qualityProfile={qualityProfile} reducedEffects={reducedEffects} reducedMotion={reducedMotion} released={birdsReleased} /> : null}
     {sceneId === "blue-moon.intimacy" || sceneId === "blue-moon.sanctuary" ? <InstancedStoryFlock origami awakened={origamiAwakened} qualityProfile={qualityProfile} reducedEffects={reducedEffects} reducedMotion={reducedMotion} released={false} /> : null}
   </group>;

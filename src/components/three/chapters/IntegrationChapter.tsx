@@ -1,3 +1,5 @@
+import { Forms } from "../environment/EnvironmentDressing";
+import { BotanicalBatch } from "../environmentArt/EnvironmentArt";
 import { AuthoredNpcSilhouette } from "../environmentArt/AuthoredNpc";
 import { memo } from "react";
 import {
@@ -58,34 +60,22 @@ function IntegrationChapterComponent({
       </group>
       <group name="seer-high-ground" position={[0, 0, 0]}>
         <ReflectivePanel position={[0, 3.2, 6.1]} size={[4.5, 5.8]} cracked />
-        {seerWitnessed ? <pointLight position={[0, 4.2, 5.4]} color="#9ba7d2" intensity={0.8} distance={9} /> : null}
+
       </group>
       {storyActorsActive ? null : <WolfStone witnessed={wolfWitnessed} />}
       {storyActorsActive ? null : <SwanStone witnessed={swanWitnessed} />}
       {isConvergenceScene ? (
         <group>
-          <mesh position={[0, 0.08, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-            <ringGeometry args={[2.7, 3, 48]} />
-            <meshStandardMaterial
-              color={converged ? "#c1a36f" : "#655d50"}
-              emissive={converged ? "#6b4c28" : "#000000"}
-              emissiveIntensity={converged ? 0.25 : 0}
-              metalness={0.34}
-              roughness={0.55}
-            />
-          </mesh>
-          {converged ? <pointLight position={[0, 3, 0]} color="#e4c692" intensity={1.15} distance={17} /> : null}
+          <group name="integration-shared-shoreline">
+            <Forms name="wood-water-stone-passage" kind="stone" surface="stone" color="#64736a" forms={Array.from({ length: 15 }, (_, i) => ({ position: [-8 + i * 1.12, .04, 3.2 + Math.sin(i * .45) * 1.4], scale: [.9, .11, .65], rotation: [0, i * 1.7, 0] }))} />
+            <BotanicalBatch kind="reeds" mergeFoliage placements={Array.from({ length: 10 }, (_, i) => ({ position: [-6 + i * 1.35, .02, 5.3 + Math.sin(i * .8)], scale: .8, rotation: [0, i, 0] }))} />
+          </group>
           {["swan", "wolf", "seer"].map((symbol, index) => {
-            const angle = -Math.PI * 0.1 + index * (Math.PI * 2 / 3);
+            const x = -2.2 + index * 2.2;
             return (
-              <mesh key={symbol} name={`integrated-${symbol}-node`} position={[Math.cos(angle) * 2.85, 0.22, Math.sin(angle) * 2.85]}>
-                <sphereGeometry args={[converged ? 0.18 : 0.1, 10, 7]} />
-                <meshBasicMaterial
-                  color={symbol === "wolf" ? "#c98243" : symbol === "swan" ? "#d9e8ef" : "#91a4d3"}
-                  transparent
-                  opacity={converged ? 0.94 : 0.42}
-                  toneMapped={false}
-                />
+              <mesh key={symbol} name={`integrated-${symbol}-node`} position={[x, .08, 3.6]} scale={[1, .14, .7]} userData={{ integrated: converged }} receiveShadow>
+                <icosahedronGeometry args={[.8, 1]} />
+                <meshStandardMaterial color={converged ? "#818a77" : "#5c675d"} roughness={.92} />
               </mesh>
             );
           })}

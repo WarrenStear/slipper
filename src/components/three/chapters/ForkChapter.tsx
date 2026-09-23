@@ -1,3 +1,4 @@
+import { ForkLandscape } from "../environment/ForkLandscape";
 import { memo } from "react";
 import {
   DoorFrame,
@@ -6,27 +7,10 @@ import {
   HouseShell,
   LanternProp,
   SceneGround,
-  StonePath,
-  TreeGrove,
   WaterSurface,
 } from "./ChapterPrimitives";
 import type { ChapterSceneProps } from "./types";
 import { useJourneyStore } from "../../../stores/useJourneyStore";
-
-const PAST_PATH_GROWTH = [
-  [-4.4, 0.16, -4.8],
-  [-3.5, 0.18, -1.7],
-  [-5.2, 0.15, 1.5],
-  [-4.05, 0.2, 4.4],
-  [-6.1, 0.17, 7.2],
-] as const;
-
-const FUTURE_PATH_MARKERS = [
-  [3.25, 0.18, -3.3],
-  [4.25, 0.21, 0.2],
-  [5.4, 0.24, 3.8],
-  [6.75, 0.27, 7.1],
-] as const;
 
 function ForkChapterComponent({
   scene,
@@ -60,51 +44,8 @@ function ForkChapterComponent({
         lanternStage: lanternOwned ? "owned" : "guided",
       }}
     >
-      <SceneGround radius={20} color="#26241b" />
-      <TreeGrove qualityProfile={qualityProfile} reducedEffects={reducedEffects} tint="#30392e" trunk="#2b2119" radius={27} />
-
-      <group
-        name="fork-past-path"
-        position={[-3.1, 0, 1]}
-        rotation={[0, -0.34, 0]}
-        userData={{ memoryStage: pastPathOvergrown ? "partially-overgrown" : "open" }}
-      >
-        <StonePath color={pastPathOvergrown ? "#454838" : "#76644e"} count={10} length={17} fork={-0.5} />
-      </group>
-      {pastPathOvergrown ? (
-        <group name="fork-past-path-overgrowth">
-          {PAST_PATH_GROWTH.map(([x, y, z], index) => (
-            <group key={`${x}:${z}`} position={[x, y, z]} rotation={[0, index * 1.31, 0]}>
-              <mesh rotation={[0, 0, -0.28]}>
-                <coneGeometry args={[0.2, 0.82, 5]} />
-                <meshStandardMaterial color="#4d5d3d" roughness={0.98} />
-              </mesh>
-              <mesh position={[0.2, 0.04, 0.08]} rotation={[0, 0, 0.34]}>
-                <coneGeometry args={[0.15, 0.62, 5]} />
-                <meshStandardMaterial color="#354936" roughness={0.98} />
-              </mesh>
-            </group>
-          ))}
-        </group>
-      ) : null}
-      <group
-        name="fork-future-path"
-        position={[3.1, 0, 1]}
-        rotation={[0, 0.34, 0]}
-        userData={{ memoryStage: futurePathEstablished ? "established" : "uncertain" }}
-      >
-        <StonePath color={futurePathEstablished ? "#89918a" : "#3e4542"} count={10} length={17} fork={0.5} />
-      </group>
-      {futurePathEstablished ? (
-        <group name="fork-future-path-established">
-          {FUTURE_PATH_MARKERS.map(([x, y, z], index) => (
-            <mesh key={`${x}:${z}`} position={[x, y, z]}>
-              <sphereGeometry args={[0.1 + index * 0.012, 8, 6]} />
-              <meshBasicMaterial color="#d7d2b5" transparent opacity={0.62 + index * 0.08} toneMapped={false} />
-            </mesh>
-          ))}
-        </group>
-      ) : null}
+      <SceneGround radius={42} color="#26241b" />
+      <ForkLandscape overgrown={pastPathOvergrown} established={futurePathEstablished} reducedEffects={reducedEffects || qualityProfile.quality === "low"} />
 
       <HouseShell
         position={[-9.5, 0, 8.5]}
@@ -116,12 +57,12 @@ function ForkChapterComponent({
       <FlickerLight position={[-8.2, 2.2, 6.1]} color="#dda466" intensity={1.5} distance={13} reducedMotion={reducedMotion} />
 
       <group position={[0, 0, -1.3]}>
-        <mesh position={[0, 0.65, 0]} castShadow receiveShadow>
-          <cylinderGeometry args={[1.25, 1.5, 1.3, 10]} />
+        <mesh position={[0, 0.02, 0]} scale={[1, .22, .82]} castShadow receiveShadow>
+          <sphereGeometry args={[1.3, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2]} />
           <meshStandardMaterial color="#514b40" roughness={1} />
         </mesh>
-        <mesh position={[0, 1.38, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <circleGeometry args={[1.14, 10]} />
+        <mesh position={[0, 0.315, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <circleGeometry args={[.62, 16]} />
           <meshStandardMaterial
             color={weighed ? "#8d7d61" : "#676052"}
             emissive={weighed ? "#4e3a20" : "#000000"}
@@ -180,7 +121,6 @@ function ForkChapterComponent({
           </> : null}
         </group>
       ) : null}
-      <pointLight position={[8, 3, 8]} color="#73828a" intensity={0.42} distance={19} />
     </group>
   );
 }

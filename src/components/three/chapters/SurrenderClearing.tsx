@@ -1,3 +1,4 @@
+import { LegacyChapterLight } from "../artDirection/LegacyChapterLight";
 import { AuthoredNpcSilhouette } from "../environmentArt/AuthoredNpc";
 import { memo } from "react";
 import type { RenderQualityProfile } from "../renderQuality";
@@ -65,13 +66,13 @@ function SurrenderClearingComponent({
         <BirdSwarm count={birdCount} dispersed={awake} color="#0c0e10" />
       </group> : null}
       {awake && actorsEnabled ? <RestingWolf /> : null}
-      <pointLight
+      <LegacyChapterLight><pointLight
         position={[0, 3.2, 0.8]}
         color="#e5dfd2"
         intensity={awake ? 0.78 : 0.16}
         distance={awake ? 18 : 9}
         decay={2}
-      />
+      /></LegacyChapterLight>
     </group>
   );
 }

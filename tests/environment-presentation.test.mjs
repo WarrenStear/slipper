@@ -72,7 +72,7 @@ test('chapter depth does not create a competing fog owner', () => {
 test('water settings update the compiled uniform objects instead of orphaning them', () => {
   const water=source('src/components/three/environment/SanctuaryWater.tsx');
   assert.match(water,/waterDetail: \{ value: 1 \} \}\), \[\]\)/);
-  assert.match(water,/uniforms\.waterDetail\.value = reducedEffects \? \.5 : 1/);
+  assert.match(water,/uniforms\.waterDetail\.value = reducedEffects \? \.5 : presentation \? Math.min\(1, presentation.motion.water \* 4\) : 1/);
 });
 
 test('room shell removes only downward triangles without changing the interactive floor', () => {

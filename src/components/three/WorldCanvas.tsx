@@ -1,3 +1,4 @@
+import { isCinematicProfileActive } from "../../cinematics/emotionalCinematography";
 import {
   memo,
   Suspense,
@@ -87,7 +88,7 @@ function CanvasRendererController({
   }, [gl]);
 
   useFrame((_, delta) => {
-    if (cinematicActive) return;
+    if (cinematicActive || isCinematicProfileActive()) return;
     gl.toneMappingExposure = THREE.MathUtils.lerp(
       gl.toneMappingExposure,
       targetExposureRef.current,

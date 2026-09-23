@@ -1,3 +1,5 @@
+import { ClimbLandscape } from "../environment/ClimbLandscape";
+import { LegacyChapterLight } from "../artDirection/LegacyChapterLight";
 import { BotanicalCluster } from "../environmentArt/EnvironmentArt";
 import { memo } from "react";
 import {
@@ -390,6 +392,7 @@ function ThreeClimbsChapterComponent({
 
   return (
     <group>
+      {isMind || isHeart || isWomb ? <group rotation={[0, arrivalHeading, 0]}><ClimbLandscape kind={isMind ? "mind" : isHeart ? "heart" : "womb"} released={questionsReleased} /></group> : null}
       <SceneGround radius={19} color={isWomb ? "#64583f" : "#373936"} />
       <group rotation={[-0.16, 0, 0]} position={[0, 0.3, 0]}>
         <StonePath color={isHeart ? "#777e81" : "#66645d"} count={12} length={19} />
@@ -417,7 +420,7 @@ function ThreeClimbsChapterComponent({
               <meshStandardMaterial color="#c9c5b8" roughness={0.96} side={2} />
             </mesh>
           ))}
-          <directionalLight position={[-8, 8, -4]} color="#abb7c2" intensity={0.7} />
+          <LegacyChapterLight><directionalLight position={[-8, 8, -4]} color="#abb7c2" intensity={0.7} /></LegacyChapterLight>
         </group>
       ) : null}
 
@@ -439,7 +442,7 @@ function ThreeClimbsChapterComponent({
           <HeartRoseMemory selected={tendernessSelected} reducedEffects={reducedEffects} />
           <HeartSwanFeatherMemory selected={beautySelected} reducedEffects={reducedEffects} />
           <HeartBlueMoonMemory selected={selfhoodSelected} reducedEffects={reducedEffects} />
-          <hemisphereLight args={["#a9c1ce", "#241b1d", reducedEffects ? 0.48 : 0.72]} />
+          <LegacyChapterLight><hemisphereLight args={["#a9c1ce", "#241b1d", reducedEffects ? 0.48 : 0.72]} /></LegacyChapterLight>
         </group>
       ) : null}
 
@@ -454,8 +457,8 @@ function ThreeClimbsChapterComponent({
           <FutureHomeSymbol selected={homeSelected} reducedEffects={reducedEffects} />
           <FutureVoiceSymbol selected={voiceSelected} reducedEffects={reducedEffects} />
           <KeyProp position={[0, creationChosen ? 1.42 : 1.2, 3]} scale={0.52} color={creationChosen ? "#f1cb73" : "#d0ad63"} />
-          <directionalLight position={[8, 12, -8]} color="#ffd89f" intensity={creationChosen ? 1.24 : 0.95} />
-          <hemisphereLight args={["#ead5ad", "#2f271d", reducedEffects ? 0.44 : 0.66]} />
+          <LegacyChapterLight><directionalLight position={[8, 12, -8]} color="#ffd89f" intensity={creationChosen ? 1.24 : 0.95} /></LegacyChapterLight>
+          <LegacyChapterLight><hemisphereLight args={["#ead5ad", "#2f271d", reducedEffects ? 0.44 : 0.66]} /></LegacyChapterLight>
         </group>
       ) : null}
     </group>

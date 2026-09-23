@@ -1,3 +1,5 @@
+import { SCENE_LOOKS } from "./artDirection/SceneLookRegistry";
+import { getJourneySceneForEntry } from "../../data/journeyNarrative";
 import * as THREE from "three";
 import type { Slipper3DEntry } from "../../data/slipper3dTypes";
 import { blendChapterDirectors, resolveChapterDirector, type ChapterDirector } from "./chapterDirector";
@@ -301,11 +303,13 @@ export function resolveWorldVisualState({
   const starCount = Math.round((biome === "archive" ? 1450 : biome === "crowned" ? 1050 : 780) * director.starMultiplier);
   const starFactor = (1.25 + memory * 0.4 + crownPresence * 0.18) * director.starMultiplier;
 
+  const narrative = getJourneySceneForEntry(entry.id);
+  const authored = narrative ? SCENE_LOOKS[narrative.id] : null;
   return {
     biome,
-    palette,
-    backgroundColor,
-    fogColor,
+    palette: authored ? { ...palette, background: authored.sky, fog: authored.fog, ground: authored.ground, leaf: authored.leaf, trunk: "#514d3f" } : palette,
+    backgroundColor: authored?.sky ?? backgroundColor,
+    fogColor: authored?.fog ?? fogColor,
     fogDensity,
     ambientIntensity,
     directionalIntensity,
@@ -336,9 +340,9 @@ export function resolveWorldVisualState({
     weatherIntensity,
     starCount,
     starFactor,
-    showStars,
+    showStars: authored ? false : showStars,
     pathClarity,
     centerQuietness,
-    director,
+    director: authored ? { ...director, skyOpenness: authored.composition.horizonOpenness, forestDensity: Math.min(director.forestDensity, .25 + authored.composition.foregroundDensity * .65) } : director,
   };
 }

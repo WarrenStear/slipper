@@ -1,3 +1,4 @@
+import { useSceneLook } from "../artDirection/SceneLookContext";
 import {
   memo,
   useEffect,
@@ -166,6 +167,7 @@ export const WaterSurface = memo(function WaterSurface({
 export const MoonDisc = memo(function MoonDisc({
   position = [0, 9, -12],
   radius = 3.4,
+  authoredRadius,
   color = "#dce9f1",
   intensity = 1.7,
   qualityProfile,
@@ -174,12 +176,15 @@ export const MoonDisc = memo(function MoonDisc({
 }: {
   position?: Vec3;
   radius?: number;
+  /** Explicit hero moons are world-sized; secondary moons keep the comfort cap. */
+  authoredRadius?: number;
   color?: string;
   intensity?: number;
   qualityProfile?: RenderQualityProfile;
   reducedEffects?: boolean;
   reducedMotion?: boolean;
 }) {
+  const presentation = useSceneLook();
   const texture = useTexture(CHAPTER_MOON_ALBEDO_PATH);
   const groupRef = useRef<THREE.Group>(null);
   const haloMaterialRef = useRef<THREE.ShaderMaterial>(null);
@@ -192,7 +197,7 @@ export const MoonDisc = memo(function MoonDisc({
   // sphere, allowing it to occupy (and clip against) most of the viewport.
   // Keep the authored value expressive, but cap its apparent chapter-scale
   // diameter so this moon remains a distant landmark.
-  const displayRadius = THREE.MathUtils.clamp(0.54 + radius * 0.19, 0.72, 1.36);
+  const displayRadius = authoredRadius === undefined ? THREE.MathUtils.clamp(0.54 + radius * 0.19, 0.72, 1.36) : THREE.MathUtils.clamp(authoredRadius, .72, 7);
   const haloRadius = displayRadius * (reducedEffects ? 1.9 : qualityIndex >= 2 ? 2.5 : 2.25);
   const discSegments = qualityIndex === 0 ? 24 : qualityIndex === 1 ? 32 : 48;
   const haloSegments = qualityIndex === 0 ? 20 : qualityIndex === 1 ? 28 : 40;
@@ -244,7 +249,7 @@ export const MoonDisc = memo(function MoonDisc({
     if (haloMaterialRef.current) {
       const breath = reducedMotion || reducedEffects
         ? 1
-        : 1 + Math.sin(clock.elapsedTime * 0.22) * (qualityIndex >= 2 ? 0.055 : 0.035);
+        : 1 + Math.sin((presentation?.time.water ?? clock.elapsedTime) * 0.22) * (qualityIndex >= 2 ? 0.055 : 0.035);
       haloMaterialRef.current.uniforms.haloOpacity.value = baseHaloOpacity * breath;
     }
   });
@@ -502,12 +507,13 @@ export const FlickerLight = memo(function FlickerLight({
   distance?: number;
   reducedMotion: boolean;
 }) {
+  const presentation = useSceneLook();
   const light = useRef<THREE.PointLight>(null);
   useFrame(({ clock }) => {
     if (!light.current) return;
     light.current.intensity = reducedMotion
       ? intensity
-      : intensity * (0.94 + Math.sin(clock.elapsedTime * 5.7) * 0.035 + Math.sin(clock.elapsedTime * 13.1) * 0.018);
+      : intensity * (1 + (Math.sin((presentation?.time.flame ?? clock.elapsedTime) * 5.7) * .035 + Math.sin((presentation?.time.flame ?? clock.elapsedTime) * 13.1) * .018) * (presentation ? Math.min(1, presentation.motion.flame * 4) : 1));
   });
   return <pointLight ref={light} position={position} color={color} intensity={intensity} distance={distance} decay={2} />;
 });
@@ -529,6 +535,7 @@ export const FabricVeil = memo(function FabricVeil({
   reducedMotion: boolean;
   phase?: number;
 }) {
+  const presentation = useSceneLook();
   const group = useRef<THREE.Group>(null);
   const detail = useTactileDetail();
   const geometry = useMemo(() => {
@@ -543,8 +550,10 @@ export const FabricVeil = memo(function FabricVeil({
   useFrame(({ clock }) => {
     if (!group.current) return;
     if (reducedMotion) { group.current.rotation.set(...rotation); return; }
-    group.current.rotation.z = rotation[2] + Math.sin(clock.elapsedTime * 0.48 + phase) * 0.025;
-    group.current.rotation.y = rotation[1] + Math.sin(clock.elapsedTime * 0.31 + phase * 0.7) * 0.035;
+    const time = presentation ? presentation.time.cloth * 3 : clock.elapsedTime;
+    const amplitude = presentation ? Math.min(1, presentation.motion.cloth * 4) : 1;
+    group.current.rotation.z = rotation[2] + Math.sin(time * .48 + phase) * .025 * amplitude;
+    group.current.rotation.y = rotation[1] + Math.sin(time * .31 + phase * .7) * .035 * amplitude;
   });
   return (
     <group ref={group} position={position} rotation={rotation}>
@@ -577,6 +586,7 @@ export const FloatingMotes = memo(function FloatingMotes({
   radius?: number;
   height?: number;
 }) {
+  const presentation = useSceneLook();
   const points = useRef<THREE.Points>(null);
   const count = reducedEffects ? 0 : 18 + qualityStep(qualityProfile) * 18;
   const positions = useMemo(() => {
@@ -592,8 +602,9 @@ export const FloatingMotes = memo(function FloatingMotes({
   }, [count, height, radius]);
 
   useFrame((_, delta) => {
-    if (!points.current || reducedMotion) return;
-    points.current.rotation.y += Math.min(delta, 0.05) * 0.018;
+    if (!points.current) return;
+    if (!reducedMotion) points.current.rotation.y += Math.min(delta, .05) * .018 * (presentation ? presentation.motion.particles : 1);
+    (points.current.material as THREE.PointsMaterial).opacity = presentation ? Math.min(.35, presentation.motion.particles) : .72;
   });
 
   if (count === 0) return null;

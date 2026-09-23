@@ -1,3 +1,4 @@
+import { useSceneLook } from "../artDirection/SceneLookContext";
 import { memo, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
@@ -102,6 +103,8 @@ function MirrorMemorySurfaceComponent({
   reducedMotion = false,
   reducedEffects = false,
 }: MirrorMemorySurfaceProps) {
+  const presentation = useSceneLook();
+  const liveReflection = Boolean(presentation?.look.budget.reflectionSize);
   const materialRef = useRef<THREE.ShaderMaterial>(null);
   const time = useRef(0);
   const detail = useTactileDetail();
@@ -113,10 +116,10 @@ function MirrorMemorySurfaceComponent({
       uDistortion: { value: targetDistortion },
       uDeepColor: { value: new THREE.Color(warm ? "#2d1717" : "#101923") },
       uSkyColor: { value: new THREE.Color(warm ? "#a15a40" : "#7995a7") },
-      uOpacity: { value: reducedEffects ? 0.62 : 0.54 },
+      uOpacity: { value: liveReflection ? .16 : reducedEffects ? 0.62 : 0.54 },
       uDetail: { value: reducedEffects || detail === "base" ? 0 : 1 },
     }),
-    [detail, reducedEffects, targetDistortion, warm],
+    [detail, reducedEffects, targetDistortion, warm, liveReflection],
   );
 
   useFrame((_, delta) => {

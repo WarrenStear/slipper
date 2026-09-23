@@ -1,3 +1,4 @@
+import { LegacyChapterLight } from "../artDirection/LegacyChapterLight";
 import { memo } from "react";
 import {
   SceneGround,
@@ -89,9 +90,9 @@ function FireRiverChapterComponent({
         actorsEnabled={!storyActorsActive}
       />
 
-      <hemisphereLight
+      <LegacyChapterLight><hemisphereLight
         args={[surrendered ? "#d8dcda" : "#aebfc7", surrendered ? "#24221e" : "#27150f", reducedEffects ? 0.2 : 0.38]}
-      />
+      /></LegacyChapterLight>
     </group>
   );
 }

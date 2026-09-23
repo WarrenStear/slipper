@@ -1,3 +1,4 @@
+import { LegacyChapterLight } from "../artDirection/LegacyChapterLight";
 import { AuthoredNpcSilhouette } from "../environmentArt/AuthoredNpc";
 import { memo } from "react";
 import type { RenderQualityProfile } from "../renderQuality";
@@ -95,13 +96,13 @@ function RiverPathComponent({
         />
       ) : null}
       {actorsEnabled ? <SwanGuardian /> : null}
-      <pointLight
+      <LegacyChapterLight><pointLight
         position={[0, 2.4, 3.2]}
         color={resolved ? "#c5e0e4" : "#7eaec4"}
         intensity={active ? 1.35 : 0.58}
         distance={active ? 20 : 14}
         decay={2}
-      />
+      /></LegacyChapterLight>
     </group>
   );
 }

@@ -1,3 +1,4 @@
+import { useSceneLook } from "../artDirection/SceneLookContext";
 import { memo, useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
@@ -43,23 +44,25 @@ function CandleChain({ lit, reducedMotion, count }: { lit: boolean; reducedMotio
 }
 
 function WaterResponse({ position, active, washed = false, includeSoot = false, reducedMotion }: { position: [number, number, number]; active: boolean; washed?: boolean; includeSoot?: boolean; reducedMotion: boolean }) {
+  const presentation = useSceneLook();
   const rings = useRef<THREE.Group>(null);
   const soot = useRef<THREE.Mesh>(null);
   const time = useRef(0);
   useEffect(() => { time.current = 0; }, [active, washed]);
   useFrame((_, delta) => {
-    time.current += Math.min(delta, 0.05);
+    const activity = presentation ? Math.min(1, presentation.motion.water * 4) : 1;
+    time.current += Math.min(delta, 0.05) * activity;
     if (rings.current) rings.current.children.forEach((child, index) => {
       const progress = reducedMotion ? 0.4 + index * 0.15 : ((time.current * 0.13 + index * 0.23) % 1);
       child.scale.setScalar(0.5 + progress * 3.6);
       const material = (child as THREE.Mesh).material as THREE.MeshBasicMaterial;
-      material.opacity = active ? (1 - progress) * 0.19 : 0;
+      material.opacity = active ? (1 - progress) * 0.19 * activity : 0;
     });
     if (soot.current) {
       const material = soot.current.material as THREE.MeshBasicMaterial;
       const target = washed ? 0 : active ? 0.16 : 0.34;
       material.opacity += (target - material.opacity) * (1 - Math.exp(-Math.min(delta, 0.05) * 0.7));
-      if (!reducedMotion && active) soot.current.rotation.z += Math.min(delta, 0.05) * 0.02;
+      if (!reducedMotion && active) soot.current.rotation.z += Math.min(delta, 0.05) * activity * 0.02;
     }
   });
   return <group position={position} name="water-and-ash-response">
@@ -114,11 +117,12 @@ function DomesticResponse({ state, house, reducedMotion, reducedEffects }: { sta
 }
 
 function WhiteFabric({ raised, reducedMotion }: { raised: boolean; reducedMotion: boolean }) {
+  const presentation = useSceneLook();
   const cloth = useRef<THREE.Group>(null);
   useFrame(({ clock }, delta) => {
     if (!cloth.current) return;
     cloth.current.position.y += ((raised ? 2.3 : 0.8) - cloth.current.position.y) * (1 - Math.exp(-Math.min(delta, 0.05) * 0.6));
-    cloth.current.rotation.z = reducedMotion ? 0 : Math.sin(clock.elapsedTime * 0.42) * Math.max(0.008, getCurrentCinematicProfile().airMovement * 0.13);
+    cloth.current.rotation.z = reducedMotion ? 0 : Math.sin((presentation?.time.cloth ?? clock.elapsedTime) * .42) * (presentation ? presentation.motion.cloth * .13 : getCurrentCinematicProfile().airMovement * .13);
   });
   return <group position={[1, 0, 4]} name="surrender-white-fabric-response"><Beam from={[-0.7, 0, 0]} to={[-0.7, 3.4, 0]} radius={0.025} color="#6a6558" /><group ref={cloth} position={[0, raised ? 2.3 : 0.8, 0]}><mesh><planeGeometry args={[1.4, 0.85]} /><meshStandardMaterial color="#e5e4d9" roughness={1} side={THREE.DoubleSide} /></mesh></group></group>;
 }

@@ -54,6 +54,7 @@ function SanctuaryMoon({
       <MoonDisc
         position={[0, 0, 0]}
         radius={2.8}
+        authoredRadius={6.5}
         color="#dceaf4"
         intensity={1.5}
         qualityProfile={qualityProfile}

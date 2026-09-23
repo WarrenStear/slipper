@@ -1,3 +1,5 @@
+import { HeroReflectionSurface } from "../reflections/HeroReflectionSurface";
+import { useSceneLook } from "../artDirection/SceneLookContext";
 import { memo, useCallback, useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
@@ -19,6 +21,7 @@ export const NarrativeWater = memo(function NarrativeWater({
   circle = false, flow = 0, warm = false, reducedMotion = false, reducedEffects = false,
 }: NarrativeWaterProps) {
   const detail = useTactileDetail();
+  const presentation = useSceneLook();
   const time = useRef(0);
   // Never replace a compiled material's uniform objects when settings change.
   const uniforms = useMemo(() => ({ waterTime: { value: 0 }, waterDetail: { value: 1 } }), []);
@@ -42,8 +45,8 @@ export const NarrativeWater = memo(function NarrativeWater({
   }, [appearance, uniforms]);
   useFrame((_, delta) => {
     time.current = environmentTime(time.current, delta, !document.hidden, reducedMotion || reducedEffects);
-    uniforms.waterTime.value = reducedMotion || reducedEffects ? 0 : time.current;
-    uniforms.waterDetail.value = reducedEffects ? .5 : 1;
+    uniforms.waterTime.value = reducedMotion || reducedEffects ? 0 : presentation ? presentation.time.water * 3 : time.current;
+    uniforms.waterDetail.value = reducedEffects ? .5 : presentation ? Math.min(1, presentation.motion.water * 4) : 1;
   });
   return <mesh name={flow ? "directional-river-water" : "still-reflective-water"} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
     {circle ? <circleGeometry args={[width * .5, 48]} /> : <planeGeometry args={[width, depth]} />}
@@ -54,6 +57,7 @@ export const NarrativeWater = memo(function NarrativeWater({
 
 export const SanctuaryWater = memo(function SanctuaryWater({ reducedMotion, reducedEffects }: { reducedMotion: boolean; reducedEffects: boolean }) {
   return <group name="moonlit-sanctuary-water" position={[0, .01, 0]}>
-    <NarrativeWater reducedMotion={reducedMotion} reducedEffects={reducedEffects} />
+    <NarrativeWater reducedMotion={reducedMotion} reducedEffects={reducedEffects} color="#0b1720" />
+    <HeroReflectionSurface kind="moonwater" size={[20, 17]} position={[0, .012, 0]} rotation={[-Math.PI / 2, 0, 0]} />
   </group>;
 });

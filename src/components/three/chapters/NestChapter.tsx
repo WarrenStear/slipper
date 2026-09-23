@@ -1,3 +1,4 @@
+import { LegacyChapterLight } from "../artDirection/LegacyChapterLight";
 import { memo, useLayoutEffect, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
@@ -291,11 +292,11 @@ function NestChapterComponent({
         distance={isProtection ? 18 : 15}
         reducedMotion={reducedMotion}
       />
-      <directionalLight
+      <LegacyChapterLight><directionalLight
         position={[8, 11, -7]}
         color={isCycle ? "#b9aaa0" : "#ffd89f"}
         intensity={reducedEffects ? 0.42 : isProtection ? 1.02 : 0.86}
-      />
+      /></LegacyChapterLight>
     </group>
   );
 }

@@ -1,3 +1,4 @@
+import { HeroReflectionSurface } from "./HeroReflectionSurface";
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
@@ -148,6 +149,12 @@ function ReflectionDirectorComponent({
         </mesh>
       </group>
 
+      <HeroReflectionSurface kind="mirror" size={[5.4, 6]} position={[0, 0, .115]} settled={reflectionSettled} />
+      <group name="mirror-scar-retained-through-truth" position={[0, 0, .23]}>
+        <Beam from={[-.92, 2.92, 0]} to={[-.47, 1.15, 0]} radius={.009} color="#637879" opacity={.7} radialSegments={3} />
+        <Beam from={[-.47, 1.15, 0]} to={[.25, -.68, 0]} radius={.007} color="#91a3a0" opacity={.5} radialSegments={3} />
+        <Beam from={[-.47, 1.15, 0]} to={[-1.35, .42, 0]} radius={.006} color="#637879" opacity={.55} radialSegments={3} />
+      </group>
       <AlternateReflectedLandmark truthful={isTruthful} still={reflectionSettled} />
       <group ref={apparitionRef} position={[-0.72, -2.17, 0.185]} visible={!reducedEffects || isWarning}>
         <ReflectionApparition apparition />

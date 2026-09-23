@@ -1,3 +1,4 @@
+import { LegacyChapterLight } from "../artDirection/LegacyChapterLight";
 import { AuthoredNpcSilhouette } from "../environmentArt/AuthoredNpc";
 import { TimberAssembly, Upholstery, WritingDesk, ShelvedBooks } from "./ChapterArt";
 import { TactileMaterial } from "../storyEvents/TactileMaterial";
@@ -944,7 +945,7 @@ export const IntegratedFinalTableau = memo(function IntegratedFinalTableau({
       <QuietSeer />
       <DistantThornedHouse reducedEffects={reducedEffects} />
 
-      <hemisphereLight args={["#b5cad5", "#111513", reducedEffects ? 0.34 : 0.5]} />
+      <LegacyChapterLight><hemisphereLight args={["#b5cad5", "#111513", reducedEffects ? 0.34 : 0.5]} /></LegacyChapterLight>
       <ChapterLightRig family="lantern-epilogue" reducedMotion={reducedMotion} reducedEffects={reducedEffects} />
     </group>
   );

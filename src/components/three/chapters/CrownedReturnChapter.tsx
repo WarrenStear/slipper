@@ -1,3 +1,4 @@
+import { LegacyChapterLight } from "../artDirection/LegacyChapterLight";
 import { memo, useMemo } from "react";
 import {
   Beam,
@@ -111,7 +112,11 @@ function IntentionallyUnusedSpace() {
 
 function KylieProtectiveShell() {
   const walls = useMemo<ConstructionPiece[]>(() => [
-    { position: [0, 3.1, 10.9], size: [14, 6.2, .34] },
+    // Actual openings around the two windows let sky and grazing light enter.
+    { position: [0, 1.0125, 10.9], size: [14, 2.025, .34] },
+    { position: [0, 5.3375, 10.9], size: [14, 1.725, .34] },
+    { position: [0, 3.25, 10.9], size: [6.35, 2.45, .34] },
+    ...[-6.1125, 6.1125].map(x => ({ position: [x, 3.25, 10.9] as [number, number, number], size: [1.775, 2.45, .34] as [number, number, number] })),
     ...[-7, 7].map(x => ({ position: [x, 3.1, 6] as [number, number, number], size: [.34, 6.2, 10] as [number, number, number] })),
   ], []);
   const roof = useMemo<ConstructionPiece[]>(() => [-1, 1].map(side => ({ position: [side * 3.15, 7.35, 6], rotation: [0, 0, side * -.43], size: [8.3, .34, 10.7] })), []);
@@ -147,11 +152,11 @@ function KylieInnerHome({ qualityProfile, reducedEffects, reducedMotion, soverei
       <group name="home-open-light-windows" userData={{ atmosphere: "open-light" }}>
         {[-4.2, 4.2].map((x) => (
           <group key={x} position={[x, 3.25, 10.67]}>
-            <mesh rotation={[0, Math.PI, 0]}><planeGeometry args={[2.05, 2.45]} /><meshBasicMaterial color="#d5c4a2" transparent opacity={.48} toneMapped={false} /></mesh>
+            <mesh rotation={[0, Math.PI, 0]}><planeGeometry args={[2.05, 2.45]} /><meshStandardMaterial color="#c6d1cf" transparent opacity={.09} roughness={.18} depthWrite={false} side={2} /></mesh>
             <WindowJoinery width={2.05} height={2.45} />
           </group>
         ))}
-        <pointLight position={[0, 5.2, 4.6]} color="#ffe0a8" intensity={reducedEffects ? 0.62 : 1.04} distance={15} />
+        <LegacyChapterLight><pointLight position={[0, 5.2, 4.6]} color="#ffe0a8" intensity={reducedEffects ? 0.62 : 1.04} distance={15} /></LegacyChapterLight>
       </group>
       <group name="home-reflection-gallery">
         <ReflectivePanel position={[-1.75, 3.22, 10.66]} rotation={[0, Math.PI, 0]} size={[2.5, 4.6]} warm />
@@ -190,7 +195,7 @@ function CrownedReturnChapterComponent({ scene, qualityProfile, reducedEffects, 
     <group>
       <SceneGround radius={24} color="#75694a" />
       <StonePath color="#a49a7f" count={13} length={22} />
-      <directionalLight position={[-9, 13, -8]} color="#ffe1a9" intensity={reducedEffects ? 0.62 : 1.08} />
+      <LegacyChapterLight><directionalLight position={[-9, 13, -8]} color="#ffe1a9" intensity={reducedEffects ? 0.62 : 1.08} /></LegacyChapterLight>
       {atThreshold ? (
         <group
           name="crowned-gate-recognises-accumulated-state"

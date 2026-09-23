@@ -1,3 +1,4 @@
+import { getCurrentCinematicProfile, isCinematicProfileActive } from "../../cinematics/emotionalCinematography";
 import { useSettingsStore } from "../../stores/useSettingsStore";
 import { useEffect, useMemo, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
@@ -238,7 +239,9 @@ export function MasterPlayerLantern({
     const phaseMovement = narrativePhase?.movement ?? 0.2;
     const instability = clamp01(director.instability * 0.58 + (1 - phaseStability) * 0.42);
     const steadiness = clamp01(director.steadiness * 0.72 + phaseStability * 0.28);
-    const motionScale = (reducedMotion ? 0 : reducedEffects ? 0.12 : 1) * (0.38 + phaseMovement * 0.62);
+    const air = isCinematicProfileActive() ? getCurrentCinematicProfile().airMovement : 1;
+    const environmentalMotion = air < .01 ? 0 : Math.min(1, air * 5);
+    const motionScale = environmentalMotion * (reducedMotion ? 0 : reducedEffects ? 0.12 : 1) * (0.38 + phaseMovement * 0.62);
     const baseX = compactPortrait ? 0.14 : BASE_LOCAL_POSITION.x;
     const baseY = compactPortrait ? -0.28 : BASE_LOCAL_POSITION.y;
     const baseZ = compactPortrait ? -1.12 : BASE_LOCAL_POSITION.z;
@@ -343,7 +346,7 @@ export function MasterPlayerLantern({
       const width = (0.92 + (flamePulse - 1) * 1.4 * flickerScale + pressure * 0.018) * activeScale;
       const height = (0.94 + (flamePulse - 1) * 2.6 * flickerScale + pressure * 0.026) * activeScale;
       flame.scale.set(width, height, width);
-      flame.rotation.y = reducedMotion || reducedEffects ? 0 : Math.sin(elapsed * 2.3) * 0.08;
+      flame.rotation.y = reducedMotion || reducedEffects ? 0 : Math.sin(elapsed * 2.3) * 0.08 * environmentalMotion;
     }
 
     const glow = glowRef.current;
@@ -358,7 +361,7 @@ export function MasterPlayerLantern({
 
     const glass = glassRef.current;
     if (glass) {
-      glass.rotation.y = reducedMotion ? 0 : Math.sin(elapsed * 0.4) * 0.055;
+      glass.rotation.y = reducedMotion ? 0 : Math.sin(elapsed * 0.4) * 0.055 * environmentalMotion;
       materials.glass.opacity = THREE.MathUtils.clamp((0.13 + depth * 0.035 - pressure * 0.02) * activeScale, 0, 0.18);
     }
   });

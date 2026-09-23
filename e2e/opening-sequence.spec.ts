@@ -1,11 +1,18 @@
 import { expect, test, type Page } from "@playwright/test";
 import { readCinematicStory } from "./cinematic-story-controls";
 
+const openingQuality = process.env.PLAYWRIGHT_OPENING_QUALITY ?? "low";
+// A requested tier must exercise its passes: reduced-motion defaults also
+// enable reduced effects in the application and would silently test a fallback.
+const fullEffects = Boolean(process.env.PLAYWRIGHT_OPENING_QUALITY);
+
 async function begin(page: Page, resume = false) {
   await page.bringToFront();
   await expect(page.locator(".onboarding-gate")).toHaveAttribute("aria-busy", "false");
   await page.getByRole("button", { name: resume ? "Continue the Journey" : "Begin", exact: true }).click();
   await expect(page.locator("canvas").first()).toBeVisible({ timeout: 30_000 });
+  await expect(page.locator("html")).toHaveAttribute("data-effects", fullEffects ? "full" : "reduced");
+  await expect.poll(() => page.evaluate(() => localStorage.getItem("sidtw-render-quality"))).toBe(openingQuality);
   // Canvas fallback children mount even with working WebGL; an invisible modal
   // there would make the rendered forest inert and swallow physical gestures.
   await expect(page.locator("canvas dialog")).toHaveCount(0);
@@ -54,8 +61,8 @@ test("opening sequence keeps floor input, restores the earned reveal, then hands
   page.on("request", request => {
     if (new URL(request.url()).pathname.startsWith("/visuals/")) linkedPhotoRequests.push(request.url());
   });
-  await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.goto("/?quality=low", { waitUntil: "domcontentloaded" });
+  await page.emulateMedia({ reducedMotion: fullEffects ? "no-preference" : "reduce" });
+  await page.goto(`/?quality=${openingQuality}`, { waitUntil: "domcontentloaded" });
   await begin(page);
   const canvas = page.locator("canvas").first();
   await expect(canvas).toHaveAttribute("data-opening-rendered-stage", "0", { timeout: 30_000 });
@@ -107,8 +114,8 @@ test("opening sequence captures rendered stages without sharing the functional t
   test.setTimeout(180_000);
   const errors: string[] = [];
   page.on("pageerror", error => errors.push(error.message));
-  await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.goto("/?quality=low", { waitUntil: "domcontentloaded" });
+  await page.emulateMedia({ reducedMotion: fullEffects ? "no-preference" : "reduce" });
+  await page.goto(`/?quality=${openingQuality}`, { waitUntil: "domcontentloaded" });
   await begin(page);
   const canvas = page.locator("canvas").first();
   await expect(canvas).toHaveAttribute("data-opening-rendered-stage", "0", { timeout: 30_000 });
