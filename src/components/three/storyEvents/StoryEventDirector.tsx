@@ -170,7 +170,8 @@ export function StoryEventDirector({ sceneId, reducedMotion, enabled = true }: {
       if (state.event.trigger === "wipe" ? physicalWipe : state.length < 22) dispatch(state.event);
     };
     const key = (event: KeyboardEvent) => {
-      if (!canInput() || event.repeat || (event.target instanceof HTMLElement && event.target.closest("button,input,textarea,select"))) return;
+      if (!canInput() || event.repeat || event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey || event.isComposing) return;
+      if (event.target instanceof HTMLElement && (event.target.isContentEditable || event.target.closest("button,input,textarea,select"))) return;
       if (event.code === "KeyE" && focusRef.current) {
         cancelStoryPointerGesture(gesture.current);
         cancelFloorStroke();

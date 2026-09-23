@@ -203,9 +203,10 @@ export function RitualInteraction({
   useEffect(() => {
     if (!ritual || !available) return;
     const keyDown = (event: KeyboardEvent) => {
+      if (event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey || event.isComposing) return;
       if (event.code !== "KeyE" || event.repeat) return;
-      const target = event.target as HTMLElement | null;
-      if (target?.closest("input, textarea, select, [contenteditable='true']")) return;
+      const target = event.target;
+      if (target instanceof HTMLElement && (target.isContentEditable || target.closest("button, input, textarea, select"))) return;
       if (ritual.inputMode === "stillness") {
         if (!assistedStillness) return;
         event.preventDefault();

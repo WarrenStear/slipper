@@ -146,7 +146,9 @@ test("the next-step view preserves the emotional moment and keyboard context", a
   await expect(guide.locator(".guided-story__intention")).toBeFocused();
   const earned = (await readCinematicStory(page)).completedStoryEventIds;
   await page.getByRole("button", { name: "Settings", exact: true }).focus();
-  await page.evaluate(() => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "instant" }));
+  // The accessible journey owns scrolling; the viewport-height document does
+  // not scroll in every engine. Exercise the same panel a reader scrolls.
+  await page.locator(".accessible-story-journey").evaluate(element => element.scrollTo({ top: element.scrollHeight, behavior: "instant" }));
   await expect(guide.locator(".guided-story__intention")).not.toBeInViewport();
   await expect(guide).toHaveAttribute("data-aftermath-readable", "false");
   await page.waitForTimeout(4100);

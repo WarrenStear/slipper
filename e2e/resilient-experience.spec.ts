@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { completedStoryJourney, seedStoryJourney } from "./story-first-fixtures";
+import { readCinematicStory } from "./cinematic-story-controls";
 
 test.beforeEach(async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
@@ -48,6 +49,27 @@ test("storage quota failure keeps the story and settings interactive", async ({ 
   await page.getByRole("button", { name: "Settings", exact: true }).last().click();
   await page.getByRole("button", { name: "High contrast" }).click();
   await expect(page.getByRole("button", { name: "High contrast" })).toHaveAttribute("aria-pressed", "true");
+  expect(errors).toEqual([]);
+});
+
+test("settings stays reachable during the 3D opening and preserves progress in text mode", async ({ page }, testInfo) => {
+  test.skip(!testInfo.project.name.includes("chromium"), "The physical opening uses the Chromium WebGL projects.");
+  test.setTimeout(90_000);
+  const errors: string[] = [];
+  page.on("pageerror", error => errors.push(error.message));
+  await page.goto("/?quality=low");
+  await page.getByRole("button", { name: "Begin", exact: true }).click();
+  await expect(page.locator("canvas").first()).toHaveAttribute("data-opening-rendered-stage", "0", { timeout: 30_000 });
+  await page.locator("button[data-story-event-id='broken-floor.first-wipe']").click();
+  await expect.poll(async () => (await readCinematicStory(page)).completedStoryEventIds.includes("broken-floor.first-wipe")).toBe(true);
+  const earned = (await readCinematicStory(page)).completedStoryEventIds;
+  await page.getByRole("button", { name: "Settings", exact: true }).click();
+  await expect(page.getByRole("dialog", { name: "Experience settings" })).toBeVisible();
+  await page.getByRole("button", { name: "Continue with text journey" }).click();
+  await expect(page).toHaveURL(/accessible=1/);
+  await expect(page.locator("[data-accessible-journey='true']")).toBeVisible();
+  expect((await readCinematicStory(page)).completedStoryEventIds).toEqual(earned);
+  await expect(page.locator("canvas, vite-error-overlay")).toHaveCount(0);
   expect(errors).toEqual([]);
 });
 

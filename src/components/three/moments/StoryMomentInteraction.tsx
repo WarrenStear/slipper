@@ -338,6 +338,7 @@ export function StoryMomentInteraction({
     const keyCodes = action.keyCodes ?? ["KeyE"];
 
     const keyDown = (event: KeyboardEvent) => {
+      if (event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey || event.isComposing) return;
       if (!keyCodes.includes(event.code) || isTypingTarget(event.target)) return;
       event.preventDefault();
       heldKeysRef.current.add(event.code);
