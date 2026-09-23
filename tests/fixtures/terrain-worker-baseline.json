@@ -1,0 +1,114 @@
+{
+  "revision": "d933acfe57bc92f08473b39bc7c396c1ef61d55b",
+  "description": "Unmodified GitHub baseline worker Float32 output and public Float64 elevation/influence samples; six biomes, three cells/morphs, eighteen curve seeds. Captured from the byte-identical local import 0e17af9.",
+  "cases": {
+    "firstWood-cell--2,1-morph-0": {
+      "positions": "be5190c20175b019668943ed5d9e3313f6d711814b625c7e7b689a0939ac5814",
+      "colors": "36ae5fb5e119a79926a251346403692679eafd6b4eb7880c71e298bc24948b45",
+      "habitat": "75f1129c681bce2085025ad9afd18fc841b6155e3224758401a00aeff0e4ffde",
+      "samples": "10e0bb0bc82217d02a2ca56bebbbacdfcd5e5220f90e8433f27e2d98c94b4078"
+    },
+    "firstWood-cell-0,0-morph-1": {
+      "positions": "4eaa4e91153b5931e7589e6b49cdb022be9286f24e5887c5b1fea7def1f07478",
+      "colors": "e22897d1a2fbe966e7d5eebedf608eba6a702cfef5de224b76ed03c539eaf825",
+      "habitat": "44c8786e0b8732a39ca0fd7b0540980b811c0918bf41dfc56d754ef2887f6ee7",
+      "samples": "52ee23652ea7da6ae71909751edc1b99fe1102c07f68ae87016b1ffef31f7ec3"
+    },
+    "firstWood-cell-2,-1-morph-2": {
+      "positions": "e9e1e580ec7a3d8461a75e84e9867de578d0339d09bf65f248042e63386f4f6a",
+      "colors": "96a6e43a00ae43fb7dd8c81c2b73db59c1a1c5573c8d1bd4e61d39be6fd7eb1e",
+      "habitat": "b8945fb339e8f22d74899062bdabf7313eae22a0e694e43f9cdfce4765e352fe",
+      "samples": "929e3192fb2d6619af6ea15dc8348df60b80c9a3709b5049658e55d8a4543a6e"
+    },
+    "mirror-cell--2,1-morph-0": {
+      "positions": "6254d4229e478b9edd4b248a01fe279395aa2dbded0240af4323649bea3ae0c9",
+      "colors": "8066c0febd077791ce78138f5f12adb6eda0e69bf2f3e7a03e7edfa6a40d09de",
+      "habitat": "f19f02c9de82b7c56c456cb8f83049fe7242f6efe4cf9830378070fd3431b7de",
+      "samples": "cd42cae7797bcd9efc736ec9f67ae0dea293af1109f1cd3b17edbb3f270c037b"
+    },
+    "mirror-cell-0,0-morph-1": {
+      "positions": "322e4567930451d695c3dbb0d2527dbf86628dfee7b869fe145b9c2ff3bc14eb",
+      "colors": "476bd250b8925bc89a34bac5463fb866f97c119011619d72fdd73bcc52da9475",
+      "habitat": "fd280550f9d3596f96a6dcf1d7c08e9fd647baf4ca457c5bfb64ec3826d220ee",
+      "samples": "e782941739715ac4e6380913c3cbed12471adebd4bc4fe5f914e5cf82a749225"
+    },
+    "mirror-cell-2,-1-morph-2": {
+      "positions": "1ca58838a125ae92b240afb605556acbe4eb0e852f14732a03d77d25378627c3",
+      "colors": "ee84989475b6017962c838edced66d247538330423718a84ce26562debc81133",
+      "habitat": "b49d58a93e5a49da372bcaf677b39fc37b75f1786c02f567fd418cd98ed2ba4a",
+      "samples": "7f652554e7fdfb23d07e8a8a07437d98e98e8f103039f99c21ca46e5621d010d"
+    },
+    "thorned-cell--2,1-morph-0": {
+      "positions": "a0a6df82aba05c034c0e8ff12f0a4378b1f27a3328a237180f07bf4be316a0e6",
+      "colors": "ae8788bbcb3cd59ac6fce8b086dafb40c8f841a71efb9e39be4828b8537be33a",
+      "habitat": "2df735b288a802d08efd72f803823d8549fb76399bca813245f4ba551a91b9d9",
+      "samples": "a9c1f42bbb3cdb210a2071400646db43d47a50868b152983c280a8fbef9dfdaa"
+    },
+    "thorned-cell-0,0-morph-1": {
+      "positions": "e24e2f992fd56ec1feab2fffb753daa883993ec3bb6506b034b8ef49172db8d7",
+      "colors": "f1e35482eb1a347d1333dda68e5e63e23ddbd674f64e490694fbb96755ec7808",
+      "habitat": "d72c2b32f2ad9cb2e24b33d17d2554e4cbfa0da12f414af016a25e6416ed866f",
+      "samples": "a172c5487f0bcb4e871694b901032a149f467adb00c0c53c24051c52794bda4b"
+    },
+    "thorned-cell-2,-1-morph-2": {
+      "positions": "ea5001095d84b04f42551eaee144b1720a2a631f51bdc35a9a44160ffbea5ccb",
+      "colors": "98e869265070b462fa268013b28ab841ef24d8d670d70bac38579a61267b738d",
+      "habitat": "458a37504d5aca20c94efc860b7fd2ef45fabeeff0a6a38ae685a3b756e8686d",
+      "samples": "13d9d50044326adf49adfe809178d249d7225ae83743df75ce0d103175ab6f5d"
+    },
+    "archive-cell--2,1-morph-0": {
+      "positions": "abbea3cc93eca761069fe87d8ef1964a8239c2b91535930480396531f09ca4c7",
+      "colors": "c933b579ddeecc9b57e32e2dfe672beae07ce0ee9881755dba2ca2d6faf4ab59",
+      "habitat": "9a96d095669ec1a7cdf9ef218db34ea1ed3f1a22b72e67c71d7719b8cb668a0c",
+      "samples": "a8947bed9980979393d53ede069280955f2a09d2fa38dbb279cc792d29159b7f"
+    },
+    "archive-cell-0,0-morph-1": {
+      "positions": "b6484ad90b53bfbca9d21df4b276ab1739da24c37353d93195797159770b2863",
+      "colors": "04a9724add68b7d857d2e00349e29321f99a9b18191dcc57a3ea28319bc43d4f",
+      "habitat": "731babb6ef5e75f55fb26b107af7678f738394d164d143af39ff96b626366c7e",
+      "samples": "5fe0d176d87c5e4802ecf70758dfa57cb87b5eb74220117ea7abb9c93362762f"
+    },
+    "archive-cell-2,-1-morph-2": {
+      "positions": "586d75749a0679fb917720490eeb2c034cc3afb2524f49eccb5038e1dca38638",
+      "colors": "0b8ea2b216301ee35e050ffde37a847ea40fa9a1159569459e6899849519a61e",
+      "habitat": "4e4b6ca3ec204d60539782636e68e01f10bc5b5feaf3edf37ce00a23a64665ad",
+      "samples": "48b22454ab70ca7286bc8b15c07f7e805230b726a4680d6be63afeb27c138bbb"
+    },
+    "fireRiver-cell--2,1-morph-0": {
+      "positions": "1542911ac61b63e3399835a8bd3e06dfd2c56ac5ca0859428db0b17c9430c5a1",
+      "colors": "e9f9cd04d404c2978711d70fd548bd1cd9d29ff7b9d72b801ec537976aef015d",
+      "habitat": "a93691af180ee40625c21095ed7ad1b2f8a880751d08277b717d53e9d430a358",
+      "samples": "fcef5854a260f009275399a3a011b472f8a67e8435300bfd4f98dc803c7e985a"
+    },
+    "fireRiver-cell-0,0-morph-1": {
+      "positions": "2ec57ead11089820bcbb13fb740acfdbb6cb6d933ca79752e48af74a7777da00",
+      "colors": "8fd03a0fee79c6310e85046ea02e78479d01368d752b84162ee7ea017245c7f7",
+      "habitat": "44e97f6dc5853fb5bf436428c7b764da5922e6b5abc8ab36016c6d2b39d98827",
+      "samples": "05128062e19aeb9e77d0066402b28a585f43a6311b6ce7ca57f02f73a8273474"
+    },
+    "fireRiver-cell-2,-1-morph-2": {
+      "positions": "a2f5246480c89f15538992681ab6ef5d3e99605ca7e9d654974eddba0582899a",
+      "colors": "021486f18168340270673e0b5c5650f5db59c200108c78be2b17448db173a83c",
+      "habitat": "cf9efae7d36ac16ea75af51182b5c9991f75764f99b8bcdc1ad992d871846c02",
+      "samples": "96657420d704362faf4bd42715b4e2a77530efaa4191201e34ec6e394a26759b"
+    },
+    "crowned-cell--2,1-morph-0": {
+      "positions": "abcec3fcce6cc555404cdae9f88a1330578195dee199d5584916ec198b9ea15b",
+      "colors": "95a095ee8f1ba51b715ca3a2c1ccd1cf0f0bdc4f24054f5dddadfb7a9de88bfb",
+      "habitat": "1fb248d80e321c88279abf76b988022cd92d77dddb8d8ef40fb36f3b07d7a1fe",
+      "samples": "13bed7ce9b3448943b046920ff8c9d5b2c39dd1919199492adfd2873dbc98e61"
+    },
+    "crowned-cell-0,0-morph-1": {
+      "positions": "88ce63eb50aa98428317e89b860b6f689dec24df30889af0b95ab7e3c4404162",
+      "colors": "3dcf076a98a157a0298f0a7caa999a65cc8b193bb2426da716a558f6d353615d",
+      "habitat": "1392d31f620ca1297d74457370d147dd48f0e7cab364009429c7872aa1c21e6e",
+      "samples": "32a3250c151348e6f9c8f037c46e85e7e04956ec739b92c1657019bf1c05c571"
+    },
+    "crowned-cell-2,-1-morph-2": {
+      "positions": "ad632065a4e2f4f1bbf2a7262603312e3ea8b7d8e2754d9d077b7b448701e29a",
+      "colors": "d4fe6323e0afc74a04e54126420e65cadbde029525558658d8c1a5c584310835",
+      "habitat": "4f3151dbfefe2f3fabebca4546cf69a765c14246163b2abc33f5ace4c41530fc",
+      "samples": "f3663a2fe5dd9ac676643cf3e156c7a8e5861910d9dd863ff6198fcb5a0ec2e9"
+    }
+  }
+}

@@ -14,8 +14,7 @@ export function createChairGeometry() {
     parts.push(createSweptGeometry([[x * 1.09, .005, z * 1.09], [x * 1.05, .19, z * 1.05], [x, .49, z]], [.024, .028, .035], 8, 8));
   }
   for (const x of [-.25, .25]) parts.push(createSweptGeometry([[x, .21, -.24], [x, .2, 0], [x, .21, .24]], [.014, .012, .014], 6, 8));
-  // ExtrudeGeometry is non-indexed; normalise before the single material merge.
-  return mergeArtGeometries(parts.map(part => { if (!part.index) return part; const expanded = part.toNonIndexed(); part.dispose(); return expanded; }));
+  return mergeArtGeometries(parts);
 }
 
 export function createNestGeometries(detail: ArtDetail = "base") {

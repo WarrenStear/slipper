@@ -19,9 +19,47 @@ function finish(positions: number[], indices: number[], uvs: number[]) {
   return geometry;
 }
 
+/** Recover exact vertex sharing without welding distinct normals or UV seams. */
+function indexExactAttributes(geometry: THREE.BufferGeometry) {
+  if (geometry.index) return;
+  const attributes = Object.entries(geometry.attributes);
+  const originals: number[] = [], indices: number[] = [];
+  const vertices = new Map<string, number>();
+  for (let vertex = 0; vertex < geometry.getAttribute("position").count; vertex++) {
+    let key = "";
+    for (const [, attribute] of attributes) {
+      if (!(attribute instanceof THREE.BufferAttribute)) throw new Error("Authored geometry requires separate buffer attributes.");
+      for (let component = 0; component < attribute.itemSize; component++) {
+        const value = attribute.array[vertex * attribute.itemSize + component];
+        key += `${Object.is(value, -0) ? "-0" : value},`;
+      }
+    }
+    let index = vertices.get(key);
+    if (index === undefined) {
+      index = originals.length;
+      vertices.set(key, index); originals.push(vertex);
+    }
+    indices.push(index);
+  }
+  for (const [name, attribute] of attributes) {
+    if (!(attribute instanceof THREE.BufferAttribute)) continue;
+    const compact = attribute.array.slice(0, originals.length * attribute.itemSize);
+    for (let vertex = 0; vertex < originals.length; vertex++) {
+      const source = originals[vertex] * attribute.itemSize;
+      for (let component = 0; component < attribute.itemSize; component++) {
+        compact[vertex * attribute.itemSize + component] = attribute.array[source + component];
+      }
+    }
+    geometry.setAttribute(name, new THREE.BufferAttribute(compact, attribute.itemSize, attribute.normalized));
+  }
+  geometry.setIndex(indices);
+}
+
 /** Consume temporary pieces and return one owned, single-material geometry. */
 export function mergeArtGeometries(pieces: THREE.BufferGeometry[]) {
   if (!pieces.length) return finish([], [], []);
+  // Extruded shapes arrive non-indexed; keep the other pieces' existing indices.
+  for (const piece of pieces) indexExactAttributes(piece);
   const geometry = mergeGeometries(pieces, false);
   for (const piece of pieces) piece.dispose();
   if (!geometry) throw new Error("Incompatible authored geometry attributes.");
@@ -89,9 +127,9 @@ export function createSweptGeometry(points: ArtVec3[], radii: number[], sides = 
   return finish(positions, indices, uvs);
 }
 
-export function createTaperedBranchGeometry(points: ArtVec3[], radius: number, seed = 0, sides = 6) {
+export function createTaperedBranchGeometry(points: ArtVec3[], radius: number, seed = 0, sides = 6, segments = Math.min(24, Math.max(8, points.length * 4))) {
   const r = Math.max(.0001, Math.min(10, Math.abs(finite(radius, .02))));
-  return createSweptGeometry(points, [r, r * (.85 + artNoise(seed, 2) * .1), r * .62, r * .35, r * .035], sides, Math.min(24, Math.max(8, points.length * 4)));
+  return createSweptGeometry(points, [r, r * (.85 + artNoise(seed, 2) * .1), r * .62, r * .35, r * .035], sides, segments);
 }
 
 /** Revolved authored cross-sections. Coordinates are [height, radiusX, radiusZ, offsetZ]. */
@@ -102,7 +140,12 @@ export function createSectionGeometry(sections: [number, number, number, number]
     for (let side = 0; side < around; side++) {
       const angle = side / around * TAU;
       positions.push(Math.cos(angle) * rx, y, Math.sin(angle) * rz + z); uvs.push(side / around, row / (sections.length - 1));
-      if (row < sections.length - 1) { const i = row * around + side, next = row * around + (side + 1) % around; indices.push(i, i + around, next, next, i + around, next + around); }
+      if (row < sections.length - 1) {
+        const i = row * around + side, next = row * around + (side + 1) % around;
+        // A zero-radius ring is a pole: one half of each quad has no area.
+        if (rx !== 0 || rz !== 0) indices.push(i, i + around, next);
+        if (sections[row + 1][1] !== 0 || sections[row + 1][2] !== 0) indices.push(next, i + around, next + around);
+      }
     }
   });
   return finish(positions, indices, uvs);
@@ -126,12 +169,13 @@ export function createFlameGeometry(radius = .05, height = .16) {
 }
 
 /** A folded lanceolate leaf with an actual pointed outline and central rib. */
-export function createLeafGeometry(length = .3, width = .1, curl = .04) {
+export function createLeafGeometry(length = .3, width = .1, curl = .04, segments = 8) {
+  const rows = Math.max(4, Math.min(16, Math.floor(finite(segments, 8))));
   const positions: number[] = [], indices: number[] = [], uvs: number[] = [];
-  for (let row = 0; row <= 8; row++) {
-    const t = row / 8, span = Math.sin(Math.PI * t) ** .8 * width;
+  for (let row = 0; row <= rows; row++) {
+    const t = row / rows, span = Math.sin(Math.PI * t) ** .8 * width;
     for (const side of [-1, 0, 1]) { positions.push(span * side, Math.sin(t * Math.PI) * curl + Math.abs(side) * curl * .3, t * length); uvs.push((side + 1) / 2, t); }
-    if (row < 8) for (let side = 0; side < 2; side++) { const i = row * 3 + side; indices.push(i, i + 3, i + 1, i + 1, i + 3, i + 4); }
+    if (row < rows) for (let side = 0; side < 2; side++) { const i = row * 3 + side; indices.push(i, i + 3, i + 1, i + 1, i + 3, i + 4); }
   }
   return finish(positions, indices, uvs);
 }

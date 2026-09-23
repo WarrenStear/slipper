@@ -13,12 +13,11 @@ import type {
   WorkerBiome,
 } from "./forestWorker.types";
 import {
+  createTerrainPointSampler,
   createTerrainSurfaceSampler,
   resolveTerrainShapeTuning as resolveWorldShapeTuning,
-  sampleTerrainElevation as terrainElevationAtPoint,
   sampleTerrainNoise as terrainNoiseAtPoint,
   terrainDistanceToPathSq as distancePointToSegmentSq,
-  terrainWalkableInfluenceAtPoint as walkableInfluenceAtPoint,
 } from "../lib/terrainModel.ts";
 
 const CHAPTER_MIRROR_CLEARING = "The Mirror Clearing";
@@ -151,15 +150,17 @@ export function generateTerrain(request: GenerateTerrainWorkerRequest): Generate
   const [baseR, baseG, baseB] = hexToRgb01(config.groundColor);
   const half = config.terrainSize * 0.5;
   const step = config.terrainSize / grid;
-  const tuning = resolveWorldShapeTuning(config);
+  const samplePoint = createTerrainPointSampler(config);
+  const point = { elevation: 0, walkableInfluence: 0 };
 
   let cursor = 0;
   for (let iz = 0; iz <= grid; iz += 1) {
     const z = iz * step - half;
     for (let ix = 0; ix <= grid; ix += 1) {
       const x = ix * step - half;
-      const lift = terrainElevationAtPoint(x, z, config);
-      const walkable = walkableInfluenceAtPoint(x, z, config, tuning);
+      samplePoint(x, z, point);
+      const lift = point.elevation;
+      const walkable = point.walkableInfluence;
       const noise = terrainNoiseAtPoint(x + 19.2, z - 13.5, config.explorationDepth, config.memoryPressure);
       const shade = clamp(0.94 + noise * 0.025 + walkable * 0.008, 0.86, 0.99);
       const offset = cursor * 3;

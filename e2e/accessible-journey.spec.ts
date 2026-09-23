@@ -2,6 +2,10 @@ import { expect, test } from "@playwright/test";
 import { completeNextCinematicEvent, readCinematicStory } from "./cinematic-story-controls";
 
 test("advances the canonical story without WebGL while prose stays veiled", async ({ page }) => {
+  const imageRequests: string[] = [];
+  page.on("request", (request) => {
+    if (request.resourceType() === "image") imageRequests.push(request.url());
+  });
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.addInitScript(() => {
     Object.defineProperty(HTMLCanvasElement.prototype, "getContext", {
@@ -37,6 +41,9 @@ test("advances the canonical story without WebGL while prose stays veiled", asyn
   await page.locator("[data-accessible-witness='fragment-008']").click();
   await expect(page.getByText("Guilty of feeding the fantasy", { exact: false })).toBeVisible();
   await expect(page.locator("canvas")).toHaveCount(0);
+  // The text journey has no linked-photo surface, even after advancing scenes.
+  // Do not spend a reader's bandwidth preloading legacy 3D image panels.
+  expect(imageRequests.filter((url) => new URL(url).pathname.startsWith("/visuals/"))).toEqual([]);
 });
 
 test("completes every canonical text scene and records the Heart and Womb choices", async ({ page }) => {

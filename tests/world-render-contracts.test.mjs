@@ -417,7 +417,9 @@ test("terrain rendering, grounding, and collision share one explicit surface", (
   assert.doesNotMatch(scene, /colliders="trimesh"/);
   assert.doesNotMatch(scene, /crownRampSegments|buildCrownRampSegments/);
   assert.match(worker, /createTerrainSurfaceSampler/);
-  assert.match(worker, /sampleTerrainElevation as terrainElevationAtPoint/);
+  assert.match(worker, /createTerrainPointSampler,[\s\S]*from "\.\.\/lib\/terrainModel\.ts"/);
+  assert.match(worker, /const samplePoint = createTerrainPointSampler\(config\)/);
+  assert.match(worker, /samplePoint\(x, z, point\)/);
   assert.match(layout, /createTerrainSurfaceSampler/);
   assert.doesNotMatch(ground, /WorldGroundShader|shaderMaterial|planeGeometry/);
   assert.match(ground, /positions\[\(row \+ 0\) \* 3 \+ 2\] = t - 0\.5/);

@@ -28,6 +28,8 @@ the shared construction toolkit, forest and surface upgrades, chapter applicatio
 quality gates, visual-review commands and remaining production asset work.
 The [validation record](docs/PRODUCTION_ART_VALIDATION.md) contains matched
 before/after renderer measurements, test results and the limits of the evidence.
+The subsequent [production optimization notes](docs/PRODUCTION_OPTIMIZATION.md)
+measure terrain CPU savings, smaller geometry buffers and avoided image downloads.
 
 ## Current package status
 

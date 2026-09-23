@@ -402,8 +402,6 @@ export function sampleTerrainElevation(
   z: number,
   config: TerrainSamplerConfig,
 ) {
-  const memoryPressure = clampTerrainUnit(config.memoryPressure);
-  const explorationDepth = clampTerrainUnit(config.explorationDepth);
   const tuning = resolveTerrainShapeTuning(config);
   const walkableInfluence = terrainWalkableInfluenceAtPoint(
     x,
@@ -411,6 +409,43 @@ export function sampleTerrainElevation(
     config,
     tuning,
   );
+  return terrainElevationWithInfluence(x, z, config, tuning, walkableInfluence);
+}
+
+export type TerrainPointSample = {
+  elevation: number;
+  walkableInfluence: number;
+};
+
+/**
+ * Prepares one immutable terrain configuration for a batch of point samples.
+ * Reusing the caller's result avoids allocating an object for every vertex,
+ * while sharing each walkable influence between elevation and surface masks.
+ */
+export function createTerrainPointSampler(config: TerrainSamplerConfig) {
+  const tuning = resolveTerrainShapeTuning(config);
+  return (x: number, z: number, result: TerrainPointSample) => {
+    result.walkableInfluence = terrainWalkableInfluenceAtPoint(x, z, config, tuning);
+    result.elevation = terrainElevationWithInfluence(
+      x,
+      z,
+      config,
+      tuning,
+      result.walkableInfluence,
+    );
+    return result;
+  };
+}
+
+function terrainElevationWithInfluence(
+  x: number,
+  z: number,
+  config: TerrainSamplerConfig,
+  tuning: TerrainShapeTuning,
+  walkableInfluence: number,
+) {
+  const memoryPressure = clampTerrainUnit(config.memoryPressure);
+  const explorationDepth = clampTerrainUnit(config.explorationDepth);
   const baseNoise = sampleTerrainNoise(
     x,
     z,

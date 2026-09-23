@@ -49,7 +49,11 @@ test("opening sequence keeps floor input, restores the earned reveal, then hands
   test.skip(!testInfo.project.name.includes("chromium"), "Physical WebGL and CDP input run on the configured Chromium projects.");
   test.setTimeout(120_000);
   const errors: string[] = [];
+  const linkedPhotoRequests: string[] = [];
   page.on("pageerror", error => errors.push(error.message));
+  page.on("request", request => {
+    if (new URL(request.url()).pathname.startsWith("/visuals/")) linkedPhotoRequests.push(request.url());
+  });
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/?quality=low", { waitUntil: "domcontentloaded" });
   await begin(page);
@@ -88,6 +92,8 @@ test("opening sequence keeps floor input, restores the earned reveal, then hands
   expect(final.completedStoryEventIds.filter(id => id === "broken-floor.inversion")).toHaveLength(1);
   expect(final.completedRitualIds).toContain("ritual.accept-lantern");
   expect(errors).toEqual([]);
+  // The authored opening uses its own surfaces, including after restoration.
+  expect(linkedPhotoRequests).toEqual([]);
   await testInfo.attach("earned-opening-state", { body: JSON.stringify({
     before: before.completedStoryEventIds, restored: restored.completedStoryEventIds,
     completed: final.completedStoryEventIds, scene: final.sceneId,

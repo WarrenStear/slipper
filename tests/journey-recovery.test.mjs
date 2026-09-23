@@ -839,7 +839,7 @@ test("the SVG map limits keyboard landmarks without removing pointer activation"
   assert.match(mapSource, /onClick=\{\(\) => activateEntry\(storyNode\.entryId\)\}/);
 });
 
-test("threshold and archive paths defer scene-only map and image work", () => {
+test("threshold and archive defer the scene map, and the app avoids unused linked-photo preloads", () => {
   const appSource = readFileSync(
     new URL("../src/App.tsx", import.meta.url),
     "utf8",
@@ -856,9 +856,11 @@ test("threshold and archive paths defer scene-only map and image work", () => {
     appSource,
     /const ConstellationMap = lazy\([\s\S]*?import\("\.\/components\/ui\/ConstellationMap"\)/,
   );
-  assert.match(
+  // Authored scenes load their own visible textures. The old app-level photo
+  // preloader had no consumer in canonical scenes or the accessible journey.
+  assert.doesNotMatch(
     appSource,
-    /if \(!experienceStarted \|\| archiveOpen \|\| mode === "map"\) return;/,
+    /new Image\(/,
   );
   assert.match(
     appSource,

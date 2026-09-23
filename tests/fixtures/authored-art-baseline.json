@@ -1,0 +1,359 @@
+{
+  "baseline": "d933acfe57bc92f08473b39bc7c396c1ef61d55b",
+  "description": "SHA-256 of expanded Float32 position/normal/UV attributes from the immutable authored-art baseline, omitting only triangles with exactly coincident vertex positions. Captured before geometry indexing/pole optimization.",
+  "cases": {
+    "chair": {
+      "triangles": 1432,
+      "attributes": {
+        "shape": {
+          "position": "ab3a28905161a236360c0232d4146a90ab4b83a85c3c212d29822e35b3dea0ea",
+          "uv": "7c96f5b79a7265a66f65640de75e7eed9fe064a06f3ecaf41c4ab2b77e8481e5",
+          "normal": "cf2ad4f13e1ab27678ee0ca546d58857814678ee0f25a8e3b70a8a1dc7a6ae74"
+        }
+      }
+    },
+    "wax": {
+      "triangles": 144,
+      "attributes": {
+        "shape": {
+          "position": "a6704ca984d37f3bebd5335ed2b5eb2af6f630c023fa7656d16eec8907d1af15",
+          "uv": "d134320b6c309ffde196727b79c64c959aef4c2e299b282b7e79cc03edf14575",
+          "normal": "765e15a96db71cbf9d5f7c4fae8381ede795482dbb3c6da111f986de5f269942"
+        }
+      }
+    },
+    "flame": {
+      "triangles": 48,
+      "attributes": {
+        "shape": {
+          "position": "4a065f4791b57f9f34d1511e2cc2dd10d7116e9b8fbdd9aa5c8b05ce33e49081",
+          "uv": "cafc6c419d6b71d0d07ae9e65a40346dcc64f2325ffda6332e049d48c40f8661",
+          "normal": "560ee866eb78fe4cd312ba9f2ed86d38f731c4acd8dafd5f34821dc6fe9b9602"
+        }
+      }
+    },
+    "seed": {
+      "triangles": 80,
+      "attributes": {
+        "shape": {
+          "position": "94cdadbfd49b6b3b1977c2e1a0cb5689822b494f4f9831b48d60702b6c735325",
+          "uv": "ad0a3f651100e3516126d744cb929b6fc82a1446477476d8052270ea6f5b2528",
+          "normal": "02c3d64bc3286657b6a865ccf45a25224909d5c4ba6cd8b2207f3018e637da20"
+        }
+      }
+    },
+    "wolf-base": {
+      "triangles": 2168,
+      "attributes": {
+        "body": {
+          "position": "7ce8191f5b08702c95b568a8c07e138bec8ff3648759f88551dfcf27c60b0bcf",
+          "uv": "916e760348d45bd31a73f73847927adf53690c339c006a88bb23d124c7859b1d",
+          "normal": "adbacff7542d7c6fbb1c74061e343338db4d7f01adf880739b61986796ddb672"
+        },
+        "accent": {
+          "position": "55ce14410d0bd0776ddc98dcb90bc9dc4ca70856b1215e2205559a72bedb3ca0",
+          "uv": "c5db9aec7b3c421975fd289266b1aec1be9c01d8ed9ae061f2d178e73e0e7d48",
+          "normal": "09df38d7ac54c0900a4f3e387f7187e77245d0dadf5874d19e5e60c6c6da12e4"
+        },
+        "dark": {
+          "position": "17fdbbae8bde3f05b315bf4d6137aea93c63007f27c46af958ffc8b1043a91e5",
+          "uv": "07165aecc1e3402dfc5afc70851d1e9bdb3bdbc91ef7ca61dde20c64dd122c79",
+          "normal": "2aa70e09eef8d45e7c917996bf5cdbf35b7a9225f8a94ed9c916d7dd4e4122d7"
+        }
+      }
+    },
+    "resting-wolf-base": {
+      "triangles": 2168,
+      "attributes": {
+        "body": {
+          "position": "f760efe3a0062fdbce5a348505da6b7a3067e1311b5b04a7e1997757ebf6961b",
+          "uv": "916e760348d45bd31a73f73847927adf53690c339c006a88bb23d124c7859b1d",
+          "normal": "95980c85ca2536e5ebfe26b0ef9e477def6e91358c8f0cf8bd204204f2522161"
+        },
+        "accent": {
+          "position": "b2c7a9b86d0e50fab3c51e14c845bc5daa2ce37c475a35bd170ec437b8257634",
+          "uv": "c5db9aec7b3c421975fd289266b1aec1be9c01d8ed9ae061f2d178e73e0e7d48",
+          "normal": "f3d3e62b031bfef20e5755109d5f30e39e4c0442ed7421abbcf99ce32a9647d8"
+        },
+        "dark": {
+          "position": "8bdb4422645b3ff08b1fcee7dda7bfd34f238c95779147a02eca2ff335495316",
+          "uv": "07165aecc1e3402dfc5afc70851d1e9bdb3bdbc91ef7ca61dde20c64dd122c79",
+          "normal": "2aa70e09eef8d45e7c917996bf5cdbf35b7a9225f8a94ed9c916d7dd4e4122d7"
+        }
+      }
+    },
+    "swan-base": {
+      "triangles": 1164,
+      "attributes": {
+        "body": {
+          "position": "a1d5169255ccc1667811be94211376bc17bbf0401da0c1a6ad813513bfa7fd90",
+          "uv": "2038a41836e6f3f312c18b5ed77483b55a7dbc57d3a9bf4f06d494994dbacaed",
+          "normal": "7699e49920b620150426b15bbd486d6857f942fba7319bb5ff206aa823eecc6b"
+        },
+        "accent": {
+          "position": "ebe292b134ba506c8e0603c0827cd238343c48da78b9a4994a72fd56cab68992",
+          "uv": "ea5e1afb445123dca167ddff9dbbe93fdc78bf18714818596ee370c0705bdfd5",
+          "normal": "49a4349cd84ca8d5c18926470518d516345df7529051fc58a52c4ae8592617e8"
+        },
+        "dark": {
+          "position": "215fcd30c42498ef91c73727b38c7581058d28efc55473a379d4ade7e39868ff",
+          "uv": "07165aecc1e3402dfc5afc70851d1e9bdb3bdbc91ef7ca61dde20c64dd122c79",
+          "normal": "3e9ebf5a76c2d068a0ecf37aec3d39087ac5fbc32a4d939859d44c4d916268be"
+        }
+      }
+    },
+    "phantom-base": {
+      "triangles": 392,
+      "attributes": {
+        "body": {
+          "position": "978947a8a22fcf79ff90649483171e155770424dbc6cb6d30cdcb044a77adc28",
+          "uv": "cdf4e14f671ad635106d4ac9fdba09a068b4f8ab5bc0c60309c11c42fb067ddc",
+          "normal": "e991be63511d3cc90ca2c9a72b954b798bde19143c4d8f498032534c39158921"
+        },
+        "accent": {
+          "position": "2caca5c020fb3aec77042b902c01e76d81f471e35b04e47c348658cf46119d26",
+          "uv": "22d337d61186106e48973bd2232f9e53ac427beab8f1282096024c810edcdf2b",
+          "normal": "f8404f43ffd8d5e27db8259d162e552564a536b772bf6060c3207cb703b6e4e2"
+        },
+        "dark": {
+          "position": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "uv": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "normal": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    },
+    "rose-relief": {
+      "triangles": 664,
+      "attributes": {
+        "stems": {
+          "position": "312a06407d5cef845a5463e7fdf4c12aef42bea9b9926ec4d086b75e73eda365",
+          "uv": "02f067ea0355b8499ccf505f6db107eca825906a0762a3a72840abc000391e66",
+          "normal": "89cbe808610a1fe4ef1edc3b9d68714709daf1c26b6e2bdacf3e2d00357b6047"
+        },
+        "leaves": {
+          "position": "b318f3be93c50862dd85a60c3ad47a0ba8db2d3d4dc6236c2895e189b42a5e2e",
+          "uv": "282577e18e32b8b64172272bd042a0128e64c890d9f558319a12d0b74f5a2987",
+          "normal": "e4eae2e88f28690ac9f45f9f8aada38aebe313fce9eee9e037a37e2bc9c01f7d"
+        },
+        "petals": {
+          "position": "5bc86d5c8682a3a22c5d294e1227192c430470c95a6ec05cb0c289d01f785fcb",
+          "uv": "4b02d567c809881b130ddd3d316bf333daaaa4da48e7b98721748b3566d862af",
+          "normal": "6169d738f1f5397d5e5109b59cd410a978510131dad6d84a8d0625f7b75b886f"
+        }
+      }
+    },
+    "lily-relief": {
+      "triangles": 512,
+      "attributes": {
+        "stems": {
+          "position": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "uv": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "normal": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "leaves": {
+          "position": "890eb8c50421f67d3ce224822f06dcb8c7705302b8d1b9b8b851ad015ec84023",
+          "uv": "282577e18e32b8b64172272bd042a0128e64c890d9f558319a12d0b74f5a2987",
+          "normal": "9dc0ee6b7714de04c48835c89b679daf9a9a715fab37e4f35012403fde4ad062"
+        },
+        "petals": {
+          "position": "8ea1cd963a1b883d270bb64312d7bc9bead8bbae481428e58f7b2b29828fa5e4",
+          "uv": "4b02d567c809881b130ddd3d316bf333daaaa4da48e7b98721748b3566d862af",
+          "normal": "5f5d41503175e0c617f73908eb4ae6afad817f8e788ff4b0743043bcd53ea44a"
+        }
+      }
+    },
+    "reeds-relief": {
+      "triangles": 924,
+      "attributes": {
+        "stems": {
+          "position": "e04105ddecd55ca3212dc9ec458750813eff7165dfe5ccc70bfdb6c6cbd377b6",
+          "uv": "5f38656f2f58c7e242c1b4d907f76fa2fa9ef2153db512c4e64f6099bfa02209",
+          "normal": "52a8a3de60a6b9225ab11baece035338bd19ecf38c185f9a322b231800cd5772"
+        },
+        "leaves": {
+          "position": "0484ba9780b7986b099ba6a112eb932cc1612671459a39941e099396a7392251",
+          "uv": "f55a4936ca878dcd93dacb05fe0ec7ebfd3e109652c329c63d1cb79630dcb323",
+          "normal": "1e42ff1f1defc3c800563e46059025fc86c0bbe8b4a8c3d95761773b693a08da"
+        },
+        "petals": {
+          "position": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "uv": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "normal": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    },
+    "wolf-relief": {
+      "triangles": 3016,
+      "attributes": {
+        "body": {
+          "position": "754c8c73b738a01522e68fc28200241aaf2a76fc112ea8a71a955863635b75dc",
+          "uv": "038ba1708827173318a96e501f10d8a8c6ffc3b5104a7d463984f7ad30d34229",
+          "normal": "22f83615f1287ad5858befc6f4883b4f7afa97a55ec1f0d43700bf83d35eee7f"
+        },
+        "accent": {
+          "position": "60d9e74f5029fddf5b68bbe236d5db1d8aa56a99a06b67e333d927ee530103e8",
+          "uv": "7a436e06e776a187fbbb6ff9c49ec25a4a9271f3d31b2b225c339d83c3346120",
+          "normal": "1a80d67fca9c1657e6f4f6ba0db82e9cc745ae34dfa879d7be4b36abd5647d3f"
+        },
+        "dark": {
+          "position": "17fdbbae8bde3f05b315bf4d6137aea93c63007f27c46af958ffc8b1043a91e5",
+          "uv": "07165aecc1e3402dfc5afc70851d1e9bdb3bdbc91ef7ca61dde20c64dd122c79",
+          "normal": "2aa70e09eef8d45e7c917996bf5cdbf35b7a9225f8a94ed9c916d7dd4e4122d7"
+        }
+      }
+    },
+    "resting-wolf-relief": {
+      "triangles": 3016,
+      "attributes": {
+        "body": {
+          "position": "1052f3439accfda707dd1f42961994329b8d8f37dcae887528c0d8c56eeef560",
+          "uv": "038ba1708827173318a96e501f10d8a8c6ffc3b5104a7d463984f7ad30d34229",
+          "normal": "77577902e1daa438294c27249c01a08620b6a8f000c81ae8104a43837f459713"
+        },
+        "accent": {
+          "position": "db9b2f42b67f65952dcfa4840abca83ca24ea1ce93117cfca81f6275e225272c",
+          "uv": "7a436e06e776a187fbbb6ff9c49ec25a4a9271f3d31b2b225c339d83c3346120",
+          "normal": "daf4ee3cbd641a9f304e6a4708461a7f48a05da9ceacce083ed20389b4f4ba30"
+        },
+        "dark": {
+          "position": "8bdb4422645b3ff08b1fcee7dda7bfd34f238c95779147a02eca2ff335495316",
+          "uv": "07165aecc1e3402dfc5afc70851d1e9bdb3bdbc91ef7ca61dde20c64dd122c79",
+          "normal": "2aa70e09eef8d45e7c917996bf5cdbf35b7a9225f8a94ed9c916d7dd4e4122d7"
+        }
+      }
+    },
+    "swan-relief": {
+      "triangles": 1532,
+      "attributes": {
+        "body": {
+          "position": "c8607a01513689a2308c25c84383fcf0436852802ca82047523d2a9b6069ced0",
+          "uv": "e1a323cb3122b816b97baf0e203844846aade9fec5d3a743a1cf88d06526278a",
+          "normal": "0373334bd1a549619f91bb07ccceca54e3dcce7fb7f8a45964c76c2db68f2849"
+        },
+        "accent": {
+          "position": "ebe292b134ba506c8e0603c0827cd238343c48da78b9a4994a72fd56cab68992",
+          "uv": "ea5e1afb445123dca167ddff9dbbe93fdc78bf18714818596ee370c0705bdfd5",
+          "normal": "49a4349cd84ca8d5c18926470518d516345df7529051fc58a52c4ae8592617e8"
+        },
+        "dark": {
+          "position": "215fcd30c42498ef91c73727b38c7581058d28efc55473a379d4ade7e39868ff",
+          "uv": "07165aecc1e3402dfc5afc70851d1e9bdb3bdbc91ef7ca61dde20c64dd122c79",
+          "normal": "3e9ebf5a76c2d068a0ecf37aec3d39087ac5fbc32a4d939859d44c4d916268be"
+        }
+      }
+    },
+    "phantom-relief": {
+      "triangles": 528,
+      "attributes": {
+        "body": {
+          "position": "34f84ecc83f930ff6c3876984af935a9b5af1c80be4286a2f44505d1715dda75",
+          "uv": "2cb6e1865f6c08e82f28afc6ebd4e04ec8b8aa87e6b4f8b3a8b9cd291377d0c9",
+          "normal": "e13fabf4b5fda00b8f11dc444673413357659d018a16d1a4129a76425807e8ba"
+        },
+        "accent": {
+          "position": "2caca5c020fb3aec77042b902c01e76d81f471e35b04e47c348658cf46119d26",
+          "uv": "22d337d61186106e48973bd2232f9e53ac427beab8f1282096024c810edcdf2b",
+          "normal": "f8404f43ffd8d5e27db8259d162e552564a536b772bf6060c3207cb703b6e4e2"
+        },
+        "dark": {
+          "position": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "uv": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "normal": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    }
+  },
+  "botanicalBaseBounds": {
+    "rose": {
+      "stems": [
+        [
+          -0.020617639645934105,
+          -0.0011150112841278315,
+          -0.014977792277932167
+        ],
+        [
+          0.012993315234780312,
+          0.4350399374961853,
+          0.022041993215680122
+        ]
+      ],
+      "leaves": [
+        [
+          -0.15226757526397705,
+          0.12999999523162842,
+          -0.11271345615386963
+        ],
+        [
+          0.10471108555793762,
+          0.331582248210907,
+          0.1528538316488266
+        ]
+      ],
+      "petals": [
+        [
+          -0.14587093889713287,
+          0.4350000023841858,
+          -0.1701684147119522
+        ],
+        [
+          0.17318309843540192,
+          0.5604682564735413,
+          0.15380509197711945
+        ]
+      ]
+    },
+    "lily": {
+      "leaves": [
+        [
+          -0.44827407598495483,
+          0.004999999888241291,
+          -0.37172767519950867
+        ],
+        [
+          0.36209040880203247,
+          0.026599999517202377,
+          0.44999998807907104
+        ]
+      ],
+      "petals": [
+        [
+          -0.20259849727153778,
+          0.07000000029802322,
+          -0.23634499311447144
+        ],
+        [
+          0.2405320554971695,
+          0.20662648975849152,
+          0.21361815929412842
+        ]
+      ]
+    },
+    "reeds": {
+      "stems": [
+        [
+          -0.19724039733409882,
+          -0.0005940237897448242,
+          -0.19953575730323792
+        ],
+        [
+          0.20030465722084045,
+          0.9426466226577759,
+          0.15904296934604645
+        ]
+      ],
+      "leaves": [
+        [
+          -0.2970888316631317,
+          0.10990004986524582,
+          -0.27858400344848633
+        ],
+        [
+          0.34968769550323486,
+          0.7630513906478882,
+          0.30077406764030457
+        ]
+      ]
+    }
+  },
+  "localSourceImport": "0e17af9 (byte-identical runtime source import)"
+}

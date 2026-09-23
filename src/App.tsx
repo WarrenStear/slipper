@@ -930,48 +930,6 @@ export default function App() {
   }, [adjacency, goBack, history.length, mode, navigateToEntry]);
 
   useEffect(() => {
-    if (!experienceStarted || archiveOpen || mode === "map") return;
-
-    const preloadSources = new Set<string>();
-    if (activeVisual?.src) preloadSources.add(activeVisual.src);
-
-    for (const portal of activePortals) {
-      const target = portal.targetEntryId ? getEntryById(entries, portal.targetEntryId) : undefined;
-      const targetVisual = target ? visuals.find((visual) => visual.id === target.engine3d.linkedVisualId) : undefined;
-      if (targetVisual?.src) preloadSources.add(targetVisual.src);
-    }
-
-    if (adjacency?.next) {
-      const nextVisual = visuals.find((visual) => visual.id === adjacency.next?.engine3d.linkedVisualId);
-      if (nextVisual?.src) preloadSources.add(nextVisual.src);
-    }
-
-    const images = Array.from(preloadSources).map((src) => {
-      const image = new Image();
-      image.decoding = "async";
-      image.loading = "eager";
-      image.src = src;
-      return image;
-    });
-
-    return () => {
-      for (const image of images) {
-        image.onload = null;
-        image.onerror = null;
-        image.src = "";
-      }
-      images.length = 0;
-    };
-  }, [
-    activePortals,
-    activeVisual,
-    adjacency,
-    archiveOpen,
-    experienceStarted,
-    mode,
-  ]);
-
-  useEffect(() => {
     const navigateFromKeyboard = (targetEntryId: string, nextMode: AppMode) => {
       const { activeEntryId: currentEntryId, navigateToEntry: navigateJourney } = useJourneyStore.getState();
       if (!targetEntryId || !getEntryById(entries, targetEntryId)) return;
