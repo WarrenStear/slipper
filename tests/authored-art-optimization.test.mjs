@@ -66,7 +66,7 @@ for (const detail of ['base', 'relief']) {
 }
 for (const kind of ['rose', 'lily', 'reeds']) builders[`${kind}-relief`] = () => createBotanicalGeometries(kind, 5, 'relief');
 
-test('lossless optimized forms expand to the baseline positions, normals and UVs in their original triangle order', () => {
+test('indexed forms expand to the approved art positions, normals and UVs in their original triangle order', () => {
   for (const [name, build] of Object.entries(builders)) {
     const shapes = build(), reference = baseline.cases[name];
     assert.equal(Object.values(shapes).reduce((sum, geometry) => sum + triangles(geometry), 0), reference.triangles, name);

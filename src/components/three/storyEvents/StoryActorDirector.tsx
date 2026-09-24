@@ -5,7 +5,8 @@ import * as THREE from "three";
 import type { JourneySceneId } from "../../../lib/storyJourneyState";
 import type { Vector3Tuple } from "../../../data/slipper3dTypes";
 import type { RenderQualityProfile } from "../renderQuality";
-import { LanternProp } from "../chapters/ChapterPrimitives";
+import { ReflectionApparition } from "../reflections/ReflectionApparition";
+import { LanternProp, ReflectivePanel } from "../chapters/ChapterPrimitives";
 import { getCurrentCinematicProfile } from "../../../cinematics/emotionalCinematography";
 import { CINEMATIC_ACTOR_CUES, flockInstanceCount, sampleActorCue, sampleFlockPose, type ActorCueDefinition, type ActorPose, type FlockPose } from "../../../cinematics/cinematicCueRegistry";
 
@@ -26,10 +27,8 @@ function SwanFigure() {
 
 function ReflectedSeer() {
   return <group name="seer-apparition-only-in-reflection" rotation={[0, Math.PI, 0]}>
-    <mesh position={[0, 1.65, 0]}><boxGeometry args={[1.9, 3.3, 0.12]} /><meshStandardMaterial color="#252b2e" metalness={0.65} roughness={0.18} /></mesh>
-    <mesh position={[0, 1.65, 0.068]}><planeGeometry args={[1.68, 3.05]} /><meshPhysicalMaterial color="#596971" metalness={0.8} roughness={0.12} /></mesh>
-    <mesh position={[0.03, 2.14, 0.078]} scale={[0.19, 0.25, 0.006]}><sphereGeometry args={[1, 14, 8]} /><meshBasicMaterial color="#bac5c7" transparent opacity={0.38} depthWrite={false} /></mesh>
-    <mesh position={[0, 1.18, 0.078]} scale={[0.47, 1.25, 0.005]}><coneGeometry args={[1, 1.4, 12]} /><meshBasicMaterial color="#aebbbe" transparent opacity={0.23} depthWrite={false} /></mesh>
+    <ReflectivePanel position={[0, 1.65, 0]} size={[1.68, 3.05]} />
+    <group position={[0, .63, .16]} scale={1.12}><ReflectionApparition apparition /></group>
   </group>;
 }
 

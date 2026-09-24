@@ -127,9 +127,9 @@ function BrokenFloorChapterComponent({
             ref={roomMaterialRef}
             onBeforeCompile={shader => applyTactileShader(shader, "plaster", tactileDetail)}
             customProgramCacheKey={() => tactileProgramKey("plaster", tactileDetail)}
-            color="#4c4840"
+            color="#716d62"
             emissive="#21150d"
-            emissiveIntensity={0.3}
+            emissiveIntensity={0.2}
             roughness={0.99}
             transparent
             opacity={openingResolved ? 0 : 1}

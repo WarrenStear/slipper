@@ -83,7 +83,8 @@ export function sceneParticleProfile(sceneId: JourneySceneId) {
 }
 
 function fillFloor(sceneId: JourneySceneId) {
-  if (sceneId === "broken-floor.confession" || sceneId === "thorned.old-memory-bedroom" || sceneId === "fire.boundary") return .055;
+  if (sceneId === "broken-floor.confession") return .13;
+  if (sceneId === "thorned.old-memory-bedroom" || sceneId === "fire.boundary") return .055;
   if (sceneId.startsWith("blue-moon.") || sceneId.startsWith("epilogue.")) return .09;
   if (sceneId.startsWith("crowned.")) return .32;
   return .17;

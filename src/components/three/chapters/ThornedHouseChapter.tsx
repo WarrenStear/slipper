@@ -103,7 +103,7 @@ function RepeatingHall({ stage, detail, reducedEffects }: { stage: HouseStage; d
           <group key={index} position={[Math.sin(index * 1.7) * (compressed ? 0.18 : 0.08), 0, z]}>
             <DoorFrame
               width={3.7 - narrowing}
-              height={4.25 - Math.max(0, narrowing) * 0.62}
+              height={4.25 - Math.max(0, narrowing) * 1.08}
               depth={0.3}
               color={index % 2 === 0 ? "#49372e" : "#3e3029"}
             />
@@ -256,7 +256,9 @@ function ArchitecturalThorns({ stage, detail, reducedEffects }: { stage: HouseSt
   const count = reducedEffects ? 5 : Math.min(ARCHITECTURAL_THORNS.length, 6 + detail);
   const branches = ARCHITECTURAL_THORNS
     .slice(0, count)
-    .filter((branch) => stage !== "leaving" || !("blocksExit" in branch && branch.blocksExit));
+    // Once leaving, keep the wall-grown thorns but clear the visible walking
+    // corridor as well as the threshold; these decorative branches have no collider.
+    .filter((branch, index) => stage !== "leaving" || (index < 2 && !("blocksExit" in branch && branch.blocksExit)));
 
   const geometry = useMemo(() => {
     const pieces: THREE.BufferGeometry[] = [];
@@ -278,16 +280,16 @@ function ExitThreshold({ stage, reducedEffects }: { stage: ExitStage; reducedEff
   const glow = stage === "open" ? "#eed6a7" : stage === "glimpsed" ? "#846c50" : "#17110f";
   return (
     <group name={`thorned-house-exit:${stage}`} position={[0, 0, 7.35]}>
-      <mesh position={[0, 2.3, 0.08]}>
+      {stage !== "open" ? <mesh position={[0, 2.3, 0.08]}>
         <planeGeometry args={[3.7, 4.65]} />
         <meshStandardMaterial
           color={glow}
           emissive={glow}
-          emissiveIntensity={stage === "open" ? 1.28 : stage === "glimpsed" ? 0.2 : 0}
+          emissiveIntensity={stage === "glimpsed" ? 0.06 : 0}
           roughness={0.86}
           side={THREE.DoubleSide}
         />
-      </mesh>
+      </mesh> : null}
       <DoorFrame width={4.25} height={4.9} depth={0.54} color="#5a4436" />
       {stage === "open" ? null : (
         <group position={[-1.72, 2.18, -0.1]} rotation={[0, -openAmount, 0]}>

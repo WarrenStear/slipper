@@ -43,52 +43,52 @@
       }
     },
     "wolf-base": {
-      "triangles": 2168,
+      "triangles": 2028,
       "attributes": {
         "body": {
-          "position": "7ce8191f5b08702c95b568a8c07e138bec8ff3648759f88551dfcf27c60b0bcf",
-          "uv": "916e760348d45bd31a73f73847927adf53690c339c006a88bb23d124c7859b1d",
-          "normal": "adbacff7542d7c6fbb1c74061e343338db4d7f01adf880739b61986796ddb672"
+          "position": "a10a994af7ac21c4286ba859d74cc2c6cfff1f74494f5c5710824fa40eb22634",
+          "uv": "c46a0f0d20272f852952b1974b588e4e5bc0deded61c27309c9d287c7e29f8d8",
+          "normal": "be95eef12e656f544e21e40543b9e9e1a0a2a4cb91c5f79dac8b1c936441c05f"
         },
         "accent": {
-          "position": "55ce14410d0bd0776ddc98dcb90bc9dc4ca70856b1215e2205559a72bedb3ca0",
-          "uv": "c5db9aec7b3c421975fd289266b1aec1be9c01d8ed9ae061f2d178e73e0e7d48",
-          "normal": "09df38d7ac54c0900a4f3e387f7187e77245d0dadf5874d19e5e60c6c6da12e4"
+          "position": "78a227e62068d3cf8251dbf06a69a9174ffadb7e4617db75a2c96ce329c12396",
+          "uv": "82371c404618f12040610e80e5180c3f03a566b265b14414b72c00ce4ba1bbc6",
+          "normal": "b90145b6964af070ddb24855fecc198c872e707c8f1843f5118c8ad0eee696cc"
         },
         "dark": {
-          "position": "17fdbbae8bde3f05b315bf4d6137aea93c63007f27c46af958ffc8b1043a91e5",
+          "position": "3af90e8d6783fc5d5a9fade8e1e2d5fa82cd4b3aad1ee636829dafbfdb55c399",
           "uv": "07165aecc1e3402dfc5afc70851d1e9bdb3bdbc91ef7ca61dde20c64dd122c79",
-          "normal": "2aa70e09eef8d45e7c917996bf5cdbf35b7a9225f8a94ed9c916d7dd4e4122d7"
+          "normal": "49634a48e318bc64cf0dbf7a43ba200d3ea930e1dfcd97438cc211b6aee25a70"
         }
       }
     },
     "resting-wolf-base": {
-      "triangles": 2168,
+      "triangles": 2028,
       "attributes": {
         "body": {
-          "position": "f760efe3a0062fdbce5a348505da6b7a3067e1311b5b04a7e1997757ebf6961b",
-          "uv": "916e760348d45bd31a73f73847927adf53690c339c006a88bb23d124c7859b1d",
-          "normal": "95980c85ca2536e5ebfe26b0ef9e477def6e91358c8f0cf8bd204204f2522161"
+          "position": "59710207734d5be08a3aae42281c21fa0e305577192b891486285de321d8e737",
+          "uv": "c46a0f0d20272f852952b1974b588e4e5bc0deded61c27309c9d287c7e29f8d8",
+          "normal": "0bd66598598c8dc29ecbde240f3bc1782920785c7f4277ffccd6e882050e3b7a"
         },
         "accent": {
-          "position": "b2c7a9b86d0e50fab3c51e14c845bc5daa2ce37c475a35bd170ec437b8257634",
-          "uv": "c5db9aec7b3c421975fd289266b1aec1be9c01d8ed9ae061f2d178e73e0e7d48",
-          "normal": "f3d3e62b031bfef20e5755109d5f30e39e4c0442ed7421abbcf99ce32a9647d8"
+          "position": "29304f170155c42fadc00858b57d94327f509aaaea65823ca8c90c83ae350342",
+          "uv": "82371c404618f12040610e80e5180c3f03a566b265b14414b72c00ce4ba1bbc6",
+          "normal": "7091a786f2c05adca7726fee192abfbd06af98bf78914338258f37b1377d5df7"
         },
         "dark": {
-          "position": "8bdb4422645b3ff08b1fcee7dda7bfd34f238c95779147a02eca2ff335495316",
+          "position": "0a092c7f07497815367d38062d9abe4a39727322cb40332775cf2c04d1ba950a",
           "uv": "07165aecc1e3402dfc5afc70851d1e9bdb3bdbc91ef7ca61dde20c64dd122c79",
-          "normal": "2aa70e09eef8d45e7c917996bf5cdbf35b7a9225f8a94ed9c916d7dd4e4122d7"
+          "normal": "49634a48e318bc64cf0dbf7a43ba200d3ea930e1dfcd97438cc211b6aee25a70"
         }
       }
     },
     "swan-base": {
-      "triangles": 1164,
+      "triangles": 1184,
       "attributes": {
         "body": {
-          "position": "a1d5169255ccc1667811be94211376bc17bbf0401da0c1a6ad813513bfa7fd90",
-          "uv": "2038a41836e6f3f312c18b5ed77483b55a7dbc57d3a9bf4f06d494994dbacaed",
-          "normal": "7699e49920b620150426b15bbd486d6857f942fba7319bb5ff206aa823eecc6b"
+          "position": "702da136b567930a1e0e53afec69cb3e3fe08f64a68fdf227169d9c2c649024f",
+          "uv": "2d95ab29b33dd6fb731a9155e29b884a27c7460f9ccd2581e0fd556ac06e3eaf",
+          "normal": "be3821d6a1bec05f4d83dd702109ef776e4d758c498ed1bd382c496dbb45fb5a"
         },
         "accent": {
           "position": "ebe292b134ba506c8e0603c0827cd238343c48da78b9a4994a72fd56cab68992",
@@ -96,7 +96,7 @@
           "normal": "49a4349cd84ca8d5c18926470518d516345df7529051fc58a52c4ae8592617e8"
         },
         "dark": {
-          "position": "215fcd30c42498ef91c73727b38c7581058d28efc55473a379d4ade7e39868ff",
+          "position": "d6a2db3c097bbf0dbd6ff0b43e29f2f702cafd91b8b8754375482fd110888798",
           "uv": "07165aecc1e3402dfc5afc70851d1e9bdb3bdbc91ef7ca61dde20c64dd122c79",
           "normal": "3e9ebf5a76c2d068a0ecf37aec3d39087ac5fbc32a4d939859d44c4d916268be"
         }
@@ -183,52 +183,52 @@
       }
     },
     "wolf-relief": {
-      "triangles": 3016,
+      "triangles": 2600,
       "attributes": {
         "body": {
-          "position": "754c8c73b738a01522e68fc28200241aaf2a76fc112ea8a71a955863635b75dc",
-          "uv": "038ba1708827173318a96e501f10d8a8c6ffc3b5104a7d463984f7ad30d34229",
-          "normal": "22f83615f1287ad5858befc6f4883b4f7afa97a55ec1f0d43700bf83d35eee7f"
+          "position": "5d94e54384c277d3e0a67b773fe604b3c725fe8978ed0e3c886b9a890578d477",
+          "uv": "6b9df90830fd90d8c843b96212f1b21522169b21ef77ec5b203e7d2fa841d8eb",
+          "normal": "7e0510eff73b440c09767b55cdedddbf2a3d190c2f42a0168959c2e50a3c06e8"
         },
         "accent": {
-          "position": "60d9e74f5029fddf5b68bbe236d5db1d8aa56a99a06b67e333d927ee530103e8",
-          "uv": "7a436e06e776a187fbbb6ff9c49ec25a4a9271f3d31b2b225c339d83c3346120",
-          "normal": "1a80d67fca9c1657e6f4f6ba0db82e9cc745ae34dfa879d7be4b36abd5647d3f"
+          "position": "62245d2115c583e2d75e2ae9c5c3cc856ace175241293db8f76ba2eec1c1ee77",
+          "uv": "b06394599bc3b33718e474450e02b78dbc6051d3fbe78fb1ea83a7d7545f5394",
+          "normal": "39829963b2bd61a65d92b107d86ca7239e63d8062ef4b8d93295428619fc4302"
         },
         "dark": {
-          "position": "17fdbbae8bde3f05b315bf4d6137aea93c63007f27c46af958ffc8b1043a91e5",
+          "position": "3af90e8d6783fc5d5a9fade8e1e2d5fa82cd4b3aad1ee636829dafbfdb55c399",
           "uv": "07165aecc1e3402dfc5afc70851d1e9bdb3bdbc91ef7ca61dde20c64dd122c79",
-          "normal": "2aa70e09eef8d45e7c917996bf5cdbf35b7a9225f8a94ed9c916d7dd4e4122d7"
+          "normal": "49634a48e318bc64cf0dbf7a43ba200d3ea930e1dfcd97438cc211b6aee25a70"
         }
       }
     },
     "resting-wolf-relief": {
-      "triangles": 3016,
+      "triangles": 2600,
       "attributes": {
         "body": {
-          "position": "1052f3439accfda707dd1f42961994329b8d8f37dcae887528c0d8c56eeef560",
-          "uv": "038ba1708827173318a96e501f10d8a8c6ffc3b5104a7d463984f7ad30d34229",
-          "normal": "77577902e1daa438294c27249c01a08620b6a8f000c81ae8104a43837f459713"
+          "position": "45dc6f27ced16faf0f542484e34955872bc1079580094592773eac7a2ce39dfb",
+          "uv": "6b9df90830fd90d8c843b96212f1b21522169b21ef77ec5b203e7d2fa841d8eb",
+          "normal": "a96f383ae81bad269ddf5b3e445718daff7ec51f348dffdef10b164e357e7e9a"
         },
         "accent": {
-          "position": "db9b2f42b67f65952dcfa4840abca83ca24ea1ce93117cfca81f6275e225272c",
-          "uv": "7a436e06e776a187fbbb6ff9c49ec25a4a9271f3d31b2b225c339d83c3346120",
-          "normal": "daf4ee3cbd641a9f304e6a4708461a7f48a05da9ceacce083ed20389b4f4ba30"
+          "position": "e722085f025dac0071f7a335b5a28765f4d64d0c6c599768ea718e09f2bf3de6",
+          "uv": "b06394599bc3b33718e474450e02b78dbc6051d3fbe78fb1ea83a7d7545f5394",
+          "normal": "1aa233723426daf0c2914f21435876a7d4281031a93093fd85f7df788479b9ef"
         },
         "dark": {
-          "position": "8bdb4422645b3ff08b1fcee7dda7bfd34f238c95779147a02eca2ff335495316",
+          "position": "0a092c7f07497815367d38062d9abe4a39727322cb40332775cf2c04d1ba950a",
           "uv": "07165aecc1e3402dfc5afc70851d1e9bdb3bdbc91ef7ca61dde20c64dd122c79",
-          "normal": "2aa70e09eef8d45e7c917996bf5cdbf35b7a9225f8a94ed9c916d7dd4e4122d7"
+          "normal": "49634a48e318bc64cf0dbf7a43ba200d3ea930e1dfcd97438cc211b6aee25a70"
         }
       }
     },
     "swan-relief": {
-      "triangles": 1532,
+      "triangles": 1560,
       "attributes": {
         "body": {
-          "position": "c8607a01513689a2308c25c84383fcf0436852802ca82047523d2a9b6069ced0",
-          "uv": "e1a323cb3122b816b97baf0e203844846aade9fec5d3a743a1cf88d06526278a",
-          "normal": "0373334bd1a549619f91bb07ccceca54e3dcce7fb7f8a45964c76c2db68f2849"
+          "position": "da58de4faf0bdc1b534d3dac2c5ec286026986a2bdc4e108b56f57fc05b4e6b4",
+          "uv": "d8400d8918435dbcbd8c0111460fe993bee235451fb3780c71ec531f4376f31a",
+          "normal": "5fca1a97851a174808c8dfb773810871038461e3cf745dda98dd8ad443745b36"
         },
         "accent": {
           "position": "ebe292b134ba506c8e0603c0827cd238343c48da78b9a4994a72fd56cab68992",
@@ -236,7 +236,7 @@
           "normal": "49a4349cd84ca8d5c18926470518d516345df7529051fc58a52c4ae8592617e8"
         },
         "dark": {
-          "position": "215fcd30c42498ef91c73727b38c7581058d28efc55473a379d4ade7e39868ff",
+          "position": "d6a2db3c097bbf0dbd6ff0b43e29f2f702cafd91b8b8754375482fd110888798",
           "uv": "07165aecc1e3402dfc5afc70851d1e9bdb3bdbc91ef7ca61dde20c64dd122c79",
           "normal": "3e9ebf5a76c2d068a0ecf37aec3d39087ac5fbc32a4d939859d44c4d916268be"
         }
@@ -355,5 +355,6 @@
       ]
     }
   },
-  "localSourceImport": "0e17af9 (byte-identical runtime source import)"
+  "localSourceImport": "0e17af9 (byte-identical runtime source import)",
+  "animalArtRevision": "2026-09-24: authored spine/shoulder/hip anatomy, grounded resting pose and folded Swan wings. Only six animal entries supersede the original optimization baseline; budgets and all other baselines are retained."
 }

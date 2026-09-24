@@ -23,11 +23,10 @@ const ORGANIC_CROWN_LOBES: OrganicCrownLobe[] = [
 
 export function createOrganicCrownGeometry(detail: 0 | 1 | 2 = 0) {
   const lobes = ORGANIC_CROWN_LOBES.map((specification, shelfIndex) => {
-    // Low trees use detail 0; clearing trees use detail 1. Detail 2
-    // smooths the two largest masses in the continuous high-tier forest. Both remain
-    // one merged instanced geometry, so nearby crowns gain a softer deciduous
-    // silhouette without adding draw calls across the continuous forest.
-    const geometry = new THREE.IcosahedronGeometry(1, detail === 2 ? (shelfIndex < 2 ? 1 : 0) : detail);
+    // Broad rounded leaf shelves remove the triangular crystal contour. The
+    // full crown retains the original 140 / 560 / 260 triangle budgets.
+    const fine = detail === 1 || (detail === 2 && shelfIndex < 2);
+    const geometry = new THREE.SphereGeometry(1, fine ? 10 : 5, fine ? 5 : 3);
     const position = geometry.getAttribute("position") as THREE.BufferAttribute;
 
     for (let index = 0; index < position.count; index += 1) {
@@ -41,10 +40,7 @@ export function createOrganicCrownGeometry(detail: 0 | 1 | 2 = 0) {
     }
 
     position.needsUpdate = true;
-    // IcosahedronGeometry is non-indexed, so computeVertexNormals() preserves
-    // one normal per triangle and makes moonlit crowns read as crystals. A
-    // radial field keeps the same low triangle budget while letting the offset
-    // deformed leaf shelves shade as one soft mass of leaves.
+    // A radial field keeps deformed shelves softly shaded across their UV seam.
     const smoothNormals = new Float32Array(position.count * 3);
     for (let index = 0; index < position.count; index += 1) {
       const x = position.getX(index);

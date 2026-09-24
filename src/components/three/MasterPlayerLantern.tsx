@@ -5,7 +5,7 @@ import { useSettingsStore } from "../../stores/useSettingsStore";
 import { useEffect, useMemo, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
+import { createLanternHousingGeometry, createLanternGlassGeometry } from "./environmentArt/heroGeometry";
 import type { Vector3Tuple } from "../../data/slipper3dTypes";
 import type { LanternPhase } from "../../lib/lanternNarrative";
 import { TERRAIN_BASE_Y } from "../../lib/worldLayout";
@@ -86,18 +86,19 @@ export function MasterPlayerLantern({
       toneMapped: true,
     });
     const glass = new THREE.MeshStandardMaterial({
-      color: "#fff0bd",
-      emissive: "#ffd78a",
-      emissiveIntensity: 0.12,
+      color: "#cbd7d1",
+      emissive: "#000000",
+      emissiveIntensity: 0,
       roughness: 0.14,
       metalness: 0,
       transparent: true,
-      opacity: 0.13,
+      opacity: 0.045,
       depthWrite: false,
       side: THREE.DoubleSide,
     });
     const metal = new THREE.MeshStandardMaterial({
-      color: "#21160e",
+      color: "#403b2d",
+      vertexColors: true,
       emissive: "#160c05",
       emissiveIntensity: 0.025,
       roughness: 0.62,
@@ -136,8 +137,8 @@ export function MasterPlayerLantern({
 
   const geometries = useMemo(() => {
     const glow = new THREE.PlaneGeometry(0.54, 0.54);
-    const glass = new THREE.CylinderGeometry(0.115, 0.13, 0.23, 20, 1, true);
-    glass.translate(0, 0.01, 0);
+    const glass = createLanternGlassGeometry();
+    glass.scale(.44, .44, .44); glass.translate(0, -.208, 0);
 
     const flame = new THREE.LatheGeometry(
       [
@@ -164,34 +165,9 @@ export function MasterPlayerLantern({
     }
     flame.setAttribute("color", new THREE.Float32BufferAttribute(flameColors, 3));
 
-    const metalParts: THREE.BufferGeometry[] = [];
-    const addMetalPart = (
-      geometry: THREE.BufferGeometry,
-      translation: Vector3Tuple = [0, 0, 0],
-      rotation: Vector3Tuple = [0, 0, 0],
-    ) => {
-      geometry.rotateX(rotation[0]);
-      geometry.rotateY(rotation[1]);
-      geometry.rotateZ(rotation[2]);
-      geometry.translate(translation[0], translation[1], translation[2]);
-      metalParts.push(geometry);
-    };
-
-    addMetalPart(new THREE.CylinderGeometry(0.155, 0.185, 0.075, 18), [0, -0.17, 0]);
-    addMetalPart(new THREE.CylinderGeometry(0.128, 0.154, 0.075, 18), [0, -0.105, 0]);
-    addMetalPart(new THREE.CylinderGeometry(0.118, 0.1, 0.045, 18), [0, 0.145, 0]);
-    addMetalPart(new THREE.CylinderGeometry(0.072, 0.094, 0.035, 16), [0, 0.182, 0]);
-    addMetalPart(new THREE.TorusGeometry(0.148, 0.011, 7, 28, Math.PI), [0, 0.17, 0]);
-    addMetalPart(new THREE.TorusGeometry(0.127, 0.008, 6, 20), [0, -0.09, 0], [Math.PI / 2, 0, 0]);
-    addMetalPart(new THREE.TorusGeometry(0.116, 0.008, 6, 20), [0, 0.115, 0], [Math.PI / 2, 0, 0]);
-    addMetalPart(new THREE.CylinderGeometry(0.008, 0.008, 0.225, 6), [-0.12, 0.012, 0]);
-    addMetalPart(new THREE.CylinderGeometry(0.008, 0.008, 0.225, 6), [0.12, 0.012, 0]);
-    addMetalPart(new THREE.CylinderGeometry(0.008, 0.008, 0.225, 6), [0, 0.012, -0.12]);
-    addMetalPart(new THREE.CylinderGeometry(0.008, 0.008, 0.225, 6), [0, 0.012, 0.12]);
-
-    const metal = mergeGeometries(metalParts, false) ?? new THREE.BufferGeometry();
-    metal.computeVertexNormals();
-    metalParts.forEach((part) => part.dispose());
+    const metal = createLanternHousingGeometry();
+    metal.scale(.44, .44, .44); metal.translate(0, -.208, 0);
+    flame.scale(.76, .8, .76);
 
     return { glow, glass, flame, metal };
   }, []);
@@ -291,8 +267,6 @@ export function MasterPlayerLantern({
     currentColorRef.current.lerp(director.color, 1 - Math.exp(-step * 4.4));
 
     materials.flame.color.copy(currentColorRef.current).multiplyScalar(3.2);
-    materials.glass.color.copy(currentColorRef.current);
-    materials.glass.emissive.copy(currentColorRef.current);
     materials.glow.uniforms.glowColor.value.copy(currentColorRef.current);
 
     const flamePulse =
@@ -371,7 +345,7 @@ export function MasterPlayerLantern({
     const glass = glassRef.current;
     if (glass) {
       glass.rotation.y = reducedMotion ? 0 : Math.sin(elapsed * 0.4) * 0.055 * environmentalMotion;
-      materials.glass.opacity = THREE.MathUtils.clamp((0.13 + depth * 0.035 - pressure * 0.02) * activeScale, 0, 0.18);
+      materials.glass.opacity = THREE.MathUtils.clamp((0.045 + depth * 0.01 - pressure * 0.008) * activeScale, 0, 0.18);
     }
   });
 

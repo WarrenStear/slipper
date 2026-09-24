@@ -370,7 +370,8 @@ test("disabled audio stays unmounted and render loops avoid known allocations", 
   assert.doesNotMatch(engine, /\.lerp\(new THREE\.(?:Vector3|Color)/);
   assert.doesNotMatch(ground, /\.lerp\(new THREE\.(?:Vector3|Color)/);
   assert.match(lantern, /const director = useMemo\(/);
-  assert.match(lantern, /mergeGeometries\(metalParts, false\)/);
+  assert.match(lantern, /const metal = createLanternHousingGeometry\(\)/);
+  assert.match(read("src/components/three/environmentArt/heroGeometry.ts"), /mergeArtGeometries\(parts\)/);
   assert.match(lantern, /<pointLight[\s\S]*castShadow=\{false\}/);
   assert.doesNotMatch(lantern, /visible=\{false\}/);
   assert.doesNotMatch(

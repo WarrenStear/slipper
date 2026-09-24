@@ -4,6 +4,7 @@ import * as THREE from "three";
 import { createReflectionHistory, recordReflectionPose, resetReflectionHistory, sampleReflectionPose } from "../../../lib/scenePolishRuntime";
 import { useSettingsStore } from "../../../stores/useSettingsStore";
 import { useWorldStore } from "../../../stores/useWorldStore";
+import { ReflectionApparition } from "../reflections/ReflectionApparition";
 import { ReflectivePanel } from "../chapters/ChapterPrimitives";
 
 /** A bounded delayed witness silhouette, not a second camera or render target. */
@@ -44,8 +45,7 @@ export function ObservedSanctuaryReflection({ delayed, reducedMotion }: { delaye
   return <group ref={root} name="blue-moon-delayed-reflection" position={[-2.9, 2.7, 5.25]} rotation={[0, Math.PI, 0]} userData={{ reflectionMode: "observed-pose", delayMs: delayed && !reducedMotion ? 800 : 0 }}>
     <ReflectivePanel position={[0, 0, 0]} size={[2.4, 4.3]} />
     <group ref={reflected} name="delayed-viewer-silhouette" position={[0, -.3, .17]}>
-      <mesh position={[0, .69, 0]} scale={[.23, .31, .025]}><sphereGeometry args={[1, 14, 10]} /><meshBasicMaterial color="#a6b7bd" transparent opacity={.42} depthWrite={false} /></mesh>
-      <mesh position={[0, -.1, 0]} scale={[.47, .66, .025]}><sphereGeometry args={[1, 14, 10]} /><meshBasicMaterial color="#879ba5" transparent opacity={.3} depthWrite={false} /></mesh>
+      <group position={[0, -.86, 0]} scale={1.15}><ReflectionApparition /></group>
     </group>
     {delayed ? <group name="lock-visible-only-in-reflection" position={[.48, -.2, .21]}>
       <mesh><ringGeometry args={[.1, .15, 14]} /><meshBasicMaterial color="#d5dbe2" toneMapped={false} /></mesh>

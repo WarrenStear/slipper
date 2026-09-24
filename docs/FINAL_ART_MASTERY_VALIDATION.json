@@ -1,0 +1,4095 @@
+{
+  "date": "2026-09-24",
+  "baselineGitHubCommit": "0ae8833132112e868134bc9ad001618e2c107a70",
+  "baselineLocalSnapshot": "370f7ae",
+  "method": "Actual components and canonical SceneLook; DPR1 software WebGL. Fixed matched cameras. Interaction screenshots seed consequences; separate browser tests perform user-facing actions. Counts include secondary and finishing passes. No physical-device FPS certification.",
+  "captureTimeoutMs": 120000,
+  "checks": {
+    "unit": 507,
+    "security": 7,
+    "productionDependencyAudit": {
+      "info": 0,
+      "low": 0,
+      "moderate": 0,
+      "high": 0,
+      "critical": 0,
+      "total": 0
+    },
+    "typecheck": true,
+    "productionBuild": true,
+    "pagesFunctionsBuild": true,
+    "accessibleBrowser": {
+      "passed": 6,
+      "projects": [
+        "chromium",
+        "firefox",
+        "mobile-chromium"
+      ]
+    },
+    "interactionBrowser": {
+      "startTime": "2026-09-24T11:33:24.679Z",
+      "duration": 377727.464,
+      "expected": 14,
+      "skipped": 6,
+      "unexpected": 0,
+      "flaky": 0
+    }
+  },
+  "captureCounts": {
+    "final-cinematic": 64,
+    "final-canonical": 64,
+    "final-tiers": 28,
+    "baseline": 8,
+    "heroes-final": 20,
+    "lifecycle": 20,
+    "forest": 14
+  },
+  "browserSkippedCases": [
+    {
+      "title": "shows safe controls and applies persisted handedness",
+      "project": "chromium",
+      "reasons": [
+        "Mobile-only coverage runs in both configured touch-device projects."
+      ]
+    },
+    {
+      "title": "keeps map tabs operable across portrait and landscape",
+      "project": "chromium",
+      "reasons": [
+        "Mobile-only coverage runs in both configured touch-device projects."
+      ]
+    },
+    {
+      "title": "guidance preserves the active entry and recovery clears the route",
+      "project": "chromium",
+      "reasons": [
+        "Mobile-only coverage runs in both configured touch-device projects."
+      ]
+    },
+    {
+      "title": "resets direct input on blur, resize, and pointer cancellation",
+      "project": "chromium",
+      "reasons": [
+        "Mobile-only coverage runs in both configured touch-device projects."
+      ]
+    },
+    {
+      "title": "trusted touch movement changes position and look telemetry",
+      "project": "chromium",
+      "reasons": [
+        "Mobile-only coverage runs in both configured touch-device projects."
+      ]
+    },
+    {
+      "title": "modified and composing keys cannot perform a focused story action",
+      "project": "mobile-chromium",
+      "reasons": [
+        "Physical story input is checked with desktop Chromium."
+      ]
+    }
+  ],
+  "matchedCinematicArrivals": [
+    {
+      "case": "broken",
+      "before": {
+        "name": "baseline-broken-arrival-cinematic-1100-full",
+        "which": "broken",
+        "view": "arrival",
+        "quality": "cinematic",
+        "width": 1100,
+        "height": 720,
+        "reduced": false,
+        "calls": 15,
+        "maxCalls": 15,
+        "triangles": 2866,
+        "textures": 10,
+        "shadows": 1,
+        "camera": [
+          0,
+          1.65,
+          -4
+        ],
+        "targetScene": "broken-floor.confession"
+      },
+      "after": {
+        "name": "final-cinematic-broken-arrival-cinematic-1100-full",
+        "which": "broken",
+        "view": "arrival",
+        "quality": "cinematic",
+        "width": 1100,
+        "height": 720,
+        "reduced": false,
+        "calls": 15,
+        "maxCalls": 15,
+        "triangles": 3886,
+        "textures": 10,
+        "shadows": 1,
+        "camera": [
+          0,
+          1.65,
+          -4
+        ],
+        "targetScene": "broken-floor.confession"
+      },
+      "delta": {
+        "calls": 0,
+        "triangles": 1020,
+        "textures": 0
+      }
+    },
+    {
+      "case": "reveal",
+      "before": {
+        "name": "baseline-reveal-arrival-cinematic-1100-full",
+        "which": "reveal",
+        "view": "arrival",
+        "quality": "cinematic",
+        "width": 1100,
+        "height": 720,
+        "reduced": false,
+        "calls": 26,
+        "maxCalls": 26,
+        "triangles": 11362,
+        "textures": 11,
+        "shadows": 1,
+        "camera": [
+          0,
+          2.6,
+          -4
+        ],
+        "targetScene": "broken-floor.confession"
+      },
+      "after": {
+        "name": "final-cinematic-reveal-arrival-cinematic-1100-full",
+        "which": "reveal",
+        "view": "arrival",
+        "quality": "cinematic",
+        "width": 1100,
+        "height": 720,
+        "reduced": false,
+        "calls": 28,
+        "maxCalls": 28,
+        "triangles": 23462,
+        "textures": 11,
+        "shadows": 1,
+        "camera": [
+          0,
+          2.6,
+          -4
+        ],
+        "targetScene": "broken-floor.confession"
+      },
+      "delta": {
+        "calls": 2,
+        "triangles": 12100,
+        "textures": 0
+      }
+    },
+    {
+      "case": "blue",
+      "before": {
+        "name": "baseline-blue-arrival-cinematic-1100-full",
+        "which": "blue",
+        "view": "arrival",
+        "quality": "cinematic",
+        "width": 1100,
+        "height": 720,
+        "reduced": false,
+        "calls": 158,
+        "maxCalls": 158,
+        "triangles": 95702,
+        "textures": 9,
+        "shadows": 1,
+        "camera": [
+          0,
+          1.65,
+          -10
+        ],
+        "targetScene": "blue-moon.intimacy"
+      },
+      "after": {
+        "name": "final-corrections-blue-arrival-cinematic-1100-full",
+        "which": "blue",
+        "view": "arrival",
+        "quality": "cinematic",
+        "width": 1100,
+        "height": 720,
+        "reduced": false,
+        "calls": 164,
+        "maxCalls": 164,
+        "triangles": 135158,
+        "textures": 9,
+        "shadows": 1,
+        "camera": [
+          0,
+          1.65,
+          -10
+        ],
+        "targetScene": "blue-moon.intimacy"
+      },
+      "delta": {
+        "calls": 6,
+        "triangles": 39456,
+        "textures": 0
+      }
+    },
+    {
+      "case": "seer",
+      "before": {
+        "name": "baseline-seer-arrival-cinematic-1100-full",
+        "which": "seer",
+        "view": "arrival",
+        "quality": "cinematic",
+        "width": 1100,
+        "height": 720,
+        "reduced": false,
+        "calls": 116,
+        "maxCalls": 116,
+        "triangles": 44788,
+        "textures": 9,
+        "shadows": 1,
+        "camera": [
+          0,
+          1.65,
+          -11
+        ],
+        "targetScene": "sunset.true-mirror"
+      },
+      "after": {
+        "name": "final-corrections-seer-arrival-cinematic-1100-full",
+        "which": "seer",
+        "view": "arrival",
+        "quality": "cinematic",
+        "width": 1100,
+        "height": 720,
+        "reduced": false,
+        "calls": 116,
+        "maxCalls": 116,
+        "triangles": 48976,
+        "textures": 9,
+        "shadows": 1,
+        "camera": [
+          0,
+          1.65,
+          -11
+        ],
+        "targetScene": "sunset.true-mirror"
+      },
+      "delta": {
+        "calls": 0,
+        "triangles": 4188,
+        "textures": 0
+      }
+    },
+    {
+      "case": "house",
+      "before": {
+        "name": "baseline-house-arrival-cinematic-1100-full",
+        "which": "house",
+        "view": "arrival",
+        "quality": "cinematic",
+        "width": 1100,
+        "height": 720,
+        "reduced": false,
+        "calls": 103,
+        "maxCalls": 103,
+        "triangles": 33584,
+        "textures": 7,
+        "shadows": 1,
+        "camera": [
+          0.65,
+          1.65,
+          -1.65
+        ],
+        "targetScene": "thorned.old-memory-bedroom"
+      },
+      "after": {
+        "name": "final-cinematic-house-arrival-cinematic-1100-full",
+        "which": "house",
+        "view": "arrival",
+        "quality": "cinematic",
+        "width": 1100,
+        "height": 720,
+        "reduced": false,
+        "calls": 103,
+        "maxCalls": 103,
+        "triangles": 35448,
+        "textures": 7,
+        "shadows": 1,
+        "camera": [
+          0.65,
+          1.65,
+          -1.65
+        ],
+        "targetScene": "thorned.old-memory-bedroom"
+      },
+      "delta": {
+        "calls": 0,
+        "triangles": 1864,
+        "textures": 0
+      }
+    },
+    {
+      "case": "river",
+      "before": {
+        "name": "baseline-river-arrival-cinematic-1100-full",
+        "which": "river",
+        "view": "arrival",
+        "quality": "cinematic",
+        "width": 1100,
+        "height": 720,
+        "reduced": false,
+        "calls": 64,
+        "maxCalls": 64,
+        "triangles": 30896,
+        "textures": 8,
+        "shadows": 1,
+        "camera": [
+          0,
+          1.65,
+          -11
+        ],
+        "targetScene": "river.release-surrender"
+      },
+      "after": {
+        "name": "final-cinematic-river-arrival-cinematic-1100-full",
+        "which": "river",
+        "view": "arrival",
+        "quality": "cinematic",
+        "width": 1100,
+        "height": 720,
+        "reduced": false,
+        "calls": 64,
+        "maxCalls": 64,
+        "triangles": 32344,
+        "textures": 8,
+        "shadows": 1,
+        "camera": [
+          0,
+          1.65,
+          -11
+        ],
+        "targetScene": "river.release-surrender"
+      },
+      "delta": {
+        "calls": 0,
+        "triangles": 1448,
+        "textures": 0
+      }
+    },
+    {
+      "case": "womb",
+      "before": {
+        "name": "baseline-womb-arrival-cinematic-1100-full",
+        "which": "womb",
+        "view": "arrival",
+        "quality": "cinematic",
+        "width": 1100,
+        "height": 720,
+        "reduced": false,
+        "calls": 59,
+        "maxCalls": 59,
+        "triangles": 19804,
+        "textures": 7,
+        "shadows": 1,
+        "camera": [
+          -7.339162210107947,
+          1.65,
+          8.193698679700361
+        ],
+        "targetScene": "climb.womb"
+      },
+      "after": {
+        "name": "final-corrections-womb-arrival-cinematic-1100-full",
+        "which": "womb",
+        "view": "arrival",
+        "quality": "cinematic",
+        "width": 1100,
+        "height": 720,
+        "reduced": false,
+        "calls": 56,
+        "maxCalls": 56,
+        "triangles": 25764,
+        "textures": 7,
+        "shadows": 1,
+        "camera": [
+          -7.339162210107947,
+          1.65,
+          8.193698679700361
+        ],
+        "targetScene": "climb.womb"
+      },
+      "delta": {
+        "calls": -3,
+        "triangles": 5960,
+        "textures": 0
+      }
+    },
+    {
+      "case": "crowned",
+      "before": {
+        "name": "baseline-crowned-arrival-cinematic-1100-full",
+        "which": "crowned",
+        "view": "arrival",
+        "quality": "cinematic",
+        "width": 1100,
+        "height": 720,
+        "reduced": false,
+        "calls": 125,
+        "maxCalls": 125,
+        "triangles": 53482,
+        "textures": 7,
+        "shadows": 1,
+        "camera": [
+          -5.529385053897269,
+          1.65,
+          2.3293563329249327
+        ],
+        "targetScene": "crowned.home"
+      },
+      "after": {
+        "name": "final-corrections-crowned-arrival-cinematic-1100-full",
+        "which": "crowned",
+        "view": "arrival",
+        "quality": "cinematic",
+        "width": 1100,
+        "height": 720,
+        "reduced": false,
+        "calls": 123,
+        "maxCalls": 123,
+        "triangles": 48060,
+        "textures": 7,
+        "shadows": 1,
+        "camera": [
+          -5.529385053897269,
+          1.65,
+          2.3293563329249327
+        ],
+        "targetScene": "crowned.home"
+      },
+      "delta": {
+        "calls": -2,
+        "triangles": -5422,
+        "textures": 0
+      }
+    }
+  ],
+  "tierMatrix": [
+    {
+      "name": "final-tiers-blue-detail-low-1100-full",
+      "which": "blue",
+      "view": "detail",
+      "quality": "low",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 77,
+      "maxCalls": 77,
+      "triangles": 39034,
+      "textures": 1,
+      "shadows": 0,
+      "camera": [
+        3.5,
+        1.65,
+        -2.8
+      ],
+      "targetScene": "blue-moon.intimacy"
+    },
+    {
+      "name": "final-tiers-blue-detail-medium-1100-full",
+      "which": "blue",
+      "view": "detail",
+      "quality": "medium",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 77,
+      "maxCalls": 77,
+      "triangles": 46694,
+      "textures": 1,
+      "shadows": 0,
+      "camera": [
+        3.5,
+        1.65,
+        -2.8
+      ],
+      "targetScene": "blue-moon.intimacy"
+    },
+    {
+      "name": "final-tiers-blue-detail-high-1100-full",
+      "which": "blue",
+      "view": "detail",
+      "quality": "high",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 150,
+      "maxCalls": 150,
+      "triangles": 113337,
+      "textures": 3,
+      "shadows": 0,
+      "camera": [
+        3.5,
+        1.65,
+        -2.8
+      ],
+      "targetScene": "blue-moon.intimacy"
+    },
+    {
+      "name": "final-tiers-blue-detail-cinematic-1100-full",
+      "which": "blue",
+      "view": "detail",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 164,
+      "maxCalls": 164,
+      "triangles": 135158,
+      "textures": 9,
+      "shadows": 1,
+      "camera": [
+        3.5,
+        1.65,
+        -2.8
+      ],
+      "targetScene": "blue-moon.intimacy"
+    },
+    {
+      "name": "final-tiers-blue-detail-high-1100-reduced",
+      "which": "blue",
+      "view": "detail",
+      "quality": "high",
+      "width": 1100,
+      "height": 720,
+      "reduced": true,
+      "calls": 71,
+      "maxCalls": 71,
+      "triangles": 35156,
+      "textures": 1,
+      "shadows": 0,
+      "camera": [
+        3.5,
+        1.65,
+        -2.8
+      ],
+      "targetScene": "blue-moon.intimacy"
+    },
+    {
+      "name": "final-tiers-blue-detail-low-393-reduced",
+      "which": "blue",
+      "view": "detail",
+      "quality": "low",
+      "width": 393,
+      "height": 851,
+      "reduced": true,
+      "calls": 54,
+      "maxCalls": 54,
+      "triangles": 31424,
+      "textures": 1,
+      "shadows": 0,
+      "camera": [
+        3.5,
+        1.65,
+        -2.8
+      ],
+      "targetScene": "blue-moon.intimacy"
+    },
+    {
+      "name": "final-tiers-blue-detail-low-851-reduced",
+      "which": "blue",
+      "view": "detail",
+      "quality": "low",
+      "width": 851,
+      "height": 393,
+      "reduced": true,
+      "calls": 71,
+      "maxCalls": 71,
+      "triangles": 35112,
+      "textures": 1,
+      "shadows": 0,
+      "camera": [
+        3.5,
+        1.65,
+        -2.8
+      ],
+      "targetScene": "blue-moon.intimacy"
+    },
+    {
+      "name": "final-tiers-seer-detail-low-1100-full",
+      "which": "seer",
+      "view": "detail",
+      "quality": "low",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 53,
+      "maxCalls": 53,
+      "triangles": 11416,
+      "textures": 1,
+      "shadows": 0,
+      "camera": [
+        3.5,
+        1.65,
+        -2.8
+      ],
+      "targetScene": "sunset.true-mirror"
+    },
+    {
+      "name": "final-tiers-seer-detail-medium-1100-full",
+      "which": "seer",
+      "view": "detail",
+      "quality": "medium",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 53,
+      "maxCalls": 53,
+      "triangles": 12088,
+      "textures": 1,
+      "shadows": 0,
+      "camera": [
+        3.5,
+        1.65,
+        -2.8
+      ],
+      "targetScene": "sunset.true-mirror"
+    },
+    {
+      "name": "final-tiers-seer-detail-high-1100-full",
+      "which": "seer",
+      "view": "detail",
+      "quality": "high",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 109,
+      "maxCalls": 109,
+      "triangles": 43567,
+      "textures": 3,
+      "shadows": 0,
+      "camera": [
+        3.5,
+        1.65,
+        -2.8
+      ],
+      "targetScene": "sunset.true-mirror"
+    },
+    {
+      "name": "final-tiers-seer-detail-cinematic-1100-full",
+      "which": "seer",
+      "view": "detail",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 115,
+      "maxCalls": 115,
+      "triangles": 48948,
+      "textures": 9,
+      "shadows": 1,
+      "camera": [
+        3.5,
+        1.65,
+        -2.8
+      ],
+      "targetScene": "sunset.true-mirror"
+    },
+    {
+      "name": "final-tiers-seer-detail-high-1100-reduced",
+      "which": "seer",
+      "view": "detail",
+      "quality": "high",
+      "width": 1100,
+      "height": 720,
+      "reduced": true,
+      "calls": 44,
+      "maxCalls": 44,
+      "triangles": 8682,
+      "textures": 1,
+      "shadows": 0,
+      "camera": [
+        3.5,
+        1.65,
+        -2.8
+      ],
+      "targetScene": "sunset.true-mirror"
+    },
+    {
+      "name": "final-tiers-seer-detail-low-393-reduced",
+      "which": "seer",
+      "view": "detail",
+      "quality": "low",
+      "width": 393,
+      "height": 851,
+      "reduced": true,
+      "calls": 39,
+      "maxCalls": 39,
+      "triangles": 8425,
+      "textures": 1,
+      "shadows": 0,
+      "camera": [
+        3.5,
+        1.65,
+        -2.8
+      ],
+      "targetScene": "sunset.true-mirror"
+    },
+    {
+      "name": "final-tiers-seer-detail-low-851-reduced",
+      "which": "seer",
+      "view": "detail",
+      "quality": "low",
+      "width": 851,
+      "height": 393,
+      "reduced": true,
+      "calls": 45,
+      "maxCalls": 45,
+      "triangles": 8710,
+      "textures": 1,
+      "shadows": 0,
+      "camera": [
+        3.5,
+        1.65,
+        -2.8
+      ],
+      "targetScene": "sunset.true-mirror"
+    },
+    {
+      "name": "final-tiers-crowned-detail-low-1100-full",
+      "which": "crowned",
+      "view": "detail",
+      "quality": "low",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 60,
+      "maxCalls": 60,
+      "triangles": 26378,
+      "textures": 0,
+      "shadows": 0,
+      "camera": [
+        6.844264463794518,
+        2.2,
+        -0.49602817423967815
+      ],
+      "targetScene": "crowned.home"
+    },
+    {
+      "name": "final-tiers-crowned-detail-medium-1100-full",
+      "which": "crowned",
+      "view": "detail",
+      "quality": "medium",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 60,
+      "maxCalls": 60,
+      "triangles": 26378,
+      "textures": 0,
+      "shadows": 0,
+      "camera": [
+        6.844264463794518,
+        2.2,
+        -0.49602817423967815
+      ],
+      "targetScene": "crowned.home"
+    },
+    {
+      "name": "final-tiers-crowned-detail-high-1100-full",
+      "which": "crowned",
+      "view": "detail",
+      "quality": "high",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 61,
+      "maxCalls": 61,
+      "triangles": 28535,
+      "textures": 1,
+      "shadows": 0,
+      "camera": [
+        6.844264463794518,
+        2.2,
+        -0.49602817423967815
+      ],
+      "targetScene": "crowned.home"
+    },
+    {
+      "name": "final-tiers-crowned-detail-cinematic-1100-full",
+      "which": "crowned",
+      "view": "detail",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 87,
+      "maxCalls": 87,
+      "triangles": 39808,
+      "textures": 7,
+      "shadows": 1,
+      "camera": [
+        6.844264463794518,
+        2.2,
+        -0.49602817423967815
+      ],
+      "targetScene": "crowned.home"
+    },
+    {
+      "name": "final-tiers-crowned-detail-high-1100-reduced",
+      "which": "crowned",
+      "view": "detail",
+      "quality": "high",
+      "width": 1100,
+      "height": 720,
+      "reduced": true,
+      "calls": 52,
+      "maxCalls": 52,
+      "triangles": 19990,
+      "textures": 0,
+      "shadows": 0,
+      "camera": [
+        6.844264463794518,
+        2.2,
+        -0.49602817423967815
+      ],
+      "targetScene": "crowned.home"
+    },
+    {
+      "name": "final-tiers-crowned-detail-low-393-reduced",
+      "which": "crowned",
+      "view": "detail",
+      "quality": "low",
+      "width": 393,
+      "height": 851,
+      "reduced": true,
+      "calls": 36,
+      "maxCalls": 36,
+      "triangles": 17664,
+      "textures": 0,
+      "shadows": 0,
+      "camera": [
+        6.844264463794518,
+        2.2,
+        -0.49602817423967815
+      ],
+      "targetScene": "crowned.home"
+    },
+    {
+      "name": "final-tiers-crowned-detail-low-851-reduced",
+      "which": "crowned",
+      "view": "detail",
+      "quality": "low",
+      "width": 851,
+      "height": 393,
+      "reduced": true,
+      "calls": 61,
+      "maxCalls": 61,
+      "triangles": 22498,
+      "textures": 0,
+      "shadows": 0,
+      "camera": [
+        6.844264463794518,
+        2.2,
+        -0.49602817423967815
+      ],
+      "targetScene": "crowned.home"
+    },
+    {
+      "name": "final-tiers-river-detail-low-1100-full",
+      "which": "river",
+      "view": "detail",
+      "quality": "low",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 52,
+      "maxCalls": 52,
+      "triangles": 15574,
+      "textures": 1,
+      "shadows": 0,
+      "camera": [
+        3.5,
+        1.65,
+        -2.8
+      ],
+      "targetScene": "river.release-surrender"
+    },
+    {
+      "name": "final-tiers-river-detail-medium-1100-full",
+      "which": "river",
+      "view": "detail",
+      "quality": "medium",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 54,
+      "maxCalls": 54,
+      "triangles": 17590,
+      "textures": 1,
+      "shadows": 0,
+      "camera": [
+        3.5,
+        1.65,
+        -2.8
+      ],
+      "targetScene": "river.release-surrender"
+    },
+    {
+      "name": "final-tiers-river-detail-high-1100-full",
+      "which": "river",
+      "view": "detail",
+      "quality": "high",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 55,
+      "maxCalls": 55,
+      "triangles": 28227,
+      "textures": 2,
+      "shadows": 0,
+      "camera": [
+        3.5,
+        1.65,
+        -2.8
+      ],
+      "targetScene": "river.release-surrender"
+    },
+    {
+      "name": "final-tiers-river-detail-cinematic-1100-full",
+      "which": "river",
+      "view": "detail",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 61,
+      "maxCalls": 61,
+      "triangles": 31448,
+      "textures": 8,
+      "shadows": 1,
+      "camera": [
+        3.5,
+        1.65,
+        -2.8
+      ],
+      "targetScene": "river.release-surrender"
+    },
+    {
+      "name": "final-tiers-river-detail-high-1100-reduced",
+      "which": "river",
+      "view": "detail",
+      "quality": "high",
+      "width": 1100,
+      "height": 720,
+      "reduced": true,
+      "calls": 47,
+      "maxCalls": 47,
+      "triangles": 13310,
+      "textures": 1,
+      "shadows": 0,
+      "camera": [
+        3.5,
+        1.65,
+        -2.8
+      ],
+      "targetScene": "river.release-surrender"
+    },
+    {
+      "name": "final-tiers-river-detail-low-393-reduced",
+      "which": "river",
+      "view": "detail",
+      "quality": "low",
+      "width": 393,
+      "height": 851,
+      "reduced": true,
+      "calls": 41,
+      "maxCalls": 41,
+      "triangles": 11062,
+      "textures": 1,
+      "shadows": 0,
+      "camera": [
+        3.5,
+        1.65,
+        -2.8
+      ],
+      "targetScene": "river.release-surrender"
+    },
+    {
+      "name": "final-tiers-river-detail-low-851-reduced",
+      "which": "river",
+      "view": "detail",
+      "quality": "low",
+      "width": 851,
+      "height": 393,
+      "reduced": true,
+      "calls": 48,
+      "maxCalls": 48,
+      "triangles": 13406,
+      "textures": 1,
+      "shadows": 0,
+      "camera": [
+        3.5,
+        1.65,
+        -2.8
+      ],
+      "targetScene": "river.release-surrender"
+    }
+  ],
+  "cinematicViews": [
+    {
+      "name": "final-cinematic-broken-arrival-cinematic-1100-full",
+      "which": "broken",
+      "view": "arrival",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 15,
+      "maxCalls": 15,
+      "triangles": 3886,
+      "textures": 10,
+      "shadows": 1,
+      "camera": [
+        0,
+        1.65,
+        -4
+      ],
+      "targetScene": "broken-floor.confession"
+    },
+    {
+      "name": "final-cinematic-broken-detail-cinematic-1100-full",
+      "which": "broken",
+      "view": "detail",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 15,
+      "maxCalls": 15,
+      "triangles": 3886,
+      "textures": 10,
+      "shadows": 1,
+      "camera": [
+        3.5,
+        1.65,
+        -2.8
+      ],
+      "targetScene": "broken-floor.confession"
+    },
+    {
+      "name": "final-cinematic-broken-interaction-cinematic-1100-full",
+      "which": "broken",
+      "view": "interaction",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 24,
+      "maxCalls": 24,
+      "triangles": 20222,
+      "textures": 11,
+      "shadows": 1,
+      "camera": [
+        3.5,
+        1.65,
+        -2.8
+      ],
+      "targetScene": "broken-floor.confession"
+    },
+    {
+      "name": "final-cinematic-broken-departure-cinematic-1100-full",
+      "which": "broken",
+      "view": "departure",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 17,
+      "maxCalls": 17,
+      "triangles": 4490,
+      "textures": 10,
+      "shadows": 1,
+      "camera": [
+        0,
+        1.65,
+        11
+      ],
+      "targetScene": "broken-floor.confession"
+    },
+    {
+      "name": "final-cinematic-reveal-arrival-cinematic-1100-full",
+      "which": "reveal",
+      "view": "arrival",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 28,
+      "maxCalls": 28,
+      "triangles": 23462,
+      "textures": 11,
+      "shadows": 1,
+      "camera": [
+        0,
+        2.6,
+        -4
+      ],
+      "targetScene": "broken-floor.confession"
+    },
+    {
+      "name": "final-cinematic-reveal-detail-cinematic-1100-full",
+      "which": "reveal",
+      "view": "detail",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 28,
+      "maxCalls": 28,
+      "triangles": 23462,
+      "textures": 11,
+      "shadows": 1,
+      "camera": [
+        0,
+        2.6,
+        -4
+      ],
+      "targetScene": "broken-floor.confession"
+    },
+    {
+      "name": "final-cinematic-reveal-interaction-cinematic-1100-full",
+      "which": "reveal",
+      "view": "interaction",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 31,
+      "maxCalls": 31,
+      "triangles": 36856,
+      "textures": 11,
+      "shadows": 1,
+      "camera": [
+        0,
+        2.6,
+        -4
+      ],
+      "targetScene": "broken-floor.confession"
+    },
+    {
+      "name": "final-cinematic-reveal-departure-cinematic-1100-full",
+      "which": "reveal",
+      "view": "departure",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 26,
+      "maxCalls": 26,
+      "triangles": 20826,
+      "textures": 11,
+      "shadows": 1,
+      "camera": [
+        0,
+        1.65,
+        11
+      ],
+      "targetScene": "broken-floor.confession"
+    },
+    {
+      "name": "final-cinematic-house-arrival-cinematic-1100-full",
+      "which": "house",
+      "view": "arrival",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 103,
+      "maxCalls": 103,
+      "triangles": 35448,
+      "textures": 7,
+      "shadows": 1,
+      "camera": [
+        0.65,
+        1.65,
+        -1.65
+      ],
+      "targetScene": "thorned.old-memory-bedroom"
+    },
+    {
+      "name": "final-cinematic-house-detail-cinematic-1100-full",
+      "which": "house",
+      "view": "detail",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 91,
+      "maxCalls": 91,
+      "triangles": 33882,
+      "textures": 7,
+      "shadows": 1,
+      "camera": [
+        0.4,
+        1.65,
+        0.4
+      ],
+      "targetScene": "thorned.old-memory-bedroom"
+    },
+    {
+      "name": "final-cinematic-house-interaction-cinematic-1100-full",
+      "which": "house",
+      "view": "interaction",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 83,
+      "maxCalls": 83,
+      "triangles": 33796,
+      "textures": 7,
+      "shadows": 1,
+      "camera": [
+        0.4,
+        1.65,
+        0.4
+      ],
+      "targetScene": "thorned.old-memory-bedroom"
+    },
+    {
+      "name": "final-cinematic-house-departure-cinematic-1100-full",
+      "which": "house",
+      "view": "departure",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 95,
+      "maxCalls": 95,
+      "triangles": 35504,
+      "textures": 7,
+      "shadows": 1,
+      "camera": [
+        0,
+        1.65,
+        5
+      ],
+      "targetScene": "thorned.old-memory-bedroom"
+    },
+    {
+      "name": "final-cinematic-river-arrival-cinematic-1100-full",
+      "which": "river",
+      "view": "arrival",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 64,
+      "maxCalls": 64,
+      "triangles": 32344,
+      "textures": 8,
+      "shadows": 1,
+      "camera": [
+        0,
+        1.65,
+        -11
+      ],
+      "targetScene": "river.release-surrender"
+    },
+    {
+      "name": "final-cinematic-river-detail-cinematic-1100-full",
+      "which": "river",
+      "view": "detail",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 61,
+      "maxCalls": 61,
+      "triangles": 31448,
+      "textures": 8,
+      "shadows": 1,
+      "camera": [
+        3.5,
+        1.65,
+        -2.8
+      ],
+      "targetScene": "river.release-surrender"
+    },
+    {
+      "name": "final-cinematic-river-interaction-cinematic-1100-full",
+      "which": "river",
+      "view": "interaction",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 60,
+      "maxCalls": 60,
+      "triangles": 31304,
+      "textures": 8,
+      "shadows": 1,
+      "camera": [
+        3.5,
+        1.65,
+        -2.8
+      ],
+      "targetScene": "river.release-surrender"
+    },
+    {
+      "name": "final-cinematic-river-departure-cinematic-1100-full",
+      "which": "river",
+      "view": "departure",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 66,
+      "maxCalls": 66,
+      "triangles": 32432,
+      "textures": 8,
+      "shadows": 1,
+      "camera": [
+        0,
+        1.65,
+        11
+      ],
+      "targetScene": "river.release-surrender"
+    },
+    {
+      "name": "final-cinematic-verbs-arrival-cinematic-1100-full",
+      "which": "verbs",
+      "view": "arrival",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 79,
+      "maxCalls": 79,
+      "triangles": 54106,
+      "textures": 7,
+      "shadows": 1,
+      "camera": [
+        0,
+        1.65,
+        -11
+      ],
+      "targetScene": "fork.four-verbs"
+    },
+    {
+      "name": "final-cinematic-verbs-detail-cinematic-1100-full",
+      "which": "verbs",
+      "view": "detail",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 79,
+      "maxCalls": 79,
+      "triangles": 54106,
+      "textures": 7,
+      "shadows": 1,
+      "camera": [
+        -7,
+        1.9,
+        -7
+      ],
+      "targetScene": "fork.four-verbs"
+    },
+    {
+      "name": "final-cinematic-verbs-interaction-cinematic-1100-full",
+      "which": "verbs",
+      "view": "interaction",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 71,
+      "maxCalls": 71,
+      "triangles": 51594,
+      "textures": 7,
+      "shadows": 1,
+      "camera": [
+        -7,
+        1.9,
+        -7
+      ],
+      "targetScene": "fork.four-verbs"
+    },
+    {
+      "name": "final-cinematic-verbs-departure-cinematic-1100-full",
+      "which": "verbs",
+      "view": "departure",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 77,
+      "maxCalls": 77,
+      "triangles": 53746,
+      "textures": 7,
+      "shadows": 1,
+      "camera": [
+        0,
+        1.65,
+        11
+      ],
+      "targetScene": "fork.four-verbs"
+    },
+    {
+      "name": "final-cinematic-fork-arrival-cinematic-1100-full",
+      "which": "fork",
+      "view": "arrival",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 49,
+      "maxCalls": 49,
+      "triangles": 47526,
+      "textures": 7,
+      "shadows": 1,
+      "camera": [
+        0,
+        1.65,
+        -11
+      ],
+      "targetScene": "fork.weighing"
+    },
+    {
+      "name": "final-cinematic-fork-detail-cinematic-1100-full",
+      "which": "fork",
+      "view": "detail",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 49,
+      "maxCalls": 49,
+      "triangles": 47526,
+      "textures": 7,
+      "shadows": 1,
+      "camera": [
+        3.5,
+        1.65,
+        -2.8
+      ],
+      "targetScene": "fork.weighing"
+    },
+    {
+      "name": "final-cinematic-fork-interaction-cinematic-1100-full",
+      "which": "fork",
+      "view": "interaction",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 51,
+      "maxCalls": 51,
+      "triangles": 48126,
+      "textures": 7,
+      "shadows": 1,
+      "camera": [
+        3.5,
+        1.65,
+        -2.8
+      ],
+      "targetScene": "fork.weighing"
+    },
+    {
+      "name": "final-cinematic-fork-departure-cinematic-1100-full",
+      "which": "fork",
+      "view": "departure",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 47,
+      "maxCalls": 47,
+      "triangles": 47166,
+      "textures": 7,
+      "shadows": 1,
+      "camera": [
+        0,
+        1.65,
+        11
+      ],
+      "targetScene": "fork.weighing"
+    },
+    {
+      "name": "final-corrections-blue-arrival-cinematic-1100-full",
+      "which": "blue",
+      "view": "arrival",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 164,
+      "maxCalls": 164,
+      "triangles": 135158,
+      "textures": 9,
+      "shadows": 1,
+      "camera": [
+        0,
+        1.65,
+        -10
+      ],
+      "targetScene": "blue-moon.intimacy"
+    },
+    {
+      "name": "final-corrections-blue-detail-cinematic-1100-full",
+      "which": "blue",
+      "view": "detail",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 164,
+      "maxCalls": 164,
+      "triangles": 135158,
+      "textures": 9,
+      "shadows": 1,
+      "camera": [
+        3.5,
+        1.65,
+        -2.8
+      ],
+      "targetScene": "blue-moon.intimacy"
+    },
+    {
+      "name": "final-corrections-blue-interaction-cinematic-1100-full",
+      "which": "blue",
+      "view": "interaction",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 169,
+      "maxCalls": 169,
+      "triangles": 137886,
+      "textures": 9,
+      "shadows": 1,
+      "camera": [
+        3.5,
+        1.65,
+        -2.8
+      ],
+      "targetScene": "blue-moon.intimacy"
+    },
+    {
+      "name": "final-corrections-blue-departure-cinematic-1100-full",
+      "which": "blue",
+      "view": "departure",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 164,
+      "maxCalls": 164,
+      "triangles": 136006,
+      "textures": 9,
+      "shadows": 1,
+      "camera": [
+        0,
+        1.65,
+        11
+      ],
+      "targetScene": "blue-moon.intimacy"
+    },
+    {
+      "name": "final-corrections-seer-arrival-cinematic-1100-full",
+      "which": "seer",
+      "view": "arrival",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 116,
+      "maxCalls": 116,
+      "triangles": 48976,
+      "textures": 9,
+      "shadows": 1,
+      "camera": [
+        0,
+        1.65,
+        -11
+      ],
+      "targetScene": "sunset.true-mirror"
+    },
+    {
+      "name": "final-corrections-seer-detail-cinematic-1100-full",
+      "which": "seer",
+      "view": "detail",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 115,
+      "maxCalls": 115,
+      "triangles": 48948,
+      "textures": 9,
+      "shadows": 1,
+      "camera": [
+        3.5,
+        1.65,
+        -2.8
+      ],
+      "targetScene": "sunset.true-mirror"
+    },
+    {
+      "name": "final-corrections-seer-interaction-cinematic-1100-full",
+      "which": "seer",
+      "view": "interaction",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 115,
+      "maxCalls": 115,
+      "triangles": 48948,
+      "textures": 9,
+      "shadows": 1,
+      "camera": [
+        3.5,
+        1.65,
+        -2.8
+      ],
+      "targetScene": "sunset.true-mirror"
+    },
+    {
+      "name": "final-corrections-seer-departure-cinematic-1100-full",
+      "which": "seer",
+      "view": "departure",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 61,
+      "maxCalls": 61,
+      "triangles": 24819,
+      "textures": 8,
+      "shadows": 1,
+      "camera": [
+        0,
+        1.65,
+        11
+      ],
+      "targetScene": "sunset.true-mirror"
+    },
+    {
+      "name": "final-corrections-exit-arrival-cinematic-1100-full",
+      "which": "exit",
+      "view": "arrival",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 96,
+      "maxCalls": 96,
+      "triangles": 37694,
+      "textures": 7,
+      "shadows": 1,
+      "camera": [
+        0.65,
+        1.65,
+        -1.65
+      ],
+      "targetScene": "thorned.self-owned-world"
+    },
+    {
+      "name": "final-corrections-exit-detail-cinematic-1100-full",
+      "which": "exit",
+      "view": "detail",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 79,
+      "maxCalls": 79,
+      "triangles": 35282,
+      "textures": 7,
+      "shadows": 1,
+      "camera": [
+        0.25,
+        1.65,
+        4.4
+      ],
+      "targetScene": "thorned.self-owned-world"
+    },
+    {
+      "name": "final-corrections-exit-interaction-cinematic-1100-full",
+      "which": "exit",
+      "view": "interaction",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 76,
+      "maxCalls": 76,
+      "triangles": 34720,
+      "textures": 7,
+      "shadows": 1,
+      "camera": [
+        0.25,
+        1.65,
+        4.4
+      ],
+      "targetScene": "thorned.self-owned-world"
+    },
+    {
+      "name": "final-corrections-exit-departure-cinematic-1100-full",
+      "which": "exit",
+      "view": "departure",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 93,
+      "maxCalls": 93,
+      "triangles": 36930,
+      "textures": 7,
+      "shadows": 1,
+      "camera": [
+        0,
+        1.65,
+        5
+      ],
+      "targetScene": "thorned.self-owned-world"
+    },
+    {
+      "name": "final-corrections-mind-arrival-cinematic-1100-full",
+      "which": "mind",
+      "view": "arrival",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 46,
+      "maxCalls": 46,
+      "triangles": 9492,
+      "textures": 7,
+      "shadows": 1,
+      "camera": [
+        -10.399893040779192,
+        1.65,
+        3.5836049922323356
+      ],
+      "targetScene": "climb.mind"
+    },
+    {
+      "name": "final-corrections-mind-detail-cinematic-1100-full",
+      "which": "mind",
+      "view": "detail",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 37,
+      "maxCalls": 37,
+      "triangles": 9162,
+      "textures": 7,
+      "shadows": 1,
+      "camera": [
+        -3.7874834533631736,
+        1.65,
+        -2.3968665149524213
+      ],
+      "targetScene": "climb.mind"
+    },
+    {
+      "name": "final-corrections-mind-interaction-cinematic-1100-full",
+      "which": "mind",
+      "view": "interaction",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 28,
+      "maxCalls": 28,
+      "triangles": 8544,
+      "textures": 7,
+      "shadows": 1,
+      "camera": [
+        -3.7874834533631736,
+        1.65,
+        -2.3968665149524213
+      ],
+      "targetScene": "climb.mind"
+    },
+    {
+      "name": "final-corrections-mind-departure-cinematic-1100-full",
+      "which": "mind",
+      "view": "departure",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 46,
+      "maxCalls": 46,
+      "triangles": 9492,
+      "textures": 7,
+      "shadows": 1,
+      "camera": [
+        10.399893040779192,
+        1.65,
+        -3.5836049922323356
+      ],
+      "targetScene": "climb.mind"
+    },
+    {
+      "name": "final-corrections-climbs-arrival-cinematic-1100-full",
+      "which": "climbs",
+      "view": "arrival",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 61,
+      "maxCalls": 61,
+      "triangles": 29452,
+      "textures": 8,
+      "shadows": 1,
+      "camera": [
+        10.16005774868186,
+        1.65,
+        4.21583046901197
+      ],
+      "targetScene": "climb.heart"
+    },
+    {
+      "name": "final-corrections-climbs-detail-cinematic-1100-full",
+      "which": "climbs",
+      "view": "detail",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 50,
+      "maxCalls": 50,
+      "triangles": 27430,
+      "textures": 8,
+      "shadows": 1,
+      "camera": [
+        1.2447959140697553,
+        1.65,
+        4.305866130329093
+      ],
+      "targetScene": "climb.heart"
+    },
+    {
+      "name": "final-corrections-climbs-interaction-cinematic-1100-full",
+      "which": "climbs",
+      "view": "interaction",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 50,
+      "maxCalls": 50,
+      "triangles": 27430,
+      "textures": 8,
+      "shadows": 1,
+      "camera": [
+        1.2447959140697553,
+        1.65,
+        4.305866130329093
+      ],
+      "targetScene": "climb.heart"
+    },
+    {
+      "name": "final-corrections-climbs-departure-cinematic-1100-full",
+      "which": "climbs",
+      "view": "departure",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 59,
+      "maxCalls": 59,
+      "triangles": 29364,
+      "textures": 8,
+      "shadows": 1,
+      "camera": [
+        -10.16005774868186,
+        1.65,
+        -4.21583046901197
+      ],
+      "targetScene": "climb.heart"
+    },
+    {
+      "name": "final-corrections-womb-arrival-cinematic-1100-full",
+      "which": "womb",
+      "view": "arrival",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 56,
+      "maxCalls": 56,
+      "triangles": 25764,
+      "textures": 7,
+      "shadows": 1,
+      "camera": [
+        -7.339162210107947,
+        1.65,
+        8.193698679700361
+      ],
+      "targetScene": "climb.womb"
+    },
+    {
+      "name": "final-corrections-womb-detail-cinematic-1100-full",
+      "which": "womb",
+      "view": "detail",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 48,
+      "maxCalls": 48,
+      "triangles": 24740,
+      "textures": 7,
+      "shadows": 1,
+      "camera": [
+        -4.475236324295774,
+        1.65,
+        -0.24951922111061853
+      ],
+      "targetScene": "climb.womb"
+    },
+    {
+      "name": "final-corrections-womb-interaction-cinematic-1100-full",
+      "which": "womb",
+      "view": "interaction",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 48,
+      "maxCalls": 48,
+      "triangles": 24740,
+      "textures": 7,
+      "shadows": 1,
+      "camera": [
+        -4.475236324295774,
+        1.65,
+        -0.24951922111061853
+      ],
+      "targetScene": "climb.womb"
+    },
+    {
+      "name": "final-corrections-womb-departure-cinematic-1100-full",
+      "which": "womb",
+      "view": "departure",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 56,
+      "maxCalls": 56,
+      "triangles": 25764,
+      "textures": 7,
+      "shadows": 1,
+      "camera": [
+        7.339162210107947,
+        1.65,
+        -8.193698679700361
+      ],
+      "targetScene": "climb.womb"
+    },
+    {
+      "name": "final-corrections-crowned-arrival-cinematic-1100-full",
+      "which": "crowned",
+      "view": "arrival",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 123,
+      "maxCalls": 123,
+      "triangles": 48060,
+      "textures": 7,
+      "shadows": 1,
+      "camera": [
+        -5.529385053897269,
+        1.65,
+        2.3293563329249327
+      ],
+      "targetScene": "crowned.home"
+    },
+    {
+      "name": "final-corrections-crowned-detail-cinematic-1100-full",
+      "which": "crowned",
+      "view": "detail",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 87,
+      "maxCalls": 87,
+      "triangles": 39808,
+      "textures": 7,
+      "shadows": 1,
+      "camera": [
+        6.844264463794518,
+        2.2,
+        -0.49602817423967815
+      ],
+      "targetScene": "crowned.home"
+    },
+    {
+      "name": "final-corrections-crowned-interaction-cinematic-1100-full",
+      "which": "crowned",
+      "view": "interaction",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 87,
+      "maxCalls": 87,
+      "triangles": 39808,
+      "textures": 7,
+      "shadows": 1,
+      "camera": [
+        6.844264463794518,
+        2.2,
+        -0.49602817423967815
+      ],
+      "targetScene": "crowned.home"
+    },
+    {
+      "name": "final-corrections-crowned-departure-cinematic-1100-full",
+      "which": "crowned",
+      "view": "departure",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 87,
+      "maxCalls": 87,
+      "triangles": 38110,
+      "textures": 7,
+      "shadows": 1,
+      "camera": [
+        11.05877010779454,
+        1.65,
+        -4.658712665849865
+      ],
+      "targetScene": "crowned.home"
+    },
+    {
+      "name": "final-corrections-sovereign-arrival-cinematic-1100-full",
+      "which": "sovereign",
+      "view": "arrival",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 125,
+      "maxCalls": 125,
+      "triangles": 51562,
+      "textures": 7,
+      "shadows": 1,
+      "camera": [
+        5.264645931604386,
+        1.65,
+        2.8781075752725775
+      ],
+      "targetScene": "crowned.sovereignty"
+    },
+    {
+      "name": "final-corrections-sovereign-detail-cinematic-1100-full",
+      "which": "sovereign",
+      "view": "detail",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 92,
+      "maxCalls": 92,
+      "triangles": 45244,
+      "textures": 7,
+      "shadows": 1,
+      "camera": [
+        -4.648060314971472,
+        2.2,
+        -5.048320048133567
+      ],
+      "targetScene": "crowned.sovereignty"
+    },
+    {
+      "name": "final-corrections-sovereign-interaction-cinematic-1100-full",
+      "which": "sovereign",
+      "view": "interaction",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 88,
+      "maxCalls": 88,
+      "triangles": 44546,
+      "textures": 7,
+      "shadows": 1,
+      "camera": [
+        -4.648060314971472,
+        2.2,
+        -5.048320048133567
+      ],
+      "targetScene": "crowned.sovereignty"
+    },
+    {
+      "name": "final-corrections-sovereign-departure-cinematic-1100-full",
+      "which": "sovereign",
+      "view": "departure",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 87,
+      "maxCalls": 87,
+      "triangles": 38520,
+      "textures": 7,
+      "shadows": 1,
+      "camera": [
+        -10.52929186320877,
+        1.65,
+        -5.756215150545154
+      ],
+      "targetScene": "crowned.sovereignty"
+    },
+    {
+      "name": "final-corrections-epilogue-arrival-cinematic-1100-full",
+      "which": "epilogue",
+      "view": "arrival",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 146,
+      "maxCalls": 146,
+      "triangles": 36845,
+      "textures": 8,
+      "shadows": 1,
+      "camera": [
+        0,
+        1.65,
+        6.5
+      ],
+      "targetScene": "epilogue.constellation"
+    },
+    {
+      "name": "final-corrections-epilogue-detail-cinematic-1100-full",
+      "which": "epilogue",
+      "view": "detail",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 28,
+      "maxCalls": 28,
+      "triangles": 15616,
+      "textures": 8,
+      "shadows": 1,
+      "camera": [
+        3.5,
+        1.65,
+        -2.8
+      ],
+      "targetScene": "epilogue.constellation"
+    },
+    {
+      "name": "final-corrections-epilogue-interaction-cinematic-1100-full",
+      "which": "epilogue",
+      "view": "interaction",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 28,
+      "maxCalls": 28,
+      "triangles": 15616,
+      "textures": 8,
+      "shadows": 1,
+      "camera": [
+        3.5,
+        1.65,
+        -2.8
+      ],
+      "targetScene": "epilogue.constellation"
+    },
+    {
+      "name": "final-corrections-epilogue-departure-cinematic-1100-full",
+      "which": "epilogue",
+      "view": "departure",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 146,
+      "maxCalls": 146,
+      "triangles": 36845,
+      "textures": 8,
+      "shadows": 1,
+      "camera": [
+        0,
+        1.65,
+        11
+      ],
+      "targetScene": "epilogue.constellation"
+    },
+    {
+      "name": "final-corrections-finale-arrival-cinematic-1100-full",
+      "which": "finale",
+      "view": "arrival",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 202,
+      "maxCalls": 202,
+      "triangles": 53595,
+      "textures": 8,
+      "shadows": 1,
+      "camera": [
+        0,
+        1.65,
+        6.5
+      ],
+      "targetScene": "epilogue.constellation"
+    },
+    {
+      "name": "final-corrections-finale-detail-cinematic-1100-full",
+      "which": "finale",
+      "view": "detail",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 34,
+      "maxCalls": 34,
+      "triangles": 19432,
+      "textures": 8,
+      "shadows": 1,
+      "camera": [
+        3.5,
+        1.65,
+        -2.8
+      ],
+      "targetScene": "epilogue.constellation"
+    },
+    {
+      "name": "final-corrections-finale-interaction-cinematic-1100-full",
+      "which": "finale",
+      "view": "interaction",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 34,
+      "maxCalls": 34,
+      "triangles": 19432,
+      "textures": 8,
+      "shadows": 1,
+      "camera": [
+        3.5,
+        1.65,
+        -2.8
+      ],
+      "targetScene": "epilogue.constellation"
+    },
+    {
+      "name": "final-corrections-finale-departure-cinematic-1100-full",
+      "which": "finale",
+      "view": "departure",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 202,
+      "maxCalls": 202,
+      "triangles": 53595,
+      "textures": 8,
+      "shadows": 1,
+      "camera": [
+        0,
+        1.65,
+        11
+      ],
+      "targetScene": "epilogue.constellation"
+    }
+  ],
+  "canonicalScenes": [
+    {
+      "name": "final-canonical-broken-floor-confession-arrival-high-1100-full",
+      "which": "broken-floor-confession",
+      "view": "arrival",
+      "quality": "high",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 10,
+      "maxCalls": 10,
+      "triangles": 3881,
+      "textures": 4,
+      "shadows": 0,
+      "camera": [
+        0,
+        1.65,
+        -4
+      ],
+      "targetScene": "broken-floor.confession"
+    },
+    {
+      "name": "final-canonical-broken-floor-confession-arrival-low-393-reduced",
+      "which": "broken-floor-confession",
+      "view": "arrival",
+      "quality": "low",
+      "width": 393,
+      "height": 851,
+      "reduced": true,
+      "calls": 6,
+      "maxCalls": 6,
+      "triangles": 2748,
+      "textures": 3,
+      "shadows": 0,
+      "camera": [
+        0,
+        1.65,
+        -4
+      ],
+      "targetScene": "broken-floor.confession"
+    },
+    {
+      "name": "final-canonical-enchanted-rabbit-hole-arrival-high-1100-full",
+      "which": "enchanted-rabbit-hole",
+      "view": "arrival",
+      "quality": "high",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 42,
+      "maxCalls": 42,
+      "triangles": 40835,
+      "textures": 1,
+      "shadows": 0,
+      "camera": [
+        0,
+        1.65,
+        -11
+      ],
+      "targetScene": "enchanted.rabbit-hole"
+    },
+    {
+      "name": "final-canonical-enchanted-rabbit-hole-arrival-low-393-reduced",
+      "which": "enchanted-rabbit-hole",
+      "view": "arrival",
+      "quality": "low",
+      "width": 393,
+      "height": 851,
+      "reduced": true,
+      "calls": 31,
+      "maxCalls": 31,
+      "triangles": 24170,
+      "textures": 0,
+      "shadows": 0,
+      "camera": [
+        0,
+        1.65,
+        -11
+      ],
+      "targetScene": "enchanted.rabbit-hole"
+    },
+    {
+      "name": "final-canonical-enchanted-friendship-meadow-arrival-high-1100-full",
+      "which": "enchanted-friendship-meadow",
+      "view": "arrival",
+      "quality": "high",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 42,
+      "maxCalls": 42,
+      "triangles": 50539,
+      "textures": 1,
+      "shadows": 0,
+      "camera": [
+        0,
+        1.65,
+        -11
+      ],
+      "targetScene": "enchanted.friendship-meadow"
+    },
+    {
+      "name": "final-canonical-enchanted-friendship-meadow-arrival-low-393-reduced",
+      "which": "enchanted-friendship-meadow",
+      "view": "arrival",
+      "quality": "low",
+      "width": 393,
+      "height": 851,
+      "reduced": true,
+      "calls": 35,
+      "maxCalls": 35,
+      "triangles": 27378,
+      "textures": 0,
+      "shadows": 0,
+      "camera": [
+        0,
+        1.65,
+        -11
+      ],
+      "targetScene": "enchanted.friendship-meadow"
+    },
+    {
+      "name": "final-canonical-enchanted-masked-hearth-arrival-high-1100-full",
+      "which": "enchanted-masked-hearth",
+      "view": "arrival",
+      "quality": "high",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 41,
+      "maxCalls": 41,
+      "triangles": 40099,
+      "textures": 1,
+      "shadows": 0,
+      "camera": [
+        0,
+        1.65,
+        -11
+      ],
+      "targetScene": "enchanted.masked-hearth"
+    },
+    {
+      "name": "final-canonical-enchanted-masked-hearth-arrival-low-393-reduced",
+      "which": "enchanted-masked-hearth",
+      "view": "arrival",
+      "quality": "low",
+      "width": 393,
+      "height": 851,
+      "reduced": true,
+      "calls": 33,
+      "maxCalls": 33,
+      "triangles": 24506,
+      "textures": 0,
+      "shadows": 0,
+      "camera": [
+        0,
+        1.65,
+        -11
+      ],
+      "targetScene": "enchanted.masked-hearth"
+    },
+    {
+      "name": "final-canonical-blue-moon-sanctuary-arrival-high-1100-full",
+      "which": "blue-moon-sanctuary",
+      "view": "arrival",
+      "quality": "high",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 102,
+      "maxCalls": 102,
+      "triangles": 98277,
+      "textures": 3,
+      "shadows": 0,
+      "camera": [
+        0,
+        1.65,
+        -10
+      ],
+      "targetScene": "blue-moon.sanctuary"
+    },
+    {
+      "name": "final-canonical-blue-moon-sanctuary-arrival-low-393-reduced",
+      "which": "blue-moon-sanctuary",
+      "view": "arrival",
+      "quality": "low",
+      "width": 393,
+      "height": 851,
+      "reduced": true,
+      "calls": 39,
+      "maxCalls": 39,
+      "triangles": 28282,
+      "textures": 1,
+      "shadows": 0,
+      "camera": [
+        0,
+        1.65,
+        -10
+      ],
+      "targetScene": "blue-moon.sanctuary"
+    },
+    {
+      "name": "final-canonical-blue-moon-intimacy-arrival-high-1100-full",
+      "which": "blue-moon-intimacy",
+      "view": "arrival",
+      "quality": "high",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 150,
+      "maxCalls": 150,
+      "triangles": 113337,
+      "textures": 3,
+      "shadows": 0,
+      "camera": [
+        0,
+        1.65,
+        -10
+      ],
+      "targetScene": "blue-moon.intimacy"
+    },
+    {
+      "name": "final-canonical-blue-moon-intimacy-arrival-low-393-reduced",
+      "which": "blue-moon-intimacy",
+      "view": "arrival",
+      "quality": "low",
+      "width": 393,
+      "height": 851,
+      "reduced": true,
+      "calls": 65,
+      "maxCalls": 65,
+      "triangles": 33288,
+      "textures": 1,
+      "shadows": 0,
+      "camera": [
+        0,
+        1.65,
+        -10
+      ],
+      "targetScene": "blue-moon.intimacy"
+    },
+    {
+      "name": "final-canonical-blue-moon-caged-bird-arrival-high-1100-full",
+      "which": "blue-moon-caged-bird",
+      "view": "arrival",
+      "quality": "high",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 152,
+      "maxCalls": 152,
+      "triangles": 107273,
+      "textures": 3,
+      "shadows": 0,
+      "camera": [
+        0,
+        1.65,
+        -10
+      ],
+      "targetScene": "blue-moon.caged-bird"
+    },
+    {
+      "name": "final-canonical-blue-moon-caged-bird-arrival-low-393-reduced",
+      "which": "blue-moon-caged-bird",
+      "view": "arrival",
+      "quality": "low",
+      "width": 393,
+      "height": 851,
+      "reduced": true,
+      "calls": 56,
+      "maxCalls": 56,
+      "triangles": 30274,
+      "textures": 1,
+      "shadows": 0,
+      "camera": [
+        0,
+        1.65,
+        -10
+      ],
+      "targetScene": "blue-moon.caged-bird"
+    },
+    {
+      "name": "final-canonical-nest-two-hands-arrival-high-1100-full",
+      "which": "nest-two-hands",
+      "view": "arrival",
+      "quality": "high",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 64,
+      "maxCalls": 64,
+      "triangles": 30553,
+      "textures": 1,
+      "shadows": 0,
+      "camera": [
+        0,
+        1.65,
+        -11
+      ],
+      "targetScene": "nest.two-hands"
+    },
+    {
+      "name": "final-canonical-nest-two-hands-arrival-low-393-reduced",
+      "which": "nest-two-hands",
+      "view": "arrival",
+      "quality": "low",
+      "width": 393,
+      "height": 851,
+      "reduced": true,
+      "calls": 55,
+      "maxCalls": 55,
+      "triangles": 17172,
+      "textures": 0,
+      "shadows": 0,
+      "camera": [
+        0,
+        1.65,
+        -11
+      ],
+      "targetScene": "nest.two-hands"
+    },
+    {
+      "name": "final-canonical-nest-unsupported-cycle-arrival-high-1100-full",
+      "which": "nest-unsupported-cycle",
+      "view": "arrival",
+      "quality": "high",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 72,
+      "maxCalls": 72,
+      "triangles": 28019,
+      "textures": 1,
+      "shadows": 0,
+      "camera": [
+        0,
+        1.65,
+        -11
+      ],
+      "targetScene": "nest.unsupported-cycle"
+    },
+    {
+      "name": "final-canonical-nest-unsupported-cycle-arrival-low-393-reduced",
+      "which": "nest-unsupported-cycle",
+      "view": "arrival",
+      "quality": "low",
+      "width": 393,
+      "height": 851,
+      "reduced": true,
+      "calls": 59,
+      "maxCalls": 59,
+      "triangles": 15094,
+      "textures": 0,
+      "shadows": 0,
+      "camera": [
+        0,
+        1.65,
+        -11
+      ],
+      "targetScene": "nest.unsupported-cycle"
+    },
+    {
+      "name": "final-canonical-nest-protection-arrival-high-1100-full",
+      "which": "nest-protection",
+      "view": "arrival",
+      "quality": "high",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 61,
+      "maxCalls": 61,
+      "triangles": 30365,
+      "textures": 1,
+      "shadows": 0,
+      "camera": [
+        0,
+        1.65,
+        -11
+      ],
+      "targetScene": "nest.protection"
+    },
+    {
+      "name": "final-canonical-nest-protection-arrival-low-393-reduced",
+      "which": "nest-protection",
+      "view": "arrival",
+      "quality": "low",
+      "width": 393,
+      "height": 851,
+      "reduced": true,
+      "calls": 50,
+      "maxCalls": 50,
+      "triangles": 15968,
+      "textures": 0,
+      "shadows": 0,
+      "camera": [
+        0,
+        1.65,
+        -11
+      ],
+      "targetScene": "nest.protection"
+    },
+    {
+      "name": "final-canonical-sunset-warning-grove-arrival-high-1100-full",
+      "which": "sunset-warning-grove",
+      "view": "arrival",
+      "quality": "high",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 102,
+      "maxCalls": 102,
+      "triangles": 48683,
+      "textures": 2,
+      "shadows": 0,
+      "camera": [
+        0,
+        1.65,
+        -11
+      ],
+      "targetScene": "sunset.warning-grove"
+    },
+    {
+      "name": "final-canonical-sunset-warning-grove-arrival-low-393-reduced",
+      "which": "sunset-warning-grove",
+      "view": "arrival",
+      "quality": "low",
+      "width": 393,
+      "height": 851,
+      "reduced": true,
+      "calls": 42,
+      "maxCalls": 42,
+      "triangles": 10372,
+      "textures": 0,
+      "shadows": 0,
+      "camera": [
+        0,
+        1.65,
+        -11
+      ],
+      "targetScene": "sunset.warning-grove"
+    },
+    {
+      "name": "final-canonical-sunset-true-mirror-arrival-high-1100-full",
+      "which": "sunset-true-mirror",
+      "view": "arrival",
+      "quality": "high",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 110,
+      "maxCalls": 110,
+      "triangles": 43595,
+      "textures": 3,
+      "shadows": 0,
+      "camera": [
+        0,
+        1.65,
+        -11
+      ],
+      "targetScene": "sunset.true-mirror"
+    },
+    {
+      "name": "final-canonical-sunset-true-mirror-arrival-low-393-reduced",
+      "which": "sunset-true-mirror",
+      "view": "arrival",
+      "quality": "low",
+      "width": 393,
+      "height": 851,
+      "reduced": true,
+      "calls": 45,
+      "maxCalls": 45,
+      "triangles": 8710,
+      "textures": 1,
+      "shadows": 0,
+      "camera": [
+        0,
+        1.65,
+        -11
+      ],
+      "targetScene": "sunset.true-mirror"
+    },
+    {
+      "name": "final-canonical-sunset-stillness-arrival-high-1100-full",
+      "which": "sunset-stillness",
+      "view": "arrival",
+      "quality": "high",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 92,
+      "maxCalls": 92,
+      "triangles": 41883,
+      "textures": 3,
+      "shadows": 0,
+      "camera": [
+        0,
+        1.65,
+        -11
+      ],
+      "targetScene": "sunset.stillness"
+    },
+    {
+      "name": "final-canonical-sunset-stillness-arrival-low-393-reduced",
+      "which": "sunset-stillness",
+      "view": "arrival",
+      "quality": "low",
+      "width": 393,
+      "height": 851,
+      "reduced": true,
+      "calls": 38,
+      "maxCalls": 38,
+      "triangles": 8480,
+      "textures": 0,
+      "shadows": 0,
+      "camera": [
+        0,
+        1.65,
+        -11
+      ],
+      "targetScene": "sunset.stillness"
+    },
+    {
+      "name": "final-canonical-thorned-locked-garden-arrival-high-1100-full",
+      "which": "thorned-locked-garden",
+      "view": "arrival",
+      "quality": "high",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 67,
+      "maxCalls": 67,
+      "triangles": 32037,
+      "textures": 1,
+      "shadows": 0,
+      "camera": [
+        0.65,
+        1.65,
+        -1.65
+      ],
+      "targetScene": "thorned.locked-garden"
+    },
+    {
+      "name": "final-canonical-thorned-locked-garden-arrival-low-393-reduced",
+      "which": "thorned-locked-garden",
+      "view": "arrival",
+      "quality": "low",
+      "width": 393,
+      "height": 851,
+      "reduced": true,
+      "calls": 48,
+      "maxCalls": 48,
+      "triangles": 21558,
+      "textures": 0,
+      "shadows": 0,
+      "camera": [
+        0.65,
+        1.65,
+        -1.65
+      ],
+      "targetScene": "thorned.locked-garden"
+    },
+    {
+      "name": "final-canonical-thorned-old-memory-bedroom-arrival-high-1100-full",
+      "which": "thorned-old-memory-bedroom",
+      "view": "arrival",
+      "quality": "high",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 77,
+      "maxCalls": 77,
+      "triangles": 25555,
+      "textures": 1,
+      "shadows": 0,
+      "camera": [
+        0.65,
+        1.65,
+        -1.65
+      ],
+      "targetScene": "thorned.old-memory-bedroom"
+    },
+    {
+      "name": "final-canonical-thorned-old-memory-bedroom-arrival-low-393-reduced",
+      "which": "thorned-old-memory-bedroom",
+      "view": "arrival",
+      "quality": "low",
+      "width": 393,
+      "height": 851,
+      "reduced": true,
+      "calls": 51,
+      "maxCalls": 51,
+      "triangles": 20232,
+      "textures": 0,
+      "shadows": 0,
+      "camera": [
+        0.65,
+        1.65,
+        -1.65
+      ],
+      "targetScene": "thorned.old-memory-bedroom"
+    },
+    {
+      "name": "final-canonical-thorned-self-owned-world-arrival-high-1100-full",
+      "which": "thorned-self-owned-world",
+      "view": "arrival",
+      "quality": "high",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 67,
+      "maxCalls": 67,
+      "triangles": 26225,
+      "textures": 1,
+      "shadows": 0,
+      "camera": [
+        0.65,
+        1.65,
+        -1.65
+      ],
+      "targetScene": "thorned.self-owned-world"
+    },
+    {
+      "name": "final-canonical-thorned-self-owned-world-arrival-low-393-reduced",
+      "which": "thorned-self-owned-world",
+      "view": "arrival",
+      "quality": "low",
+      "width": 393,
+      "height": 851,
+      "reduced": true,
+      "calls": 48,
+      "maxCalls": 48,
+      "triangles": 21914,
+      "textures": 0,
+      "shadows": 0,
+      "camera": [
+        0.65,
+        1.65,
+        -1.65
+      ],
+      "targetScene": "thorned.self-owned-world"
+    },
+    {
+      "name": "final-canonical-wolf-swan-false-choice-arrival-high-1100-full",
+      "which": "wolf-swan-false-choice",
+      "view": "arrival",
+      "quality": "high",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 56,
+      "maxCalls": 56,
+      "triangles": 30209,
+      "textures": 2,
+      "shadows": 0,
+      "camera": [
+        0,
+        1.65,
+        -11
+      ],
+      "targetScene": "wolf-swan.false-choice"
+    },
+    {
+      "name": "final-canonical-wolf-swan-false-choice-arrival-low-393-reduced",
+      "which": "wolf-swan-false-choice",
+      "view": "arrival",
+      "quality": "low",
+      "width": 393,
+      "height": 851,
+      "reduced": true,
+      "calls": 47,
+      "maxCalls": 47,
+      "triangles": 14420,
+      "textures": 1,
+      "shadows": 0,
+      "camera": [
+        0,
+        1.65,
+        -11
+      ],
+      "targetScene": "wolf-swan.false-choice"
+    },
+    {
+      "name": "final-canonical-wolf-swan-convergence-arrival-high-1100-full",
+      "which": "wolf-swan-convergence",
+      "view": "arrival",
+      "quality": "high",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 51,
+      "maxCalls": 51,
+      "triangles": 38267,
+      "textures": 2,
+      "shadows": 0,
+      "camera": [
+        0,
+        1.65,
+        -11
+      ],
+      "targetScene": "wolf-swan.convergence"
+    },
+    {
+      "name": "final-canonical-wolf-swan-convergence-arrival-low-393-reduced",
+      "which": "wolf-swan-convergence",
+      "view": "arrival",
+      "quality": "low",
+      "width": 393,
+      "height": 851,
+      "reduced": true,
+      "calls": 46,
+      "maxCalls": 46,
+      "triangles": 18774,
+      "textures": 1,
+      "shadows": 0,
+      "camera": [
+        0,
+        1.65,
+        -11
+      ],
+      "targetScene": "wolf-swan.convergence"
+    },
+    {
+      "name": "final-canonical-fire-boundary-arrival-high-1100-full",
+      "which": "fire-boundary",
+      "view": "arrival",
+      "quality": "high",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 76,
+      "maxCalls": 76,
+      "triangles": 32101,
+      "textures": 2,
+      "shadows": 0,
+      "camera": [
+        0,
+        1.65,
+        -11
+      ],
+      "targetScene": "fire.boundary"
+    },
+    {
+      "name": "final-canonical-fire-boundary-arrival-low-393-reduced",
+      "which": "fire-boundary",
+      "view": "arrival",
+      "quality": "low",
+      "width": 393,
+      "height": 851,
+      "reduced": true,
+      "calls": 60,
+      "maxCalls": 60,
+      "triangles": 14632,
+      "textures": 1,
+      "shadows": 0,
+      "camera": [
+        0,
+        1.65,
+        -11
+      ],
+      "targetScene": "fire.boundary"
+    },
+    {
+      "name": "final-canonical-river-wash-arrival-high-1100-full",
+      "which": "river-wash",
+      "view": "arrival",
+      "quality": "high",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 60,
+      "maxCalls": 60,
+      "triangles": 27381,
+      "textures": 2,
+      "shadows": 0,
+      "camera": [
+        0,
+        1.65,
+        -11
+      ],
+      "targetScene": "river.wash"
+    },
+    {
+      "name": "final-canonical-river-wash-arrival-low-393-reduced",
+      "which": "river-wash",
+      "view": "arrival",
+      "quality": "low",
+      "width": 393,
+      "height": 851,
+      "reduced": true,
+      "calls": 50,
+      "maxCalls": 50,
+      "triangles": 12288,
+      "textures": 1,
+      "shadows": 0,
+      "camera": [
+        0,
+        1.65,
+        -11
+      ],
+      "targetScene": "river.wash"
+    },
+    {
+      "name": "final-canonical-river-release-surrender-arrival-high-1100-full",
+      "which": "river-release-surrender",
+      "view": "arrival",
+      "quality": "high",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 58,
+      "maxCalls": 58,
+      "triangles": 29123,
+      "textures": 2,
+      "shadows": 0,
+      "camera": [
+        0,
+        1.65,
+        -11
+      ],
+      "targetScene": "river.release-surrender"
+    },
+    {
+      "name": "final-canonical-river-release-surrender-arrival-low-393-reduced",
+      "which": "river-release-surrender",
+      "view": "arrival",
+      "quality": "low",
+      "width": 393,
+      "height": 851,
+      "reduced": true,
+      "calls": 41,
+      "maxCalls": 41,
+      "triangles": 10918,
+      "textures": 1,
+      "shadows": 0,
+      "camera": [
+        0,
+        1.65,
+        -11
+      ],
+      "targetScene": "river.release-surrender"
+    },
+    {
+      "name": "final-canonical-fork-weighing-arrival-high-1100-full",
+      "which": "fork-weighing",
+      "view": "arrival",
+      "quality": "high",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 39,
+      "maxCalls": 39,
+      "triangles": 45961,
+      "textures": 1,
+      "shadows": 0,
+      "camera": [
+        0,
+        1.65,
+        -11
+      ],
+      "targetScene": "fork.weighing"
+    },
+    {
+      "name": "final-canonical-fork-weighing-arrival-low-393-reduced",
+      "which": "fork-weighing",
+      "view": "arrival",
+      "quality": "low",
+      "width": 393,
+      "height": 851,
+      "reduced": true,
+      "calls": 31,
+      "maxCalls": 31,
+      "triangles": 26538,
+      "textures": 0,
+      "shadows": 0,
+      "camera": [
+        0,
+        1.65,
+        -11
+      ],
+      "targetScene": "fork.weighing"
+    },
+    {
+      "name": "final-canonical-fork-four-verbs-arrival-high-1100-full",
+      "which": "fork-four-verbs",
+      "view": "arrival",
+      "quality": "high",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 60,
+      "maxCalls": 60,
+      "triangles": 49569,
+      "textures": 1,
+      "shadows": 0,
+      "camera": [
+        0,
+        1.65,
+        -11
+      ],
+      "targetScene": "fork.four-verbs"
+    },
+    {
+      "name": "final-canonical-fork-four-verbs-arrival-low-393-reduced",
+      "which": "fork-four-verbs",
+      "view": "arrival",
+      "quality": "low",
+      "width": 393,
+      "height": 851,
+      "reduced": true,
+      "calls": 41,
+      "maxCalls": 41,
+      "triangles": 27862,
+      "textures": 0,
+      "shadows": 0,
+      "camera": [
+        0,
+        1.65,
+        -11
+      ],
+      "targetScene": "fork.four-verbs"
+    },
+    {
+      "name": "final-canonical-fork-relinquish-hope-arrival-high-1100-full",
+      "which": "fork-relinquish-hope",
+      "view": "arrival",
+      "quality": "high",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 41,
+      "maxCalls": 41,
+      "triangles": 45193,
+      "textures": 1,
+      "shadows": 0,
+      "camera": [
+        0,
+        1.65,
+        -11
+      ],
+      "targetScene": "fork.relinquish-hope"
+    },
+    {
+      "name": "final-canonical-fork-relinquish-hope-arrival-low-393-reduced",
+      "which": "fork-relinquish-hope",
+      "view": "arrival",
+      "quality": "low",
+      "width": 393,
+      "height": 851,
+      "reduced": true,
+      "calls": 33,
+      "maxCalls": 33,
+      "triangles": 25462,
+      "textures": 0,
+      "shadows": 0,
+      "camera": [
+        0,
+        1.65,
+        -11
+      ],
+      "targetScene": "fork.relinquish-hope"
+    },
+    {
+      "name": "arrival-correction-climbs-arrival-arrival-high-1100-full",
+      "which": "climbs-arrival",
+      "view": "arrival",
+      "quality": "high",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 26,
+      "maxCalls": 26,
+      "triangles": 7811,
+      "textures": 1,
+      "shadows": 0,
+      "camera": [
+        8.169077464687625,
+        1.65,
+        7.3665577698089635
+      ],
+      "targetScene": "climbs.arrival"
+    },
+    {
+      "name": "arrival-correction-climbs-arrival-arrival-low-393-reduced",
+      "which": "climbs-arrival",
+      "view": "arrival",
+      "quality": "low",
+      "width": 393,
+      "height": 851,
+      "reduced": true,
+      "calls": 20,
+      "maxCalls": 20,
+      "triangles": 6886,
+      "textures": 0,
+      "shadows": 0,
+      "camera": [
+        8.169077464687625,
+        1.65,
+        7.3665577698089635
+      ],
+      "targetScene": "climbs.arrival"
+    },
+    {
+      "name": "final-canonical-climb-mind-arrival-high-1100-full",
+      "which": "climb-mind",
+      "view": "arrival",
+      "quality": "high",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 41,
+      "maxCalls": 41,
+      "triangles": 9487,
+      "textures": 1,
+      "shadows": 0,
+      "camera": [
+        -10.399893040779192,
+        1.65,
+        3.5836049922323356
+      ],
+      "targetScene": "climb.mind"
+    },
+    {
+      "name": "final-canonical-climb-mind-arrival-low-393-reduced",
+      "which": "climb-mind",
+      "view": "arrival",
+      "quality": "low",
+      "width": 393,
+      "height": 851,
+      "reduced": true,
+      "calls": 18,
+      "maxCalls": 18,
+      "triangles": 8148,
+      "textures": 0,
+      "shadows": 0,
+      "camera": [
+        -10.399893040779192,
+        1.65,
+        3.5836049922323356
+      ],
+      "targetScene": "climb.mind"
+    },
+    {
+      "name": "final-canonical-climb-heart-arrival-high-1100-full",
+      "which": "climb-heart",
+      "view": "arrival",
+      "quality": "high",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 56,
+      "maxCalls": 56,
+      "triangles": 29447,
+      "textures": 2,
+      "shadows": 0,
+      "camera": [
+        10.16005774868186,
+        1.65,
+        4.21583046901197
+      ],
+      "targetScene": "climb.heart"
+    },
+    {
+      "name": "final-canonical-climb-heart-arrival-low-393-reduced",
+      "which": "climb-heart",
+      "view": "arrival",
+      "quality": "low",
+      "width": 393,
+      "height": 851,
+      "reduced": true,
+      "calls": 45,
+      "maxCalls": 47,
+      "triangles": 17422,
+      "textures": 1,
+      "shadows": 0,
+      "camera": [
+        10.16005774868186,
+        1.65,
+        4.21583046901197
+      ],
+      "targetScene": "climb.heart"
+    },
+    {
+      "name": "final-canonical-climb-womb-arrival-high-1100-full",
+      "which": "climb-womb",
+      "view": "arrival",
+      "quality": "high",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 46,
+      "maxCalls": 46,
+      "triangles": 22691,
+      "textures": 1,
+      "shadows": 0,
+      "camera": [
+        -7.339162210107947,
+        1.65,
+        8.193698679700361
+      ],
+      "targetScene": "climb.womb"
+    },
+    {
+      "name": "final-canonical-climb-womb-arrival-low-393-reduced",
+      "which": "climb-womb",
+      "view": "arrival",
+      "quality": "low",
+      "width": 393,
+      "height": 851,
+      "reduced": true,
+      "calls": 38,
+      "maxCalls": 38,
+      "triangles": 16958,
+      "textures": 0,
+      "shadows": 0,
+      "camera": [
+        -7.339162210107947,
+        1.65,
+        8.193698679700361
+      ],
+      "targetScene": "climb.womb"
+    },
+    {
+      "name": "final-canonical-crowned-threshold-arrival-high-1100-full",
+      "which": "crowned-threshold",
+      "view": "arrival",
+      "quality": "high",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 31,
+      "maxCalls": 31,
+      "triangles": 8943,
+      "textures": 1,
+      "shadows": 0,
+      "camera": [
+        4.413484015911779,
+        1.65,
+        4.064622841210637
+      ],
+      "targetScene": "crowned.threshold"
+    },
+    {
+      "name": "final-canonical-crowned-threshold-arrival-low-393-reduced",
+      "which": "crowned-threshold",
+      "view": "arrival",
+      "quality": "low",
+      "width": 393,
+      "height": 851,
+      "reduced": true,
+      "calls": 22,
+      "maxCalls": 22,
+      "triangles": 7582,
+      "textures": 0,
+      "shadows": 0,
+      "camera": [
+        4.413484015911779,
+        1.65,
+        4.064622841210637
+      ],
+      "targetScene": "crowned.threshold"
+    },
+    {
+      "name": "final-canonical-crowned-home-arrival-high-1100-full",
+      "which": "crowned-home",
+      "view": "arrival",
+      "quality": "high",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 97,
+      "maxCalls": 97,
+      "triangles": 36787,
+      "textures": 1,
+      "shadows": 0,
+      "camera": [
+        -5.529385053897269,
+        1.65,
+        2.3293563329249327
+      ],
+      "targetScene": "crowned.home"
+    },
+    {
+      "name": "final-canonical-crowned-home-arrival-low-393-reduced",
+      "which": "crowned-home",
+      "view": "arrival",
+      "quality": "low",
+      "width": 393,
+      "height": 851,
+      "reduced": true,
+      "calls": 66,
+      "maxCalls": 68,
+      "triangles": 23714,
+      "textures": 0,
+      "shadows": 0,
+      "camera": [
+        -5.529385053897269,
+        1.65,
+        2.3293563329249327
+      ],
+      "targetScene": "crowned.home"
+    },
+    {
+      "name": "final-canonical-crowned-sovereignty-arrival-high-1100-full",
+      "which": "crowned-sovereignty",
+      "view": "arrival",
+      "quality": "high",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 95,
+      "maxCalls": 95,
+      "triangles": 34885,
+      "textures": 1,
+      "shadows": 0,
+      "camera": [
+        5.264645931604386,
+        1.65,
+        2.8781075752725775
+      ],
+      "targetScene": "crowned.sovereignty"
+    },
+    {
+      "name": "final-canonical-crowned-sovereignty-arrival-low-393-reduced",
+      "which": "crowned-sovereignty",
+      "view": "arrival",
+      "quality": "low",
+      "width": 393,
+      "height": 851,
+      "reduced": true,
+      "calls": 68,
+      "maxCalls": 68,
+      "triangles": 24174,
+      "textures": 0,
+      "shadows": 0,
+      "camera": [
+        5.264645931604386,
+        1.65,
+        2.8781075752725775
+      ],
+      "targetScene": "crowned.sovereignty"
+    },
+    {
+      "name": "final-canonical-epilogue-constellation-arrival-high-1100-full",
+      "which": "epilogue-constellation",
+      "view": "arrival",
+      "quality": "high",
+      "width": 1100,
+      "height": 720,
+      "reduced": false,
+      "calls": 126,
+      "maxCalls": 126,
+      "triangles": 28856,
+      "textures": 2,
+      "shadows": 0,
+      "camera": [
+        0,
+        1.65,
+        6.5
+      ],
+      "targetScene": "epilogue.constellation"
+    },
+    {
+      "name": "final-canonical-epilogue-constellation-arrival-low-393-reduced",
+      "which": "epilogue-constellation",
+      "view": "arrival",
+      "quality": "low",
+      "width": 393,
+      "height": 851,
+      "reduced": true,
+      "calls": 92,
+      "maxCalls": 92,
+      "triangles": 18267,
+      "textures": 1,
+      "shadows": 0,
+      "camera": [
+        0,
+        1.65,
+        6.5
+      ],
+      "targetScene": "epilogue.constellation"
+    }
+  ],
+  "lifecycle": {
+    "cases": 20,
+    "errors": [],
+    "qualityCycleMemory": [
+      {
+        "geometries": 34,
+        "textures": 3
+      },
+      {
+        "geometries": 34,
+        "textures": 3
+      },
+      {
+        "geometries": 34,
+        "textures": 3
+      }
+    ],
+    "surrenderOpacity": {
+      "scene-boundary-veil": {
+        "before": 0.02721,
+        "held": 0.00217848701082935
+      },
+      "scene-breath-field": {
+        "before": 0.0018479442800000004,
+        "held": 7.39563908952004e-05
+      },
+      "scene-path-guidance": {
+        "before": 0.8190000000000001,
+        "held": 0.2772000000086552
+      }
+    },
+    "heldParticleOpacity": 0,
+    "heldMotion": {
+      "vegetation": 0,
+      "cloth": 0,
+      "water": 0,
+      "particles": 0,
+      "flame": 0
+    },
+    "resumedParticleOpacity": 0.08933646277371442
+  },
+  "forest": [
+    {
+      "name": "after-route-high-1100-standard",
+      "label": "after",
+      "quality": "high",
+      "width": 1100,
+      "height": 720,
+      "shot": "route",
+      "reduced": false,
+      "calls": 11,
+      "triangles": 94394,
+      "geometries": 11,
+      "textures": 8,
+      "programs": 16,
+      "lights": 2,
+      "shadowLights": 0,
+      "instances": 192,
+      "workerReady": true,
+      "terrainReady": true,
+      "camera": [
+        -2.4981448981282615,
+        0.5553035198790923,
+        -347.55095707299375
+      ],
+      "quaternion": [
+        -0.036328966981996336,
+        0.9612081747470138,
+        -0.15506040361107548,
+        -0.22520062653000228
+      ],
+      "delta": {
+        "calls": 0,
+        "triangles": 0,
+        "textures": 0,
+        "lights": 0
+      }
+    },
+    {
+      "name": "after-clearing-high-1100-standard",
+      "label": "after",
+      "quality": "high",
+      "width": 1100,
+      "height": 720,
+      "shot": "clearing",
+      "reduced": false,
+      "calls": 11,
+      "triangles": 92290,
+      "geometries": 9,
+      "textures": 7,
+      "programs": 10,
+      "lights": 2,
+      "shadowLights": 0,
+      "instances": 184,
+      "workerReady": true,
+      "terrainReady": true,
+      "camera": [
+        -4,
+        0.5289561211768281,
+        -351
+      ],
+      "quaternion": [
+        0.0935425542673177,
+        0.3807168380972893,
+        -0.03874659463654423,
+        0.9191317539582776
+      ],
+      "delta": {
+        "calls": 0,
+        "triangles": 0,
+        "textures": 0,
+        "lights": 0
+      }
+    },
+    {
+      "name": "after-route-medium-1100-standard",
+      "label": "after",
+      "quality": "medium",
+      "width": 1100,
+      "height": 720,
+      "shot": "route",
+      "reduced": false,
+      "calls": 11,
+      "triangles": 72032,
+      "geometries": 11,
+      "textures": 8,
+      "programs": 16,
+      "lights": 2,
+      "shadowLights": 0,
+      "instances": 138,
+      "workerReady": true,
+      "terrainReady": true,
+      "camera": [
+        -2.4981448981282615,
+        0.5553035198790923,
+        -347.55095707299375
+      ],
+      "quaternion": [
+        -0.036328966981996336,
+        0.9612081747470138,
+        -0.15506040361107548,
+        -0.22520062653000228
+      ],
+      "delta": {
+        "calls": 0,
+        "triangles": 0,
+        "textures": 0,
+        "lights": 0
+      }
+    },
+    {
+      "name": "after-route-low-390-standard",
+      "label": "after",
+      "quality": "low",
+      "width": 390,
+      "height": 844,
+      "shot": "route",
+      "reduced": false,
+      "calls": 10,
+      "triangles": 55080,
+      "geometries": 8,
+      "textures": 6,
+      "programs": 9,
+      "lights": 2,
+      "shadowLights": 0,
+      "instances": 88,
+      "workerReady": true,
+      "terrainReady": true,
+      "camera": [
+        -2.4981448981282615,
+        0.5553035198790923,
+        -347.55095707299375
+      ],
+      "quaternion": [
+        -0.036328966981996336,
+        0.9612081747470138,
+        -0.15506040361107548,
+        -0.22520062653000228
+      ],
+      "delta": {
+        "calls": 0,
+        "triangles": 0,
+        "textures": 0,
+        "lights": 0
+      }
+    },
+    {
+      "name": "after-clearing-low-844-standard",
+      "label": "after",
+      "quality": "low",
+      "width": 844,
+      "height": 390,
+      "shot": "clearing",
+      "reduced": false,
+      "calls": 10,
+      "triangles": 53456,
+      "geometries": 8,
+      "textures": 6,
+      "programs": 9,
+      "lights": 2,
+      "shadowLights": 0,
+      "instances": 80,
+      "workerReady": true,
+      "terrainReady": true,
+      "camera": [
+        -4,
+        0.5289561211768281,
+        -351
+      ],
+      "quaternion": [
+        0.0935425542673177,
+        0.3807168380972893,
+        -0.03874659463654423,
+        0.9191317539582776
+      ],
+      "delta": {
+        "calls": 0,
+        "triangles": 0,
+        "textures": 0,
+        "lights": 0
+      }
+    },
+    {
+      "name": "after-route-cinematic-1100-standard",
+      "label": "after",
+      "quality": "cinematic",
+      "width": 1100,
+      "height": 720,
+      "shot": "route",
+      "reduced": false,
+      "calls": 11,
+      "triangles": 97698,
+      "geometries": 11,
+      "textures": 8,
+      "programs": 16,
+      "lights": 2,
+      "shadowLights": 0,
+      "instances": 200,
+      "workerReady": true,
+      "terrainReady": true,
+      "camera": [
+        -2.4981448981282615,
+        0.5553035198790923,
+        -347.55095707299375
+      ],
+      "quaternion": [
+        -0.036328966981996336,
+        0.9612081747470138,
+        -0.15506040361107548,
+        -0.22520062653000228
+      ],
+      "delta": {
+        "calls": 0,
+        "triangles": 0,
+        "textures": 0,
+        "lights": 0
+      }
+    },
+    {
+      "name": "after-route-high-390-reduced",
+      "label": "after",
+      "quality": "high",
+      "width": 390,
+      "height": 844,
+      "shot": "route",
+      "reduced": true,
+      "calls": 11,
+      "triangles": 94394,
+      "geometries": 9,
+      "textures": 7,
+      "programs": 10,
+      "lights": 2,
+      "shadowLights": 0,
+      "instances": 192,
+      "workerReady": true,
+      "terrainReady": true,
+      "camera": [
+        -2.4981448981282615,
+        0.5553035198790923,
+        -347.55095707299375
+      ],
+      "quaternion": [
+        -0.036328966981996336,
+        0.9612081747470138,
+        -0.15506040361107548,
+        -0.22520062653000228
+      ],
+      "delta": {
+        "calls": 0,
+        "triangles": 0,
+        "textures": 0,
+        "lights": 0
+      }
+    }
+  ],
+  "forestPriorFailures": [
+    {
+      "name": "before-route-high-1100-standard",
+      "error": "Error: Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
+      "errors": [
+        "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+      ],
+      "diagnostics": {
+        "workers": []
+      }
+    },
+    {
+      "name": "before-clearing-high-1100-standard",
+      "error": "Error: Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
+      "errors": [
+        "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+      ],
+      "diagnostics": {
+        "workers": []
+      }
+    },
+    {
+      "name": "before-route-medium-1100-standard",
+      "error": "Error: Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
+      "errors": [
+        "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+      ],
+      "diagnostics": {
+        "workers": []
+      }
+    },
+    {
+      "name": "before-route-low-390-standard",
+      "error": "Error: Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
+      "errors": [
+        "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+      ],
+      "diagnostics": {
+        "workers": []
+      }
+    },
+    {
+      "name": "before-clearing-low-844-standard",
+      "error": "Error: Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
+      "errors": [
+        "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+      ],
+      "diagnostics": {
+        "workers": []
+      }
+    },
+    {
+      "name": "before-route-cinematic-1100-standard",
+      "error": "Error: Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
+      "errors": [
+        "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+      ],
+      "diagnostics": {
+        "workers": []
+      }
+    },
+    {
+      "name": "before-route-high-390-reduced",
+      "error": "Error: Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
+      "errors": [
+        "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+      ],
+      "diagnostics": {
+        "workers": []
+      }
+    }
+  ],
+  "workflow": [
+    {
+      "name": "final-corrections",
+      "exitCode": 0,
+      "seconds": 1094.7
+    },
+    {
+      "name": "lifecycle-final",
+      "exitCode": 0,
+      "seconds": 283.9
+    },
+    {
+      "name": "final-canonical",
+      "exitCode": 0,
+      "seconds": 586.3
+    },
+    {
+      "name": "final-tiers",
+      "exitCode": 0,
+      "seconds": 364.9
+    },
+    {
+      "name": "baseline",
+      "exitCode": 0,
+      "seconds": 217.6
+    },
+    {
+      "name": "check-final",
+      "exitCode": 0,
+      "seconds": 31.5
+    },
+    {
+      "name": "forest",
+      "exitCode": 0,
+      "seconds": 50.9,
+      "priorAttempts": [
+        {
+          "name": "forest",
+          "exitCode": 1,
+          "seconds": 65.2
+        }
+      ]
+    },
+    {
+      "name": "browser",
+      "exitCode": 0,
+      "seconds": 378.6
+    }
+  ],
+  "initialCaptureFailures": [
+    {
+      "name": "final-cinematic-blue-detail-cinematic-1100-full",
+      "error": "TimeoutError: locator.waitFor: Timeout 60000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('body[data-ready=\"true\"]') to be visible\u001b[22m\n",
+      "errors": []
+    },
+    {
+      "name": "final-cinematic-crowned-detail-cinematic-1100-full",
+      "error": "TimeoutError: locator.waitFor: Timeout 60000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('body[data-ready=\"true\"]') to be visible\u001b[22m\n",
+      "errors": []
+    },
+    {
+      "name": "final-cinematic-sovereign-arrival-cinematic-1100-full",
+      "error": "TimeoutError: locator.waitFor: Timeout 60000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('body[data-ready=\"true\"]') to be visible\u001b[22m\n",
+      "errors": []
+    }
+  ],
+  "rawEvidenceDirectory": "../artifacts/final-art-mastery",
+  "rawCinematicRevisions": [
+    "final-cinematic-initial.json",
+    "final-corrections.json"
+  ],
+  "rawCanonicalRevisions": [
+    "final-canonical-before-arrival-fix.json",
+    "arrival-correction.json"
+  ],
+  "priorVisualFindings": [
+    "The Three Climbs arrival outcrop obscured its oblique camera. The arrival-only group was moved 5 metres back and both tiers recaptured."
+  ],
+  "sourceSha256": {
+    "scripts/review-hero-art.mjs": "c21906435180681fc3e3f19723e4763b2c4113b35c03470a17e99159fd5ca266",
+    "scripts/review-production-art.mjs": "56e764bee792c273e7f4c6524f4a3711b23be628b13066462f9a93285775ccec",
+    "scripts/review-scene-look-lifecycle.mjs": "0427ce1344e721b86ac3ca2a0005f5257b8dbe4c69658bfc0fd08b5834293ab5",
+    "src/components/three/MasterPlayerLantern.tsx": "112d4de9be66af0c164864cbc24fa7886fd5e1bbfb0f59837e9616ab2e92747e",
+    "src/components/three/artDirection/SceneLookRegistry.ts": "23fdd65334c2d483ca1828259aa732a6edcdcffc0bbd8f54d8cb2cd911cd5c50",
+    "src/components/three/chapters/BlueMoonSanctuaryChapter.tsx": "d3353766d175715c55387a295561341495d301f5e53ea37b45413e02e48145f4",
+    "src/components/three/chapters/BrokenFloorChapter.tsx": "8089adb2e6437f16503a27efac51ea58e8c01312ee598ac2f7522452efd9fe64",
+    "src/components/three/chapters/ChapterArt.tsx": "951364ccaedba95ab980cc4d05e4982d4888435864bf3587c1e0cb181a860149",
+    "src/components/three/chapters/ChapterPrimitives.tsx": "ae392301f7bef1f084b51d13978df4017a037e84598d9436821e45d78da29816",
+    "src/components/three/chapters/CrownedReturnChapter.tsx": "2146c5a5ae944242199fa87e610fe2df54281a08bedc12deaccb7bbd26c8eaed",
+    "src/components/three/chapters/ForkChapter.tsx": "fb714523b63cbe567e5b2acbf8d7232777340510869f7d57adf166f06620aa8a",
+    "src/components/three/chapters/ThornedHouseChapter.tsx": "a92d3389fd288e8115df638bd8acb864eafdc79a18409f3ec2d5747bb91e3513",
+    "src/components/three/chapters/ThreeClimbsChapter.tsx": "c3af202210ba721e26c9c69aef940526412974a5405c8d56a0876fe1804d8f07",
+    "src/components/three/chapters/chapterArtGeometry.ts": "2f35bf90d5da92807f468de0b004264147a14ce09ccf260f438a421b92c181c6",
+    "src/components/three/environment/ClimbLandscape.tsx": "c2706b3fbd36691ec1e38717ca71f004290475312aa523918db73523ad5b9820",
+    "src/components/three/environment/EnvironmentDressing.tsx": "2340fe5de37bb389316b7f5af68297f95cf535ecfad9f343e80ca776846aa7cc",
+    "src/components/three/environment/SanctuaryWater.tsx": "6599e52269020c4a9c4a7c3b9cbcfe599046a80ba1f04cb510c358f97ecc3b0a",
+    "src/components/three/environment/forestGeometry.ts": "f36d28ad8338e620abb344f299d52bb6df9026850321512f8970e0de78cc821b",
+    "src/components/three/environmentArt/AuthoredNpc.tsx": "8166433cd967cb32b4c04c15e3e157b12fbb8332954643ff91dd121d623585ef",
+    "src/components/three/environmentArt/heroGeometry.ts": "d86f7d8d90b2c65e93578ea45a762f991ad88ebbe72884a5912ee6cd47dafcae",
+    "src/components/three/environmentArt/npcGeometry.ts": "29aecce730bca1e158be5b20913b561456442830bb0e0c0a489cb36dc8187ebd",
+    "src/components/three/reflections/ReflectedPath.tsx": "54d084cee79b340bf8158588e751c2313f821142d9923315cb511e3c46558228",
+    "src/components/three/reflections/ReflectionApparition.tsx": "412dd203758a62f8e384edbac415bd1c2f7168cfb177ce0b83d6504c96e21244",
+    "src/components/three/reflections/ReflectionDirector.tsx": "184cca0ab9eb4e9db859469e101061aa9b1dbcd06ec9bef88a513c9a578e4b9c",
+    "src/components/three/reflections/UnderfloorForest.tsx": "70a85be5ef2c6e445ccf889a9625d1fc1adbdbab81e093b33f6a13a5d191f6ea",
+    "src/components/three/reflections/WaterMemoryReflection.tsx": "6bca9e121af9bb26d5b9b59381fa65851366891600afcbde82339be1346b9f51",
+    "src/components/three/storyEvents/ObservedSanctuaryReflection.tsx": "4984d96a3fe0e1dfce7799e49fd9db0f74463ff608746b43fdb12b40e84a0b3d",
+    "src/components/three/storyEvents/StoryActorDirector.tsx": "49ae57a336705a158142edc876571e269d3f3b5a66e2ec5bf476deb94f5ad120",
+    "src/components/three/storyEvents/StoryObjectModel.tsx": "2758749d3945a020abd59d506c4a815de7a45f1dc38e1d179f323078ee3a405d",
+    "src/components/three/storyEvents/SwanModel.tsx": "c5f7a488ef82e124137b6a9afc9db778196a5af9c8cf7403c7dfc1f2514be23d",
+    "src/components/three/storyEvents/WetFloorReveal.tsx": "c40fc06443259257ae7d9b4a1b3b7d6ddd8a96659f2a0a93fa0135b1c9422002",
+    "src/components/three/storyEvents/tactileShader.ts": "52f13e493478a7f7ca074ac991dbae8c7828fb7d0700a665f3ea9c3abb7e00aa",
+    "src/components/three/world/WorldEngineLayer.tsx": "40dcec2cbc0726ab6a40d1c545488a088543bf02f6ef7faeb7fa7dfc0a34c992",
+    "src/components/three/world/WorldEnvironmentParticles.tsx": "9906b74bed8c089cadffbd678f552d054cf7bad453d98fef5d8e749f22045c59",
+    "tests/authored-art-optimization.test.mjs": "a3e9247491fbde27d22bca2db73d50c76f416af1bd349eeb6a7e721921def4a3",
+    "tests/final-art-geometry.test.mjs": "2df3e8d03539da7c801080a1fba34d0bd2148321c69bffd5714c1d47f45f1d1b",
+    "tests/fixtures/authored-art-baseline.json": "a516fdcd8af2b3d14c21b4c9812a5c87b20df05c56aab93fd016c420232e59be",
+    "tests/shot-composition.test.mjs": "36bdbae6b8b54bb94702e314a2a5c6e4af8316fcfcbeb88ad0e18282b7123d49",
+    "tests/world-render-contracts.test.mjs": "e7ee9a4ebc3443e8e4b55bb657639542083cd326760174f4dd648691272fa282"
+  },
+  "limits": [
+    "No reviewed production hero models or KTX2 maps were added.",
+    "No physical Safari/iPhone, Android or integrated-GPU certification.",
+    "Installed WebKit has a PushAPIEnabled runtime incompatibility.",
+    "Shader timings from SwiftShader are not hardware FPS measurements."
+  ]
+}

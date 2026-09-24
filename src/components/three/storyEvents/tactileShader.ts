@@ -42,14 +42,14 @@ export const TACTILE_BASE_PATTERNS: Record<StorySurface, string> = {
     float grain = .88 + mineral * .22;`,
   earth: `float soil = storyNoise(p * 1.8);
     float grain = .87 + soil * .24;`,
-  linen: `float grain = .97;`,
-  paper: `float grain = .98;`,
+  linen: `float grain = .95 + storyNoise(p * 1.3) * .035;`,
+  paper: `float grain = .96 + storyNoise(p * 2.1) * .035;`,
   wax: `float grain = .99 + sin(p.y * 16.0) * .01;`,
-  metal: `float grain = .99;`,
+  metal: `float grain = .91 + storyNoise(p * 1.7) * .12;`,
   "wet-wood": `float wet = storyNoise(p * 2.4); float grain = .76 + wet * .17;`,
   "charred-wood": `float charcoal = storyNoise(p * 5.0); float grain = .82 + charcoal * .24;`,
   "painted-wood": `float wear = smoothstep(.57, .79, storyNoise(p * 3.8)); float grain = .98 - wear * .18;`,
-  plaster: `float trowel = storyNoise(p * 2.7); float grain = .95 + (trowel - .5) * .13;`,
+  plaster: `float trowel = storyNoise(p * 2.7); float grain = .93 + (storyNoise(p * .38) - .5) * .11 + (trowel - .5) * .08;`,
   velvet: `float nap = sin(storyPlane.y * 7.0 + storyNoise(p * 3.0)); float grain = .93 + nap * .045;`,
   ash: `float soot = storyNoise(p * 4.0); float grain = .88 + soot * .17;`,
   moss: `float cushion = storyNoise(p * 4.7); float grain = .86 + cushion * .23;`,
@@ -87,12 +87,12 @@ export const TACTILE_PATTERNS: Record<StorySurface, string> = {
     float storyReliefFilter = 1.0 - smoothstep(.25, 1.2, length(fwidth(p * 8.0)));`,
   linen: `float warp = sin(storyPlane.x * 650.0), weft = sin(storyPlane.y * 650.0);
     float detail = 1.0 - smoothstep(.25, 1.3, max(fwidth(storyPlane.x * 650.0), fwidth(storyPlane.y * 650.0)));
-    float grain = .97 + warp * weft * .032 * detail;
+    float grain = .95 + storyNoise(p * 1.3) * .035 + warp * weft * .024 * detail;
     float storyHeight = warp * weft * .000025;
     float storyReliefFilter = detail;`,
   paper: `float fiber = sin(storyPlane.x * 620.0 + sin(storyPlane.y * 38.0)) * sin(storyPlane.y * 850.0);
     float detail = 1.0 - smoothstep(.25, 1.3, max(fwidth(storyPlane.x * 620.0), fwidth(storyPlane.y * 850.0)));
-    float grain = .98 + fiber * .02 * detail;
+    float grain = .96 + storyNoise(p * 2.1) * .035 + fiber * .018 * detail;
     float storyHeight = fiber * .000006;
     float storyReliefFilter = detail;`,
   wax: `float drip = sin((p.x + p.z) * 57.0 + sin(p.y * 11.0));
@@ -102,12 +102,12 @@ export const TACTILE_PATTERNS: Record<StorySurface, string> = {
     float storyReliefFilter = detail;`,
   metal: `float scratch = sin(storyPlane.x * 510.0 + sin(storyPlane.y * 7.0));
     float detail = 1.0 - smoothstep(.3, 1.3, fwidth(storyPlane.x * 510.0));
-    float grain = .99 + scratch * .012 * detail;
+    float grain = .91 + storyNoise(p * 1.7) * .12 + scratch * .012 * detail;
     float storyHeight = scratch * .000003;
     float storyReliefFilter = detail;`,
   "wet-wood": `float wet = storyNoise(p * 2.4);
     float channel = sin(storyPlane.x * 38.0 + sin(storyPlane.y * 4.0));
-    float grain = .82 + wet * .12 + channel * .012;
+    float grain = .79 + wet * .14 + channel * .016 * (1.0 - smoothstep(.3, 1.3, fwidth(storyPlane.x * 38.0)));
     float storyHeight = channel * .00012;
     float storyReliefFilter = 1.0 - smoothstep(.3, 1.3, fwidth(storyPlane.x * 38.0));`,
   "charred-wood": `float charcoal = storyNoise(p * 5.0);
@@ -121,7 +121,7 @@ export const TACTILE_PATTERNS: Record<StorySurface, string> = {
     float storyReliefFilter = 1.0 - smoothstep(.25, 1.2, length(fwidth(p * 12.0)));`,
   plaster: `float trowel = storyNoise(p * 2.7);
     float aggregate = storyNoise(p * 42.0);
-    float grain = .95 + (trowel - .5) * .13;
+    float grain = .93 + (storyNoise(p * .38) - .5) * .11 + (trowel - .5) * .08;
     float storyHeight = trowel * .002 + aggregate * .0003;
     float storyReliefFilter = 1.0 - smoothstep(.25, 1.1, length(fwidth(p * 42.0)));`,
   velvet: `float nap = sin(storyPlane.y * 7.0 + storyNoise(p * 3.0));
@@ -164,7 +164,7 @@ export const TACTILE_RELIEF_NORMAL = `
 `;
 
 export function tactileProgramKey(surface: StorySurface, detail: TactileDetail) {
-  return `sidtw-tactile-${surface}-v6-${detail}`;
+  return `sidtw-tactile-${surface}-v7-${detail}`;
 }
 
 /** Extend the standard light/shadow/fog/colour pipeline, never replace it. */
@@ -187,10 +187,11 @@ export function applyTactileShader(shader: TactileShader, surface: StorySurface,
     .replace("#include <common>", `#include <common>\nvarying vec3 vStoryPosition;\nvarying vec3 vStoryNormal;\nuniform vec4 storyMemory;\n${SURFACE_NOISE}`)
     .replace("#include <color_fragment>", `#include <color_fragment>\n${SURFACE_COORDINATES}\n${detail === "relief" ? TACTILE_PATTERNS[surface] : TACTILE_BASE_PATTERNS[surface]}\ndiffuseColor.rgb *= grain;
       float memoryField = max(max(storyMemory.x, storyMemory.y), storyMemory.z) > 0. ? storyNoise(p * 2.8) : .5;
-      float dampPatch = smoothstep(.28, .7, memoryField) * storyMemory.x;
+      float broadMemory = storyNoise(p * .43 + vec3(3.7, .8, 2.1));
+      float dampPatch = smoothstep(.34, .72, memoryField * .42 + broadMemory * .58) * storyMemory.x;
       float wornPatch = smoothstep(.55, .82, memoryField) * storyMemory.y;
       float scarLine = storyMemory.z > 0. ? pow(abs(sin(storyPlane.x * 39. + memoryField * 8.)), 24.) * (1. - smoothstep(.3, 1.4, fwidth(storyPlane.x * 39.))) : 0.;
-      float scar = scarLine * smoothstep(.32, .66, memoryField) * storyMemory.z;
+      float scar = scarLine * smoothstep(.56, .78, broadMemory) * smoothstep(.32, .66, memoryField) * storyMemory.z;
       diffuseColor.rgb *= 1. - dampPatch * .14 - scar * .24;
       diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * .9 + vec3(.025), wornPatch * .32);
     `)

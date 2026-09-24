@@ -71,15 +71,15 @@ export function WetFloorReveal({ stage, reducedMotion = false }: { stage: number
         vec3 branches=hasDepth>.5?texture2D(liveForest,parallaxUv+vec2(ripple*.3)).rgb:texture2D(forest,vUv+vec2(ripple)).rgb*(.64+second*.22);
         // Staggered joinery, long grain and a restrained reflected lamp pool.
         // Geometry, ray UVs, mask strength and progression stay unchanged.
-        float board=floor(vUv.x*14.0), seed=woodHash(board);
-        vec2 timber=vec2(fract(vUv.x*14.0),fract(vUv.y*3.0+seed));
+        float board=floor(vUv.x*36.0), seed=woodHash(board);
+        vec2 timber=vec2(fract(vUv.x*36.0),fract(vUv.y*(4.5+seed)+seed));
         float grainPhase=vUv.x*1700.0+sin(vUv.y*28.0+seed*6.0)*2.8;
         float grainFade=1.0-smoothstep(.4,1.6,fwidth(grainPhase));
-        float grain=sin(grainPhase)*.012*grainFade+sin(vUv.x*310.0+seed*4.0)*.008;
+        float grain=sin(grainPhase)*.006*grainFade+sin(vUv.x*310.0+seed*4.0)*.003*(1.-smoothstep(.4,1.6,fwidth(vUv.x*310.0)));
         vec3 room=mix(vec3(.14,.125,.105),vec3(.22,.194,.158),seed)+grain;
-        float seamX=smoothstep(.012,.026,min(timber.x,1.0-timber.x));
+        float seamX=smoothstep(.006,.018,min(timber.x,1.0-timber.x));
         float seamY=smoothstep(.004,.012,min(timber.y,1.0-timber.y));
-        room*=mix(.36,1.0,seamX*seamY);
+        room*=mix(.57,1.0,seamX*seamY);
         float stain=sin(vUv.x*19.+sin(vUv.y*13.)*1.8)*sin(vUv.y*17.+seed*.7);
         float damp=smoothstep(-.25,.65,stain);
         room*=1.-damp*.19;

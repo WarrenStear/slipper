@@ -1,7 +1,12 @@
+import { TimberAssembly, Upholstery, RestingThrow, StoneBasin } from "./ChapterArt";
+import { ClothboundBook, MemoryFeather } from "../storyEvents/StoryHeroProps";
 import { ClimbLandscape } from "../environment/ClimbLandscape";
 import { LegacyChapterLight } from "../artDirection/LegacyChapterLight";
 import { BotanicalCluster } from "../environmentArt/EnvironmentArt";
-import { memo } from "react";
+import { mergeArtGeometries } from "../environmentArt/authoredGeometry";
+import { createWeatheredBoulderGeometry } from "./chapterArtGeometry";
+import { TactileMaterial } from "../storyEvents/TactileMaterial";
+import { memo, useEffect, useMemo } from "react";
 import {
   Beam,
   FabricVeil,
@@ -30,28 +35,22 @@ const PAPER_FRAGMENTS = Array.from({ length: 16 }, (_, index) => ({
 const SCENIC_BOULDER_INDICES = [0, 1, 2, 3, 4, 5] as const;
 const NO_SCENIC_BOULDERS: readonly number[] = [];
 
+function GroundedOutcrops() {
+  const geometry = useMemo(() => mergeArtGeometries(SCENIC_BOULDER_INDICES.map(index => {
+    const rock = createWeatheredBoulderGeometry(13 + index * 3);
+    rock.scale(1.3 + index % 2 * .3, 1.5 + index % 3 * .28, 1.3 + index % 3 * .16);
+    rock.rotateY(index * .93);
+    rock.translate((index % 2 === 0 ? -1 : 1) * (4.8 + index % 3), 0, -6 + index * 2.6);
+    return rock;
+  })), []);
+  useEffect(() => () => geometry.dispose(), [geometry]);
+  return <mesh name="grounded-weathered-climb-outcrops" geometry={geometry} receiveShadow>
+    <TactileMaterial surface="stone" color="#60645b" roughness={.98} />
+  </mesh>;
+}
+
 function MemoryPedestal({ selected }: { selected: boolean }) {
-  return (
-    <>
-      <mesh position={[0, 0.16, 0]} receiveShadow>
-        <cylinderGeometry args={[0.86, 1.02, 0.32, 18]} />
-        <meshStandardMaterial
-          color={selected ? "#9d825d" : "#59554d"}
-          emissive={selected ? "#73502a" : "#000000"}
-          emissiveIntensity={selected ? 0.34 : 0}
-          roughness={0.92}
-        />
-      </mesh>
-      <mesh position={[0, 0.34, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[0.62, 0.72, 24]} />
-        <meshBasicMaterial
-          color={selected ? "#efca83" : "#888174"}
-          transparent
-          opacity={selected ? 0.82 : 0.34}
-        />
-      </mesh>
-    </>
-  );
+  return <StoneBasin position={[0,.15,0]} radius={.83} height={.3} color={selected ? "#8f816b" : "#6a665a"} />;
 }
 
 function HeartRoseMemory({ selected, reducedEffects }: { selected: boolean; reducedEffects: boolean }) {
@@ -69,7 +68,7 @@ function HeartRoseMemory({ selected, reducedEffects }: { selected: boolean; redu
       }}
     >
       <MemoryPedestal selected={selected} />
-      <BotanicalCluster kind="rose" position={[0, .36, 0]} scale={3.25} seed={41} color={selected ? "#d49aa3" : "#a36f78"} />
+      <BotanicalCluster kind="rose" position={[0, .36, 0]} scale={2.15} seed={41} color={selected ? "#d49aa3" : "#a36f78"} />
       {selected && !reducedEffects ? (
         <pointLight position={[0, 1.75, 0]} color="#d9a0a8" intensity={0.74} distance={5} />
       ) : null}
@@ -92,18 +91,7 @@ function HeartSwanFeatherMemory({ selected, reducedEffects }: { selected: boolea
       }}
     >
       <MemoryPedestal selected={selected} />
-      <group position={[0, 1.26, 0]} rotation={[0.08, -0.24, -0.32]} scale={1.08}>
-        <Beam from={[0, -0.72, 0]} to={[0, 0.86, 0]} radius={0.035} color={selected ? "#f2eee5" : "#c9c8c1"} />
-        {[-0.46, -0.18, 0.1, 0.38, 0.62].map((y, index) => {
-          const reach = 0.58 - index * 0.075;
-          return (
-            <group key={y}>
-              <Beam from={[0, y, 0]} to={[-reach, y + 0.22, 0]} radius={0.022} color="#e4e2db" opacity={selected ? 0.96 : 0.66} />
-              <Beam from={[0, y, 0]} to={[reach, y + 0.22, 0]} radius={0.022} color="#e4e2db" opacity={selected ? 0.96 : 0.66} />
-            </group>
-          );
-        })}
-      </group>
+      <group position={[0,.37,0]} rotation={[.15,-.24,-.45]} scale={2.1}><MemoryFeather /></group>
       {selected && !reducedEffects ? (
         <pointLight position={[0, 1.45, 0]} color="#dce8ed" intensity={0.7} distance={5} />
       ) : null}
@@ -138,23 +126,10 @@ function HeartBlueMoonMemory({ selected, reducedEffects }: { selected: boolean; 
           side={2}
         />
       </mesh>
-      <mesh position={[0.2, 1.38, 0.025]} scale={0.42}>
+      <mesh position={[0.2, 1.38, -0.025]} scale={0.42}>
         <circleGeometry args={[0.72, 24]} />
         <meshBasicMaterial color="#e3edf2" transparent opacity={selected ? 0.9 : 0.55} toneMapped={false} side={2} />
       </mesh>
-      {!reducedEffects ? (
-        <mesh position={[0, 1.22, -0.02]} scale={1.28}>
-          <ringGeometry args={[0.62, 0.69, 32]} />
-          <meshBasicMaterial
-            color="#95b9ca"
-            transparent
-            opacity={selected ? 0.5 : 0.18}
-            depthWrite={false}
-            toneMapped={false}
-            side={2}
-          />
-        </mesh>
-      ) : null}
       {selected && !reducedEffects ? (
         <pointLight position={[0, 1.3, 0.4]} color="#a7cede" intensity={0.76} distance={5} />
       ) : null}
@@ -175,7 +150,7 @@ function FutureRestSymbol({
   return (
     <group
       name="womb-future-rest"
-      position={[target.localPosition[0], 0.46, target.localPosition[1]]}
+      position={[target.localPosition[0], 0.05, target.localPosition[1]]}
       userData={{
         symbolicObjectId: "creation.future.rest",
         worldChoiceId: "future.rest",
@@ -185,31 +160,9 @@ function FutureRestSymbol({
         approachable: true,
       }}
     >
-      <mesh position={[0, 0.28, 0]} scale={[1.35, 0.28, 0.88]}>
-        <sphereGeometry args={[0.72, 14, 9]} />
-        <meshStandardMaterial
-          color={selected ? "#c8a898" : "#8c756a"}
-          emissive={selected ? "#70483d" : "#000000"}
-          emissiveIntensity={selected ? 0.26 : 0}
-          roughness={1}
-        />
-      </mesh>
-      <mesh position={[-0.72, 0.55, 0]} scale={[0.5, 0.22, 0.68]}>
-        <sphereGeometry args={[0.7, 12, 8]} />
-        <meshStandardMaterial color="#d6c8b7" roughness={1} />
-      </mesh>
-      {!reducedEffects ? (
-        <FabricVeil
-          position={[0, 1.22, 0.28]}
-          size={[2.2, 1.18]}
-          color="#b99689"
-          opacity={0.34}
-          reducedMotion={reducedMotion}
-        />
-      ) : null}
-      {selected && !reducedEffects ? (
-        <pointLight position={[0, 1.1, 0]} color="#e4bd9d" intensity={0.64} distance={5} />
-      ) : null}
+      <Upholstery position={[0, .13, 0]} size={[1.58,.24,1.04]} color={selected ? "#b2a38c" : "#998c7b"} surface="linen" />
+      <Upholstery position={[-.47,.31,.06]} size={[.54,.17,.78]} color="#c2b7a2" surface="linen" />
+      <RestingThrow position={[.2,.27,-.09]} rotation={[0,Math.PI,0]} size={[.77,1.22]} maxDrop={.24} color="#918d78" />
     </group>
   );
 }
@@ -219,7 +172,7 @@ function FutureHomeSymbol({ selected, reducedEffects }: { selected: boolean; red
   return (
     <group
       name="womb-future-home"
-      position={[target.localPosition[0], 0.38, target.localPosition[1]]}
+      position={[target.localPosition[0], 0.05, target.localPosition[1]]}
       userData={{
         symbolicObjectId: "creation.future.home",
         worldChoiceId: "future.home",
@@ -229,26 +182,14 @@ function FutureHomeSymbol({ selected, reducedEffects }: { selected: boolean; red
         approachable: true,
       }}
     >
-      <mesh position={[0, 0.72, 0]}>
-        <boxGeometry args={[1.62, 1.38, 1.16]} />
-        <meshStandardMaterial
-          color={selected ? "#a88d68" : "#76664f"}
-          emissive={selected ? "#64451f" : "#000000"}
-          emissiveIntensity={selected ? 0.3 : 0}
-          roughness={0.96}
-        />
-      </mesh>
-      <mesh position={[0, 1.55, 0]} rotation={[0, 0, Math.PI / 4]}>
-        <boxGeometry args={[1.24, 1.24, 1.32]} />
-        <meshStandardMaterial color="#4d493d" roughness={0.98} />
-      </mesh>
-      <mesh position={[0, 0.6, -0.6]}>
-        <boxGeometry args={[0.48, 0.82, 0.08]} />
-        <meshBasicMaterial color={selected ? "#f1c57b" : "#7d6d55"} toneMapped={false} />
-      </mesh>
-      {selected && !reducedEffects ? (
-        <pointLight position={[0, 1.2, -0.8]} color="#f2c97e" intensity={0.7} distance={5} />
-      ) : null}
+      <TimberAssembly name="joined-model-of-an-open-home" color={selected ? "#a5906d" : "#857354"} pieces={[
+        {position:[0,.025,0],size:[1.54,.05,1.16]},
+        {position:[-.65,.42,0],size:[.075,.79,1]}, {position:[.65,.42,0],size:[.075,.79,1]},
+        {position:[0,.42,.48],size:[1.25,.79,.055]},
+        {position:[-.39,.93,0],size:[.95,.055,1.22],rotation:[0,0,.33]},
+        {position:[.39,.93,0],size:[.95,.055,1.22],rotation:[0,0,-.33]},
+        {position:[0,.78,-.49],size:[1.27,.06,.06]},
+      ]} />
     </group>
   );
 }
@@ -258,7 +199,7 @@ function FutureVoiceSymbol({ selected, reducedEffects }: { selected: boolean; re
   return (
     <group
       name="womb-future-voice"
-      position={[target.localPosition[0], 0.34, target.localPosition[1]]}
+      position={[target.localPosition[0], 0.05, target.localPosition[1]]}
       userData={{
         symbolicObjectId: "creation.future.voice",
         worldChoiceId: "future.voice",
@@ -268,32 +209,8 @@ function FutureVoiceSymbol({ selected, reducedEffects }: { selected: boolean; re
         approachable: true,
       }}
     >
-      <mesh position={[0, 0.5, 0]} rotation={[-0.08, 0.2, 0]}>
-        <boxGeometry args={[1.8, 0.08, 1.22]} />
-        <meshStandardMaterial
-          color={selected ? "#d7d0bf" : "#9a9488"}
-          emissive={selected ? "#75684d" : "#000000"}
-          emissiveIntensity={selected ? 0.2 : 0}
-          roughness={0.92}
-        />
-      </mesh>
-      <Beam from={[-0.5, 0.58, 0.05]} to={[0.58, 1.3, -0.05]} radius={0.045} color="#4f4033" />
-      {[0.45, 0.72, 0.99].map((radius, index) => (
-        <mesh key={radius} position={[0.72, 1.35, 0]}>
-          <ringGeometry args={[radius, radius + 0.025, 24, 1, -0.65, 1.3]} />
-          <meshBasicMaterial
-            color="#b9d1d4"
-            transparent
-            opacity={selected ? 0.48 - index * 0.1 : 0.16}
-            depthWrite={false}
-            toneMapped={false}
-            side={2}
-          />
-        </mesh>
-      ))}
-      {selected && !reducedEffects ? (
-        <pointLight position={[0, 1.25, 0.4]} color="#b9d5d8" intensity={0.64} distance={5} />
-      ) : null}
+      <group position={[0,.06,0]} rotation={[0,.2,0]}><ClothboundBook open /></group>
+      <Beam from={[-.25,.14,-.07]} to={[.3,.15,.18]} radius={.012} color={selected ? "#786044" : "#514938"} />
     </group>
   );
 }
@@ -307,7 +224,7 @@ function ProtectedCreationSpace({
   reducedMotion: boolean;
   chosen: boolean;
 }) {
-  const ribIndices = reducedEffects ? [0, 2, 4] : [0, 1, 2, 3, 4];
+  const ribIndices = [0, 1];
   return (
     <group
       name="womb-protected-creation-space"
@@ -315,21 +232,21 @@ function ProtectedCreationSpace({
       userData={{ protectedByRecoveredKey: true }}
     >
       {ribIndices.map((index) => {
-        const angle = -Math.PI * 0.8 + index * (Math.PI * 1.6) / 4;
+        const angle = 2.18 + index * .36;
         return (
           <Beam
             key={index}
             from={[Math.cos(angle) * 4.65, 0, Math.sin(angle) * 3]}
-            to={[Math.cos(angle) * 3.8, 2.5, Math.sin(angle) * 2.5]}
+            to={[Math.cos(angle) * 4.55, .46, Math.sin(angle) * 2.95]}
             radius={0.075}
             color="#7a6446"
           />
         );
       })}
       <FabricVeil
-        position={[0, 1.75, 2.7]}
-        rotation={[0, 0, 0]}
-        size={[5.4, 1.6]}
+        position={[-3.25, .4, 2.15]}
+        rotation={[0, .72, 0]}
+        size={[1.6, .52]}
         color="#d8c6a2"
         opacity={chosen ? 0.48 : 0.26}
         reducedMotion={reducedMotion}
@@ -389,12 +306,7 @@ function ThreeClimbsChapterComponent({
       {isWomb ? null : <group rotation={[-0.16, 0, 0]} position={[0, 0.3, 0]}>
         <StonePath color={isHeart ? "#777e81" : "#66645d"} count={12} length={19} />
       </group>}
-      {scenicBoulderIndices.map((index) => (
-        <mesh key={index} position={[(index % 2 === 0 ? -1 : 1) * (4.8 + (index % 3)), index * 0.58, -6 + index * 2.6]}>
-          <dodecahedronGeometry args={[1.3 + (index % 2) * 0.45, 0]} />
-          <meshStandardMaterial color={isWomb ? "#77684b" : "#4c504f"} roughness={1} />
-        </mesh>
-      ))}
+      {scenicBoulderIndices.length ? <group position={[0, 0, isArrival ? -5 : 0]}><GroundedOutcrops /></group> : null}
 
       {isArrival ? (
         <group position={[0, 0.3, 4]}>
@@ -448,7 +360,8 @@ function ThreeClimbsChapterComponent({
           <FutureRestSymbol selected={restSelected} reducedEffects={reducedEffects} reducedMotion={reducedMotion} />
           <FutureHomeSymbol selected={homeSelected} reducedEffects={reducedEffects} />
           <FutureVoiceSymbol selected={voiceSelected} reducedEffects={reducedEffects} />
-          <KeyProp position={[0, creationChosen ? 1.42 : 1.2, 3]} scale={0.52} color={creationChosen ? "#f1cb73" : "#d0ad63"} />
+          <Upholstery position={[.22,.055,3]} size={[1.06,.05,.64]} surface="linen" color="#aaa291" />
+          <KeyProp position={[0, .1, 3]} scale={0.52} color={creationChosen ? "#f1cb73" : "#d0ad63"} />
           <LegacyChapterLight><directionalLight position={[8, 12, -8]} color="#ffd89f" intensity={creationChosen ? 1.24 : 0.95} /></LegacyChapterLight>
           <LegacyChapterLight><hemisphereLight args={["#ead5ad", "#2f271d", reducedEffects ? 0.44 : 0.66]} /></LegacyChapterLight>
         </group>

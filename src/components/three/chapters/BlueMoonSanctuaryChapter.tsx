@@ -21,27 +21,32 @@ import type { ChapterSceneProps } from "./types";
 import { useJourneyStore } from "../../../stores/useJourneyStore";
 import { ObservedSanctuaryReflection } from "../storyEvents/ObservedSanctuaryReflection";
 
-const BRIDGE_PLANKS = Array.from({ length: 13 }, (_, index) => index);
-const LILIES = Array.from({ length: 16 }, (_, index) => ({
-  x: -7 + (index * 2.3) % 14,
-  z: -5 + (index * 3.7) % 10,
-  scale: 0.45 + (index % 4) * 0.08,
+const BRIDGE_PLANKS = Array.from({ length: 35 }, (_, index) => index);
+const LILIES = Array.from({ length: 10 }, (_, i) => ({
+  x: (i < 6 ? -1 : 1) * (6.7 + Math.sin(i * 2.3) * 1.2),
+  z: 1.8 + i * .67 + Math.cos(i * 1.7) * .8,
+  scale: .36 + (i % 3) * .07,
 }));
 
 function WornSanctuaryBridge() {
   const boards = useMemo<ConstructionPiece[]>(() => BRIDGE_PLANKS.map(index => ({
-    position: [0, Math.sin(index * .45) * .08, -7.2 + index * 1.2], size: [3.8, .2, 1.08],
-    color: index % 2 ? "#9b8976" : "#bfaa8c",
+    position: [Math.sin(index * 2.7) * .075, Math.sin(index * .45) * .018, -7.38 + index * .438],
+    size: [3.65 + Math.sin(index * 1.8) * .16, .18, .408 + Math.sin(index * 2.4) * .011],
+    rotation: [0, Math.sin(index * 3.1) * .006, Math.sin(index * 1.2) * .005],
+    color: ["#b0a18d", "#9b9382", "#c3b59b", "#a59989", "#b5aa96"][index % 5],
   })), []);
   const supports = useMemo<ConstructionPiece[]>(() => [-1, 1].flatMap(side => [
-    { position: [side * 1.65, -.24, 0] as [number, number, number], size: [.16, .3, 15.4] as [number, number, number] },
-    ...[-6, 0, 6].map(z => ({ position: [side * 2.1, .24 + (z + 8) / 15.4 * .65, z] as [number, number, number], size: [.14, .85, .14] as [number, number, number] })),
+    { position: [side * 1.47, -.26, 0] as [number, number, number], size: [.23, .35, 15.5] as [number, number, number] },
+    ...[-6.9, -2.35, 2.3, 6.85].flatMap((z, i) => [
+      { position: [side * 1.96, .4, z] as [number, number, number], size: [.17, 1.52, .19] as [number, number, number], rotation: [0, .03 * side, side * .022] as [number, number, number] },
+      ...(i < 3 ? [{ position: [side * 1.91, .99, z + 2.27] as [number, number, number], size: [.115, .12, 4.6] as [number, number, number] }] : []),
+      { position: [0, -.26, z] as [number, number, number], size: [4.15, .16, .2] as [number, number, number] },
+    ]),
   ]), []);
   return <group position={[0, .3, 0]} name="weathered-sanctuary-bridge">
     <TimberAssembly pieces={boards} color="#685441" surface="wet-wood" />
     <TimberAssembly pieces={supports} color="#3c332a" surface="wet-wood" />
-    <Beam from={[-2.1, .1, -8]} to={[-2.1, .75, 7.4]} radius={.1} color="#302b27" surface="wet-wood" />
-    <Beam from={[2.1, .1, -8]} to={[2.1, .75, 7.4]} radius={.1} color="#302b27" surface="wet-wood" />
+    <TimberAssembly name="bridge-iron-fasteners" surface="metal" color="#393b34" pieces={BRIDGE_PLANKS.flatMap(i => [-1, 1].map(side => ({ position: [side * 1.47, .096 + Math.sin(i * .45) * .018, -7.38 + i * .438], size: [.028, .009, .04] })))} />
   </group>;
 }
 
@@ -129,8 +134,8 @@ function BlueMoonSanctuaryChapterComponent({
           </mesh>
         </group>
       ) : null}
-      <FabricVeil position={[-5.8, 3.6, 2]} rotation={[0, 0.18, 0]} color="#dce2e3" reducedMotion={reducedMotion} />
-      <FabricVeil position={[5.6, 3.2, 1]} rotation={[0, -0.22, 0]} color="#d7dde0" reducedMotion={reducedMotion} phase={2.1} />
+      <FabricVeil position={[-6.4, 2.25, 3]} size={[1.15, 3.4]} rotation={[0, 0.18, 0]} color="#b4c0c4" opacity={.38} reducedMotion={reducedMotion} />
+      <FabricVeil position={[6.2, 2.2, 2.4]} size={[.8, 2.9]} rotation={[0, -0.22, 0]} color="#b5bfc3" opacity={.32} reducedMotion={reducedMotion} phase={2.1} />
 
       {isIntimacy ? (
         <group>
@@ -150,7 +155,7 @@ function BlueMoonSanctuaryChapterComponent({
           <Beam from={[-3.8, 0, 0]} to={[-3.8, 4.8, 0]} radius={0.16} color="#4b4035" />
           <Beam from={[3.8, 0, 0]} to={[3.8, 4.8, 0]} radius={0.16} color="#4b4035" />
           <Beam from={[-3.8, 4.8, 0]} to={[3.8, 4.8, 0]} radius={0.18} color="#4b4035" />
-          <FabricVeil position={[0, 2.5, 0.05]} size={[6.8, 4.4]} color="#d9d8d2" opacity={0.58} reducedMotion={reducedMotion} />
+          {[-1, 1].map(side => <FabricVeil key={side} position={[side * 3.05, 2.6, .05]} size={[1.1, 4.05]} rotation={[0, side * .12, side * .06]} color="#c7cecd" opacity={.42} reducedMotion={reducedMotion} />)}
           </group>
         </group>
       ) : null}

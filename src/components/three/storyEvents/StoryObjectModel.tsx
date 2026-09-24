@@ -2,6 +2,7 @@ import { memo, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import type { StoryObjectKind } from "../../../storyEvents/storyEventTypes";
+import { TimberAssembly } from "../chapters/ChapterArt";
 import { DoorFrame, KeyProp, LanternProp } from "../chapters/ChapterPrimitives";
 import { ClothboundBook, DomesticChair, FoldedPaperBird, MemoryFeather, MemoryRose, StoryLinen, StoryPaper } from "./StoryHeroProps";
 import { TactileMaterial } from "./TactileMaterial";
@@ -17,7 +18,15 @@ function TactileDoor({ open, reducedMotion }: { open: boolean; reducedMotion: bo
   return <group name="touchable-hinged-door">
     <DoorFrame width={1.5} height={2} depth={.18} open />
     <group ref={hinge} position={[-.72, 0, 0]} rotation={[0, open ? -1.32 : 0, 0]}>
-      <TimberPiece position={[.68, .95, 0]} size={[1.33, 1.86, .09]} color="#66503d" seed={12} />
+      <TimberAssembly color="#66503d" pieces={[
+        ...[.085,1.275].map(x=>({position:[x,.95,0] as [number,number,number],size:[.15,1.86,.105] as [number,number,number]})),
+        ...[.1,.8,1.8].map(y=>({position:[.68,y,0] as [number,number,number],size:[1.06,.16,.105] as [number,number,number]})),
+        {position:[.68,.44,.015],size:[1.08,.53,.055]}, {position:[.68,1.29,.015],size:[1.08,.85,.055]},
+      ]} />
+      <TimberAssembly surface="metal" color="#71624a" pieces={[
+        {position:[1.17,.93,-.063],size:[.065,.23,.014]},
+        ...[.34,1.51].map(y=>({position:[.04,y,-.06] as [number,number,number],size:[.09,.14,.018] as [number,number,number]})),
+      ]} />
       <mesh position={[1.17, .93, -.075]}><sphereGeometry args={[.045, 8, 6]} /><meshStandardMaterial color="#b4a17c" metalness={.7} roughness={.35} /></mesh>
     </group>
   </group>;
@@ -71,7 +80,14 @@ export const StoryObjectModel = memo(function StoryObjectModel({ kind, state = "
   if (kind === "candle") return <AuthoredCandle lit={state === "lit" || state === "awakened"} color={cream} />;
   if (kind === "basket" || kind === "nest") return <WovenNest />;
   if (kind === "seed") return <StorySeed grown={state === "planted" || state === "grown"} />;
-  if (kind === "marker") return <group name="scraped-timber-path-marker"><TimberPiece position={[0,.26,0]} size={[.42,.85,.085]} rotation={[0,.08,-.055]} color={state === "erased" ? "#635947" : "#554b3b"} seed={37}/>{state === "erased" ? null : <TimberPiece position={[0,.32,-.045]} size={[.24,.022,.005]} color="#bab09a" seed={19}/>}</group>;
+  if (kind === "marker") return <group name="scraped-timber-path-marker" rotation={[0,.08,-.055]}>
+    <TimberAssembly color={state === "erased" ? "#635947" : "#554b3b"} pieces={[
+      {position:[0,.29,.032],size:[.065,.7,.08]},
+      {position:[0,.5,0],size:[.51,.23,.047]}, {position:[-.02,.28,0],size:[.44,.12,.044]},
+    ]} />
+    <TimberAssembly surface="metal" color="#6d6552" pieces={[-1,1].map(side=>({position:[side*.18,.5,-.028],size:[.018,.02,.01]}))} />
+    {state === "erased" ? null : <TimberPiece position={[0,.49,-.029]} size={[.27,.019,.005]} color="#b0a48e" seed={19}/>}
+  </group>;
   if (kind === "path") return <mesh rotation={[-Math.PI / 2, 0, 0]}><planeGeometry args={[1.1, 2.8]} /><meshStandardMaterial color="#777263" transparent opacity={.26} roughness={1} /></mesh>;
   return <mesh scale={[.3, .45, .18]}><dodecahedronGeometry args={[1, 0]} /><meshStandardMaterial color={cream} roughness={.95} /></mesh>;
 });

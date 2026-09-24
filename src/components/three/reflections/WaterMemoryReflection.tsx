@@ -27,7 +27,7 @@ function WaterMemoryReflectionComponent({
 
   return (
     <group name="water-memory-reflection" position={[0, 0.015, 0.6]}>
-      <WaterSurface position={[0, 0, 0]} size={[17, 13]} color={still ? "#172b36" : "#111921"} opacity={0.82} />
+      <WaterSurface position={[0, 0, 0]} size={[17, 13]} color={still ? "#172b36" : "#111921"} opacity={0.82} roughness={.38} />
       <group name="reflection-only-water-route" position={[0, 0.035, 0]}>
         {visiblePoints.slice(0, -1).map((point, index) => {
           const next = visiblePoints[index + 1];

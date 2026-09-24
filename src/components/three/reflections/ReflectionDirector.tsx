@@ -9,6 +9,7 @@ import type { RenderQualityProfile } from "../renderQuality";
 import { MirrorMemorySurface } from "./MirrorMemorySurface";
 import { ReflectedPath } from "./ReflectedPath";
 import { ReflectionApparition } from "./ReflectionApparition";
+import { createMirrorFrameGeometry } from "../environmentArt/heroGeometry";
 import { TactileMaterial } from "../storyEvents/TactileMaterial";
 
 export type ReflectionDirectorProps = {
@@ -53,18 +54,7 @@ function ReflectionDirectorComponent({
   const isWarning = sceneId === "sunset.warning-grove";
   const isTruthful = sceneId === "sunset.true-mirror";
   const isStillnessScene = sceneId === "sunset.stillness";
-  const frameGeometry = useMemo(() => {
-    const outline = new THREE.Shape();
-    outline.moveTo(-2.88, -3.18); outline.lineTo(2.88, -3.18);
-    outline.lineTo(2.83, 3.15); outline.quadraticCurveTo(0, 3.44, -2.86, 3.18); outline.closePath();
-    const opening = new THREE.Path();
-    opening.moveTo(-2.69, -2.99); opening.lineTo(-2.69, 2.99);
-    opening.lineTo(2.69, 2.99); opening.lineTo(2.69, -2.99); opening.closePath();
-    outline.holes.push(opening);
-    const geometry = new THREE.ExtrudeGeometry(outline, { depth: .11, bevelEnabled: true, bevelThickness: .024, bevelSize: .026, bevelSegments: 2, steps: 1, curveSegments: 12 });
-    geometry.computeBoundingBox(); geometry.computeBoundingSphere();
-    return geometry;
-  }, []);
+  const frameGeometry = useMemo(() => createMirrorFrameGeometry(), []);
   useEffect(() => () => frameGeometry.dispose(), [frameGeometry]);
   const reflectionSettled = isStillnessScene && Boolean(presentation?.look.stillness);
   const sampleCount = reducedMotion ? 1 : reflectionSettled ? 2 : reducedEffects ? 12 : qualityProfile.quality === "low" ? 18 : 34;
@@ -120,7 +110,7 @@ function ReflectionDirectorComponent({
         <meshStandardMaterial color="#25201c" metalness={0.58} roughness={0.42} />
       </mesh>
       <HeroAssetSlot id="cracked-mirror"><mesh name="worn-joined-mirror-frame" geometry={frameGeometry} position={[0, 0, .11]}>
-        <TactileMaterial surface="metal" color="#766d5a" metalness={.72} roughness={.48} memory={{ wear: .92, damage: .65 }} />
+        <TactileMaterial surface="metal" color="#8c7960" vertexColors metalness={.38} roughness={.68} memory={{ wear: .92, damage: .65 }} />
       </mesh></HeroAssetSlot>
 
       <group name="reflected-past-and-future" position={[0, 0, 0.155]}>

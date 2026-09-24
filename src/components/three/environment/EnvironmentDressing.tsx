@@ -1,3 +1,4 @@
+import { createWornTimberGeometry } from "../environmentArt/authoredGeometry";
 import { createOrganicCrownGeometry } from "./forestGeometry";
 import { memo, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
@@ -11,7 +12,8 @@ type FormsProps = { forms: readonly DressingForm[]; name: string; color: string;
 export const Forms = memo(function Forms({ forms, name, color, kind = "box", wood = false, surface, shadows = false, roughness = .98 }: FormsProps) {
   const mesh = useRef<THREE.InstancedMesh>(null);
   const organicGeometry = useMemo(() => {
-    if (kind === "crown") return createOrganicCrownGeometry(0);
+    if (kind === "crown") return createOrganicCrownGeometry(2);
+    if (kind === "box") return createWornTimberGeometry([1, 1, 1], 59);
     if (kind !== "tree") return null;
     const geometry = new THREE.CylinderGeometry(.23, .5, 1, 8, 3);
     const position = geometry.getAttribute("position") as THREE.BufferAttribute;
@@ -117,7 +119,14 @@ export const BrokenRoomDetails = memo(function BrokenRoomDetails() {
       for (const y of [.17, 5.9]) result.push({ position: [side * 8.06, y, 0], scale: [.14, .12, 16.6] });
       for (const z of [-7.8, 0, 7.8]) result.push({ position: [side * 8.06, 3, z], scale: [.12, 5.85, .14] });
     }
-    for (const y of [.17, 5.9]) result.push({ position: [0, y, -8.24], scale: [16.1, .12, .13] });
+    for (const z of [-8.24, 8.24]) for (const y of [.17, 5.9]) result.push({ position: [0, y, z], scale: [16.1, .12, .13] });
+    // A sealed domestic door, deep casing and a broad dado establish human scale.
+    for (const x of [3.05, 4.75]) result.push({ position: [x, 1.3, 8.12], scale: [.14, 2.6, .15] });
+    result.push({ position: [3.9, 2.63, 8.12], scale: [1.86, .16, .17] });
+    for (let i = 0; i < 6; i++) result.push({ position: [3.22 + i * .27, 1.28, 8.19], scale: [.262, 2.49, .07], color: i % 3 ? "#8a8271" : "#797567" });
+    for (const y of [.44, 1.5, 2.29]) result.push({ position: [3.9, y, 8.11], scale: [1.48, .12, .065] });
+    for (const side of [-1, 1]) result.push({ position: [side * 8.01, .92, 0], scale: [.065, .055, 16.3] });
+    result.push({ position: [4.38, 1.15, 8.01], scale: [.07, .19, .065], color: "#b09b6a" });
     return result;
   }, []);
   return <TimberInstances forms={forms} name="damp-room-edge-joinery" color="#6b6051" surface="wet-wood" />;

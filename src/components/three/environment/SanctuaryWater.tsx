@@ -9,7 +9,7 @@ import { applyWaterShader } from "./waterShader";
 
 type Shader = Parameters<THREE.MeshStandardMaterial["onBeforeCompile"]>[0];
 export type NarrativeWaterProps = {
-  width?: number; depth?: number; color?: string; opacity?: number;
+  width?: number; depth?: number; color?: string; opacity?: number; roughness?: number;
   circle?: boolean; flow?: number; warm?: boolean;
   reducedMotion?: boolean; reducedEffects?: boolean;
 };
@@ -17,7 +17,7 @@ export type NarrativeWaterProps = {
 /** One lit, opaque dielectric surface. Reflected sky is an approximation;
  * there is no scene capture, transmission, framebuffer copy, or extra pass. */
 export const NarrativeWater = memo(function NarrativeWater({
-  width = 20, depth = 17, color = "#1b3540", opacity = .9,
+  width = 20, depth = 17, color = "#1b3540", opacity = .9, roughness = .24,
   circle = false, flow = 0, warm = false, reducedMotion = false, reducedEffects = false,
 }: NarrativeWaterProps) {
   const detail = useTactileDetail();
@@ -50,7 +50,7 @@ export const NarrativeWater = memo(function NarrativeWater({
   });
   return <mesh name={flow ? "directional-river-water" : "still-reflective-water"} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
     {circle ? <circleGeometry args={[width * .5, 48]} /> : <planeGeometry args={[width, depth]} />}
-    <meshStandardMaterial color={color} roughness={.24} metalness={0}
+    <meshStandardMaterial color={color} roughness={roughness} metalness={0}
       onBeforeCompile={compile} customProgramCacheKey={() => "sidtw-narrative-water-v2"} />
   </mesh>;
 });

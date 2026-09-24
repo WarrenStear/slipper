@@ -1,5 +1,5 @@
 import { HeroAssetSlot } from "../actors/HeroAssetSlot";
-import { createKeyGeometry, createLanternHousingGeometry } from "../environmentArt/heroGeometry";
+import { createKeyGeometry, createLanternHousingGeometry, createLanternGlassGeometry, createMirrorFrameGeometry } from "../environmentArt/heroGeometry";
 import { useSceneLook } from "../artDirection/SceneLookContext";
 import {
   memo,
@@ -152,16 +152,16 @@ export const SceneGround = memo(function SceneGround({
 });
 
 export const WaterSurface = memo(function WaterSurface({
-  position = [0, .02, 0], size = [12, 10], color = "#182b39", opacity = .82,
+  position = [0, .02, 0], size = [12, 10], color = "#182b39", opacity = .82, roughness,
   circle = false, flow = 0, reducedMotion, reducedEffects,
 }: {
-  position?: Vec3; size?: [number, number]; color?: string; opacity?: number;
+  position?: Vec3; size?: [number, number]; color?: string; opacity?: number; roughness?: number;
   circle?: boolean; flow?: number; reducedMotion?: boolean; reducedEffects?: boolean;
 }) {
   const motionPreference = useSettingsStore(state => state.reducedMotion);
   const effectsPreference = useSettingsStore(state => state.reducedEffects);
   return <group position={position}>
-    <NarrativeWater width={size[0]} depth={size[1]} color={color} opacity={opacity} circle={circle} flow={flow}
+    <NarrativeWater width={size[0]} depth={size[1]} color={color} opacity={opacity} roughness={roughness} circle={circle} flow={flow}
       reducedMotion={reducedMotion ?? motionPreference} reducedEffects={reducedEffects ?? effectsPreference} />
   </group>;
 });
@@ -642,13 +642,15 @@ export const LanternProp = memo(function LanternProp({
   light?: boolean;
 }) {
   const housing = useMemo(createLanternHousingGeometry, []);
+  const glass = useMemo(createLanternGlassGeometry, []);
+  const flame = useMemo(() => createFlameGeometry(.043, .25), []);
   const coreColor = useMemo(() => new THREE.Color(color).multiplyScalar(3.2), [color]);
-  useEffect(() => () => housing.dispose(), [housing]);
+  useEffect(() => () => { housing.dispose(); glass.dispose(); flame.dispose(); }, [housing, glass, flame]);
   return (
     <group position={position} scale={scale} name="authored-master-lantern-prop">
-      <HeroAssetSlot id="master-lantern"><mesh geometry={housing} castShadow><TactileMaterial surface="metal" color="#483b29" metalness={.68} roughness={.5} memory={{ wear: .8, damage: .15 }} /></mesh></HeroAssetSlot>
-      <mesh position={[0, .46, 0]}><cylinderGeometry args={[.19, .2, .58, 16, 1, true]} /><meshStandardMaterial color="#d1c19e" transparent opacity={.15} roughness={.2} metalness={0} depthWrite={false} /></mesh>
-      <mesh position={[0, .41, 0]} scale={[.055, .19, .055]}><sphereGeometry args={[1, 10, 8]} /><meshBasicMaterial color={coreColor} toneMapped={false} /></mesh>
+      <HeroAssetSlot id="master-lantern"><mesh geometry={housing} castShadow><TactileMaterial surface="metal" color="#504733" vertexColors metalness={.56} roughness={.6} memory={{ wear: .62, damage: .07 }} /></mesh></HeroAssetSlot>
+      <mesh geometry={glass}><meshStandardMaterial color="#cbd7d1" transparent opacity={.035} roughness={.17} metalness={0} depthWrite={false} side={THREE.DoubleSide} /></mesh>
+      <mesh geometry={flame} position={[0, .402, 0]}><meshBasicMaterial color={coreColor} toneMapped={false} /></mesh>
       {light ? (
         <FlickerLight position={[0, 0.64, 0]} color={color} intensity={1.8} distance={9} reducedMotion={reducedMotion} />
       ) : null}
@@ -707,21 +709,19 @@ export const ReflectivePanel = memo(function ReflectivePanel({
   const reducedMotion = useSettingsStore(state => state.reducedMotion);
   const reducedEffects = useSettingsStore(state => state.reducedEffects);
   const [width, height] = size;
-  const frame = useMemo<ConstructionPiece[]>(() => [
-    ...[-1, 1].map(side => ({ position: [side * (width / 2 + .085), 0, .055] as Vec3, size: [.17, height + .34, .18] as Vec3 })),
-    ...[-1, 1].map(side => ({ position: [0, side * (height / 2 + .085), .055] as Vec3, size: [width, .17, .18] as Vec3 })),
-  ], [width, height]);
+  const frame = useMemo(() => createMirrorFrameGeometry(width, height), [width, height]);
+  useEffect(() => () => frame.dispose(), [frame]);
   return (
     <group position={position} rotation={rotation}>
-      <TimberAssembly pieces={frame} color={warm ? "#6b5642" : "#45403b"} />
+      <mesh geometry={frame} position={[0,0,.04]}><TactileMaterial surface="wood" color={warm ? "#7d6b51" : "#655e4b"} vertexColors roughness={.76} /></mesh>
       <mesh><planeGeometry args={size} /><meshStandardMaterial color="#202827" metalness={.35} roughness={.24} /></mesh>
       <MirrorMemorySurface width={width} height={height} warm={warm} reducedMotion={reducedMotion} reducedEffects={reducedEffects} />
       {cracked ? (
-        <group position={[0, 0, 0.17]}>
-          <Beam from={[-0.15, 2.1, 0]} to={[0.12, 0.2, 0]} radius={0.018} color="#d4c9b4" />
-          <Beam from={[0.12, 0.2, 0]} to={[-1.25, -1.1, 0]} radius={0.018} color="#d4c9b4" />
-          <Beam from={[0.12, 0.2, 0]} to={[1.4, -0.45, 0]} radius={0.018} color="#d4c9b4" />
-          <Beam from={[0.12, 0.2, 0]} to={[0.64, -2.05, 0]} radius={0.018} color="#d4c9b4" />
+        <group position={[0, 0, 0.17]} scale={[width / 4, height / 5, 1]}>
+          <Beam from={[-0.15, 2.1, 0]} to={[0.12, 0.2, 0]} radius={0.008} color="#969085" opacity={.5} />
+          <Beam from={[0.12, 0.2, 0]} to={[-1.25, -1.1, 0]} radius={0.008} color="#969085" opacity={.5} />
+          <Beam from={[0.12, 0.2, 0]} to={[1.4, -0.45, 0]} radius={0.008} color="#969085" opacity={.5} />
+          <Beam from={[0.12, 0.2, 0]} to={[0.64, -2.05, 0]} radius={0.008} color="#969085" opacity={.5} />
         </group>
       ) : null}
     </group>
@@ -775,7 +775,7 @@ export const KeyProp = memo(function KeyProp({
   const geometry = useMemo(createKeyGeometry, []);
   useEffect(() => () => geometry.dispose(), [geometry]);
   return <group position={position} rotation={[Math.PI / 2, 0, .18]} scale={scale}>
-    <HeroAssetSlot id="key"><mesh name="worn-warded-key" geometry={geometry} castShadow><TactileMaterial surface="metal" color={color} metalness={.72} roughness={.38} memory={{ wear: .72, damage: .12 }} /></mesh></HeroAssetSlot>
+    <HeroAssetSlot id="key"><mesh name="worn-warded-key" geometry={geometry} castShadow><TactileMaterial surface="metal" color={color} vertexColors metalness={.64} roughness={.48} memory={{ wear: .72, damage: .12 }} /></mesh></HeroAssetSlot>
   </group>;
 });
 

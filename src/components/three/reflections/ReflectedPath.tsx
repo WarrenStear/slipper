@@ -39,7 +39,7 @@ function HiddenReflectionText() {
   return (
     <mesh name="reflection-only-hidden-text" position={[0, -2.48, 0.01]} renderOrder={6}>
       <planeGeometry args={[3.9, 0.72]} />
-      <meshBasicMaterial map={texture} transparent opacity={0.76} depthWrite={false} toneMapped={false} />
+      <meshBasicMaterial map={texture} transparent opacity={0.46} depthWrite={false} toneMapped={false} />
     </mesh>
   );
 }
@@ -57,8 +57,8 @@ function ReflectedPathComponent({ visible, still = false, reducedEffects = false
     <group name="reflection-only-hidden-route" position={[0, 0, 0.205]}>
       {HIDDEN_ROUTE.slice(0, reducedEffects ? 4 : HIDDEN_ROUTE.length).map((point, index) => (
         <mesh key={`${point[0]}:${point[1]}`} position={[point[0], point[1], 0]} renderOrder={5}>
-          <circleGeometry args={[0.085 + index * 0.008, 9]} />
-          <meshBasicMaterial color={still ? "#e0eeeb" : "#9fc6cd"} transparent opacity={0.74} depthWrite={false} toneMapped={false} />
+          <circleGeometry args={[0.034 + index * 0.003, 9]} />
+          <meshBasicMaterial color={still ? "#e0eeeb" : "#9fc6cd"} transparent opacity={still ? .42 : .23} depthWrite={false} toneMapped={false} />
         </mesh>
       ))}
       <HiddenReflectionText />

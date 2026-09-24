@@ -1,4 +1,4 @@
-import { StoryLinen } from "../storyEvents/StoryHeroProps";
+import { ClothboundBook, StoryLinen } from "../storyEvents/StoryHeroProps";
 import { TimberAssembly } from "./ChapterArt";
 import { ForkLandscape } from "../environment/ForkLandscape";
 import { memo } from "react";
@@ -82,13 +82,18 @@ function ForkChapterComponent({
           <group name="fork-verb-let-go-moving-water">
             <WaterSurface reducedMotion={reducedMotion} reducedEffects={reducedEffects} position={[-5.2, 0.03, -4]} size={[4.8, 4.8]} color="#243c43" opacity={0.8} circle />
             {!letGo ? (
-              <group position={[-5.2, .3, -4]} scale={1.1}><StoryLinen /></group>
+              <group position={[-5.2, .12, -4]} rotation={[0, -.3, 0]} scale={.8}><StoryLinen /><group position={[.04,.06,0]} scale={.72}><ClothboundBook /></group></group>
             ) : null}
           </group>
           <group name="fork-verb-decline-familiar-door">
             <DoorFrame position={[5.3, 0, -3.8]} width={2.5} height={3.7} depth={0.4} color="#4b3b2f" open={!declined} />
           </group>
           <group name="fork-verb-depart-turning-veil">
+            <TimberAssembly color="#695e4b" pieces={[
+              {position:[-1.55,2.3,5.65],size:[.1,4.6,.12],rotation:[0,0,-.018]},
+              {position:[.96,2.28,5.65],size:[.12,4.56,.11],rotation:[0,0,.025]},
+              {position:[-.3,4.55,5.65],size:[2.8,.09,.12]},
+            ]} />
             <FabricVeil
               position={[-0.3, 2.6, 5.6]}
               size={[2.3, 4.3]}

@@ -50,8 +50,12 @@ export function createUpholsteryGeometry(size: ArtVector) {
     normal.subVectors(p, nearest).normalize();
     p.copy(nearest).addScaledVector(normal, radius);
     // Shallow creases sit inside the original volume; they do not inflate bounds.
-    const crease = Math.sin(p.x / width * 19) * Math.sin(p.z / depth * 13) * .009;
-    p.y *= 1 - Math.abs(crease);
+    const nx = p.x / width * 2, nz = p.z / depth * 2;
+    const seat = Math.max(0, 1 - nx * nx) * Math.max(0, 1 - nz * nz);
+    const crease = Math.sin(nx * 12 + nz * 2) * .016 * Math.pow(Math.abs(nz), 5);
+    if (p.y > 0) p.y -= height * (.19 * seat * seat + Math.abs(crease));
+    // Broad compression, with shallow gathered corners, never noisy bumps.
+    p.z *= 1 - .016 * Math.abs(Math.cos(nx * 9)) * Math.max(0, 1 - Math.abs(p.y / height * 2));
     position.setXYZ(i, p.x, p.y, p.z);
   }
   geometry.computeVertexNormals();
@@ -87,6 +91,20 @@ export function createSteppingStoneGeometry() {
   return geometry;
 }
 
+/** A ground-based outcrop with broad weathered shoulders, not a regular solid. */
+export function createWeatheredBoulderGeometry(seed = 1) {
+  const geometry = new THREE.SphereGeometry(1, 10, 6);
+  const p = geometry.getAttribute("position");
+  for (let i = 0; i < p.count; i++) {
+    const x = p.getX(i), y = p.getY(i), z = p.getZ(i);
+    const shoulder = .86 + Math.sin(x * 3.8 + y * 2.3 + seed) * .08 + Math.cos(z * 4.7 - y + seed * .7) * .045;
+    const height = Math.max(0, (y + .64) / 1.64);
+    p.setXYZ(i, x * shoulder + height * .09, height * (.95 + Math.sin(x * 4 + seed) * .04), z * (.78 + Math.cos(x * 3 + y * 2 + seed) * .075));
+  }
+  geometry.computeVertexNormals(); geometry.computeBoundingBox(); geometry.computeBoundingSphere();
+  return geometry;
+}
+
 /** The bowl has an actual recessed interior and a worn rolled rim. */
 export function createBasinGeometry(radius = 1.68, height = .45) {
   const profile = [
@@ -94,7 +112,14 @@ export function createBasinGeometry(radius = 1.68, height = .45) {
     [.97, 1], [.9, .99], [.86, .86], [.81, .34], [.12, .28],
   ].map(([r, y]) => new THREE.Vector2(r * radius, y * height - height / 2));
   const geometry = new THREE.LatheGeometry(profile, 32);
-  geometry.computeBoundingBox(); geometry.computeBoundingSphere();
+  const p = geometry.getAttribute("position");
+  for (let i = 0; i < p.count; i++) {
+    const x = p.getX(i), z = p.getZ(i), a = Math.atan2(z, x);
+    const rim = Math.max(0, p.getY(i) / height + .1);
+    const wear = .986 + .009 * Math.sin(a * 3 + .8) + .004 * Math.sin(a * 7);
+    p.setXYZ(i, x * wear, p.getY(i) - rim * height * (.017 + .012 * Math.sin(a * 5)), z * wear);
+  }
+  geometry.computeVertexNormals(); geometry.computeBoundingBox(); geometry.computeBoundingSphere();
   return geometry;
 }
 

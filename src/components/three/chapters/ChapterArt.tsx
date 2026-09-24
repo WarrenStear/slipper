@@ -91,6 +91,26 @@ export const WritingDesk = memo(function WritingDesk({ width = 2.8, depth = 1.34
   </group></HeroAssetSlot>;
 });
 
+export const RestingThrow = memo(function RestingThrow({ position, size, color = "#a69b82", rotation = [0, 0, 0], maxDrop = Infinity }: {
+  position: ArtVector; size: [number, number]; color?: string; rotation?: ArtVector; maxDrop?: number;
+}) {
+  const [width, length] = size;
+  const geometry = useMemo(() => {
+    const g = new THREE.PlaneGeometry(width, length, 12, 18), p = g.getAttribute("position");
+    for (let i = 0; i < p.count; i++) {
+      const x = p.getX(i), t = (p.getY(i) / length + .5);
+      const fold = Math.sin(x / width * 21 + t * 2) * .018 + Math.sin(x / width * 9) * .01;
+      const drop = Math.min(maxDrop, Math.pow(Math.max(0, t - .58), 1.35) * length * 1.4);
+      p.setXYZ(i, x * (1 - .025 * t), fold - drop, (t - .5) * length * .62);
+    }
+    g.computeVertexNormals(); return g;
+  }, [width, length, maxDrop]);
+  useEffect(() => () => geometry.dispose(), [geometry]);
+  return <mesh name="gravity-draped-linen" geometry={geometry} position={position} rotation={rotation} receiveShadow>
+    <TactileMaterial surface="linen" color={color} roughness={.98} side={THREE.DoubleSide} />
+  </mesh>;
+});
+
 /** Covers and inset paper edges retain individual spines in two material batches. */
 export const ShelvedBooks = memo(function ShelvedBooks({ count, spacing = .51, rowHeight = .96, startX = -.98, startY = 1.15, z = .03, scale = 1 }: {
   count: number; spacing?: number; rowHeight?: number; startX?: number; startY?: number; z?: number; scale?: number;
@@ -98,12 +118,14 @@ export const ShelvedBooks = memo(function ShelvedBooks({ count, spacing = .51, r
   const pieces = useMemo(() => {
     const covers: ConstructionPiece[] = [], pages: ConstructionPiece[] = [];
     for (let i = 0; i < count; i++) {
-      const x = startX + (i % 4) * spacing, y = startY + Math.floor(i / 4) * rowHeight;
-      const h = (.62 + (i % 2) * .12) * scale, w = .34 * scale, d = .46 * scale;
-      const color = ["#78594e", "#536260", "#8a744f"][i % 3];
+      const h = (.49 + (i * 7 % 5) * .058) * scale, w = (.22 + (i * 3 % 4) * .029) * scale, d = (.38 + (i * 3 % 5) * .024) * scale;
+      const x = startX + (i % 4) * spacing + Math.sin(i * 4) * .023;
+      const y = startY - .27 * scale + Math.floor(i / 4) * rowHeight + h / 2;
+      const color = ["#70534a", "#59635c", "#857452", "#665f54", "#494b46"][i % 5];
       covers.push({ position: [x - w / 2, y, z], size: [.035 * scale, h, d], color },
         { position: [x + w / 2, y, z], size: [.035 * scale, h, d], color },
         { position: [x, y, z - d / 2], size: [w, h, .035 * scale], color });
+      for (const dy of [-.32, .29]) covers.push({ position: [x, y + dy * h, z - d / 2 - .014], size: [w * .97, .022, .018], color });
       pages.push({ position: [x, y, z + .008], size: [w * .9, h * .92, d * .92] });
     }
     return { covers, pages };
