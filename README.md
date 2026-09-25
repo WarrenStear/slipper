@@ -21,6 +21,13 @@ GitHub Actions validates changes; Cloudflare Pages builds and deploys the
 production branch independently. Earlier validation records retain the repository
 and commit identifiers that were current when those reviews were performed.
 
+Check [the live build version](https://slipperinthewoods.com/version.json) to
+compare its `revision` with the latest commit on `main`. Each production build
+records its Git revision, branch, build time, and source working-tree state automatically
+(excluding the regenerated world-state output);
+the version document is served without caching. The development server explicitly
+reports a development version instead of a historical production date.
+
 ## Narrative north star
 
 Slipper in the Woods is a walkable memory archive. The player should feel like

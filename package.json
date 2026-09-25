@@ -16,6 +16,7 @@
     "repair:world": "node scripts/build-final-4d-world.mjs",
     "repair:world:legacy": "node scripts/apply-world-object-optimisations.mjs && node scripts/enforce-single-master-lantern.mjs && node scripts/optimise-world-rendering.mjs && node scripts/upgrade-ground-environment.mjs && node scripts/upgrade-ground-surface.mjs && node scripts/optimise-visual-cleanup.mjs && node scripts/upgrade-player-collision.mjs && node scripts/final-world-polish.mjs && node scripts/harden-4d-world.mjs && node scripts/rebuild-smooth-4d-world.mjs && node scripts/fix-smooth-world-markers.mjs && node scripts/fix-terrain-worker-type-narrowing.mjs",
     "build": "npm run typecheck:functions && tsc -b && vite --config vite.config.ts build",
+    "postbuild": "node scripts/write-build-version.mjs",
     "check": "npm run validate && npm run lint && npm run content:qa && npm run typecheck && npm run typecheck:functions && npm run test:unit && npm run test:security && npm run build && npm run wrangler:check",
     "qa": "npm run check",
     "test": "npm run test:unit",

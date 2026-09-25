@@ -1,5 +1,7 @@
 {
-  "package": "slipper-in-the-woods-runtime-safe",
-  "builtAt": "2026-04-30T13:30:00+02:00",
-  "notes": "Runtime-safe Canvas boundary, WebGL fallback, and missing-asset fallbacks."
+  "package": "slipper-in-the-woods",
+  "mode": "development",
+  "revision": null,
+  "builtAt": null,
+  "notes": "Production builds replace this document with the actual Git revision and build time."
 }
