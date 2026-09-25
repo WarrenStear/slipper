@@ -49,7 +49,7 @@ function AuthoredActor({ definition, reducedMotion }: { definition: ActorCueDefi
     const profile = getCurrentCinematicProfile();
     if (distance <= definition.waitDistance || definition.cue !== "lead") elapsed.current += Math.min(delta, 0.05) * (0.65 + profile.airMovement);
     const pose = sampleActorCue(definition, elapsed.current, scratch.player, reducedMotion, scratch.pose);
-    const alpha = 1 - Math.exp(-Math.min(delta, 0.05) * 2.2);
+    const alpha = reducedMotion ? 1 : 1 - Math.exp(-Math.min(delta, 0.05) * 2.2);
     actor.position.set(THREE.MathUtils.lerp(actor.position.x, pose.x, alpha), pose.y, THREE.MathUtils.lerp(actor.position.z, pose.z, alpha));
     if (definition.actor !== "seer") actor.rotation.y = THREE.MathUtils.lerp(actor.rotation.y, pose.yaw, alpha);
     actor.visible = pose.visible;
@@ -58,7 +58,8 @@ function AuthoredActor({ definition, reducedMotion }: { definition: ActorCueDefi
       actor.visible = scratch.player[2] < definition.from[2] && Math.abs(scratch.player[0] - definition.from[0]) < 10;
     }
   });
-  return <group ref={group} position={definition.from} name={`StoryActor:${definition.actor}:${definition.cue}`}>
+  const start = reducedMotion && definition.actor === "swan" && definition.cue === "lead" ? definition.to : definition.from;
+  return <group ref={group} position={start} name={`StoryActor:${definition.actor}:${definition.cue}`}>
     {definition.actor === "lantern" ? <LanternProp scale={0.5} reducedMotion={reducedMotion} /> : null}
     {definition.actor === "wolf" ? <WolfFigure resting={definition.cue === "rest"} /> : null}
     {definition.actor === "swan" ? <SwanFigure /> : null}

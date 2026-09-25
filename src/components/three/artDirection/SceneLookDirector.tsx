@@ -14,8 +14,7 @@ import { SceneAtmosphere } from "./SceneAtmosphere";
 import { ScenePostProcessing } from "./ScenePostProcessing";
 import { useStillnessState } from "../../../hooks/useStillnessState";
 import { ASSISTED_STILLNESS_EVENT } from "../rituals/RitualInteraction";
-
-const MOTION_CHANNELS = ["vegetation", "cloth", "water", "particles", "flame"] as const;
+import { advanceSceneMotion } from "./sceneMotion";
 
 /** The sole presentation owner in a canonical world. It never writes story facts. */
 export function SceneLookDirector({ sceneId, quality, reducedEffects, reducedMotion, cameraAssistance, origin = [0, 0, 0], heading = 0, focusPosition, bloomIntensity = .6, vignetteIntensity = .1, children }: {
@@ -24,7 +23,7 @@ export function SceneLookDirector({ sceneId, quality, reducedEffects, reducedMot
 }) {
   const objects = useJourneyStore(s => s.storyObjectStates);
   const flags = useJourneyStore(s => s.worldFlags);
-  const measuredStillness = useStillnessState({ requiredSeconds: 2.4, enabled: sceneId === "sunset.stillness" });
+  const measuredStillness = useStillnessState({ requiredSeconds: 2.4, enabled: sceneId === "sunset.stillness", observeCamera: true });
   const [assisted, setAssisted] = useState(false);
   useEffect(() => {
     setAssisted(false);
@@ -43,23 +42,17 @@ export function SceneLookDirector({ sceneId, quality, reducedEffects, reducedMot
     nestHandsOccupied: Number(objects["nest.protected-linen"] === "carried") + Number(objects["nest.responsibility"] === "carried"),
     nestBurdenResting: objects["nest.responsibility"] === "placed",
     mirrorStill: measuredStillness || assisted,
+    openingReveal: objects["broken-floor.reflection"] === "inverted" || objects["broken-floor.reflection"] === "revealed" ? 1 : objects["broken-floor.reflection"] === "clearing" ? .5 : 0,
+    openingInverted: objects["broken-floor.reflection"] === "inverted",
   }), [sceneId, quality, reducedEffects, flags, objects, measuredStillness, assisted]);
-  const presentation = useRef<ScenePresentation>({ look: target, reducedMotion, reducedEffects, motion: { ...target.motion }, time: { vegetation: 0, cloth: 0, water: 0, particles: 0, flame: 0 } });
-  const context = useMemo<ScenePresentation>(() => ({ look: target, reducedMotion, reducedEffects, motion: presentation.current.motion, time: presentation.current.time }), [target, reducedMotion, reducedEffects]);
+  const presentation = useRef<ScenePresentation>({ look: target, reducedMotion, reducedEffects, stillness: Number(target.stillness), motion: { ...target.motion }, time: { vegetation: 0, cloth: 0, water: 0, particles: 0, flame: 0 } });
+  const context = useMemo<ScenePresentation>(() => ({ look: target, reducedMotion, reducedEffects, stillness: presentation.current.stillness, motion: presentation.current.motion, time: presentation.current.time }), [target, reducedMotion, reducedEffects]);
   presentation.current = context;
   useEffect(() => activateCinematicProfile(), []);
   useFrame((_, delta) => {
     const active = !document.hidden && !useSettingsStore.getState().drawerOpen && useWorldStore.getState().mode === "explore";
-    const dt = active && Number.isFinite(delta) ? Math.max(0, Math.min(.05, delta)) : 0;
+    const dt = advanceSceneMotion(presentation.current, target, delta, active, reducedMotion, reducedEffects);
     advanceCinematicProfile(target.emotional, dt);
-    const alpha = reducedMotion || reducedEffects ? 1 : 1 - Math.exp(-dt * 1.3);
-    for (const key of MOTION_CHANNELS) {
-      const value = reducedMotion || reducedEffects ? 0 : target.motion[key];
-      presentation.current.motion[key] += (value - presentation.current.motion[key]) * alpha;
-      // Snap the last imperceptible tail to actual stillness, not an endless loop.
-      if (value === 0 && presentation.current.motion[key] < .0005) presentation.current.motion[key] = 0;
-      presentation.current.time[key] += dt * presentation.current.motion[key];
-    }
   }, -3);
   return <SceneLookContext.Provider value={context}>
     <group name="scene-look-authority" userData={{ sceneId, hero: target.composition.heroLandmark, quality }}>

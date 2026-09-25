@@ -1,6 +1,5 @@
 import { LegacyChapterLight } from "../artDirection/LegacyChapterLight";
-import { memo, useLayoutEffect, useRef } from "react";
-import { useFrame } from "@react-three/fiber";
+import { memo, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import {
   Beam,
@@ -16,35 +15,27 @@ import {
 import type { ChapterSceneProps } from "./types";
 import { useJourneyStore } from "../../../stores/useJourneyStore";
 
-type NestState = "repairing" | "burdened" | "protected";
+import { RestingThrow, TimberAssembly } from "./ChapterArt";
+import { useSceneLook } from "../artDirection/SceneLookContext";
+import { nestDomesticLayout, nestSpatialPressure } from "./domesticSpatialPressure";
 
-const DOMESTIC_OBJECTS = [
-  [-2.8, 0.28, 1.1],
-  [-2.15, 0.22, 1.5],
-  [-1.45, 0.34, 1.12],
-  [2.7, 0.2, 1.6],
-  [3.25, 0.26, 1.15],
-  [2.3, 0.34, 0.92],
-] as const;
+type NestState = "repairing" | "burdened" | "protected";
 
 function WovenNest({
   state,
   detail,
   reducedEffects,
-  reducedMotion,
 }: {
   state: NestState;
   detail: number;
   reducedEffects: boolean;
-  reducedMotion: boolean;
 }) {
-  const groupRef = useRef<THREE.Group>(null);
   const weaveRef = useRef<THREE.InstancedMesh>(null);
   const strandCount = reducedEffects ? 10 : 14 + detail * 3;
 
   useLayoutEffect(() => {
     const dummy = new THREE.Object3D();
-    const sag = state === "burdened" ? 0.34 : state === "protected" ? 0.04 : 0.16;
+    const sag = .08; // Responsibility gathers outside; the protected centre never sags.
 
     for (let index = 0; index < strandCount; index += 1) {
       const angle = (index / strandCount) * Math.PI * 2;
@@ -60,23 +51,15 @@ function WovenNest({
       dummy.updateMatrix();
       weaveRef.current?.setMatrixAt(index, dummy.matrix);
     }
-    if (weaveRef.current) weaveRef.current.instanceMatrix.needsUpdate = true;
+    if (weaveRef.current) { weaveRef.current.instanceMatrix.needsUpdate = true; weaveRef.current.computeBoundingBox(); weaveRef.current.computeBoundingSphere(); }
   }, [state, strandCount]);
 
-  useFrame(({ clock }) => {
-    if (!groupRef.current || reducedMotion) return;
-    const time = clock.getElapsedTime();
-    const strain = state === "burdened" ? Math.sin(time * 1.65) * 0.035 : Math.sin(time * 0.52) * 0.012;
-    groupRef.current.position.y = strain;
-    groupRef.current.rotation.z = state === "burdened" ? Math.sin(time * 0.72) * 0.012 : 0;
-  });
-
   return (
-    <group ref={groupRef} position={[0, 0, 2.5]}>
-      <mesh position={[0, state === "burdened" ? 0.32 : 0.48, 0]} scale={[1, state === "burdened" ? 0.72 : 1, 1]}>
+    <group name="nest-stable-shelter" position={[0, 0, 2.5]}>
+      <mesh position={[0, .48, 0]}>
         <sphereGeometry args={[2.28, 24, 10, 0, Math.PI * 2, Math.PI * 0.5, Math.PI * 0.5]} />
         <meshStandardMaterial
-          color={state === "protected" ? "#8f7350" : "#71543c"}
+          color="#8f7350"
           roughness={0.98}
           side={THREE.DoubleSide}
         />
@@ -85,10 +68,7 @@ function WovenNest({
         <boxGeometry args={[1, 1, 1]} />
         <meshStandardMaterial color={state === "protected" ? "#a28158" : "#806044"} roughness={1} />
       </instancedMesh>
-      <mesh position={[0, state === "burdened" ? 0.42 : 0.68, 0]} scale={[1, state === "burdened" ? 0.82 : 1, 1]}>
-        <cylinderGeometry args={[1.5, 1.82, 0.42, 20]} />
-        <meshStandardMaterial color="#b98a73" roughness={1} />
-      </mesh>
+      {/* The resting linen occupies the open centre; no solid plinth hides it. */}
     </group>
   );
 }
@@ -135,42 +115,18 @@ function TwoHandRepair({ balanced }: { balanced: boolean }) {
   );
 }
 
-function UnsupportedWeight({ detail, reducedMotion, released }: { detail: number; reducedMotion: boolean; released: boolean }) {
-  const strainRef = useRef<THREE.Group>(null);
-  const bundleCount = 3 + detail;
-
-  useFrame(({ clock }) => {
-    if (!strainRef.current || reducedMotion) return;
-    const time = clock.getElapsedTime();
-    strainRef.current.rotation.z = released ? 0 : Math.sin(time * 1.25) * 0.018;
-    strainRef.current.position.y = (released ? -0.72 : 0) + (released ? 0 : Math.sin(time * 1.7) * 0.035);
-  });
-
-  return (
-    <group ref={strainRef} scale={released ? 0.82 : 1}>
-      <Beam from={[-4.25, 4.7, 3.1]} to={[-1.82, 0.72, 2.6]} radius={0.045} color="#5b4635" />
-      <Beam from={[4.25, 4.7, 3.1]} to={[1.82, 0.72, 2.6]} radius={0.075} color="#9a6d42" />
-      <Beam from={[-4.25, 4.7, 3.1]} to={[-3.38, 2.7, 2.82]} radius={0.035} color="#4f3d30" />
-      {Array.from({ length: bundleCount }, (_, index) => (
-        <group key={index} position={[-1.15 + index * (2.3 / Math.max(1, bundleCount - 1)), 1.2 + (index % 2) * 0.34, 2.5]}>
-          <mesh rotation={[0.1, index * 0.48, index % 2 === 0 ? 0.12 : -0.12]} castShadow>
-            <dodecahedronGeometry args={[0.48 + (index % 3) * 0.08, 0]} />
-            <meshStandardMaterial color={index % 2 === 0 ? "#5d4a3c" : "#7d6248"} roughness={1} />
-          </mesh>
-          <mesh rotation={[Math.PI / 2, 0, 0]}>
-            <torusGeometry args={[0.38, 0.025, 5, 12]} />
-            <meshStandardMaterial color="#b28b5d" roughness={0.9} />
-          </mesh>
-        </group>
-      ))}
-      {[0, 1, 2].map((layer) => (
-        <mesh key={layer} position={[0, 0.35 - layer * 0.11, 2.5]} rotation={[Math.PI / 2, 0, layer * 0.35]}>
-          <torusGeometry args={[2.45 + layer * 0.28, 0.035, 6, 30]} />
-          <meshStandardMaterial color="#513d30" transparent opacity={0.62 - layer * 0.12} roughness={1} />
-        </mesh>
-      ))}
-    </group>
-  );
+/** Familiar laundry and furniture occupy the edges; nothing hangs over the linen. */
+function UnsupportedWeight({ pressure, reducedEffects }: { pressure: number; reducedEffects: boolean }) {
+  const forms = useMemo(() => nestDomesticLayout(pressure, reducedEffects), [pressure, reducedEffects]);
+  const layers = 1 + Math.floor(pressure * (reducedEffects ? 2 : 3));
+  const sideX = 3.82 - pressure * .85;
+  return <group name="nest-occupied-domestic-edges" userData={{ pressure }}>
+    <TimberAssembly pieces={forms.timber} color="#715940" />
+    <TimberAssembly pieces={forms.linen} color="#bcaa8d" surface="linen" />
+    {[-1, 1].map(side => <RestingThrow key={side}
+      position={[side * sideX, .99 + (layers - 1) * .16, side < 0 ? -.7 : .05]}
+      size={[1.08, 1.05]} maxDrop={.42} color={side < 0 ? "#c1ad94" : "#b7a18a"} />)}
+  </group>;
 }
 
 function ProtectionShelter({ detail }: { detail: number }) {
@@ -206,6 +162,7 @@ function NestChapterComponent({
     : scene.id === "nest.protection"
       ? "protected"
       : "repairing";
+  const presentation = useSceneLook();
   const detail = qualityStep(qualityProfile);
   const isCycle = state === "burdened";
   const isProtection = state === "protected";
@@ -215,13 +172,16 @@ function NestChapterComponent({
   const burdenReleased = useJourneyStore(
     (journey) => journey.worldFlags["nest.unsupported-burden-released"] === true,
   );
+  const daysCompressed = useJourneyStore(journey => journey.storyObjectStates["nest.day"] === "compressed" || journey.worldFlags["nest.unsupported-burden-held"] === true);
+  const responsibilityResting = useJourneyStore(journey => journey.storyObjectStates["nest.responsibility"] === "placed");
+  const pressure = nestSpatialPressure(scene.id, daysCompressed, burdenReleased || responsibilityResting);
   const protectionAcknowledged = useJourneyStore(
     (journey) => journey.worldFlags["nest.protection-acknowledged"] === true,
   );
 
   return (
     <group>
-      <SceneGround radius={16} color={isCycle ? "#3b3129" : isProtection ? "#51422e" : "#493b2d"} />
+      <SceneGround radius={16} color="#493b2d" />
       <TreeGrove
         qualityProfile={qualityProfile}
         reducedEffects={reducedEffects}
@@ -231,11 +191,11 @@ function NestChapterComponent({
       />
       <StonePath color={isProtection ? "#aa9168" : "#927c61"} count={9} length={13} />
 
-      <group rotation={[isCycle ? 0.025 : 0, 0, isCycle ? -0.035 : 0]}>
+      <group name="nest-unwavering-domestic-shelter">
         <HouseShell
           position={[0, 0, 3]}
           size={[9.5, isProtection ? 5 : 4.6, 6.8]}
-          wallColor={isCycle ? "#59483b" : isProtection ? "#806747" : "#68533d"}
+          wallColor="#806747"
           roofColor={isProtection ? "#3b3023" : "#332920"}
         />
       </group>
@@ -244,31 +204,19 @@ function NestChapterComponent({
         state={state}
         detail={detail}
         reducedEffects={reducedEffects}
-        reducedMotion={reducedMotion}
       />
       {state === "repairing" ? <TwoHandRepair balanced={twoHandsBalanced} /> : null}
-      {isCycle ? <UnsupportedWeight detail={detail} reducedMotion={reducedMotion} released={burdenReleased} /> : null}
+      <UnsupportedWeight pressure={pressure} reducedEffects={reducedEffects} />
       {isProtection ? <ProtectionShelter detail={reducedEffects ? 0 : detail} /> : null}
 
       <mesh position={[2.7, 1.25, 3.1]} rotation={[0, 0.03, 0]}>
         <boxGeometry args={[2.2, 1.5, 0.08]} />
-        <meshStandardMaterial color={isCycle ? "#9e9382" : "#ddd2b8"} roughness={0.98} />
+        <meshStandardMaterial color="#ddd2b8" roughness={0.98} />
       </mesh>
       <mesh position={[2.7, 1.25, 3.04]}>
         <planeGeometry args={[1.7, 1.05]} />
-        <meshBasicMaterial color={isProtection ? "#d6b36c" : "#c89b6f"} transparent opacity={isCycle ? 0.22 : 0.44} />
+        <meshBasicMaterial color={isProtection ? "#d6b36c" : "#c89b6f"} transparent opacity={.44} />
       </mesh>
-
-      {DOMESTIC_OBJECTS.slice(0, reducedEffects ? 3 : DOMESTIC_OBJECTS.length).map((position, index) => (
-        <mesh
-          key={index}
-          position={[position[0], isCycle ? position[1] + index * 0.055 : position[1], position[2]]}
-          rotation={[isCycle ? 0.08 * (index % 2 === 0 ? -1 : 1) : 0, index * 0.7, isCycle ? 0.1 : 0]}
-        >
-          <boxGeometry args={[0.45 + (index % 2) * 0.18, 0.45 + (index % 3) * 0.12, 0.45]} />
-          <meshStandardMaterial color={index % 2 === 0 ? "#9b7651" : "#755844"} roughness={0.92} />
-        </mesh>
-      ))}
 
       {isProtection ? (
         <KeyProp
@@ -286,9 +234,9 @@ function NestChapterComponent({
         y={0.04}
       />
       <FlickerLight
-        position={[0, isCycle ? 1.65 : 2.5, 3.5]}
-        color={isProtection ? "#ffd38b" : isCycle ? "#d87c4d" : "#ffc784"}
-        intensity={isCycle ? 1.25 : isProtection ? 2.55 : 2.1}
+        position={[-1, 2.5, 3.5]}
+        color={presentation?.look.lighting.color ?? "#e3d0ac"}
+        intensity={2.1}
         distance={isProtection ? 18 : 15}
         reducedMotion={reducedMotion}
       />

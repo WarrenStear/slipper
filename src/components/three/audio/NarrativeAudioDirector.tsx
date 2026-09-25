@@ -1,16 +1,20 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { useJourneyStore } from "../../../stores/useJourneyStore";
 import { useSettingsStore } from "../../../stores/useSettingsStore";
 import { resolveAudioTargetVolume } from "../../../lib/audioVolume";
-import { getGestureActivatedNarrativeAudioContext } from "../../../lib/narrativeAudioActivation";
+import { getGestureActivatedNarrativeAudioContext, NARRATIVE_AUDIO_ACTIVATION_EVENT } from "../../../lib/narrativeAudioActivation";
 import { getCurrentCinematicProfile } from "../../../cinematics/emotionalCinematography";
+import { getJourneyScene } from "../../../data/journeyBlueprint";
+import { useSceneLook } from "../artDirection/SceneLookContext";
 import { useStoryEventAudio } from "./useStoryEventAudio";
+import { createNarrativePlaybackGate, disposeNarrativeAudioNodes, getNarrativeStemBuffers, pauseNarrativeAudioNodes } from "./narrativeAudioRuntime";
 import type { RenderQualityProfile } from "../renderQuality";
 import {
   NARRATIVE_AUDIO_STEM_IDS,
   resolveNarrativeAudioProfile,
+  resolveNarrativeStemTarget,
   type NarrativeAudioStemId,
 } from "./narrativeAudioProfiles";
 
@@ -20,181 +24,129 @@ type StemRuntime = {
   volume: number;
   filter: BiquadFilterNode;
 };
-
-type NarrativeAudioDirectorProps = {
-  qualityProfile: RenderQualityProfile;
-  enabled?: boolean;
-};
-
-function seededNoise(seed: number) {
-  let value = seed >>> 0;
-  return () => {
-    value = (1664525 * value + 1013904223) >>> 0;
-    return value / 0xffffffff;
-  };
-}
-
-function createStemBuffer(context: AudioContext, stemId: NarrativeAudioStemId) {
-  const duration = stemId === "glass" ? 6.4 : stemId === "birds" ? 7.6 : 4.2;
-  const sampleRate = context.sampleRate;
-  const buffer = context.createBuffer(1, Math.floor(sampleRate * duration), sampleRate);
-  const data = buffer.getChannelData(0);
-  const random = seededNoise(0x51d700 + NARRATIVE_AUDIO_STEM_IDS.indexOf(stemId) * 7919);
-  let low = 0;
-  let slower = 0;
-  let impulse = 0;
-
-  for (let index = 0; index < data.length; index += 1) {
-    const t = index / sampleRate;
-    const noise = random() * 2 - 1;
-    low += (noise - low) * (stemId === "water" ? 0.025 : 0.012);
-    slower += (low - slower) * 0.004;
-
-    if (stemId === "room") {
-      data[index] = slower * (0.42 + Math.sin(t * 0.31) * 0.05);
-    } else if (stemId === "wind") {
-      data[index] = (slower * 0.78 + low * 0.11) * (0.58 + Math.sin(t * 0.73) * 0.13);
-    } else if (stemId === "water") {
-      data[index] = low * 0.36 + slower * 0.44 + Math.sin(t * Math.PI * 2 * 1.9) * 0.004;
-    } else if (stemId === "fire") {
-      if (random() > 0.987) impulse = 0.65 + random() * 0.55;
-      impulse *= 0.91;
-      data[index] = (noise * impulse + Math.sin(t * Math.PI * 2 * 24) * 0.025) * 0.2;
-    } else if (stemId === "glass") {
-      if (index % Math.floor(sampleRate * 1.61) === 0) impulse = 0.7;
-      impulse *= 0.9997;
-      data[index] = (
-        Math.sin(t * Math.PI * 2 * 523.25) * 0.035 +
-        Math.sin(t * Math.PI * 2 * 783.99) * 0.018
-      ) * impulse;
-    } else if (stemId === "warmth") {
-      const breathe = 0.52 + Math.sin(t * Math.PI * 2 * 0.11) * 0.18;
-      data[index] = (
-        Math.sin(t * Math.PI * 2 * 110) * 0.028 +
-        Math.sin(t * Math.PI * 2 * 164.81) * 0.014
-      ) * breathe;
-    } else if (stemId === "birds") {
-      const call = Math.pow(Math.max(0, Math.sin(t * Math.PI * 2 * 0.19 - 1.4)), 18);
-      const overtone = Math.sin(t * Math.PI * 2 * (1_720 + Math.sin(t * 5.1) * 210));
-      data[index] = overtone * call * 0.018;
-    } else if (stemId === "cloth") {
-      const movement = Math.pow(Math.max(0, Math.sin(t * Math.PI * 2 * 0.23)), 6);
-      data[index] = (low * 0.12 + noise * 0.018) * movement;
-    } else if (stemId === "wood") {
-      if (random() > 0.9992) impulse = 0.72;
-      impulse *= 0.9982;
-      data[index] = (
-        Math.sin(t * Math.PI * 2 * 73.42) * 0.025 +
-        Math.sin(t * Math.PI * 2 * 109.8) * 0.012
-      ) * impulse;
-    } else {
-      const phrase = Math.pow(Math.max(0, Math.sin(t * Math.PI * 2 * 0.29 + 0.8)), 5);
-      data[index] = (low * 0.07 + Math.sin(t * Math.PI * 2 * 246.94) * 0.008) * phrase;
-    }
-  }
-  return buffer;
-}
+type AudioRuntime = { listener: THREE.AudioListener; stems: StemRuntime[]; started: boolean; sync: () => void };
+type NarrativeAudioDirectorProps = { qualityProfile: RenderQualityProfile; enabled?: boolean };
 
 export function NarrativeAudioDirector({ qualityProfile, enabled = true }: NarrativeAudioDirectorProps) {
   const { camera } = useThree();
+  const presentation = useSceneLook();
   const audioEnabled = useSettingsStore((state) => state.audioEnabled);
   const audioVolume = useSettingsStore((state) => state.audioVolume);
   const reducedEffects = useSettingsStore((state) => state.reducedEffects);
   const reducedMotion = useSettingsStore((state) => state.reducedMotion);
+  const drawerOpen = useSettingsStore((state) => state.drawerOpen);
   const chapterId = useJourneyStore((state) => state.chapterId);
-  const sceneId = useJourneyStore((state) => state.sceneId);
+  const journeySceneId = useJourneyStore((state) => state.sceneId);
   const resonances = useJourneyStore((state) => state.resonances);
   const releasedWords = useJourneyStore((state) => state.releasedWords);
-  const surrenderComplete = useJourneyStore((state) =>
-    state.completedRitualIds.includes("ritual.surrender")
+  const surrenderComplete = useJourneyStore((state) => state.completedRitualIds.includes("ritual.surrender"));
+  const enabledRef = useRef(enabled);
+  enabledRef.current = enabled;
+  const [runtime, setRuntime] = useState<AudioRuntime | null>(null);
+  const runtimeRef = useRef<AudioRuntime | null>(null);
+  const targetRef = useRef({ volume: 0, lowpassHz: 600 });
+  const sceneId = presentation?.look.sceneId ?? journeySceneId;
+  const sceneChapterId = getJourneyScene(sceneId)?.chapterId ?? chapterId;
+  // SceneLook owns the completed Surrender fade. Do not jump the profile master to zero.
+  const profileComplete = presentation ? false : surrenderComplete;
+  const profile = useMemo(
+    () => resolveNarrativeAudioProfile({ chapterId: sceneChapterId, sceneId, resonances, releasedWords, surrenderComplete: profileComplete }),
+    [sceneChapterId, releasedWords, resonances, sceneId, profileComplete],
   );
-  const listener = useMemo(() => {
+  const eventAmbientGain = useStoryEventAudio({
+    listener: runtime?.listener ?? null, enabled: enabled && audioEnabled && !drawerOpen,
+    audioVolume, reducedEffects, reducedMotion, sceneLookOwnsSurrender: Boolean(presentation),
+  });
+
+  useEffect(() => {
+    // Web Audio nodes are effect-owned: discarded StrictMode renders allocate nothing.
     const gestureContext = getGestureActivatedNarrativeAudioContext();
     if (gestureContext) THREE.AudioContext.setContext(gestureContext);
-    return new THREE.AudioListener();
-  }, []);
-  const startedRef = useRef(false);
-  const eventAmbientGain = useStoryEventAudio({ listener, enabled: enabled && audioEnabled, audioVolume, reducedEffects, reducedMotion });
-  const profile = useMemo(
-    () => resolveNarrativeAudioProfile({ chapterId, sceneId, resonances, releasedWords, surrenderComplete }),
-    [chapterId, releasedWords, resonances, sceneId, surrenderComplete],
-  );
-  const stems = useMemo<StemRuntime[]>(
-    () => NARRATIVE_AUDIO_STEM_IDS.map((id) => {
+    const listener = new THREE.AudioListener();
+    listener.getInput().gain.setValueAtTime(0, listener.context.currentTime);
+    const bank = getNarrativeStemBuffers(listener.context);
+    const stems: StemRuntime[] = NARRATIVE_AUDIO_STEM_IDS.map(id => {
       const filter = listener.context.createBiquadFilter();
       filter.type = "lowpass";
-      filter.frequency.value = 18000;
+      filter.frequency.value = 600;
       const sound = new THREE.Audio(listener);
       sound.setFilter(filter);
-      return { id, sound, volume: 0, filter };
-    }),
-    [listener],
-  );
-
-  useEffect(() => {
-    camera.add(listener);
-    return () => {
-      camera.remove(listener);
-    };
-  }, [camera, listener]);
-
-  useEffect(() => {
-    stems.forEach((stem) => {
-      stem.sound.setBuffer(createStemBuffer(listener.context, stem.id));
-      stem.sound.setLoop(true);
-      stem.sound.setVolume(0);
+      sound.setBuffer(bank.get(id)!);
+      sound.setLoop(true);
+      sound.setVolume(0);
+      return { id, sound, filter, volume: 0 };
     });
-
-    const start = async () => {
-      if (!enabled || !audioEnabled) return;
-      try {
-        if (listener.context.state !== "running") await listener.context.resume();
-        stems.forEach((stem) => {
-          if (!stem.sound.isPlaying) stem.sound.play();
-        });
-        startedRef.current = true;
-      } catch {
-        // The trusted-gesture listeners remain available when autoplay is denied.
-      }
+    const current: AudioRuntime = { listener, stems, started: false, sync: () => {} };
+    const allowed = () => {
+      const settings = useSettingsStore.getState();
+      return enabledRef.current && settings.audioEnabled && settings.audioVolume > 0 && !settings.drawerOpen && !document.hidden;
     };
-    const handleGesture = (event: Event) => { if (event.isTrusted) void start(); };
-
-    if (audioEnabled && getGestureActivatedNarrativeAudioContext()?.state === "running") void start();
+    const gate = createNarrativePlaybackGate({
+      allowed,
+      running: () => listener.context.state === "running",
+      resume: () => listener.context.resume(),
+      play: () => {
+        for (const stem of stems) if (!stem.sound.isPlaying) stem.sound.play();
+        current.started = true;
+        listener.setMasterVolume(1);
+      },
+      pause: () => {
+        // Visibility and mute do not depend on requestAnimationFrame continuing to run.
+        pauseNarrativeAudioNodes(listener, stems);
+        current.started = false;
+      },
+      dispose: () => disposeNarrativeAudioNodes(listener, stems),
+    });
+    current.sync = () => {
+      if (!allowed()) gate.pause();
+      else if (getGestureActivatedNarrativeAudioContext() === listener.context && listener.context.state === "running") void gate.start();
+    };
+    const handleGesture = (event: Event) => { if (event.isTrusted) void gate.start(); };
+    const unsubscribe = useSettingsStore.subscribe(current.sync);
+    camera.add(listener);
+    runtimeRef.current = current;
+    setRuntime(current);
+    current.sync();
     window.addEventListener("pointerdown", handleGesture, { passive: true });
     window.addEventListener("keydown", handleGesture, { passive: true });
+    window.addEventListener(NARRATIVE_AUDIO_ACTIVATION_EVENT, current.sync);
+    document.addEventListener("visibilitychange", current.sync);
     return () => {
+      unsubscribe();
       window.removeEventListener("pointerdown", handleGesture);
       window.removeEventListener("keydown", handleGesture);
-      stems.forEach((stem) => {
-        if (stem.sound.isPlaying) stem.sound.stop();
-        stem.sound.disconnect();
-      });
-      startedRef.current = false;
+      window.removeEventListener(NARRATIVE_AUDIO_ACTIVATION_EVENT, current.sync);
+      document.removeEventListener("visibilitychange", current.sync);
+      gate.dispose();
+      camera.remove(listener);
+      if (runtimeRef.current === current) runtimeRef.current = null;
     };
-  }, [audioEnabled, enabled, listener.context, stems]);
+  }, [camera]);
+
+  useEffect(() => { runtimeRef.current?.sync(); }, [enabled]);
 
   useFrame((_, delta) => {
+    const current = runtimeRef.current;
+    if (!current) return;
     const film = getCurrentCinematicProfile();
-    const audible = enabled && audioEnabled && startedRef.current;
-    const qualityScale = qualityProfile.quality === "low"
-      ? 0.56
-      : qualityProfile.quality === "medium"
-        ? 0.78
-        : 1;
-    const blend = 1 - Math.exp(-Math.min(delta, 0.08) * 1.8);
-    stems.forEach((stem) => {
-      const requested = profile.stems[stem.id] * profile.master * qualityScale * film.audioPressure * (1 - film.silenceBias);
-      const target = resolveAudioTargetVolume(requested, audioVolume, audible);
-      stem.volume = THREE.MathUtils.lerp(stem.volume, target, blend);
-      const outside = stem.id === "wind" || stem.id === "birds" || stem.id === "water";
-      stem.filter.frequency.value = THREE.MathUtils.lerp(stem.filter.frequency.value, outside ? film.lowpassHz : Math.max(5000, film.lowpassHz), blend);
+    const audible = enabled && audioEnabled && !drawerOpen && !document.hidden && current.started;
+    const qualityScale = qualityProfile.quality === "low" ? .56 : qualityProfile.quality === "medium" ? .78 : 1;
+    const blend = 1 - Math.exp(-Math.max(0, Math.min(delta, .08)) * 1.8);
+    for (const stem of current.stems) {
+      const target = resolveNarrativeStemTarget(targetRef.current, stem.id, profile, presentation?.look ?? null, presentation?.stillness ?? 0, film);
+      const volume = resolveAudioTargetVolume(target.volume * qualityScale * (reducedEffects ? .65 : 1), audioVolume, audible);
+      stem.volume = audible ? THREE.MathUtils.lerp(stem.volume, volume, blend) : 0;
+      // Avoid an inaudible exponential tail at completed Surrender or mute.
+      if (volume === 0 && stem.volume < .00001) stem.volume = 0;
+      const cutoff = Math.min(current.listener.context.sampleRate * .45, target.lowpassHz);
+      stem.filter.frequency.value = THREE.MathUtils.lerp(stem.filter.frequency.value, cutoff, blend);
       stem.sound.setVolume(stem.volume * eventAmbientGain.current);
-    });
+    }
   });
 
   return (
     <group name="NarrativeAudioDirector" userData={{ audioCue: profile.cue }}>
-      {stems.map((stem) => (
+      {runtime?.stems.map(stem => (
         <primitive key={stem.id} object={stem.sound} name={`NarrativeAudioStem.${stem.id}`} />
       ))}
     </group>

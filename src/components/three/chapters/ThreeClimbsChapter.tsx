@@ -342,7 +342,6 @@ function ThreeClimbsChapterComponent({
             reducedEffects={reducedEffects}
             reducedMotion={reducedMotion}
           />
-          <FabricVeil position={[0, 4.4, 7.4]} size={[7, 2.6]} color="#dadde0" opacity={0.22} reducedMotion={reducedMotion} />
           <HeartRoseMemory selected={tendernessSelected} reducedEffects={reducedEffects} />
           <HeartSwanFeatherMemory selected={beautySelected} reducedEffects={reducedEffects} />
           <HeartBlueMoonMemory selected={selfhoodSelected} reducedEffects={reducedEffects} />

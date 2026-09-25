@@ -119,15 +119,17 @@ function MirrorMemorySurfaceComponent({
       uOpacity: { value: liveReflection ? .16 : reducedEffects ? 0.62 : 0.54 },
       uDetail: { value: reducedEffects || detail === "base" ? 0 : 1 },
     }),
-    [detail, reducedEffects, targetDistortion, warm, liveReflection],
+    [detail, reducedEffects, warm, liveReflection],
   );
 
   useFrame((_, delta) => {
     const material = materialRef.current;
     if (!material) return;
-    time.current = environmentTime(time.current, delta, !document.hidden, reducedMotion || reducedEffects);
+    if (!presentation) time.current = environmentTime(time.current, delta, !document.hidden, reducedMotion || reducedEffects);
     material.uniforms.uTime.value = reducedMotion || reducedEffects ? 0 : presentation ? presentation.time.water : time.current;
-    material.uniforms.uDistortion.value = THREE.MathUtils.damp(
+    material.uniforms.uDistortion.value = presentation
+      ? reducedMotion || reducedEffects ? 0 : (warm ? .065 : .04) * (1 - presentation.stillness)
+      : THREE.MathUtils.damp(
       material.uniforms.uDistortion.value,
       targetDistortion,
       3.4,

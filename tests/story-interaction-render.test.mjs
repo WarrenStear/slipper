@@ -32,6 +32,12 @@ test("Blue Moon interactions bind to authored sanctuary objects and contradictio
     assert.match(chapter, new RegExp(objectName));
   }
   assert.match(chapter, /open=\{beautifulDoorOpen\}/);
+  const director = source("../src/components/three/storyEvents/StoryEventDirector.tsx");
+  assert.match(director, /sceneId === "blue-moon\.sanctuary" && object\.id === "blue-moon\.water"/);
+  // Suppress only the duplicate image: the named pose still supplies the same
+  // authored location to physical proximity, focus and touch-event selection.
+  assert.match(director, /return <StoryObjectPose[^>]+position=\{location\}[^>]*>\s*\{chapterOwnsVisual \? null : <StoryObjectModel/);
+  assert.match(director, /renderedObject\.getWorldPosition\(target\.current\); root\.worldToLocal\(target\.current\)/);
 });
 
 test("Wolf Swan and Seer require three witnessed paths before convergence", () => {

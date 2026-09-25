@@ -18,10 +18,21 @@ import { useWorldStore } from "../../../stores/useWorldStore";
 import { StoryObjectModel } from "./StoryObjectModel";
 import { beginFloorStroke, breakFloorStroke, brushFloor, cancelFloorStroke, floorStrokeReady } from "./storyInteractionRuntime";
 import { StoryObjectIdentity, StoryObjectPose } from "./StoryObjectPose";
+import { TimberAssembly } from "../chapters/ChapterArt";
+import type { ConstructionPiece } from "../chapters/chapterArtGeometry";
 import "./StoryObjects.css";
 
 const AUTOMATIC = new Set(["scene-enter", "volume-enter", "volume-exit", "gaze", "stillness", "scene-complete", "sequence-complete"]);
 const VERBS: Record<string, string> = { pickup: "Take", touch: "Touch", wipe: "Wipe", place: "Place", light: "Light", open: "Open", close: "Close", burn: "Place in fire", wash: "Wash", release: "Release", plant: "Plant", inspect: "Look closely", extinguish: "Extinguish" };
+// Stable construction data avoids rebuilding this merged mesh as focus changes.
+// The semantic mirror stays at its authored height; joined feet reach Y=0.
+const CROWN_MIRROR_STAND: readonly ConstructionPiece[] = [
+  ...[-.61, .61].flatMap(x => [
+    { position: [x, -.38, 0] as [number, number, number], size: [.12, 2.44, .16] as [number, number, number] },
+    { position: [x, -1.55, 0] as [number, number, number], size: [.25, .1, .9] as [number, number, number] },
+  ]),
+  { position: [0, -.92, 0], size: [1.22, .12, .13] },
+];
 
 function eventLocation(event: StoryEventDefinition, objects: readonly StoryObjectDefinition[]) {
   const object = objects.find(item => item.id === event.objectId);
@@ -316,14 +327,20 @@ export function StoryEventDirector({ sceneId, reducedMotion, enabled = true }: {
       // placed light is rendered by the object system.
       if (object.kind === "lantern" && !(object.id === "lantern.master" && state === "placed")) return null;
       if (object.id === "thorn-house.threshold") return null;
-      // Sunset's monumental mirror owns the image. Keep this semantic pose for
-      // gaze, stillness and guidance without placing a second mirror in front.
-      const chapterOwnsVisual = sceneId.startsWith("sunset.") && object.kind === "mirror";
+      // Keep semantic poses for input while the chapter/actor owns the image.
+      // A second miniature Swan at its destination competes with the real bird
+      // and overlaps it when reduced motion parks the actor at that location.
+      // SanctuaryWater also owns the touch surface; a metallic object disk
+      // floats above it and obscures the moon reflection.
+      const chapterOwnsVisual = (sceneId.startsWith("sunset.") && object.kind === "mirror")
+        || (sceneId === "blue-moon.intimacy" && object.kind === "swan")
+        || (sceneId === "blue-moon.sanctuary" && object.id === "blue-moon.water");
       const placement = state === "reset" || state === "resting" ? undefined : object.targets?.find(item => item.id === placements[object.id]);
       const preservedAt = state === "preserved" ? object.targets?.[0]?.localPosition : undefined;
       const location: [number, number, number] = preservedAt ? [preservedAt[0] + .8, preservedAt[1] + .2, preservedAt[2]] : placement?.localPosition ?? object.localPosition;
       return <StoryObjectPose key={object.id} object={object} state={state} position={location} placementId={placements[object.id]} reducedMotion={reducedMotion}>
         {chapterOwnsVisual ? null : <StoryObjectModel kind={object.kind} state={state ?? (object.id === "fork.door" ? "open" : undefined)} reducedMotion={reducedMotion} />}
+        {object.id === "home.crown-mirror" ? <TimberAssembly name="crown-mirror-grounded-stand" color="#66503d" pieces={CROWN_MIRROR_STAND} /> : null}
       </StoryObjectPose>;
     })}
     {surfaces.map(surface => <group key={surface.id} name={`story-placement:${surface.id}`} position={surface.localPosition} userData={{ targetId: surface.id }}>

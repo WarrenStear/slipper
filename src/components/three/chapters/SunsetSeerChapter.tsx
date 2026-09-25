@@ -24,7 +24,7 @@ function SunsetSeerChapterComponent({
     <group>
       <SceneGround radius={18} color="#211f1d" />
       <TreeGrove qualityProfile={qualityProfile} reducedEffects={reducedEffects} tint="#31352f" trunk="#2b211c" radius={18} />
-      <WaterMemoryReflection truthful={isTruthful} still={isStillness} reducedEffects={reducedEffects} />
+      <WaterMemoryReflection truthful={isTruthful} reducedEffects={reducedEffects} />
       <StonePath color="#5d574f" count={9} length={14} y={0.06} />
 
       <ReflectionDirector
@@ -33,16 +33,14 @@ function SunsetSeerChapterComponent({
         reducedEffects={reducedEffects}
         reducedMotion={reducedMotion}
       />
-      {!isStillness ? (
-        <FabricVeil
+      <FabricVeil
           position={[-5.2, 3.1, -1.2]}
           rotation={[0, 0.2, 0]}
           size={[1.7, 4.9]}
           color="#c4b8ab"
           opacity={0.38}
           reducedMotion={reducedMotion}
-        />
-      ) : null}
+      />
       <FloatingMotes
         qualityProfile={qualityProfile}
         reducedEffects={reducedEffects || isStillness}

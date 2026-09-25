@@ -85,6 +85,9 @@ export function sceneParticleProfile(sceneId: JourneySceneId) {
 function fillFloor(sceneId: JourneySceneId) {
   if (sceneId === "broken-floor.confession") return .13;
   if (sceneId === "thorned.old-memory-bedroom" || sceneId === "fire.boundary") return .055;
+  // Feather and cloth retain a pale silhouette over black water. The Moon is
+  // still the dominant key; the later enclosed bridge keeps its darker fill.
+  if (sceneId === "blue-moon.sanctuary" || sceneId === "blue-moon.intimacy") return .28;
   if (sceneId.startsWith("blue-moon.") || sceneId.startsWith("epilogue.")) return .09;
   if (sceneId.startsWith("crowned.")) return .32;
   return .17;
@@ -106,12 +109,19 @@ export function sceneRenderBudget(quality: LookQuality, reducedEffects = false) 
   };
 }
 
-export function resolveSceneLook(sceneId: JourneySceneId, quality: LookQuality = "medium", reducedEffects = false, state: CinematicStoryState & { mirrorStill?: boolean } = {}) {
+export function resolveSceneLook(sceneId: JourneySceneId, quality: LookQuality = "medium", reducedEffects = false, state: CinematicStoryState & { mirrorStill?: boolean; openingReveal?: number; openingInverted?: boolean } = {}) {
   const authored = SCENE_LOOKS[sceneId];
   const emotional = resolveCinematicProfile(sceneId, sceneId === "thorned.self-owned-world" ? { ...state, compression: 0 } : state);
   const quiet = (sceneId === "river.release-surrender" && state.surrenderComplete) || (sceneId === "sunset.stillness" && state.mirrorStill);
   return {
     sceneId, emotional, stillness: Boolean(quiet), budget: sceneRenderBudget(quality, reducedEffects),
+    audio: {
+      openingReveal: Math.max(0, Math.min(1, state.openingReveal ?? 0)),
+      openingInverted: Boolean(state.openingInverted),
+      mirrorStillness: sceneId === "sunset.stillness" && state.mirrorStill ? 1 : 0,
+      surrenderRelease: sceneId === "river.release-surrender" && state.surrenderComplete ? 1 : 0,
+      domesticCompression: sceneId === "thorned.self-owned-world" ? 0 : Math.max(0, Math.min(1, state.compression ?? 0)),
+    },
     lighting: { source: authored.source, color: authored.keyColor, position: authored.keyPosition, intensity: authored.keyIntensity, fill: emotional.fillIntensity, fillFloor: fillFloor(sceneId), shadowProfile: quality === "cinematic" && !reducedEffects },
     atmosphere: { sky: authored.sky, horizon: authored.horizon, fog: authored.fog, density: Math.min(.025, emotional.fogDensity * Math.min(1.3, 90 / emotional.visibility)), visibility: emotional.visibility },
     grade: { exposure: emotional.exposure, contrast: 1 + (emotional.contrast - 1) * .16, saturation: authored.saturation, warmth: emotional.warmth, vignette: reducedEffects ? 0 : .09, grain: reducedEffects ? 0 : .0012 },

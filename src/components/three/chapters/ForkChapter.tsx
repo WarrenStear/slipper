@@ -22,7 +22,6 @@ function ForkChapterComponent({
 }: ChapterSceneProps) {
   const fourVerbs = scene.id === "fork.four-verbs";
   const ownershipScene = scene.id === "fork.relinquish-hope";
-  const weighed = useJourneyStore((journey) => journey.worldFlags["fork.weighed"] === true);
   const letGo = useJourneyStore((journey) => journey.worldFlags["fork.let-go"] === true);
   const declined = useJourneyStore((journey) => journey.worldFlags["fork.declined"] === true);
   const departed = useJourneyStore((journey) => journey.worldFlags["fork.departed"] === true);
@@ -66,9 +65,7 @@ function ForkChapterComponent({
         <mesh position={[0, 0.315, 0]} rotation={[-Math.PI / 2, 0, 0]}>
           <circleGeometry args={[.62, 16]} />
           <meshStandardMaterial
-            color={weighed ? "#8d7d61" : "#676052"}
-            emissive={weighed ? "#4e3a20" : "#000000"}
-            emissiveIntensity={weighed ? 0.38 : 0}
+            color="#676052"
             roughness={0.98}
           />
         </mesh>
@@ -95,7 +92,7 @@ function ForkChapterComponent({
               {position:[-.3,4.55,5.65],size:[2.8,.09,.12]},
             ]} />
             <FabricVeil
-              position={[-0.3, 2.6, 5.6]}
+              position={[-0.3, 2.4, 5.6]}
               size={[2.3, 4.3]}
               color="#b9b0a0"
               opacity={departed ? 0.18 : 0.52}
@@ -113,7 +110,7 @@ function ForkChapterComponent({
 
       {rememberOwnership ? (
         <group name="fork-lantern-ownership-memory" userData={{ oldHopeRelinquished, lanternOwned }}>
-          {!oldHopeRelinquished ? (
+          {!oldHopeRelinquished && !lanternOwned ? (
             <FabricVeil position={[0, 1.85, 3.35]} size={[1.35, 2.5]} color="#c5b7a2" opacity={0.42} reducedMotion={reducedMotion} />
           ) : null}
           {!storyActorsActive ? <>

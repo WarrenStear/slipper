@@ -5,6 +5,7 @@ import { TactileMaterial } from "../storyEvents/TactileMaterial";
 import { FinalWoodlandDetails } from "../environment/WoodlandDetails";
 import { ChapterLightRig } from "../environment/ChapterLightRig";
 import { ReverseMemoryLights } from "../storyEvents/ReverseMemoryLights";
+import { memoryStarPosition } from "../../../lib/journeyMemoryProjection";
 import { memo, useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
@@ -42,9 +43,6 @@ type FinalTableauProps = {
 
 const CANONICAL_ENTRY_IDS = journeyChapters.flatMap((chapter) => chapter.entryIds);
 const CANONICAL_ENTRY_ID_SET = new Set<string>(CANONICAL_ENTRY_IDS);
-const CANONICAL_ENTRY_INDEX = new Map(
-  CANONICAL_ENTRY_IDS.map((entryId, index) => [entryId, index] as const),
-);
 const CONSTELLATION_FORMATION_CENTER: Vec3 = [0, 9.6, -20];
 const CONSTELLATION_FORMATION_COMPLETE_THRESHOLD = 0.995;
 const CONSTELLATION_MAX_FRAME_DELTA = 0.25;
@@ -59,22 +57,6 @@ const FINAL_TREE_POSITIONS: readonly Vec3[] = [
   [-18, 0, -28],
   [16.5, 0, -28],
 ];
-
-function memoryStarPosition(entryId: string): Vec3 {
-  const context = JOURNEY_ENTRY_CONTEXT[entryId];
-  const canonicalIndex = CANONICAL_ENTRY_INDEX.get(entryId) ?? 0;
-  const chapterProgress = context ? context.chapterIndex / Math.max(1, journeyChapters.length - 1) : 0;
-  const chapterX = THREE.MathUtils.lerp(-9.8, 9.8, chapterProgress);
-  const arc = Math.sin(chapterProgress * Math.PI) * 4.15;
-  const localIndex = context?.entryIndex ?? canonicalIndex;
-  const orbit = localIndex * 2.399963 + (context?.sceneIndex ?? 0) * 0.63;
-  const localRadius = 0.22 + (localIndex % 4) * 0.16;
-  return [
-    chapterX + Math.cos(orbit) * localRadius,
-    7.5 + arc + Math.sin(orbit) * localRadius * 0.72,
-    -20.2 - Math.sin(chapterProgress * Math.PI * 2) * 0.42,
-  ];
-}
 
 function pointsGeometry(points: readonly Vec3[]) {
   const geometry = new THREE.BufferGeometry();

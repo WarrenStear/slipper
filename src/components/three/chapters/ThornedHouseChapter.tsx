@@ -37,6 +37,8 @@ import {
   type Vec3,
 } from "./ChapterPrimitives";
 import type { ChapterSceneProps } from "./types";
+import { useSceneLook } from "../artDirection/SceneLookContext";
+import { houseCeilingLayout, houseClutterInset, housePressureCollider, houseSpatialPressure, houseSurfaceInset } from "./domesticSpatialPressure";
 
 const WALL_MEMORY_MARKS = [
   { position: [-5.32, 2.15, -0.25] as Vec3, rotation: [0, Math.PI / 2, 0] as Vec3, size: [1.2, 1.7] as [number, number] },
@@ -118,7 +120,15 @@ function RepeatingHall({ stage, detail, reducedEffects }: { stage: HouseStage; d
   );
 }
 
+function CompressionCeiling({ pressure, detail, reducedEffects }: { pressure: number; detail: number; reducedEffects: boolean }) {
+  const pieces = useMemo(() => houseCeilingLayout(pressure, thornedHouseCorridorCount(detail, reducedEffects)), [pressure, detail, reducedEffects]);
+  return <group name="house-occupied-overhead-space" userData={{ pressure, minimumHeadroom: 2.25 }}>
+    <TimberAssembly pieces={pieces} color="#8c7761" />
+  </group>;
+}
+
 function RefilledSurfaces({
+  pressure,
   stage,
   detail,
   reducedEffects,
@@ -126,6 +136,7 @@ function RefilledSurfaces({
   refilled,
   reorganisationReleased,
 }: {
+  pressure: number;
   stage: HouseStage;
   detail: number;
   reducedEffects: boolean;
@@ -154,19 +165,19 @@ function RefilledSurfaces({
         reorganisationReleased,
       );
       if (!transform) continue;
-      dummy.position.set(...transform.position);
+      dummy.position.set(transform.position[0] + houseClutterInset(index, pressure), transform.position[1], transform.position[2]);
       dummy.rotation.set(...transform.rotation);
       dummy.scale.set(...transform.size);
       dummy.updateMatrix();
       clutterRef.current?.setMatrixAt(index, dummy.matrix);
     }
     if (clutterRef.current) { clutterRef.current.instanceMatrix.needsUpdate = true; clutterRef.current.computeBoundingSphere(); clutterRef.current.computeBoundingBox(); }
-  }, [clutterCount, reorganisationReleased, stage]);
+  }, [clutterCount, reorganisationReleased, stage, pressure]);
 
   return (
     <group name="thorned-house-refilled-surfaces">
       {MEMORY_SURFACES.slice(0, surfaceCount).map((surface, index) => (
-        <group key={surface.position.join(":")}>
+        <group key={surface.position.join(":")} position={[houseSurfaceInset(index, pressure), 0, 0]}>
           <TimberPiece position={surface.position} size={surface.size} seed={index} color={index % 2 === 0 ? "#614738" : "#49362d"} />
           <Beam
             from={[surface.position[0] - surface.size[0] * 0.36, 0, surface.position[2]]}
@@ -201,6 +212,7 @@ function RefilledSurfaces({
 }
 
 function ThornedHouseCollisionArchitecture({
+  pressure,
   stage,
   exitStage,
   detail,
@@ -210,6 +222,7 @@ function ThornedHouseCollisionArchitecture({
   refilled,
   reorganisationReleased,
 }: {
+  pressure: number;
   stage: HouseStage;
   exitStage: ExitStage;
   detail: number;
@@ -228,7 +241,8 @@ function ThornedHouseCollisionArchitecture({
     cleared,
     refilled,
     reorganisationReleased,
-  }).filter(spec => !(cleared && spec.id === "locked-garden-door"));
+  }).filter(spec => !(cleared && spec.id === "locked-garden-door"))
+    .map(spec => housePressureCollider(spec, pressure));
 
   return (
     <RigidBody
@@ -308,7 +322,7 @@ function ExitThreshold({ stage, reducedEffects }: { stage: ExitStage; reducedEff
           <group position={[0, 0.02, 5.1]}>
             <StonePath color="#756a59" count={reducedEffects ? 5 : 8} length={9.5} y={0.02} />
           </group>
-          <pointLight position={[0, 2.8, 1.5]} color="#f1d7aa" intensity={1.45} distance={15} />
+          <LegacyChapterLight><pointLight position={[0, 2.8, 1.5]} color="#cbd8d9" intensity={1.45} distance={15} /></LegacyChapterLight>
         </>
       ) : null}
     </group>
@@ -368,6 +382,12 @@ function ThornedHouseChapterComponent({
   const isBedroom = scene.id === "thorned.old-memory-bedroom";
   const isLeaving = scene.id === "thorned.self-owned-world";
   const stage: HouseStage = isBedroom ? "bedroom" : isLeaving ? "leaving" : "garden";
+  const presentation = useSceneLook();
+  const acceptedCompression = useJourneyStore(journey => {
+    const table = journey.storyObjectStates["thorn-house.table"];
+    return table === "refilled-twice" || table === "waiting-again" ? 1 : table === "refilled" ? .5 : 0;
+  });
+  const pressure = houseSpatialPressure(Math.max(presentation?.look.emotional.pathCompression ?? 0, acceptedCompression * .6), isLeaving);
   const detail = qualityStep(qualityProfile);
   const shellSize: Vec3 = stage === "garden" ? [13.5, 5.45, 11] : stage === "bedroom" ? [12.2, 4.75, 11.8] : [12.8, 5.05, 11.4];
   const thornDensity = reducedEffects ? 0.34 : stage === "bedroom" ? 1 : stage === "garden" ? 0.72 : 0.48;
@@ -403,6 +423,7 @@ function ThornedHouseChapterComponent({
       <SceneGround radius={17} color="#30251e" />
       <HouseShell rearOpening={4.6} position={[0, 0, 2.35]} size={shellSize} wallColor={stage === "bedroom" ? "#44352e" : "#4f3d31"} roofColor="#211b18" />
       <ThornedHouseCollisionArchitecture
+        pressure={pressure}
         stage={stage}
         exitStage={exitStage}
         detail={detail}
@@ -415,7 +436,9 @@ function ThornedHouseChapterComponent({
       <ModularRooms stage={stage} detail={detail} reducedEffects={reducedEffects} />
       <HouseWallDetails stage={stage} detail={detail} reducedEffects={reducedEffects} />
       <RepeatingHall stage={stage} detail={detail} reducedEffects={reducedEffects} />
+      <CompressionCeiling pressure={pressure} detail={detail} reducedEffects={reducedEffects} />
       <RefilledSurfaces
+        pressure={pressure}
         stage={stage}
         detail={detail}
         reducedEffects={reducedEffects}

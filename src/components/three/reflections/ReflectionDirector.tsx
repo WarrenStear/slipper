@@ -57,7 +57,7 @@ function ReflectionDirectorComponent({
   const frameGeometry = useMemo(() => createMirrorFrameGeometry(), []);
   useEffect(() => () => frameGeometry.dispose(), [frameGeometry]);
   const reflectionSettled = isStillnessScene && Boolean(presentation?.look.stillness);
-  const sampleCount = reducedMotion ? 1 : reflectionSettled ? 2 : reducedEffects ? 12 : qualityProfile.quality === "low" ? 18 : 34;
+  const sampleCount = reducedMotion ? 1 : reducedEffects ? 12 : qualityProfile.quality === "low" ? 18 : 34;
   const samplesRef = useRef(Array.from({ length: sampleCount }, () => new THREE.Vector3()));
   const localCameraRef = useRef(new THREE.Vector3());
 
@@ -83,11 +83,12 @@ function ReflectionDirectorComponent({
     samples[cursorRef.current].copy(localCamera);
     cursorRef.current = (cursorRef.current + 1) % samples.length;
     const delayed = samples[cursorRef.current];
-    const reflectedX = THREE.MathUtils.clamp(-delayed.x * 0.34, -1.72, 1.72);
+    const clarity = presentation?.stillness ?? Number(reflectionSettled);
+    const reflectedX = THREE.MathUtils.clamp(-THREE.MathUtils.lerp(delayed.x, localCamera.x, clarity) * 0.34, -1.72, 1.72);
     player.position.x = THREE.MathUtils.damp(
       player.position.x,
       reflectedX,
-      reflectionSettled ? 7.5 : 3.1,
+      THREE.MathUtils.lerp(3.1, 7.5, clarity),
       Math.min(delta, 0.05),
     );
     player.position.y = -2.35 + THREE.MathUtils.clamp((delayed.y - 1.7) * 0.035, -0.12, 0.2);
@@ -99,7 +100,7 @@ function ReflectionDirectorComponent({
     if (apparition) {
       apparition.position.x = -player.position.x * 0.54 + (isWarning ? -0.72 : 0.82);
       apparition.position.y = player.position.y + 0.18;
-      apparition.scale.setScalar(reflectionSettled ? 0.92 : 1.04);
+      apparition.scale.setScalar(THREE.MathUtils.lerp(1.04, .92, clarity));
     }
   });
 
@@ -129,7 +130,7 @@ function ReflectionDirectorComponent({
         </mesh>
       </group>
 
-      <HeroReflectionSurface kind="mirror" size={[5.4, 6]} position={[0, 0, .115]} settled={reflectionSettled} />
+      <HeroReflectionSurface kind="mirror" size={[5.4, 6]} position={[0, 0, .115]} />
       <group name="mirror-scar-retained-through-truth" position={[0, 0, .23]}>
         <Beam from={[-.92, 2.92, 0]} to={[-.47, 1.15, 0]} radius={.009} color="#637879" opacity={.7} radialSegments={3} />
         <Beam from={[-.47, 1.15, 0]} to={[.25, -.68, 0]} radius={.007} color="#91a3a0" opacity={.5} radialSegments={3} />
@@ -138,14 +139,14 @@ function ReflectionDirectorComponent({
         <Beam from={[-.75, 2.35, 0]} to={[-.22, 2.05, 0]} radius={.003} color="#8c9b96" opacity={.45} radialSegments={3} />
       </group>
       <AlternateReflectedLandmark truthful={isTruthful} still={reflectionSettled} />
-      <group ref={apparitionRef} position={[-0.72, -2.17, 0.185]} visible={!reducedEffects || isWarning}>
+      <group ref={apparitionRef} position={[-0.72, -2.17, 0.185]}>
         <ReflectionApparition apparition />
       </group>
       <group ref={playerRef} position={[0, -2.35, 0.205]}>
         <ReflectionApparition />
       </group>
 
-      <ReflectedPath visible={isTruthful || reflectionSettled} still={reflectionSettled} reducedEffects={reducedEffects} />
+      <ReflectedPath visible={isTruthful || isStillnessScene} truthful={isTruthful} still={reflectionSettled} reducedEffects={reducedEffects} />
       <MirrorMemorySurface
         warm={isWarning}
         still={reflectionSettled}

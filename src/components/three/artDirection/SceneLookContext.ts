@@ -6,6 +6,8 @@ export type ScenePresentation = {
   reducedMotion: boolean;
   reducedEffects: boolean;
   motion: SceneLook["motion"];
+  /** Shared eased quietness, including its release when leaving a quiet scene. */
+  stillness: number;
   time: { vegetation: number; cloth: number; water: number; particles: number; flame: number };
 };
 export const SceneLookContext = createContext<ScenePresentation | null>(null);

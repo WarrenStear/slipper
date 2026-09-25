@@ -1,4 +1,7 @@
-import { memo } from "react";
+import { memo, useRef } from "react";
+import { useFrame } from "@react-three/fiber";
+import { Group, Mesh, MeshStandardMaterial } from "three";
+import { useSceneLook } from "../artDirection/SceneLookContext";
 import { Beam, WaterSurface } from "../chapters/ChapterPrimitives";
 
 export type WaterMemoryReflectionProps = {
@@ -22,13 +25,23 @@ function WaterMemoryReflectionComponent({
   still = false,
   reducedEffects = false,
 }: WaterMemoryReflectionProps) {
+  const presentation = useSceneLook();
+  const route = useRef<Group>(null);
   const visiblePoints = ROUTE_POINTS.slice(0, reducedEffects ? 4 : ROUTE_POINTS.length);
-  const opacity = still ? 0.62 : truthful ? 0.42 : 0.13;
+  const opacity = truthful ? .3 : .1;
+  useFrame(() => {
+    const clarity = presentation ? presentation.stillness : Number(still);
+    // Beam owns a single mesh. Update just this bounded route, not the scene.
+    for (const child of route.current?.children ?? []) {
+      const material = (child as Mesh).material as MeshStandardMaterial;
+      if (material) material.opacity = opacity + clarity * .35;
+    }
+  });
 
   return (
     <group name="water-memory-reflection" position={[0, 0.015, 0.6]}>
-      <WaterSurface position={[0, 0, 0]} size={[17, 13]} color={still ? "#172b36" : "#111921"} opacity={0.82} roughness={.38} />
-      <group name="reflection-only-water-route" position={[0, 0.035, 0]}>
+      <WaterSurface position={[0, 0, 0]} size={[17, 13]} color="#111921" opacity={0.82} roughness={.38} />
+      <group ref={route} name="reflection-only-water-route" position={[0, 0.035, 0]}>
         {visiblePoints.slice(0, -1).map((point, index) => {
           const next = visiblePoints[index + 1];
           return (
@@ -37,7 +50,7 @@ function WaterMemoryReflectionComponent({
               from={[point[0], 0, point[1]]}
               to={[next[0], 0, next[1]]}
               radius={0.027}
-              color={still ? "#d9eef2" : "#91b6c5"}
+              color="#91b6c5"
               opacity={opacity}
             />
           );

@@ -1,4 +1,4 @@
-import { TimberAssembly } from "../chapters/ChapterArt";
+import { TimberAssembly, WritingDesk } from "../chapters/ChapterArt";
 import { useSceneLook } from "../artDirection/SceneLookContext";
 import { memo, useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
@@ -88,40 +88,27 @@ function CageResponse({ physical, reflected }: { physical: boolean; reflected: b
   </group>;
 }
 
-function DomesticResponse({ state, house, reducedMotion, reducedEffects }: { state: EnvironmentalCueState; house: boolean; reducedMotion: boolean; reducedEffects: boolean }) {
+function DomesticResponse({ state, house, reducedMotion }: { state: EnvironmentalCueState; house: boolean; reducedMotion: boolean; reducedEffects: boolean }) {
   const presentation = useSceneLook();
-  const ceiling = useRef<THREE.Group>(null);
   const windowLight = useRef<THREE.PointLight>(null);
-  const walls = useRef<THREE.Group>(null);
-  const clutter = useRef<THREE.InstancedMesh>(null);
-  const dummy = useMemo(() => new THREE.Object3D(), []);
-  const amount = useRef(house ? state.houseCompression : Number(state.daysCompressed));
-  const count = reducedEffects ? 8 : 20;
-  useFrame(({ clock }, delta) => {
-    const released = house && presentation?.look.sceneId === "thorned.self-owned-world";
-    const target = released ? 0 : house ? state.houseCompression : Number(state.daysCompressed);
-    if (ceiling.current) ceiling.current.position.y = 4.6 - amount.current * 1.35;
-    amount.current += (target - amount.current) * (1 - Math.exp(-Math.min(delta, 0.05) * 0.5));
-    if (walls.current) walls.current.children.forEach((child, index) => { child.position.x = (index ? 1 : -1) * (4.3 - amount.current * 1.2); });
-    for (let index = 0; index < count; index += 1) {
-      const visible = index < 3 + amount.current * (count - 3);
-      dummy.position.set((index % 2 ? -1 : 1) * (3.25 - amount.current * .45 + index % 3 * 0.35), 0.18 + Math.floor(index / 8) * 0.22, 0.5 + index % 5 * 0.92);
-      dummy.rotation.set(0.05 * (index % 3), index * 0.84, 0.06);
-      dummy.scale.set(visible ? 0.5 : 0, visible ? 0.22 : 0, visible ? 0.4 : 0); dummy.updateMatrix(); clutter.current?.setMatrixAt(index, dummy.matrix);
-    }
-    if (clutter.current) clutter.current.instanceMatrix.needsUpdate = true;
-    if (windowLight.current) {
-      const cycle = state.daysCompressed && !reducedMotion ? 0.75 + Math.sin((presentation?.time.vegetation ?? clock.elapsedTime) * 0.7) * 0.35 : 1;
-      windowLight.current.intensity = house ? 0.65 * (1 - amount.current * 0.8) : cycle;
-    }
+  useFrame(() => {
+    if (!windowLight.current) return;
+    // Only the surrounding daylight changes. The child's own light never cycles.
+    const cycle = state.daysCompressed && !reducedMotion && !presentation?.reducedEffects
+      ? .85 + Math.sin((presentation?.time.vegetation ?? 0) * .7) * .15 : 1;
+    windowLight.current.intensity = cycle;
   });
+  // Chapter architecture now owns spatial pressure. Keeping a second set of
+  // animated boxes/walls here would duplicate furniture and cross its colliders.
   return <group name={house ? "house-refill-compression" : "nest-time-and-weight"} userData={{ handsOccupied: state.handsOccupied, compressed: state.daysCompressed, compression: state.houseCompression }}>
-    {house ? <group ref={ceiling} name="house-lowering-overhead-joinery" position={[0,4.6,2.4]}>
-      <TimberAssembly color="#51402f" pieces={[-1.5,1,3.5].map(z=>({position:[0,0,z],size:[6.6,.24,.48]}))} />
-    </group> : null}
-    <pointLight ref={windowLight} position={[0, 4, 4]} color="#d7c5a0" intensity={0.8} distance={13} decay={2} />
-    <instancedMesh ref={clutter} args={[undefined, undefined, count]}><boxGeometry args={[1, 1, 1]} /><meshStandardMaterial color={house ? "#685340" : "#8e7760"} roughness={1} /></instancedMesh>
-    {house ? <group ref={walls}>{[-1, 1].map(side => <group key={side} position={[side * 4.3, 0, 1]}><mesh position={[0, 1.7, 0]}><boxGeometry args={[0.3, 3.4, 7.5]} /><meshStandardMaterial color="#564638" roughness={0.98} /></mesh><mesh position={[-side * 0.2, 2, -1]}><boxGeometry args={[0.08, 1.3, 0.9]} /><meshStandardMaterial color="#2b2c28" roughness={0.95} /></mesh></group>)}</group> : <group name="child-space-remains-protected" position={[-1, 0, 3.5]}><pointLight position={[0, 1.4, 0]} color="#f0d2a5" intensity={1.2} distance={5} decay={2} /><mesh position={[0, 0.13, 0]}><cylinderGeometry args={[0.9, 1, 0.25, 24]} /><meshStandardMaterial color="#ad937a" roughness={1} /></mesh><group position={[0, 0.29, 0]} scale={1.5}><StoryObjectModel kind="fabric" reducedMotion={reducedMotion} /></group></group>}
+    {house ? null : <>
+      <pointLight ref={windowLight} position={[0, 4, 4]} color="#d7c5a0" intensity={1} distance={13} decay={2} />
+      <group name="child-space-remains-protected" position={[-1, 0, 3.5]}>
+        <pointLight position={[0, 1.4, 0]} color="#f0d2a5" intensity={1.2} distance={5} decay={2} />
+        <mesh position={[0, .25, 0]}><cylinderGeometry args={[.9, 1, .5, 24]} /><TactileMaterial surface="linen" color="#ad937a" roughness={1} /></mesh>
+        <group position={[0, .54, 0]} scale={1.5}><StoryObjectModel kind="fabric" reducedMotion={reducedMotion} /></group>
+      </group>
+    </>}
   </group>;
 }
 
@@ -140,9 +127,16 @@ function ChosenContinuity({ memory, creation, atHome, reducedMotion }: { memory:
   const grown = useRef<THREE.Group>(null);
   useFrame((_, delta) => { if (grown.current) grown.current.scale.y += (1 - grown.current.scale.y) * (1 - Math.exp(-Math.min(delta, 0.05) * 0.55)); });
   return <group name="chosen-memory-and-creation-continuity" userData={{ memory, creation }}>
-    {atHome && memory ? <group position={[-2.5, 1.15, 2.5]}><StoryObjectModel kind={memory === "blush-rose" ? "rose" : memory === "swan-feather" ? "feather" : "mirror"} reducedMotion={reducedMotion} /><mesh position={[0, -0.12, 0]}><cylinderGeometry args={[0.5, 0.5, 0.12, 20]} /><meshStandardMaterial color="#8c7960" roughness={0.92} /></mesh></group> : null}
+    {atHome && memory ? <group position={[-2.5, 1.15, 2.5]}><StoryObjectModel kind={memory === "blush-rose" ? "rose" : memory === "swan-feather" ? "feather" : "mirror"} reducedMotion={reducedMotion} /><TimberAssembly name="remembered-object-side-table" color="#8c7960" pieces={[
+      {position:[0,-.12,0],size:[1,.12,.9]},
+      ...[-1,1].flatMap(x=>[-1,1].map(z=>({position:[x*.38,-.65,z*.33] as [number,number,number],size:[.07,1,.07] as [number,number,number]}))),
+      {position:[0,-.27,.33],size:[.82,.2,.06]},
+    ]} /></group> : null}
     {creation ? <group ref={grown} scale={[1, reducedMotion ? 1 : 0.02, 1]} position={atHome ? [2.8, 0, 2.8] : [0, 0, 4.5]}>
-      {creation === "rest" ? <><mesh position={[0, 0.5, 0]}><boxGeometry args={[2.4, 0.25, 1.2]} /><meshStandardMaterial color="#8f7c64" roughness={1} /></mesh><group position={[0, 0.67, 0]} scale={[2.2, 1, 2]}><StoryObjectModel kind="fabric" reducedMotion={reducedMotion} /></group></> : creation === "home" ? <><DoorFrame width={2.8} height={3.6} depth={0.3} color="#998b70" /><group position={[0.9, 0.6, 0]}><StoryObjectModel kind="candle" state="lit" /></group><pointLight position={[0.9, 1, 0]} intensity={1.2} distance={7} color="#dfcba5" /></> : <><mesh position={[0, 0.85, 0]}><boxGeometry args={[2.2, 0.13, 1.1]} /><meshStandardMaterial color="#8c7963" roughness={1} /></mesh><group position={[0, 0.95, 0]}><StoryObjectModel kind="page" /></group><group position={[0, 0, 0.9]}><StoryObjectModel kind="chair" /></group></>}
+      {creation === "rest" ? <><TimberAssembly name="created-rest-supported-frame" color="#8f7c64" pieces={[
+        {position:[0,.5,0],size:[2.4,.25,1.2]},
+        ...[-1,1].flatMap(x=>[-1,1].map(z=>({position:[x*.98,.19,z*.43] as [number,number,number],size:[.14,.38,.14] as [number,number,number]}))),
+      ]} /><group position={[0, 0.67, 0]} scale={[2.2, 1, 2]}><StoryObjectModel kind="fabric" reducedMotion={reducedMotion} /></group></> : creation === "home" ? <><DoorFrame width={2.8} height={3.6} depth={0.3} color="#998b70" /><TimberAssembly name="created-home-practical-bracket" color="#75634c" pieces={[{position:[.9,.52,0],size:[.35,.1,.35]},{position:[.9,.23,0],size:[.12,.5,.12]}]} /><group position={[0.9, 0.6, 0]}><StoryObjectModel kind="candle" state="lit" /></group><pointLight position={[0.9, 1, 0]} intensity={1.2} distance={7} color="#dfcba5" /></> : <><group position={[0,.85,0]}><WritingDesk width={2.2} depth={1.1} height={.85 / .905} color="#8c7963" /></group><group position={[0, 0.95, 0]}><StoryObjectModel kind="page" /></group><group position={[0, 0, 0.9]}><StoryObjectModel kind="chair" /></group></>}
     </group> : null}
   </group>;
 }

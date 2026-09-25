@@ -6,20 +6,19 @@ import { useSceneLook } from "../artDirection/SceneLookContext";
 
 const capturing = new WeakSet<WebGLRenderer>();
 /** Exactly one eligible hero surface per scene; lower tiers keep their skin. */
-export function HeroReflectionSurface({ kind, size, position = [0, 0, 0], rotation = [0, 0, 0], settled = false }: {
-  kind: "moonwater" | "mirror"; size: [number, number]; position?: [number, number, number]; rotation?: [number, number, number]; settled?: boolean;
+export function HeroReflectionSurface({ kind, size, position = [0, 0, 0], rotation = [0, 0, 0] }: {
+  kind: "moonwater" | "mirror"; size: [number, number]; position?: [number, number, number]; rotation?: [number, number, number];
 }) {
   const presentation = useSceneLook();
   const allowed = presentation && presentation.look.reflection.mode === kind && presentation.look.budget.reflectionSize > 0;
-  return allowed ? <CapturedSurface kind={kind} size={size} position={position} rotation={rotation} settled={settled} /> : null;
+  return allowed ? <CapturedSurface kind={kind} size={size} position={position} rotation={rotation} /> : null;
 }
 
-function CapturedSurface({ kind, size, position, rotation, settled }: Required<Parameters<typeof HeroReflectionSurface>[0]>) {
+function CapturedSurface({ kind, size, position, rotation }: Required<Parameters<typeof HeroReflectionSurface>[0]>) {
   const presentation = useSceneLook()!;
   const current = useRef(presentation);
   current.current = presentation;
-  const frame = useRef(0), capturedFrame = useRef(-100), settledRef = useRef(settled);
-  settledRef.current = settled;
+  const frame = useRef(0), capturedFrame = useRef(-100);
   const resources = useMemo(() => {
     const geometry = new PlaneGeometry(size[0], size[1]);
     const mirror = new Reflector(geometry, { textureWidth: presentation.look.budget.reflectionSize, textureHeight: presentation.look.budget.reflectionSize, multisample: 0, clipBias: .003 });
@@ -48,10 +47,9 @@ function CapturedSurface({ kind, size, position, rotation, settled }: Required<P
       if (!(sourceCamera instanceof PerspectiveCamera)) return;
       camera.copy(sourceCamera); camera.far = Math.min(sourceCamera.far, presentation.look.budget.reflectionFar); camera.updateProjectionMatrix();
       material.uniforms.uTime.value = presentation.time.water;
-      const disturbance = settledRef.current || presentation.motion.water === 0 ? 0 : kind === "mirror" ? .004 : .0015;
-      // Follow the eased transition, then share its exact stopping point.
+      // The same eased quietness settles the live view, its aged skin and air.
       material.uniforms.uDisturbance.value = presentation.motion.water === 0 ? 0
-        : material.uniforms.uDisturbance.value + (disturbance - material.uniforms.uDisturbance.value) * .08;
+        : (kind === "mirror" ? .004 : .0015) * (1 - presentation.stillness);
       if (!renderer.extensions.has("EXT_color_buffer_float")) mirror.getRenderTarget().texture.type = UnsignedByteType;
       const previousTarget = renderer.getRenderTarget(), xr = renderer.xr.enabled, shadows = renderer.shadowMap.autoUpdate;
       capturing.add(renderer);

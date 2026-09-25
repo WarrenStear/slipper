@@ -28,7 +28,7 @@ const LILIES = Array.from({ length: 10 }, (_, i) => ({
   scale: .36 + (i % 3) * .07,
 }));
 
-function WornSanctuaryBridge() {
+export function WornSanctuaryBridge() {
   const boards = useMemo<ConstructionPiece[]>(() => BRIDGE_PLANKS.map(index => ({
     position: [Math.sin(index * 2.7) * .075, Math.sin(index * .45) * .018, -7.38 + index * .438],
     size: [3.65 + Math.sin(index * 1.8) * .16, .18, .408 + Math.sin(index * 2.4) * .011],
@@ -40,9 +40,10 @@ function WornSanctuaryBridge() {
     ...[-6.9, -2.35, 2.3, 6.85].flatMap((z, i) => [
       { position: [side * 1.96, .4, z] as [number, number, number], size: [.17, 1.52, .19] as [number, number, number], rotation: [0, .03 * side, side * .022] as [number, number, number] },
       ...(i < 3 ? [{ position: [side * 1.91, .99, z + 2.27] as [number, number, number], size: [.115, .12, 4.6] as [number, number, number] }] : []),
-      { position: [0, -.26, z] as [number, number, number], size: [4.15, .16, .2] as [number, number, number] },
     ]),
-  ]), []);
+  ]).concat([-6.9, -2.35, 2.3, 6.85].map(z => ({
+    position: [0, -.26, z] as [number, number, number], size: [4.15, .16, .2] as [number, number, number],
+  }))), []);
   return <group position={[0, .3, 0]} name="weathered-sanctuary-bridge">
     <TimberAssembly pieces={boards} color="#685441" surface="wet-wood" />
     <TimberAssembly pieces={supports} color="#3c332a" surface="wet-wood" />
@@ -90,7 +91,6 @@ function BlueMoonSanctuaryChapterComponent({
   const eventDriven = useJourneyStore((journey) => journey.worldFlags["story-events.started"] === true);
   const candlesLit = useJourneyStore((journey) => journey.worldFlags["blue-moon.candles-lit"] === true);
   const waterTouched = useJourneyStore((journey) => journey.worldFlags["blue-moon.water-touched"] === true);
-  const swanFollowed = useJourneyStore((journey) => journey.worldFlags["blue-moon.swan-followed"] === true);
   const flowersPlaced = useJourneyStore((journey) => journey.worldFlags["blue-moon.flowers-placed"] === true);
   const beautifulDoorOpen = useJourneyStore((journey) => journey.worldFlags["blue-moon.beautiful-door-open"] === true);
   const lilyCount = reducedEffects ? 6 : 10 + qualityProfile.decorationsPerCell * 3;
@@ -179,13 +179,6 @@ function BlueMoonSanctuaryChapterComponent({
           ))}
           <group position={[0, -.65, 0]} scale={.65}><SwanModel /></group>
         </group>
-      ) : null}
-
-      {isIntimacy && swanFollowed ? (
-        <mesh name="swan-path-lingers" position={[-2.4, 0.035, 4.2]} rotation={[-Math.PI / 2, 0, 0]}>
-          <planeGeometry args={[4.8, 0.32]} />
-          <meshBasicMaterial color="#d9e9f2" transparent opacity={0.2} depthWrite={false} toneMapped={false} />
-        </mesh>
       ) : null}
 
       <FloatingMotes

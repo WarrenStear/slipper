@@ -41,8 +41,8 @@ function PathGuidancePool({
   const lanternColor = worldDirector.lantern.color;
   const pressure = clamp01(narrativeWorldState.memoryPressure);
   const depth = clamp01(narrativeWorldState.explorationDepth);
-  const released = presentation?.look.sceneId === "river.release-surrender" && presentation.look.stillness;
-  const targetOpacity = target && enabled ? 0.16 + depth * 0.1 + worldDirector.lantern.guideBoost * 0.5 : 0;
+  const surrender = presentation?.look.sceneId === "river.release-surrender";
+  const targetOpacity = target && enabled ? (0.16 + depth * 0.1 + worldDirector.lantern.guideBoost * 0.5) * (presentation ? .3 : 1) : 0;
 
   useFrame(({ clock }, delta) => {
     const group = groupRef.current;
@@ -68,12 +68,14 @@ function PathGuidancePool({
 
     if (ringMaterialRef.current) {
       ringMaterialRef.current.color.lerp(lanternColor, smoothing);
-      ringMaterialRef.current.opacity = THREE.MathUtils.lerp(ringMaterialRef.current.opacity, targetOpacity * (released ? .18 : 1), smoothing);
+      const quiet = surrender ? presentation?.stillness ?? 0 : 0;
+      ringMaterialRef.current.opacity = THREE.MathUtils.lerp(ringMaterialRef.current.opacity, targetOpacity * (1 - quiet * .82), smoothing);
     }
 
     if (moteMaterialRef.current) {
       moteMaterialRef.current.color.lerp(lanternColor, smoothing);
-      moteMaterialRef.current.opacity = THREE.MathUtils.lerp(moteMaterialRef.current.opacity, targetOpacity * (released ? .7 : 1.6), smoothing);
+      const quiet = surrender ? presentation?.stillness ?? 0 : 0;
+      moteMaterialRef.current.opacity = THREE.MathUtils.lerp(moteMaterialRef.current.opacity, targetOpacity * (1.6 - quiet * .9), smoothing);
     }
   });
 
@@ -102,7 +104,7 @@ function PathGuidancePool({
 
 function BoundaryVeil({ worldDirector, visualState, narrativeWorldState, qualityProfile, enabled }: WorldEngineLayerProps) {
   const presentation = useSceneLook();
-  const released = presentation?.look.sceneId === "river.release-surrender" && presentation.look.stillness;
+  const surrender = presentation?.look.sceneId === "river.release-surrender";
   const materialRef = useRef<THREE.MeshBasicMaterial>(null);
   const rotationRef = useRef<THREE.Mesh>(null);
   const pressure = clamp01(narrativeWorldState.memoryPressure);
@@ -122,7 +124,8 @@ function BoundaryVeil({ worldDirector, visualState, narrativeWorldState, quality
     if (rotationRef.current) rotationRef.current.rotation.z = (presentation?.time.vegetation ?? clock.elapsedTime) * 0.011;
     if (materialRef.current) {
       materialRef.current.color.lerp(targetFogColor, smoothing);
-      materialRef.current.opacity = THREE.MathUtils.lerp(materialRef.current.opacity, boundaryOpacity * (released ? .08 : 1), smoothing);
+      const quiet = surrender ? presentation?.stillness ?? 0 : 0;
+      materialRef.current.opacity = THREE.MathUtils.lerp(materialRef.current.opacity, boundaryOpacity * (1 - quiet * .92), smoothing);
     }
   });
 
@@ -145,7 +148,7 @@ function BoundaryVeil({ worldDirector, visualState, narrativeWorldState, quality
 
 function StillnessBreathField({ worldDirector, visualState, narrativeWorldState, enabled }: WorldEngineLayerProps) {
   const presentation = useSceneLook();
-  const released = presentation?.look.sceneId === "river.release-surrender" && presentation.look.stillness;
+  const surrender = presentation?.look.sceneId === "river.release-surrender";
   const materialRef = useRef<THREE.MeshBasicMaterial>(null);
   const meshRef = useRef<THREE.Mesh>(null);
   const pressure = clamp01(narrativeWorldState.memoryPressure);
@@ -163,7 +166,8 @@ function StillnessBreathField({ worldDirector, visualState, narrativeWorldState,
     if (meshRef.current) meshRef.current.scale.setScalar(breath);
     if (materialRef.current) {
       materialRef.current.color.lerp(targetEmissiveColor, smoothing);
-      materialRef.current.opacity = THREE.MathUtils.lerp(materialRef.current.opacity, baseOpacity * (released ? .04 : 1), smoothing);
+      const quiet = surrender ? presentation?.stillness ?? 0 : 0;
+      materialRef.current.opacity = THREE.MathUtils.lerp(materialRef.current.opacity, baseOpacity * (1 - quiet * .96), smoothing);
     }
   });
 

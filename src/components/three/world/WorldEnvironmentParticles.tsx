@@ -25,16 +25,14 @@ export function WorldEnvironmentParticles({ worldDirector, enabled = true }: Pro
   }, [count]);
   useEffect(() => () => geometry.dispose(), [geometry]);
   const uniforms = useMemo(() => ({ time: { value: 0 }, size: { value: 1 }, opacity: { value: 0 }, tint: { value: new THREE.Color() }, drift: { value: .1 } }), []);
-  useFrame(({ camera, gl }, delta) => {
+  useFrame(({ camera, gl }) => {
     if (!group.current || !profile || !presentation) return;
     // Camera translation is user control, not environmental animation.
     group.current.position.set(camera.position.x, 0, camera.position.z);
     uniforms.time.value = presentation.time.particles;
     uniforms.size.value = profile.size * Math.min(gl.getPixelRatio(), 1.5);
-    const released = presentation.look.sceneId === "river.release-surrender" && presentation.look.stillness;
-    uniforms.opacity.value += ((released ? 0 : profile.opacity) - uniforms.opacity.value) * (1 - Math.exp(-Math.min(.05, delta) * 1.3));
-    // End the invisible easing tail so completed release has no residual layer.
-    if (released && uniforms.opacity.value < .002) uniforms.opacity.value = 0;
+    // Shared quietness removes the layer as its clock settles; no second tail.
+    uniforms.opacity.value = profile.opacity * (1 - presentation.stillness);
     uniforms.tint.value.set(profile.color);
     uniforms.drift.value = profile.drift;
   });

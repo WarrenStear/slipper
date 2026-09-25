@@ -2,7 +2,7 @@ import type { JourneySceneId } from "../lib/storyJourneyState.ts";
 
 export type StoryActorId = "lantern" | "wolf" | "swan" | "seer";
 export type StoryActorCue = "lead" | "wait" | "watch" | "cross" | "guard" | "rest" | "reveal" | "captive";
-export type ActorCueDefinition = { actor: StoryActorId; cue: StoryActorCue; from: [number, number, number]; to: [number, number, number]; duration: number; waitDistance: number };
+export type ActorCueDefinition = { actor: StoryActorId; cue: StoryActorCue; from: [number, number, number]; to: [number, number, number]; duration: number; waitDistance: number; terminalYaw?: number };
 const cue = (actor: StoryActorId, behavior: StoryActorCue, from: ActorCueDefinition["from"], to = from, duration = 14, waitDistance = 10): ActorCueDefinition => ({ actor, cue: behavior, from, to, duration, waitDistance });
 const lantern = cue("lantern", "lead", [0.8, 1.3, 2], [0, 1.3, 5], 18, 9);
 const wolf = cue("wolf", "watch", [-5.5, 0, 4]);
@@ -13,8 +13,10 @@ export const CINEMATIC_ACTOR_CUES: Partial<Record<JourneySceneId, readonly Actor
   "enchanted.rabbit-hole": [lantern, cue("wolf", "cross", [-6, 0, 4], [6, 0, 4], 24)],
   "enchanted.friendship-meadow": [lantern, swan],
   "enchanted.masked-hearth": [lantern, wolf],
-  "blue-moon.sanctuary": [lantern, swan],
-  "blue-moon.intimacy": [cue("swan", "lead", [-3, 0.2, 1], [-3, 0.2, 3], 18), lantern],
+  // The first pale form is on open water beside the near bridge. Its destination
+  // still meets the existing story volume; rails no longer hide its arrival.
+  "blue-moon.sanctuary": [lantern, { ...cue("swan", "lead", [3.8, 0.12, -3.5], [5, 0.12, 1], 30, 8), terminalYaw: -Math.PI / 2 }],
+  "blue-moon.intimacy": [{ ...cue("swan", "lead", [-4.4, 0.2, -2.2], [-4.4, 0.2, 3], 28), terminalYaw: Math.PI / 2 }, lantern],
   "blue-moon.caged-bird": [cue("swan", "captive", [3.1, 0.1, -2.8]), wolf],
   "sunset.warning-grove": [seer, wolf],
   "sunset.true-mirror": [seer],
@@ -41,11 +43,20 @@ export function sampleActorCue(definition: ActorCueDefinition, seconds: number, 
   // the player falls behind. No actor chases or attacks the player.
   const phase = Math.min(1, Math.max(0, seconds / definition.duration));
   const smooth = phase * phase * (3 - 2 * phase);
-  const amount = moving && !reducedMotion ? smooth : 0;
+  // A stationary guiding Swan waits at its destination under reduced motion,
+  // beside the same interaction volume the moving version eventually reaches.
+  const amount = moving ? (reducedMotion ? (definition.actor === "swan" ? 1 : 0) : smooth) : 0;
   output.x = x + (definition.to[0] - x) * amount;
   output.y = y + (definition.to[1] - y) * amount;
   output.z = z + (definition.to[2] - z) * amount;
-  output.yaw = moving ? Math.atan2(definition.to[0] - x, definition.to[2] - z) : Math.atan2(player[0] - output.x, player[2] - output.z);
+  output.yaw = moving || definition.cue === "rest"
+    ? Math.atan2(definition.to[0] - x, definition.to[2] - z)
+    : Math.atan2(player[0] - output.x, player[2] - output.z);
+  if (moving && definition.terminalYaw !== undefined) {
+    const turn = Math.min(1, Math.max(0, (amount - .7) / .3));
+    const angle = definition.terminalYaw - output.yaw;
+    output.yaw += Math.atan2(Math.sin(angle), Math.cos(angle)) * turn * turn * (3 - 2 * turn);
+  }
   output.visible = true;
   if (definition.actor === "wolf" && definition.cue !== "rest") {
     const dx = output.x - player[0], dz = output.z - player[2];

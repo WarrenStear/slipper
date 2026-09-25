@@ -306,7 +306,9 @@ test("the prologue, story roles, and guidance express authored progression", () 
     reflection,
     /reflectionSettled = isStillnessScene && Boolean\(presentation\?\.look.stillness\)/,
   );
-  assert.match(reflection, /sampleCount = reducedMotion \? 1 : reflectionSettled \? 2/);
+  assert.match(reflection, /sampleCount = reducedMotion \? 1 : reducedEffects \? 12 : qualityProfile.quality === "low" \? 18 : 34/);
+  assert.match(reflection, /lerp\(delayed.x, localCamera.x, clarity\)/);
+  assert.doesNotMatch(reflection, /sampleCount = [^;]*reflectionSettled/, "stillness must blend the existing history, not reset the reflection buffer");
   assert.match(reflection, /name="reflected-past-and-future"/);
   assert.match(reflection, /<ReflectionApparition apparition/);
   assert.match(reflection, /<ReflectedPath/);

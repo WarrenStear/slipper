@@ -9,29 +9,44 @@ type Voice = { source: AudioBufferSourceNode; filter: BiquadFilterNode; gain: Ga
 type Silence = { start: number; hold: number; floor: number };
 
 /** Uses the existing trusted-gesture context. Never creates or resumes audio. */
-export function useStoryEventAudio({ listener, enabled, audioVolume, reducedEffects, reducedMotion }: {
-  listener: AudioListener; enabled: boolean; audioVolume: number; reducedEffects: boolean; reducedMotion: boolean;
+export function useStoryEventAudio({ listener, enabled, audioVolume, reducedEffects, reducedMotion, sceneLookOwnsSurrender = false }: {
+  listener: AudioListener | null; enabled: boolean; audioVolume: number; reducedEffects: boolean; reducedMotion: boolean;
+  sceneLookOwnsSurrender?: boolean;
 }) {
   const voices = useRef<Voice[]>([]);
   const buffers = useRef(new Map<string, AudioBuffer>());
   const silence = useRef<Silence | null>(null);
   const ambientGain = useRef(1);
-  const config = useRef({ enabled, audioVolume, reducedEffects, reducedMotion });
-  config.current = { enabled, audioVolume, reducedEffects, reducedMotion };
+  const config = useRef({ enabled, audioVolume, reducedEffects, reducedMotion, sceneLookOwnsSurrender });
+  config.current = { enabled, audioVolume, reducedEffects, reducedMotion, sceneLookOwnsSurrender };
 
   useEffect(() => {
-    if (enabled) return;
+    if (enabled && audioVolume > 0) return;
     for (const voice of [...voices.current]) voice.stop();
     silence.current = null;
     ambientGain.current = 1;
-  }, [enabled]);
+  }, [enabled, audioVolume]);
+
+  useEffect(() => {
+    const pauseHidden = () => {
+      if (!document.hidden) return;
+      for (const voice of [...voices.current]) voice.stop();
+      silence.current = null;
+      ambientGain.current = 1;
+    };
+    document.addEventListener("visibilitychange", pauseHidden);
+    return () => document.removeEventListener("visibilitychange", pauseHidden);
+  }, []);
 
   useEffect(() => subscribeAcceptedStoryEvents(({ eventIds }) => {
     // Hydration never publishes: a restored grief/recognition beat stays silent.
     const additions = eventIds.slice(-3);
     const context = getGestureActivatedNarrativeAudioContext();
-    if (!config.current.enabled || !context || context !== listener.context || context.state !== "running") return;
+    if (!config.current.enabled || document.hidden || !listener || !context || context !== listener.context || context.state !== "running") return;
     for (const eventId of additions) {
+      // Shared SceneLook stillness owns the gradual Surrender and its return.
+      // The legacy 140 ms event duck would otherwise cut across that same transition.
+      if (eventId === "river.surrender" && config.current.sceneLookOwnsSurrender) continue;
       const cue = resolveStoryEventAudioCue(eventId);
       if (!cue) continue;
       if (cue.silenceFloor !== undefined) {
@@ -41,7 +56,7 @@ export function useStoryEventAudio({ listener, enabled, audioVolume, reducedEffe
       }
       if (!cue.material || cue.gain === 0 || config.current.audioVolume === 0) continue;
       while (voices.current.length >= MAX_STORY_EVENT_VOICES) voices.current[0].stop();
-      const key = `${cue.material}:${cue.duration}:${cue.filterHz}`;
+      const key = `${cue.material}:${cue.duration}:${cue.filterHz}:${cue.toneHz ?? 0}`;
       let buffer = buffers.current.get(key);
       if (!buffer) {
         const samples = materialSoundSamples(cue, context.sampleRate);
@@ -74,6 +89,7 @@ export function useStoryEventAudio({ listener, enabled, audioVolume, reducedEffe
   }), [listener]);
 
   useFrame(() => {
+    if (!listener) return;
     const event = silence.current;
     ambientGain.current = event ? eventSilenceGain(listener.context.currentTime - event.start, event.hold, event.floor) : 1;
     if (ambientGain.current >= 1 && event && listener.context.currentTime > event.start + 0.14) silence.current = null;
