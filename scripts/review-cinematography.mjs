@@ -2,12 +2,16 @@ import { chromium } from '@playwright/test';
 import { spawn, execFileSync } from 'node:child_process';
 import { mkdir, writeFile, readFile, symlink, rm } from 'node:fs/promises';
 
-const baseline = process.env.VISUAL_REVIEW_BASELINE || '7cb74739204fe153f7f0449e662478ec78c358e1';
+// Verified main before the restraint/finale pass; earlier review SHAs lack these source paths.
+// An explicit override must contain every required baseline file; never fall back silently.
+const baseline = process.env.VISUAL_REVIEW_BASELINE || '2fe438ed0d3f29860ee225f1fe6269eaced0ef79';
+const angle = process.env.REVIEW_ANGLE ?? 'swiftshader';
+if (!['swiftshader', 'metal'].includes(angle)) throw new Error('REVIEW_ANGLE must be swiftshader or metal');
 const root = process.cwd(), out = '/tmp/slipper-cinematography-review';
 const beforeRoot = '/tmp/slipper-cinematography-baseline';
 const fixtureName = '.cinematography-review';
 const processes = []; let browser;
-const report = { candidate: execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(), baseline,
+const report = { candidate: execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(), baseline, requestedAngle: angle,
   method: 'Identical scene states, camera positions and directions. Baseline uses settled authored FOV; candidate uses responsive shot FOV except the opening, which retains its authored lens. Environment motion is reduced and the light profile is pre-settled; comparisons wait 25 completed render frames. Actual camera/input lifecycle is exercised separately in a lightweight fixture. Not an unassisted gameplay or FPS certification.', captures: [], interactions: [], failures: [] };
 const stage = `import React,{Suspense,useLayoutEffect,useRef} from 'react';
 import {createRoot} from 'react-dom/client';import {Canvas,useFrame,useThree} from '@react-three/fiber';import {Physics} from '@react-three/rapier';
@@ -122,10 +126,18 @@ function withMaterialPolicy(source) {
  return source;
 }
 try{
- await mkdir(out,{recursive:true});execFileSync('git',['worktree','add','--detach',beforeRoot,baseline]);await symlink(root+'/node_modules',beforeRoot+'/node_modules','dir');
+ await mkdir(out,{recursive:true});
+ execFileSync('git',['cat-file','-e',`${baseline}^{commit}`]);
+ const baselineFiles=new Set(execFileSync('git',['ls-tree','-r','--name-only',baseline],{encoding:'utf8'}).trim().split('\n'));
+ // The full-worktree fixture imports both TS and TSX modules; validate each before starting Vite.
+ const baselineImports=[...stage.matchAll(/from ['"]\.\.\/(src\/[^'"]+)['"]/g)].map(match=>match[1]);
+ for(const required of ['vite.config.ts',...baselineImports]) {
+   if(![required,required+'.ts',required+'.tsx'].some(file=>baselineFiles.has(file))) throw new Error(`Baseline ${baseline} lacks required fixture source ${required}`);
+ }
+ execFileSync('git',['worktree','add','--detach',beforeRoot,baseline]);await symlink(root+'/node_modules',beforeRoot+'/node_modules','dir');
  for(const dir of [root,beforeRoot]){await mkdir(dir+'/'+fixtureName,{recursive:true});await writeFile(dir+'/'+fixtureName+'/index.html','<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>Cinematography review fixture</title><style>html,body,#root{width:100%;height:100%;margin:0;overflow:hidden}button{padding:8px;margin:4px}</style></head><body><div id="root"></div><script type="module" src="./stage.tsx"></script></body></html>');await writeFile(dir+'/'+fixtureName+'/stage.tsx',dir===root?withMaterialPolicy(stage):stage);await writeFile(dir+'/'+fixtureName+'/shotComposition.ts',await readFile(root+'/src/cinematics/shotComposition.ts'));}
  await server(root,4203,true);await server(root,4204);await server(beforeRoot,4205);
- browser=await chromium.launch({args:['--enable-webgl','--ignore-gpu-blocklist','--use-angle=swiftshader']});
+ browser=await chromium.launch({args:['--enable-webgl','--ignore-gpu-blocklist',`--use-angle=${angle}`]});
  await testRig();await entry(1280,800);await entry(390,844);
  await capture('details',1100,720,'high',true);await capture('details',1100,720,'high',false);
  for(const which of ['broken','blue','house','meadow','ending']){

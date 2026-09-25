@@ -3,7 +3,9 @@ import { readCinematicStory } from "./cinematic-story-controls";
 
 test("surface coverage rejects jitter and preserves the two-stage accessible reveal on reload", async ({ page }, testInfo) => {
   test.skip(!testInfo.project.name.includes("chromium"), "Physical WebGL coverage uses Chromium; the semantic full route still runs on every configured project.");
-  test.setTimeout(120_000);
+  // Software-rendered CI reached restored state before its aggregate timeout;
+  // keep every jitter, reload, state and screenshot check, with a bounded budget.
+  test.setTimeout(process.env.CI ? 300_000 : 120_000);
   const errors: string[] = [];
   page.on("pageerror", error => errors.push(error.message));
   await page.emulateMedia({ reducedMotion: "reduce" });
@@ -42,7 +44,7 @@ test("surface coverage rejects jitter and preserves the two-stage accessible rev
   expect((await readCinematicStory(page)).completedStoryEventIds).not.toContain("broken-floor.forest-revealed");
   await expect(canvas).toHaveAttribute("data-opening-rendered-stage", "1", { timeout: 30_000 });
   const firstPath = testInfo.outputPath("first-reveal-stage.png");
-  await page.screenshot({ path: firstPath, timeout: 30_000 });
+  await page.screenshot({ path: firstPath, timeout: process.env.CI ? 60_000 : 30_000 });
   await testInfo.attach("first-reveal-stage", { path: firstPath, contentType: "image/png" });
   await page.locator("button[data-story-event-id='broken-floor.forest-revealed']").click();
   await expect(canvas).toHaveAttribute("data-opening-rendered-stage", "2", { timeout: 30_000 });
@@ -61,7 +63,7 @@ test("surface coverage rejects jitter and preserves the two-stage accessible rev
   await expect(page.locator("vite-error-overlay")).toHaveCount(0);
   await expect(canvas).toHaveAttribute("data-opening-rendered-stage", "2", { timeout: 30_000 });
   const restoredPath = testInfo.outputPath("restored-second-reveal-stage.png");
-  await page.screenshot({ path: restoredPath, timeout: 30_000 });
+  await page.screenshot({ path: restoredPath, timeout: process.env.CI ? 60_000 : 30_000 });
   await testInfo.attach("restored-second-reveal-stage", { path: restoredPath, contentType: "image/png" });
   expect(errors).toEqual([]);
 });

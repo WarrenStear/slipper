@@ -4,7 +4,9 @@ import { completeNextCinematicEvent, readCinematicStory } from "./cinematic-stor
 
 test("the rendered floor requires two pointer wipes and a touch before inversion", async ({ page }, testInfo) => {
   test.skip(!testInfo.project.name.includes("chromium"), "This physical WebGL check runs on the configured desktop and mobile Chromium renderers; semantic equivalence runs on every project.");
-  test.setTimeout(90_000);
+  // Hosted SwiftShader completed the assertions and screenshot but exhausted
+  // the aggregate 90s budget; native GPU runs retain the tighter bound.
+  test.setTimeout(process.env.CI ? 240_000 : 90_000);
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.emulateMedia({ reducedMotion: "reduce" });
@@ -55,7 +57,7 @@ test("the rendered floor requires two pointer wipes and a touch before inversion
   await expect(page.locator(".story-hud, .mini-map-hud, .scene-compass, .map-workspace")).toHaveCount(0);
   expect(errors).toEqual([]);
   const screenshotPath = testInfo.outputPath("pointer-revealed-forest.png");
-  await page.screenshot({ path: screenshotPath, fullPage: false, timeout: 30_000 });
+  await page.screenshot({ path: screenshotPath, fullPage: false, timeout: process.env.CI ? 60_000 : 30_000 });
   await testInfo.attach("pointer-revealed-forest", { path: screenshotPath, contentType: "image/png" });
 });
 

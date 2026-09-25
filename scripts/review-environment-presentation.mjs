@@ -3,14 +3,18 @@ import { spawn, execFileSync } from 'node:child_process';
 import { mkdir, writeFile, rm } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
-const baseline = process.env.VISUAL_REVIEW_BASELINE || '475b16cbe5533178f8fc3ee5fb7620ab4205b3ec';
+// Verified main before the restraint/finale pass; earlier review SHAs lack these source paths.
+// An explicit override must contain every required baseline file; never fall back silently.
+const baseline = process.env.VISUAL_REVIEW_BASELINE || '2fe438ed0d3f29860ee225f1fe6269eaced0ef79';
+const angle = process.env.REVIEW_ANGLE ?? 'swiftshader';
+if (!['swiftshader', 'metal'].includes(angle)) throw new Error('REVIEW_ANGLE must be swiftshader or metal');
 const out = '/tmp/slipper-environment-review', fixture = resolve('.environment-review');
 const originals = [
   'chapters/BrokenFloorChapter', 'chapters/BlueMoonSanctuaryChapter', 'chapters/ThornedHouseChapter',
   'storyEvents/WetFloorReveal', 'cinematics/CinematicAtmosphereDirector', 'cinematics/CinematicLightingDirector',
 ];
 const copies = originals.map(path => [`src/components/three/${path}.tsx`, `src/components/three/${path.replace(/([^/]+)$/, 'EnvironmentBaseline$1')}.tsx`]);
-const report = { candidate: execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(), baseline, method: 'Same-camera reduced-motion chapter fixtures with settled authored profiles and 25 rendered warm-up frames; production entry controls. Not full gameplay or real-device FPS certification.', captures: [], failures: [] };
+const report = { candidate: execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(), baseline, requestedAngle: angle, method: 'Same-camera reduced-motion chapter fixtures with settled authored profiles and 25 rendered warm-up frames; production entry controls. Not full gameplay or real-device FPS certification.', captures: [], failures: [] };
 const processes = []; let browser;
 async function server(args, port) {
   if (args[0] !== 'preview') {
@@ -65,11 +69,14 @@ async function entry(width,height){const ctx=await browser.newContext({viewport:
  try{await page.goto('http://127.0.0.1:4183/?accessible=1',{waitUntil:'domcontentloaded'});await page.locator('.onboarding-gate[aria-busy="false"]').waitFor();const button=page.getByRole('button',{name:'Begin',exact:true});await button.waitFor();await page.waitForTimeout(2600);if(await page.locator('#onboarding-title').innerText()!=='SLIPPER IN THE WOODS')throw new Error('Title changed');if(await page.locator('#onboarding-description').innerText()!=='A journey to you.')throw new Error('Subtitle changed');if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth))throw new Error('Overflow');await page.screenshot({path:`${out}/${name}.png`});await button.click();await page.locator('[data-accessible-journey="true"]').waitFor();if(errors.length)throw new Error(errors.join('\n'));report.captures.push({name,width,height,scope:'production entry',interaction:'Begin opens accessible journey'});}
  catch(e){report.failures.push({name,error:String(e),errors});}finally{await ctx.close();await writeFile(out+'/review.json',JSON.stringify(report,null,2));}}
 try{
- await mkdir(out,{recursive:true});await mkdir(fixture,{recursive:true});
+ await mkdir(out,{recursive:true});
+ execFileSync('git',['cat-file','-e',`${baseline}^{commit}`]);
+ for(const [required] of copies) execFileSync('git',['cat-file','-e',`${baseline}:${required}`]);
+ await mkdir(fixture,{recursive:true});
  for(const [original,copy] of copies){let text=execFileSync('git',['show',baseline+':'+original],{encoding:'utf8'});if(original.endsWith('BrokenFloorChapter.tsx'))text=text.replace('../storyEvents/WetFloorReveal','../storyEvents/EnvironmentBaselineWetFloorReveal');await writeFile(copy,text);}
  await writeFile(fixture+'/index.html','<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>Environment component comparison</title><style>html,body,#root{width:100%;height:100%;margin:0;overflow:hidden}</style></head><body><div id="root"></div><script type="module" src="./stage.tsx"></script></body></html>');await writeFile(fixture+'/stage.tsx',stage);
  await server(['preview'],4183);await server(['--config','vite.config.ts'],4184);
- browser=await chromium.launch({args:['--enable-webgl','--ignore-gpu-blocklist','--use-angle=swiftshader']});
+ browser=await chromium.launch({args:['--enable-webgl','--ignore-gpu-blocklist',`--use-angle=${angle}`]});
  await entry(1280,800);await entry(390,844);
  for(const which of ['broken','blue','house']){for(const quality of ['low','high']){await capture(which,1100,720,quality,true);await capture(which,1100,720,quality);}await capture(which,390,844);}
  await capture('house-side',1100,720,'low',true);await capture('house-side',1100,720);

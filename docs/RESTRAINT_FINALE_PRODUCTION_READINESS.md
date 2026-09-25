@@ -23,11 +23,16 @@ The intended source/documentation manifest at this handoff is:
 | Modified | `docs/FINAL_4D_WORLD.md` |
 | Added | `docs/RESTRAINT_FINALE_PRODUCTION_READINESS.md` |
 | Modified | `e2e/cinematic-story-gameplay.spec.ts` |
+| Modified | `e2e/opening-sequence.spec.ts` |
 | Modified | `e2e/scene-polish.spec.ts` |
 | Added | `public/art/heroes/README.md` |
 | Added | `public/art/materials/README.md` |
 | Added | `public/audio/README.md` |
+| Modified | `scripts/review-cinematography.mjs` |
+| Modified | `scripts/review-environment-presentation.mjs` |
 | Modified | `scripts/review-scene-look-lifecycle.mjs` |
+| Modified | `scripts/review-visual-presentation.mjs` |
+| Modified | `scripts/review-woodland-presentation.mjs` |
 | Modified | `src/components/three/artDirection/SceneLookRegistry.ts` |
 | Deleted | `src/components/three/audio/EchoingClearingAudio.tsx` |
 | Modified | `src/components/three/audio/NarrativeAudioDirector.tsx` |
@@ -51,7 +56,7 @@ The build regenerates `src/data/worldState.json`; that generated difference was 
 
 `NestChapter.tsx` replaces the mannequin-like supporting hands and emissive ring with two linen-draped timber supports. Their state-dependent balance preserves the shared-weight cue. Protection becomes four posts, overhead beams/rafters, and a supported linen canopy; the radial diagram, glowing sphere, and ground ring are removed.
 
-`domesticSpatialPressure.ts` moves accumulated edge objects slightly further inward at maximum pressure and shares their layout with the throws, keeping the accumulation physically coherent. The child/rest centre, existing keys/candles, semantic targets, event conditions, and navigation authority remain intact. The shelter has open sides and introduces no colliders or new blockers. Matched desktop and mobile-sized captures now record the supported construction; the wider normal-motion quality matrix is still running.
+`domesticSpatialPressure.ts` moves accumulated edge objects slightly further inward at maximum pressure and shares their layout with the throws, keeping the accumulation physically coherent. The child/rest centre, existing keys/candles, semantic targets, event conditions, and navigation authority remain intact. The shelter has open sides and introduces no colliders or new blockers. Matched desktop and mobile-sized captures record the supported construction, and the wider normal-motion quality matrix passed.
 
 ## 5. Epilogue simplifications
 
@@ -159,6 +164,9 @@ The 42 matched views include desktop and mobile-sized/reduced configurations. A 
 | Matched render captures | 34 ordinary + 8 corrected finale pairs complete; no capture failures |
 | Extended normal-motion matrix | 49 captures passed across seven variants |
 | Hero/silhouette review | 12 low/high lit/silhouette captures of Swan, Wolf and bridge passed |
+| Repaired legacy visual review | 13 captures passed with native Metal; no failures |
+| Repaired legacy environment review | 19 captures passed with native Metal; no failures |
+| Post-CI-repair physical/opening regression | 6 desktop/mobile Chromium tests passed in 24.5 seconds with unchanged native bounds |
 | Complete accessible journeys | 4 passed: first-scene and full canonical journey on desktop/mobile Chromium |
 | Firefox accessibility smoke | 1 passed |
 | WebKit / mobile WebKit accessibility smoke | 2 runner setup failures before navigation: unknown `PushAPIEnabled` setting |
@@ -191,11 +199,17 @@ The main workflow preserves install → non-browser check → fingerprint/upload
 
 Hosted runs begin after publication. Their observed status is recorded by run URL and commit in `release-verification.json`; this source report makes no blanket hosted-CI pass claim. A successful deployment or local check does not establish that the complete hosted browser matrix passed.
 
+The first hosted visual review of `f275599001d1d8f3aa08a72b91ab033f8899bcd5` failed before any capture: its historical baseline did not contain `StoryObjectModel.tsx` ([run 36126327880](https://github.com/warrenstear30-afk/sitw/actions/runs/36126327880)). The four legacy visual, environment, cinematography and woodland scripts now explicitly default to the verified starting main revision `2fe438ed0d3f29860ee225f1fe6269eaced0ef79` and check their required baseline paths before creating fixtures. `VISUAL_REVIEW_BASELINE` remains an explicit override with the same validation; there is no silent fallback. Capture assertions and rendering budgets are unchanged. The optional `REVIEW_ANGLE=metal` selects the local native backend; the default remains `swiftshader` for CI, unsupported values fail immediately, and each report records the requested backend. The repaired hosted review must complete before it can be reported as passing.
+
+The repaired visual and environment scripts subsequently completed locally: 13 and 19 captures respectively, with empty failure lists and their temporary fixtures removed. All four scripts passed syntax checks and positive/negative baseline preflight checks, including missing commits, missing required files, and unsupported ANGLE values. These results are saved in `legacy-visual/review.json`, `legacy-environment/review.json`, and the migration-review logs. Native Metal results do not establish the outcome of the hosted SwiftShader run.
+
+The first published smoke run also failed in software-rendered physical lanes ([run 36126327797](https://github.com/warrenstear30-afk/sitw/actions/runs/36126327797)). Its validation job, both semantic lanes, and mobile opening passed. Trace inspection showed the desktop opening preserved both wipes and restored state before a 57–58 second input operation exhausted the total 120-second budget; a physical retry passed inversion and completed its screenshot before the total 90-second deadline. Mobile scene-polish reached the correct restored state but a screenshot exhausted its own 30-second allowance. The three affected tests now use CI-only aggregate budgets of 240/300 seconds, with 60-second screenshot bounds in the physical/persistence tests. Local bounds, gestures, state assertions, readiness bounds, screenshot evidence, and error checks remain intact. These bounded changes address observed software-renderer timing; they do not claim acceptable hardware performance or a hosted pass before the replacement run completes. The post-repair full local check passed again, and all 85 production output fingerprints remained unchanged.
+
 ## 17. Build-version verification
 
 The existing postbuild identity mechanism is retained: Cloudflare/GitHub/local Git revision precedence, strict SHA validation, branch, timestamp, repository URL, and dirty-state reporting. Tests now assert the migrated `warrenstear30-afk/sitw` URL, provider precedence, and version-cache contract.
 
-The inspected local `dist/version.json` reports the starting SHA, `main`, the migrated repository URL, and `dirty: true`, correctly identifying an uncommitted candidate. This correctly describes the tested uncommitted candidate. An 85-file SHA-256 manifest fingerprints the tested output, excluding only `version.json`. The release procedure rebuilds from the committed revision and checks every fingerprint before comparing both live domains and uncached version metadata; those publication results are recorded in `release-verification.json`. Cloudflare was independently confirmed to track `warrenstear30-afk/sitw`, production branch `main`, with production deployments enabled.
+The tested candidate's `dist/version.json` recorded the starting SHA, `main`, the migrated repository URL, and `dirty: true`, correctly identifying its then-uncommitted source. An 85-file SHA-256 manifest fingerprints that tested output, excluding only `version.json`. The first published revision, `f275599001d1d8f3aa08a72b91ab033f8899bcd5`, subsequently rebuilt with `dirty: false` and identical hashes for all 85 files; both production domains served that revision with `no-store`, and all 14 checked HTML/JavaScript/CSS/worker hashes matched. Two live desktop/mobile opening smoke tests passed. The final release also includes the four legacy-review baseline repairs and this report update; its revision and refreshed publication evidence are recorded in `release-verification.json`. Cloudflare was independently confirmed to track `warrenstear30-afk/sitw`, production branch `main`, with production deployments enabled.
 
 ## 18. Remaining real-device risks
 

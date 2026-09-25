@@ -54,7 +54,9 @@ async function observeClickHandoff(page: Page) {
 
 test("opening sequence keeps floor input, restores the earned reveal, then hands back clicking", async ({ page }, testInfo) => {
   test.skip(!testInfo.project.name.includes("chromium"), "Physical WebGL and CDP input run on the configured Chromium projects.");
-  test.setTimeout(120_000);
+  // CI traces show the native inversion click alone taking 57–58s after a
+  // successful reveal/reload. Preserve all assertions and local timing bounds.
+  test.setTimeout(process.env.CI ? 300_000 : 120_000);
   const errors: string[] = [];
   const linkedPhotoRequests: string[] = [];
   page.on("pageerror", error => errors.push(error.message));

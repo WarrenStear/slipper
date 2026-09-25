@@ -3,8 +3,11 @@ import { spawn, execFileSync } from 'node:child_process';
 import { mkdir, writeFile, rm } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
-// A fixed, previously reviewed reference. Fixtures never enter the production build.
-const baseline = process.env.VISUAL_REVIEW_BASELINE || '47a3451a38b085de09d73257ccaa3bdfc11fadee';
+// Verified main before the restraint/finale pass; earlier review SHAs lack these source paths.
+// An explicit override must contain every required baseline file; never fall back silently.
+const baseline = process.env.VISUAL_REVIEW_BASELINE || '2fe438ed0d3f29860ee225f1fe6269eaced0ef79';
+const angle = process.env.REVIEW_ANGLE ?? 'swiftshader';
+if (!['swiftshader', 'metal'].includes(angle)) throw new Error('REVIEW_ANGLE must be swiftshader or metal');
 const out = '/tmp/slipper-woodland-review', fixture = resolve('.woodland-review');
 const originals = [
   'chapters/EnchantedWoodChapter.tsx', 'chapters/IntegratedFinalTableau.tsx',
@@ -13,7 +16,7 @@ const originals = [
 ];
 const copies = originals.map(p => [`src/components/three/${p}`, `src/components/three/${p.replace(/([^/]+)$/, 'WoodlandBaseline$1')}`]);
 const report = {
-  candidate: execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(), baseline,
+  candidate: execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(), baseline, requestedAngle: angle,
   method: 'Same-camera, settled-profile source-component fixtures. Seeded ending state is appearance evidence only, not an earned gameplay completion. No real-device FPS claim.',
   captures: [], failures: [],
 };
@@ -90,7 +93,10 @@ async function entry(width,height){
   }catch(e){report.failures.push({name,error:String(e),errors});}finally{await ctx.close();await writeFile(out+'/review.json',JSON.stringify(report,null,2));}
 }
 try{
-  await mkdir(out,{recursive:true});await mkdir(fixture,{recursive:true});
+  await mkdir(out,{recursive:true});
+  execFileSync('git',['cat-file','-e',`${baseline}^{commit}`]);
+  for(const [required] of copies) execFileSync('git',['cat-file','-e',`${baseline}:${required}`]);
+  await mkdir(fixture,{recursive:true});
   for(const [original,copy]of copies){
     let text=execFileSync('git',['show',baseline+':'+original],{encoding:'utf8'});
     if(original.includes('/cinematics/'))text=text.replace('../environment/chapterEnvironment','../environment/WoodlandBaselinechapterEnvironment');
@@ -101,7 +107,7 @@ try{
   // Other review harnesses share dependencies, never Vite's mutable prebundle cache.
   await writeFile(fixture+'/vite.config.ts', `import original from '../vite.config.ts'; export default { ...original, cacheDir: ${JSON.stringify(fixture+'/vite-cache')}, optimizeDeps: { ...original.optimizeDeps, entries: [${JSON.stringify(fixture+'/index.html')}] } };`);
   await server(['preview'],4193);await server(['--config',fixture+'/vite.config.ts'],4194);
-  browser=await chromium.launch({args:['--enable-webgl','--ignore-gpu-blocklist','--use-angle=swiftshader']});
+  browser=await chromium.launch({args:['--enable-webgl','--ignore-gpu-blocklist',`--use-angle=${angle}`]});
   await entry(1280,800);await entry(390,844);
   for(const which of ['meadow','rabbit','ending']){
     for(const quality of ['low','high']){await capture(which,1100,720,quality,true);await capture(which,1100,720,quality,false);}

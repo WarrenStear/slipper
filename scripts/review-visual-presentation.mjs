@@ -7,13 +7,17 @@ import { resolve } from 'node:path';
 // imported by the app or included in the production dist. Fixture screenshots
 // establish appearance, not journey completion, collision, or performance QA.
 const out = '/tmp/slipper-visual-review';
-const baseline = process.env.VISUAL_REVIEW_BASELINE || 'a7b61f01858af8e9f07530d0d782fd1d2253b959';
+// Verified main before the restraint/finale pass; earlier review SHAs lack these source paths.
+// An explicit override must contain every required baseline file; never fall back silently.
+const baseline = process.env.VISUAL_REVIEW_BASELINE || '2fe438ed0d3f29860ee225f1fe6269eaced0ef79';
+const angle = process.env.REVIEW_ANGLE ?? 'swiftshader';
+if (!['swiftshader', 'metal'].includes(angle)) throw new Error('REVIEW_ANGLE must be swiftshader or metal');
 const fixture = resolve('.visual-review');
 const modelPath = 'src/components/three/storyEvents/StoryObjectModel.tsx';
 const floorPath = 'src/components/three/storyEvents/WetFloorReveal.tsx';
 const oldModelPath = 'src/components/three/storyEvents/BaselineStoryObjectModel.tsx';
 const oldFloorPath = 'src/components/three/storyEvents/BaselineWetFloorReveal.tsx';
-const report = { candidate: execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(), baseline, method: 'Production entry controls plus isolated source-component fixtures; not full gameplay certification.', captures: [], failures: [] };
+const report = { candidate: execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(), baseline, requestedAngle: angle, method: 'Production entry controls plus isolated source-component fixtures; not full gameplay certification.', captures: [], failures: [] };
 let browser;
 const processes = [];
 
@@ -127,12 +131,15 @@ async function captureEntry(width,height) {
   finally{await context.close();}
 }
 try {
-  await mkdir(out,{recursive:true});await mkdir(fixture,{recursive:true});
+  await mkdir(out,{recursive:true});
+  execFileSync('git',['cat-file','-e',`${baseline}^{commit}`]);
+  for (const required of [modelPath, floorPath]) execFileSync('git',['cat-file','-e',`${baseline}:${required}`]);
+  await mkdir(fixture,{recursive:true});
   for(const [original,temporary] of [[modelPath,oldModelPath],[floorPath,oldFloorPath]]) await writeFile(temporary,execFileSync('git',['show',`${baseline}:${original}`]));
   await writeFile(`${fixture}/index.html`,'<!doctype html><html><head><meta name="viewport" content="width=device-width, initial-scale=1"><title>Isolated visual component review</title><style>html,body,#root{margin:0;width:100%;height:100%;overflow:hidden;background:#080e11}</style></head><body><div id="root"></div><script type="module" src="./stage.tsx"></script></body></html>');
   await writeFile(`${fixture}/stage.tsx`,stageSource);
   await server(['preview'],4173); await server(['--config','vite.config.ts'],4174);
-  browser=await chromium.launch({args:['--enable-webgl','--ignore-gpu-blocklist','--use-angle=swiftshader']});
+  browser=await chromium.launch({args:['--enable-webgl','--ignore-gpu-blocklist',`--use-angle=${angle}`]});
   await captureEntry(1280,800);await captureEntry(390,844);await captureEntry(844,390);
   for(const which of ['props','floor0','floor2']) {await captureFixture(which,1100,720,true);await captureFixture(which,1100,720);}
   await captureFixture('blue',1100,720);await captureFixture('house',1100,720);
