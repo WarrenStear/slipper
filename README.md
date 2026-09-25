@@ -6,6 +6,21 @@ forest, part persistent memory map.
 Built with React, Vite, React Three Fiber, Drei, Rapier Physics, Web Workers,
 Zustand, and Cloudflare Pages.
 
+## Repository and production
+
+The active repository is [warrenstear30-afk/sitw](https://github.com/warrenstear30-afk/sitw).
+Use `main` for production. The public experience is
+[slipperinthewoods.com](https://slipperinthewoods.com).
+
+```bash
+git clone https://github.com/warrenstear30-afk/sitw.git
+cd sitw
+```
+
+GitHub Actions validates changes; Cloudflare Pages builds and deploys the
+production branch independently. Earlier validation records retain the repository
+and commit identifiers that were current when those reviews were performed.
+
 ## Narrative north star
 
 Slipper in the Woods is a walkable memory archive. The player should feel like
