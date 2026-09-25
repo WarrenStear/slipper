@@ -2,7 +2,6 @@ import { LegacyChapterLight } from "../artDirection/LegacyChapterLight";
 import { memo, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import {
-  Beam,
   CandleField,
   FlickerLight,
   HouseShell,
@@ -15,6 +14,7 @@ import {
 import type { ChapterSceneProps } from "./types";
 import { useJourneyStore } from "../../../stores/useJourneyStore";
 
+import type { ConstructionPiece } from "./chapterArtGeometry";
 import { RestingThrow, TimberAssembly } from "./ChapterArt";
 import { useSceneLook } from "../artDirection/SceneLookContext";
 import { nestDomesticLayout, nestSpatialPressure } from "./domesticSpatialPressure";
@@ -73,53 +73,31 @@ function WovenNest({
   );
 }
 
-function SupportingHand({ side }: { side: -1 | 1 }) {
-  const accent = side < 0 ? "#d6aa87" : "#c69475";
-  return (
-    <group position={[side * 3.35, 1.05, 2.45]} rotation={[0, 0, side * -0.2]} scale={[side, 1, 1]}>
-      <mesh rotation={[0, 0, -0.54]} castShadow>
-        <capsuleGeometry args={[0.26, 1.25, 6, 10]} />
-        <meshStandardMaterial color={accent} roughness={0.88} />
-      </mesh>
-      <mesh position={[-0.74, 0.52, 0]} scale={[1.25, 0.68, 0.55]} castShadow>
-        <sphereGeometry args={[0.55, 14, 10]} />
-        <meshStandardMaterial color={accent} roughness={0.9} />
-      </mesh>
-      {[0, 1, 2, 3].map((finger) => (
-        <mesh key={finger} position={[-1.14 - finger * 0.11, 0.78 - finger * 0.12, -0.24 + finger * 0.16]} rotation={[0, 0, -0.7]}>
-          <capsuleGeometry args={[0.07, 0.52 - finger * 0.035, 4, 7]} />
-          <meshStandardMaterial color={accent} roughness={0.9} />
-        </mesh>
-      ))}
-    </group>
-  );
+/** Two joined supports take the weight at opposite edges of the same fragile centre. */
+function SupportingTrestle({ side, balanced }: { side: -1 | 1; balanced: boolean }) {
+  const pieces = useMemo<ConstructionPiece[]>(() => [
+    { position: [0, .56, 0], size: [.32, .16, 1.8] },
+    ...[-1, 1].map(end => ({ position: [side * .14, .27, end * .64] as [number, number, number], size: [.16, .54, .2] as [number, number, number], rotation: [0, 0, side * -.18] as [number, number, number] })),
+    { position: [-side * .38, .63, 0], size: [1.12, .1, 1.24], rotation: [0, 0, side * (balanced ? .025 : .08)] },
+    { position: [side * .16, .21, 0], size: [.12, .12, 1.48] },
+  ], [side, balanced]);
+  return <group name={`nest-shared-support:${side}`} position={[side * 2.65, 0, 2.5]}>
+    <TimberAssembly pieces={pieces} color={side < 0 ? "#826447" : "#927251"} />
+    <RestingThrow position={[-side * .33, .7, 0]} size={[1.05, 1.8]} maxDrop={.22} color="#c3b298" />
+  </group>;
 }
 
 function TwoHandRepair({ balanced }: { balanced: boolean }) {
-  return (
-    <group position={[0, balanced ? 0.12 : 0, 0]}>
-      <SupportingHand side={-1} />
-      <SupportingHand side={1} />
-      <Beam from={[-2.25, 0.55, 2.3]} to={[-0.28, 0.94, 2.52]} radius={0.085} color="#a8784b" />
-      <Beam from={[2.25, 0.55, 2.3]} to={[0.28, 0.94, 2.52]} radius={0.085} color="#a8784b" />
-      <mesh position={[0, 0.98, 2.5]} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[0.39, 0.055, 8, 20]} />
-        <meshStandardMaterial
-          color={balanced ? "#f0ca7e" : "#d1a45f"}
-          emissive={balanced ? "#b5742c" : "#7a4a1e"}
-          emissiveIntensity={balanced ? 0.72 : 0.32}
-          roughness={0.5}
-        />
-      </mesh>
-    </group>
-  );
+  return <group name="nest-two-supports-one-centre" userData={{ balanced }}>
+    <SupportingTrestle side={-1} balanced={balanced} />
+    <SupportingTrestle side={1} balanced={balanced} />
+  </group>;
 }
 
 /** Familiar laundry and furniture occupy the edges; nothing hangs over the linen. */
 function UnsupportedWeight({ pressure, reducedEffects }: { pressure: number; reducedEffects: boolean }) {
   const forms = useMemo(() => nestDomesticLayout(pressure, reducedEffects), [pressure, reducedEffects]);
-  const layers = 1 + Math.floor(pressure * (reducedEffects ? 2 : 3));
-  const sideX = 3.82 - pressure * .85;
+  const { layers, sideX } = forms;
   return <group name="nest-occupied-domestic-edges" userData={{ pressure }}>
     <TimberAssembly pieces={forms.timber} color="#715940" />
     <TimberAssembly pieces={forms.linen} color="#bcaa8d" surface="linen" />
@@ -129,26 +107,17 @@ function UnsupportedWeight({ pressure, reducedEffects }: { pressure: number; red
   </group>;
 }
 
+/** A roof with open sides keeps the resting linen safe without marking a zone. */
 function ProtectionShelter({ detail }: { detail: number }) {
-  const ribCount = 5 + detail;
-  return (
-    <group position={[0, 0, 2.5]}>
-      {Array.from({ length: ribCount }, (_, index) => {
-        const progress = ribCount <= 1 ? 0.5 : index / (ribCount - 1);
-        const angle = -Math.PI * 0.72 + progress * Math.PI * 1.44;
-        const foot: [number, number, number] = [Math.cos(angle) * 3.05, 0.05, Math.sin(angle) * 2.15];
-        return <Beam key={index} from={foot} to={[0, 4.25, 0]} radius={0.09} color="#8d704c" />;
-      })}
-      <mesh position={[0, 4.3, 0]}>
-        <sphereGeometry args={[0.22, 10, 8]} />
-        <meshStandardMaterial color="#d3ae67" emissive="#845323" emissiveIntensity={0.5} roughness={0.48} />
-      </mesh>
-      <mesh position={[0, 0.12, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[2.8, 3.2, 32]} />
-        <meshStandardMaterial color="#c28e4f" emissive="#6d3a19" emissiveIntensity={0.42} roughness={0.72} />
-      </mesh>
-    </group>
-  );
+  const pieces = useMemo<ConstructionPiece[]>(() => [
+    ...[-1, 1].flatMap(side => [1.05, 3.95].map(z => ({ position: [side * 2.78, 1.67, z] as [number, number, number], size: [.12, 3.34, .14] as [number, number, number] }))),
+    ...[1.05, 3.95].map(z => ({ position: [0, 3.37, z] as [number, number, number], size: [5.7, .14, .16] as [number, number, number] })),
+    ...Array.from({ length: 3 + Math.min(detail, 2) }, (_, i) => ({ position: [-2.6 + i * 5.2 / (2 + Math.min(detail, 2)), 3.47, 2.5] as [number, number, number], size: [.08, .1, 3.05] as [number, number, number] })),
+  ], [detail]);
+  return <group name="nest-open-linen-shelter">
+    <TimberAssembly pieces={pieces} color="#917958" />
+    <RestingThrow position={[0, 3.55, 2.5]} size={[5.8, 4.9]} maxDrop={.32} color="#c8b99b" />
+  </group>;
 }
 
 function NestChapterComponent({

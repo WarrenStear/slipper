@@ -1,7 +1,9 @@
 import { ClothboundBook, StoryLinen } from "../storyEvents/StoryHeroProps";
 import { TimberAssembly } from "./ChapterArt";
 import { ForkLandscape } from "../environment/ForkLandscape";
-import { memo } from "react";
+import { memo, useEffect, useMemo } from "react";
+import { createWeatheredBoulderGeometry } from "./chapterArtGeometry";
+import { TactileMaterial } from "../storyEvents/TactileMaterial";
 import {
   DoorFrame,
   FabricVeil,
@@ -13,6 +15,15 @@ import {
 } from "./ChapterPrimitives";
 import type { ChapterSceneProps } from "./types";
 import { useJourneyStore } from "../../../stores/useJourneyStore";
+
+/** One low, weathered resting stone shares the terrain's material and ground plane. */
+function SittingStone() {
+  const geometry = useMemo(() => createWeatheredBoulderGeometry(23), []);
+  useEffect(() => () => geometry.dispose(), [geometry]);
+  return <mesh name="fork-weathered-sitting-stone" geometry={geometry} position={[0, -.17, -1.3]} rotation={[0, .37, 0]} scale={[1.45, .55, 1.12]} castShadow receiveShadow>
+    <TactileMaterial surface="stone" color="#575246" roughness={.98} />
+  </mesh>;
+}
 
 function ForkChapterComponent({
   scene,
@@ -57,19 +68,7 @@ function ForkChapterComponent({
       />
       <FlickerLight position={[-8.2, 2.2, 6.1]} color="#dda466" intensity={1.5} distance={13} reducedMotion={reducedMotion} />
 
-      <group position={[0, 0, -1.3]}>
-        <mesh position={[0, 0.02, 0]} scale={[1, .22, .82]} castShadow receiveShadow>
-          <sphereGeometry args={[1.3, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2]} />
-          <meshStandardMaterial color="#514b40" roughness={1} />
-        </mesh>
-        <mesh position={[0, 0.315, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <circleGeometry args={[.62, 16]} />
-          <meshStandardMaterial
-            color="#676052"
-            roughness={0.98}
-          />
-        </mesh>
-      </group>
+      <SittingStone />
 
       {rememberFourVerbs ? (
         <group

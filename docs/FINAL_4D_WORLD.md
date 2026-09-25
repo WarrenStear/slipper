@@ -2,10 +2,11 @@
 
 ## Build identity
 
-The Cloudflare Pages build runs an idempotent world canonicalizer and audit.
-Version-controlled finalizer-controlled source should already be canonical, so
-`final:world` completes without repairs. The later `world:compile` step
-deliberately regenerates `worldState.json`, including its generation timestamp.
+The Cloudflare Pages build audits the checked-in world source. `final:world`
+does not rewrite or repair source files. The later `world:compile` step
+regenerates `worldState.json` deterministically from the archive; it adds no
+wall-clock timestamp by default. Optional `SOURCE_DATE_EPOCH` metadata must use
+non-negative integer seconds.
 
 ## Terrain rule
 
@@ -19,11 +20,15 @@ The world should resolve to one clean, walkable memory-floor with open clearings
 npm run final:world && npm run content:qa && npm run world:compile
 ```
 
-`final:world` applies deterministic repairs when finalizer-controlled world
-constants or structures have drifted, then audits the required source files,
-terrain/layout contract, renderer ownership, and environment. Run it before
-reviewing a release diff; any repair output indicates source changes that
-should be inspected and committed before deployment.
+`final:world` audits the required source files, terrain/layout contract, renderer
+ownership, and environment budgets. A failed audit stops the build and requires
+an intentional source fix. Normal builds do not run the legacy repair scripts.
+
+The old one-shot materialisation workflow has been retired: checked-in source
+and the normal build pipeline already provide its required inputs and checks.
+CI remains read-only. Its main workflow fingerprints the validated build and
+passes that same artifact to browser tests; it does not commit generated source
+or create a second build for browser validation.
 
 ## Narrative environment principles
 

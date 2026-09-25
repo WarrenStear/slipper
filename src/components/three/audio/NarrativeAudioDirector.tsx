@@ -9,7 +9,8 @@ import { getCurrentCinematicProfile } from "../../../cinematics/emotionalCinemat
 import { getJourneyScene } from "../../../data/journeyBlueprint";
 import { useSceneLook } from "../artDirection/SceneLookContext";
 import { useStoryEventAudio } from "./useStoryEventAudio";
-import { createNarrativePlaybackGate, disposeNarrativeAudioNodes, getNarrativeStemBuffers, pauseNarrativeAudioNodes } from "./narrativeAudioRuntime";
+import { createNarrativePlaybackGate, createNarrativeStemVoice, disposeNarrativeAudioNodes, getNarrativeStemBuffers, pauseNarrativeAudioNodes, replaceNarrativeStemBuffer, type OwnedNarrativeStem } from "./narrativeAudioRuntime";
+import { createProductionAudioLoader } from "./productionAudioLoader";
 import type { RenderQualityProfile } from "../renderQuality";
 import {
   NARRATIVE_AUDIO_STEM_IDS,
@@ -18,13 +19,10 @@ import {
   type NarrativeAudioStemId,
 } from "./narrativeAudioProfiles";
 
-type StemRuntime = {
+type StemRuntime = OwnedNarrativeStem & {
   id: NarrativeAudioStemId;
-  sound: THREE.Audio;
-  volume: number;
-  filter: BiquadFilterNode;
 };
-type AudioRuntime = { listener: THREE.AudioListener; stems: StemRuntime[]; started: boolean; sync: () => void };
+type AudioRuntime = { listener: THREE.AudioListener; stems: StemRuntime[]; started: boolean; sync: () => void; production: ReturnType<typeof createProductionAudioLoader> | null };
 type NarrativeAudioDirectorProps = { qualityProfile: RenderQualityProfile; enabled?: boolean };
 
 export function NarrativeAudioDirector({ qualityProfile, enabled = true }: NarrativeAudioDirectorProps) {
@@ -65,22 +63,23 @@ export function NarrativeAudioDirector({ qualityProfile, enabled = true }: Narra
     const listener = new THREE.AudioListener();
     listener.getInput().gain.setValueAtTime(0, listener.context.currentTime);
     const bank = getNarrativeStemBuffers(listener.context);
-    const stems: StemRuntime[] = NARRATIVE_AUDIO_STEM_IDS.map(id => {
-      const filter = listener.context.createBiquadFilter();
-      filter.type = "lowpass";
-      filter.frequency.value = 600;
-      const sound = new THREE.Audio(listener);
-      sound.setFilter(filter);
-      sound.setBuffer(bank.get(id)!);
-      sound.setLoop(true);
-      sound.setVolume(0);
-      return { id, sound, filter, volume: 0 };
-    });
-    const current: AudioRuntime = { listener, stems, started: false, sync: () => {} };
+    const stems: StemRuntime[] = NARRATIVE_AUDIO_STEM_IDS.map(id => ({
+      id, ...createNarrativeStemVoice(listener, bank.get(id)!), volume: 0,
+    }));
+    const current: AudioRuntime = { listener, stems, started: false, sync: () => {}, production: null };
     const allowed = () => {
       const settings = useSettingsStore.getState();
       return enabledRef.current && settings.audioEnabled && settings.audioVolume > 0 && !settings.drawerOpen && !document.hidden;
     };
+    const production = createProductionAudioLoader({
+      context: listener.context,
+      active: () => current.started && allowed() && listener.context.state === "running",
+      ready: (id, buffer) => {
+        const stem = stems.find(candidate => candidate.id === id)!;
+        if (replaceNarrativeStemBuffer(listener, stem, buffer)) setRuntime({ ...current });
+      },
+    });
+    current.production = production;
     const gate = createNarrativePlaybackGate({
       allowed,
       running: () => listener.context.state === "running",
@@ -92,10 +91,11 @@ export function NarrativeAudioDirector({ qualityProfile, enabled = true }: Narra
       },
       pause: () => {
         // Visibility and mute do not depend on requestAnimationFrame continuing to run.
+        production.pause();
         pauseNarrativeAudioNodes(listener, stems);
         current.started = false;
       },
-      dispose: () => disposeNarrativeAudioNodes(listener, stems),
+      dispose: () => { production.dispose(); disposeNarrativeAudioNodes(listener, stems); },
     });
     current.sync = () => {
       if (!allowed()) gate.pause();
@@ -135,12 +135,18 @@ export function NarrativeAudioDirector({ qualityProfile, enabled = true }: Narra
     for (const stem of current.stems) {
       const target = resolveNarrativeStemTarget(targetRef.current, stem.id, profile, presentation?.look ?? null, presentation?.stillness ?? 0, film);
       const volume = resolveAudioTargetVolume(target.volume * qualityScale * (reducedEffects ? .65 : 1), audioVolume, audible);
+      // No requests before trusted playback, while muted/hidden, or for unused scene layers.
+      if (volume > .00001) current.production?.request(stem.id);
       stem.volume = audible ? THREE.MathUtils.lerp(stem.volume, volume, blend) : 0;
       // Avoid an inaudible exponential tail at completed Surrender or mute.
       if (volume === 0 && stem.volume < .00001) stem.volume = 0;
       const cutoff = Math.min(current.listener.context.sampleRate * .45, target.lowpassHz);
       stem.filter.frequency.value = THREE.MathUtils.lerp(stem.filter.frequency.value, cutoff, blend);
       stem.sound.setVolume(stem.volume * eventAmbientGain.current);
+      if (stem.retiring) {
+        stem.retiring.filter.frequency.value = stem.filter.frequency.value;
+        stem.retiring.sound.setVolume(stem.volume * eventAmbientGain.current);
+      }
     }
   });
 

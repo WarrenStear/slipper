@@ -53,6 +53,14 @@ before/after renderer measurements, test results and the limits of the evidence.
 The subsequent [production optimization notes](docs/PRODUCTION_OPTIMIZATION.md)
 measure terrain CPU savings, smaller geometry buffers and avoided image downloads.
 
+Reviewed replacement art belongs in [public/art/heroes](public/art/heroes/README.md)
+and [public/art/materials](public/art/materials/README.md). Their contracts describe
+the registry gates, coordinate and material requirements, and review evidence
+needed before activation. No reviewed production hero models or material maps are
+currently supplied; authored/procedural fallbacks remain active. The legacy
+`public/models/` GLBs are placeholders, and `docs/visual-concepts/` is reference
+art rather than runtime imagery.
+
 ## Current package status
 
 ```txt
@@ -142,7 +150,7 @@ docs/                       architecture, mobile, browser, and test guidance
 
 ## Runtime content pipeline
 
-`npm run prebuild` preserves the existing final-world pass, checks the archive,
+`npm run prebuild` audits the existing final world, checks the archive,
 and compiles the raw archive into `src/data/worldState.json` before each
 production build. The app imports that generated world state through
 `src/data/slipperContent.ts`; archive migration is not performed in the browser

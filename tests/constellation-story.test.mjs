@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import { runInNewContext } from "node:vm";
+import ts from "typescript";
+import * as THREE from "three";
+import { memoryStarPosition } from "../src/lib/journeyMemoryProjection.ts";
 import {
   JOURNEY_ENTRY_CONTEXT,
   JOURNEY_RITUAL_IDS,
@@ -240,18 +244,200 @@ test("the UI consumes the authored story model and does not classify archive key
   assert.match(source, /data-released-word=\{word\.word\}/);
   assert.match(source, /data-protected-nest=/);
   assert.match(finalTableau, /buildStoryConstellationModel/);
-  assert.match(finalTableau, /name=\{`constellation-resonance-\$\{node\.id\}`\}/);
-  assert.match(finalTableau, /wolf: \[-1\.8, -0\.58, 0\.03\]/);
-  assert.match(finalTableau, /swan: \[0, 1\.42, 0\.05\]/);
-  assert.match(finalTableau, /seer: \[1\.8, -0\.58, 0\.03\]/);
-  assert.match(finalTableau, /name="constellation-protected-nest"/);
-  assert.match(finalTableau, /name="constellation-released-words"/);
+  // The archive retains detailed symbolic history; the in-world sky uses only
+  // real witnessed locations and route edges, without extra symbolic satellites.
+  assert.match(finalTableau, /witnessedNodes\.map\(\(node\) => memoryStarPosition\(node\.entryId\)\)/);
+  assert.match(finalTableau, /model\.routeEntryIds[\s\S]*\.map\(memoryStarPosition\)/);
+  assert.doesNotMatch(finalTableau, /RESONANCE_SKY_OFFSETS|ConstellationProtectedNest|ReleasedWordConstellation/);
   assert.match(finalTableau, /name="constellation-formation-reveal"/);
-  assert.match(finalTableau, /formationReady=\{\(lanternPlaced && \(!eventDriven \|\| reverseComplete\)\) \|\| storyCompleted\}/);
+  assert.match(finalTableau, /const formationReady = \(lanternPlaced && \(!eventDriven \|\| reverseComplete\)\) \|\| storyCompleted/);
+  assert.match(finalTableau, /formationReady=\{formationReady\}/);
   assert.match(finalTableau, /formationMode: reducedMotion \? "immediate" : "gradual"/);
   assert.match(finalTableau, /beginsAfter: "lantern-placement-or-story-completion"/);
   assert.match(
     finalTableau,
     /THREE\.MathUtils\.damp\([\s\S]{0,120}formationProgressRef\.current,[\s\S]{0,80}target/,
   );
+});
+
+// Exercise the real TSX render branches and frame callback without a WebGL
+// context. React/R3F host hooks are bounded stubs; all model/geometry/math code is real.
+const finaleModuleCode = ts.transpileModule(readFileSync(new URL(
+  "../src/components/three/chapters/IntegratedFinalTableau.tsx", import.meta.url,
+), "utf8"), { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX } }).outputText;
+
+function finaleFixture(overrides = {}, props = {}) {
+  const entryIds = journeyChapters.flatMap(chapter => chapter.entryIds);
+  const state = {
+    ...constellationState({ activeEntryId: entryIds.at(-1), history: entryIds, witnessedEntryIds: entryIds }),
+    worldFlags: { "story-events.started": true, "lantern.placed-and-lit": true },
+    storyObjectStates: { "epilogue.reverse-light": "running" },
+    storyPlacementStates: { "lantern.master": "window" },
+    storyCompleted: false,
+    ...overrides,
+  };
+  const frames = [], cleanups = [], exports = {};
+  const hostElement = (type, props) => ({ type, props });
+  const imports = {
+    "react/jsx-runtime": { jsx: hostElement, jsxs: hostElement },
+    react: {
+      memo: component => component,
+      useMemo: create => create(),
+      useRef: current => ({ current }),
+      useEffect: effect => { const cleanup = effect(); if (cleanup) cleanups.push(cleanup); },
+    },
+    "@react-three/fiber": { useFrame: callback => frames.push(callback) },
+    three: THREE,
+    "../../../data/journeyNarrative.ts": { JOURNEY_ENTRY_CONTEXT, journeyChapters },
+    "../../../lib/lanternNarrative.ts": { buildStoryConstellationModel },
+    "../../../lib/journeyMemoryProjection": { memoryStarPosition },
+    "../../../stores/useJourneyStore": { useJourneyStore: select => select(state) },
+    "../artDirection/LegacyChapterLight": { LegacyChapterLight: "LegacyChapterLight" },
+    "../environment/WoodlandDetails": { FinalWoodlandDetails: "FinalWoodlandDetails" },
+    "../environment/ChapterLightRig": { ChapterLightRig: "ChapterLightRig" },
+    "../storyEvents/ReverseMemoryLights": { ReverseMemoryLights: "ReverseMemoryLights" },
+    "./ChapterPrimitives": { LanternProp: "LanternProp", SceneGround: "SceneGround", qualityStep: () => 2 },
+  };
+  runInNewContext(finaleModuleCode, {
+    exports,
+    require: id => { assert.ok(id in imports, `unmocked finale host dependency: ${id}`); return imports[id]; },
+  });
+  const tree = exports.IntegratedFinalTableau({
+    qualityProfile: { quality: "high" }, reducedEffects: false, reducedMotion: false, ...props,
+  });
+  return { tree, frames, cleanups };
+}
+
+function sceneElements(tree) {
+  if (!tree || typeof tree !== "object") return [];
+  return [tree, ...[tree.props?.children].flat().flatMap(sceneElements)];
+}
+
+function constellationElement(tree) {
+  return sceneElements(tree).find(element => element.type?.name === "WitnessedMemoryConstellation");
+}
+
+test("the real finale render keeps remembered places until its existing formation gate opens", () => {
+  const cases = [
+    { state: {}, ready: false, reverse: true },
+    { state: { storyObjectStates: { "epilogue.reverse-light": "complete" } }, ready: true, reverse: false },
+    { state: { worldFlags: { "story-events.started": true }, storyObjectStates: { "epilogue.reverse-light": "complete" } }, ready: false, reverse: true },
+    { state: { worldFlags: {}, completedRitualIds: ["ritual.place-lantern"] }, ready: true, reverse: false },
+    { state: { worldFlags: {}, storyCompleted: true, storyObjectStates: {} }, ready: true, reverse: false },
+  ];
+  for (const { state, ready, reverse } of cases) {
+    const { tree } = finaleFixture(state);
+    assert.equal(constellationElement(tree).props.formationReady, ready);
+    assert.equal(sceneElements(tree).some(element => element.type === "ReverseMemoryLights"), reverse);
+  }
+  for (const placement of ["reading-nook", "fountain", "window", "threshold"]) {
+    const { tree } = finaleFixture({ storyPlacementStates: { "lantern.master": placement } });
+    const placed = sceneElements(tree).find(element => element.props?.name === "placed-lit-lantern-continuity");
+    const lantern = sceneElements(placed).find(element => element.type === "LanternProp");
+    const ground = sceneElements(tree).find(element => element.type === "SceneGround");
+    assert.equal(placed.props.userData.placementId, placement);
+    assert.equal(placed.props.position[1] + lantern.props.position[1], ground.props.y, "every continuity light rests on the actual ground plane");
+    assert.equal(lantern.props.light, false, "the continuity prop adds no competing light source");
+  }
+});
+
+test("the rendered sky contains only real witnessed positions and route crossings, with bounded buffers", () => {
+  const ids = journeyChapters.flatMap(chapter => chapter.entryIds);
+  const history = [ids[0], ids[5], ids[1], ids[5], ids[9]];
+  const fixture = finaleFixture({ activeEntryId: ids[9], history, witnessedEntryIds: history });
+  const constellation = constellationElement(fixture.tree);
+  const sky = constellation.type(constellation.props);
+  const elements = sceneElements(sky);
+  const points = elements.filter(element => element.type === "points");
+  const lines = elements.find(element => element.type === "lineSegments");
+  assert.equal(points.length, 2, "one witnessed batch and one keystone accent batch, no symbolic stars");
+  const witnessed = constellation.props.model.nodes.filter(node => node.witnessed);
+  const expected = new Float32Array(witnessed.flatMap(node => memoryStarPosition(node.entryId)));
+  assert.deepEqual(points[0].props.geometry.getAttribute("position").array, expected);
+  assert.equal(points[0].props.geometry.getAttribute("position").count, new Set(history).size);
+  const route = constellation.props.model.routeEntryIds.map(memoryStarPosition);
+  const segments = route.slice(1).flatMap((point, index) => [...route[index], ...point]);
+  assert.deepEqual(lines.props.geometry.getAttribute("position").array, new Float32Array(segments));
+  assert.equal(lines.props.geometry.getAttribute("position").count, (history.length - 1) * 2);
+  const geometries = [...points.map(point => point.props.geometry), lines.props.geometry];
+  let disposed = 0;
+  geometries.forEach(geometry => geometry.addEventListener("dispose", () => disposed++));
+  fixture.cleanups.forEach(cleanup => cleanup());
+  assert.equal(disposed, 3, "all retained sky buffers have an explicit cleanup owner");
+});
+
+test("the actual formation callback keeps gradual timing, capped frame delta and reduced-motion completion", () => {
+  for (const reducedMotion of [false, true]) {
+    let completions = 0;
+    const fixture = finaleFixture({ storyObjectStates: { "epilogue.reverse-light": "complete" } }, {
+      reducedMotion, onFinalConstellationFormationComplete: () => completions++,
+    });
+    const constellation = constellationElement(fixture.tree);
+    const sky = constellation.type(constellation.props);
+    const formation = sceneElements(sky).find(element => element.props?.name === "constellation-formation-reveal");
+    const group = new THREE.Group();
+    formation.props.ref.current = group;
+    assert.equal(fixture.frames.length, 1);
+    const advance = fixture.frames[0];
+    advance({}, 100);
+    assert.equal(completions, reducedMotion ? 1 : 0, "a stalled frame must not skip the gradual reveal");
+    if (!reducedMotion) {
+      for (let i = 0; i < 60; i++) advance({}, 1 / 60);
+      assert.equal(completions, 0, "normal reveal is not shortened to one second");
+      for (let i = 0; i < 240; i++) advance({}, 1 / 60);
+    }
+    assert.equal(completions, 1);
+    assert.equal(group.userData.formationComplete, true);
+    assert.ok(group.userData.formationProgress >= .995);
+    for (let i = 0; i < 60; i++) advance({}, 1 / 60);
+    assert.equal(completions, 1, "the parent receives one completion callback for this formation");
+    fixture.cleanups.forEach(cleanup => cleanup());
+  }
+});
+
+test("the actual sky hierarchy composes the unchanged route visibly on desktop and mobile without warping", () => {
+  const fixture = finaleFixture({ storyObjectStates: { "epilogue.reverse-light": "complete" } }, { reducedMotion: true });
+  const constellation = constellationElement(fixture.tree);
+  const sky = constellation.type(constellation.props);
+  let routeMatrix, routePositions;
+  function visit(element, parentMatrix = new THREE.Matrix4()) {
+    if (!element || typeof element !== "object") return;
+    const props = element.props ?? {}, object = new THREE.Object3D();
+    if (props.position) object.position.fromArray(props.position);
+    if (props.rotation) object.rotation.set(...props.rotation);
+    if (typeof props.scale === "number") object.scale.setScalar(props.scale);
+    else if (props.scale) object.scale.fromArray(props.scale);
+    object.updateMatrix();
+    const worldMatrix = parentMatrix.clone().multiply(object.matrix);
+    if (props.name === "constellation-actual-walked-route") {
+      routeMatrix = worldMatrix;
+      routePositions = props.geometry.getAttribute("position");
+    }
+    [props.children].flat().forEach(child => visit(child, worldMatrix));
+  }
+  visit(sky);
+  assert.ok(routeMatrix && routePositions, "measure the real rendered route and its full transform hierarchy");
+  const original = Array.from({ length: routePositions.count }, (_, index) => new THREE.Vector3().fromBufferAttribute(routePositions, index));
+  const presented = original.map(point => point.clone().applyMatrix4(routeMatrix));
+  const lengths = [0, 1, 2].map(axis => new THREE.Vector3().setFromMatrixColumn(routeMatrix, axis).length());
+  assert.ok(lengths[0] >= 1.5 && lengths[0] <= 1.6, "bounded presentation scale");
+  lengths.forEach(length => assert.ok(Math.abs(length - lengths[0]) < 1e-12, "every spatial axis has the same scale"));
+  const center = new THREE.Vector3(0, 9.6, -20);
+  assert.ok(center.clone().applyMatrix4(routeMatrix).distanceTo(center) < 1e-12, "the route rotates around its existing formation center");
+  for (let index = 1; index < original.length; index += 2) {
+    assert.ok(Math.abs(presented[index].distanceTo(presented[index - 1]) - original[index].distanceTo(original[index - 1]) * lengths[0]) < 1e-10, "each actual route segment preserves its proportions");
+  }
+  for (const [width, height] of [[1100, 720], [393, 851], [851, 393]]) {
+    const camera = new THREE.PerspectiveCamera(65, width / height, .05, 180);
+    camera.position.set(0, 1.65, 6.5);
+    camera.lookAt(0, 4.8, -15);
+    camera.updateMatrixWorld();
+    const projected = presented.map(point => point.clone().project(camera));
+    assert.ok(projected.every(point => Math.abs(point.x) < .9 && Math.abs(point.y) < .9 && Math.abs(point.z) < 1), `${width}×${height}: complete route remains inside the camera with a margin`);
+    const xSpan = (Math.max(...projected.map(point => point.x)) - Math.min(...projected.map(point => point.x))) * width / 2;
+    const ySpan = (Math.max(...projected.map(point => point.y)) - Math.min(...projected.map(point => point.y))) * height / 2;
+    assert.ok(xSpan / ySpan > .5 && xSpan / ySpan < .7, "the actual narrow map reads as a diagonal sky route, not a vertical strip");
+    assert.ok(xSpan > height * .17 && ySpan > height * .29, "the sky route occupies the freed focal space");
+  }
+  fixture.cleanups.forEach(cleanup => cleanup());
 });

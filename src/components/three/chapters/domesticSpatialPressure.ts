@@ -14,7 +14,8 @@ export function nestSpatialPressure(sceneId: string, compressed: boolean, restin
 export function nestDomesticLayout(pressure: number, reducedEffects: boolean) {
   const amount = unit(pressure);
   const timber: ConstructionPiece[] = [], linen: ConstructionPiece[] = [];
-  const sideX = 3.82 - amount * .85;
+  const sideX = 3.82 - amount;
+  const layers = 1 + Math.floor(amount * (reducedEffects ? 2 : 3));
   for (const side of [-1, 1]) {
     const x = side * sideX, z = side < 0 ? -.7 : .05;
     // Familiar slatted laundry benches: supported tops, aprons and four legs.
@@ -24,7 +25,6 @@ export function nestDomesticLayout(pressure: number, reducedEffects: boolean) {
     // A chair back interrupts peripheral sightlines, never the child-space.
     for (const dx of [-.56, .56]) timber.push({ position: [x + dx, 1.18, z + .37], size: [.1, .88, .1] });
     for (const y of [1.23, 1.54]) timber.push({ position: [x, y, z + .37], size: [1.16, .12, .07] });
-    const layers = 1 + Math.floor(amount * (reducedEffects ? 2 : 3));
     for (let layer = 0; layer < layers; layer++) linen.push({
       position: [x + (layer % 2 ? .13 : -.09), .9 + layer * .16, z - .04],
       size: [1.05 - layer * .12, .15, .67], rotation: [0, side * (.06 + layer * .08), 0],
@@ -36,7 +36,7 @@ export function nestDomesticLayout(pressure: number, reducedEffects: boolean) {
     const side = index % 2 ? 1 : -1;
     linen.push({ position: [side * (2.3 + Math.floor(index / 2) * .5), .16, -2.0 + Math.floor(index / 2) * .55], size: [.7, .3, .62], rotation: [0, side * .16, 0] });
   }
-  return { timber, linen, pressure: amount };
+  return { timber, linen, pressure: amount, sideX, layers };
 }
 
 /** The SceneLook director owns the refill-to-compression mapping. */

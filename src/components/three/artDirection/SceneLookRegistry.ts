@@ -85,9 +85,9 @@ export function sceneParticleProfile(sceneId: JourneySceneId) {
 function fillFloor(sceneId: JourneySceneId) {
   if (sceneId === "broken-floor.confession") return .13;
   if (sceneId === "thorned.old-memory-bedroom" || sceneId === "fire.boundary") return .055;
-  // Feather and cloth retain a pale silhouette over black water. The Moon is
-  // still the dominant key; the later enclosed bridge keeps its darker fill.
-  if (sceneId === "blue-moon.sanctuary" || sceneId === "blue-moon.intimacy") return .28;
+  // Matched .18/.22/.28 captures retain the Swan, linen and bridge at .18.
+  // Keep unlit water dark and let the Moon remain the dominant source.
+  if (sceneId === "blue-moon.sanctuary" || sceneId === "blue-moon.intimacy") return .18;
   if (sceneId.startsWith("blue-moon.") || sceneId.startsWith("epilogue.")) return .09;
   if (sceneId.startsWith("crowned.")) return .32;
   return .17;

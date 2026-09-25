@@ -334,7 +334,8 @@ export function StoryEventDirector({ sceneId, reducedMotion, enabled = true }: {
       // floats above it and obscures the moon reflection.
       const chapterOwnsVisual = (sceneId.startsWith("sunset.") && object.kind === "mirror")
         || (sceneId === "blue-moon.intimacy" && object.kind === "swan")
-        || (sceneId === "blue-moon.sanctuary" && object.id === "blue-moon.water");
+        || (sceneId === "blue-moon.sanctuary" && object.id === "blue-moon.water")
+        || (sceneId === "fork.weighing" && object.id === "fork.weighing-stone");
       const placement = state === "reset" || state === "resting" ? undefined : object.targets?.find(item => item.id === placements[object.id]);
       const preservedAt = state === "preserved" ? object.targets?.[0]?.localPosition : undefined;
       const location: [number, number, number] = preservedAt ? [preservedAt[0] + .8, preservedAt[1] + .2, preservedAt[2]] : placement?.localPosition ?? object.localPosition;

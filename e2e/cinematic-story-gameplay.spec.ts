@@ -9,9 +9,12 @@ test("the rendered floor requires two pointer wipes and a touch before inversion
   page.on("pageerror", (error) => errors.push(error.message));
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/", { waitUntil: "domcontentloaded" });
+  await page.bringToFront();
+  await expect(page.locator(".onboarding-gate")).toHaveAttribute("aria-busy", "false");
   await page.getByRole("button", { name: "Begin", exact: true }).click();
   const canvas = page.locator("canvas").first();
   await expect(canvas).toBeVisible({ timeout: 30_000 });
+  await expect(canvas).toHaveAttribute("data-opening-rendered-stage", "0", { timeout: 30_000 });
   await expect(page.locator("button[data-story-event-id='broken-floor.first-wipe']")).toBeVisible({ timeout: 30_000 });
   expect((await readCinematicStory(page)).storyObjectStates["broken-floor.reflection"]).not.toBe("inverted");
   const bounds = await canvas.boundingBox();
@@ -19,8 +22,8 @@ test("the rendered floor requires two pointer wipes and a touch before inversion
   const startX = bounds.x + bounds.width * 0.36;
   const startY = bounds.y + bounds.height * 0.62;
 
-  for (const id of ["broken-floor.first-wipe", "broken-floor.forest-revealed"]) {
-    await expect(page.locator(`button[data-story-event-id="${id}"]`)).toBeVisible();
+  for (const [index, id] of ["broken-floor.first-wipe", "broken-floor.forest-revealed"].entries()) {
+    await expect(page.locator(`button[data-story-event-id="${id}"]`)).toBeVisible({ timeout: 30_000 });
     if (testInfo.project.use.isMobile) {
       const touch = await page.context().newCDPSession(page);
       const point = (step: number) => ({ x: startX + 12 * step, y: startY - 2.2 * step, id: 1, radiusX: 8, radiusY: 8, force: 0.7 });
@@ -40,17 +43,19 @@ test("the rendered floor requires two pointer wipes and a touch before inversion
       await page.mouse.move(startX + 120, startY - 22, { steps: 10 });
       await page.mouse.up();
     }
-    await expect.poll(async () => (await readCinematicStory(page)).completedStoryEventIds.includes(id)).toBe(true);
+    await expect.poll(async () => (await readCinematicStory(page)).completedStoryEventIds.includes(id), { timeout: 30_000 }).toBe(true);
+    await expect(canvas).toHaveAttribute("data-opening-rendered-stage", String(index + 1), { timeout: 30_000 });
     expect((await readCinematicStory(page)).storyObjectStates["broken-floor.reflection"]).not.toBe("inverted");
   }
-  await expect(page.locator("button[data-story-event-id='broken-floor.inversion']")).toBeVisible();
+  await expect(page.locator("button[data-story-event-id='broken-floor.inversion']")).toBeVisible({ timeout: 30_000 });
   if (testInfo.project.use.isMobile) await page.touchscreen.tap(startX, startY);
   else await page.mouse.click(startX, startY);
-  await expect.poll(async () => (await readCinematicStory(page)).storyObjectStates["broken-floor.reflection"]).toBe("inverted");
+  // CI recorded a successful state read taking 16.6s under software WebGL.
+  await expect.poll(async () => (await readCinematicStory(page)).storyObjectStates["broken-floor.reflection"], { timeout: 30_000 }).toBe("inverted");
   await expect(page.locator(".story-hud, .mini-map-hud, .scene-compass, .map-workspace")).toHaveCount(0);
   expect(errors).toEqual([]);
   const screenshotPath = testInfo.outputPath("pointer-revealed-forest.png");
-  await page.screenshot({ path: screenshotPath, fullPage: false });
+  await page.screenshot({ path: screenshotPath, fullPage: false, timeout: 30_000 });
   await testInfo.attach("pointer-revealed-forest", { path: screenshotPath, contentType: "image/png" });
 });
 

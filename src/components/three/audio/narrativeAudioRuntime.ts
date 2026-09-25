@@ -1,9 +1,83 @@
 import { NARRATIVE_AUDIO_STEM_IDS, type NarrativeAudioStemId } from "./narrativeAudioProfiles.ts";
-import type { Audio, AudioListener } from "three";
+import { Audio, type AudioListener } from "three";
 
-type OwnedStem = { sound: Audio; filter: BiquadFilterNode; volume: number };
+type OwnedVoice = { sound: Audio; filter: BiquadFilterNode; fade?: GainNode };
+export type OwnedNarrativeStem = OwnedVoice & { volume: number; retiring?: OwnedVoice };
+export const PRODUCTION_STEM_CROSSFADE_SECONDS = .35;
 
-export function pauseNarrativeAudioNodes(listener: AudioListener, stems: readonly OwnedStem[]) {
+export function createNarrativeStemVoice(listener: AudioListener, buffer: AudioBuffer, cutoff = 600): OwnedVoice {
+  const filter = listener.context.createBiquadFilter();
+  filter.type = "lowpass";
+  filter.frequency.value = cutoff;
+  const sound = new Audio(listener);
+  sound.setFilter(filter);
+  sound.setBuffer(buffer);
+  sound.setLoop(true);
+  // A new Web Audio gain defaults to one; set zero synchronously before playback.
+  sound.getOutput().gain.setValueAtTime(0, listener.context.currentTime);
+  return { sound, filter };
+}
+
+function disposeVoice(voice: OwnedVoice) {
+  if (voice.sound.isPlaying) voice.sound.pause();
+  if (voice.sound.source) voice.sound.source.onended = null;
+  voice.sound.disconnect();
+  voice.filter.disconnect();
+  voice.sound.getOutput().disconnect();
+  voice.fade?.disconnect();
+}
+
+function attachFade(listener: AudioListener, voice: OwnedVoice, value: number) {
+  if (!voice.fade) {
+    const fade = listener.context.createGain();
+    voice.sound.getOutput().disconnect(listener.getInput());
+    voice.sound.getOutput().connect(fade);
+    fade.connect(listener.getInput());
+    voice.fade = fade;
+  }
+  voice.fade.gain.cancelScheduledValues(listener.context.currentTime);
+  voice.fade.gain.setValueAtTime(value, listener.context.currentTime);
+  return voice.fade.gain;
+}
+
+/** One bounded old/new overlap, below the existing scene gain and low-pass mixing. */
+export function replaceNarrativeStemBuffer(listener: AudioListener, stem: OwnedNarrativeStem, buffer: AudioBuffer) {
+  if (stem.sound.buffer === buffer) return false;
+  if (stem.retiring) { disposeVoice(stem.retiring); stem.retiring = undefined; }
+  const previous: OwnedVoice = { sound: stem.sound, filter: stem.filter, fade: stem.fade };
+  const next = createNarrativeStemVoice(listener, buffer, previous.filter.frequency.value);
+  const previousSource = previous.sound.source;
+  if (previous.sound.isPlaying && previousSource) {
+    const now = listener.context.currentTime;
+    const end = now + PRODUCTION_STEM_CROSSFADE_SECONDS;
+    next.sound.getOutput().gain.setValueAtTime(previous.sound.getVolume(), now);
+    attachFade(listener, previous, 1).linearRampToValueAtTime(0, end);
+    attachFade(listener, next, 0).linearRampToValueAtTime(1, end);
+    try { next.sound.play(); } catch {
+      // A context interrupted during installation must retain its working fallback.
+      disposeVoice(next);
+      attachFade(listener, previous, 1);
+      stem.fade = previous.fade;
+      return false;
+    }
+    stem.retiring = previous;
+    previousSource.onended = () => {
+      previous.sound.isPlaying = false;
+      disposeVoice(previous);
+      if (stem.retiring === previous) stem.retiring = undefined;
+    };
+    // Stop only after its audio-clock gain reaches zero; this does not depend on frames.
+    previousSource.stop(end);
+  } else {
+    disposeVoice(previous);
+  }
+  stem.sound = next.sound;
+  stem.filter = next.filter;
+  stem.fade = next.fade;
+  return true;
+}
+
+export function pauseNarrativeAudioNodes(listener: AudioListener, stems: readonly OwnedNarrativeStem[]) {
   const gain = listener.getInput().gain;
   gain.cancelScheduledValues(listener.context.currentTime);
   gain.setValueAtTime(0, listener.context.currentTime);
@@ -13,13 +87,18 @@ export function pauseNarrativeAudioNodes(listener: AudioListener, stems: readonl
     stem.sound.disconnect();
     stem.sound.setVolume(0);
     stem.volume = 0;
+    if (stem.fade) {
+      stem.fade.gain.cancelScheduledValues(listener.context.currentTime);
+      stem.fade.gain.setValueAtTime(1, listener.context.currentTime);
+    }
+    if (stem.retiring) { disposeVoice(stem.retiring); stem.retiring = undefined; }
   }
 }
 
-export function disposeNarrativeAudioNodes(listener: AudioListener, stems: readonly OwnedStem[]) {
+export function disposeNarrativeAudioNodes(listener: AudioListener, stems: readonly OwnedNarrativeStem[]) {
   for (const stem of stems) {
-    stem.filter.disconnect();
-    stem.sound.getOutput().disconnect();
+    disposeVoice(stem);
+    if (stem.retiring) { disposeVoice(stem.retiring); stem.retiring = undefined; }
   }
   listener.getInput().disconnect();
   // The gesture context is shared and remains owned by narrativeAudioActivation.
