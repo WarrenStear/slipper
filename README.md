@@ -8,13 +8,13 @@ Zustand, and Cloudflare Pages.
 
 ## Repository and production
 
-The active repository is [warrenstear30-afk/sitw](https://github.com/warrenstear30-afk/sitw).
+The active repository is [WarrenStear/slipper](https://github.com/WarrenStear/slipper).
 Use `main` for production. The public experience is
 [slipperinthewoods.com](https://slipperinthewoods.com).
 
 ```bash
-git clone https://github.com/warrenstear30-afk/sitw.git
-cd sitw
+git clone https://github.com/WarrenStear/slipper.git
+cd slipper
 ```
 
 GitHub Actions validates changes; Cloudflare Pages builds and deploys the
