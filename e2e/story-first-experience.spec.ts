@@ -356,7 +356,9 @@ test.describe("story-first gift experience", () => {
   test("canonical order carries surrender, Fork ownership, the Three Climbs, Crown state, and lantern placement", async ({
     page,
   }, testInfo) => {
-    test.setTimeout(180_000);
+    // The 32-scene route includes real attention and finale sequences; hosted
+    // WebKit reached the last stillness just before the former 180s deadline.
+    test.setTimeout(process.env.CI ? 240_000 : 180_000);
     await page.goto("/?accessible=1", { waitUntil: "domcontentloaded" });
     await page.getByRole("button", { name: "Begin", exact: true }).click();
 

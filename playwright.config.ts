@@ -23,8 +23,13 @@ export default defineConfig({
     actionTimeout: 12_000,
     navigationTimeout: 45_000,
     screenshot: "only-on-failure",
-    trace: "retain-on-failure",
-    video: "retain-on-failure",
+    // Hosted software rendering must not compete with two continuous image
+    // streams. Preserve DOM, actions, network, failure screenshots and the
+    // explicit visual-review PNGs; local debugging still records video.
+    trace: process.env.CI
+      ? { mode: "retain-on-failure", screenshots: false }
+      : "retain-on-failure",
+    video: process.env.CI ? "off" : "retain-on-failure",
   },
   webServer: process.env.PLAYWRIGHT_TEST_BASE_URL
     ? undefined

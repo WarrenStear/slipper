@@ -47,7 +47,9 @@ test("advances the canonical story without WebGL while prose stays veiled", asyn
 });
 
 test("completes every canonical text scene and records the Heart and Womb choices", async ({ page }) => {
-  test.setTimeout(180_000);
+  // Hosted WebKit reached the final authored stillness at 179s. Keep every
+  // scene and per-event deadline while budgeting for the complete journey.
+  test.setTimeout(process.env.CI ? 240_000 : 180_000);
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.addInitScript(() => {
     Object.defineProperty(HTMLCanvasElement.prototype, "getContext", {
