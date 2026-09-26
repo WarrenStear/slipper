@@ -18,6 +18,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { createForestTrunkGeometry, createOrganicCrownGeometry } from "./environment/forestGeometry";
 import { ForestSurfaceMaterial } from "./environment/ForestSurfaceMaterial";
+import { DistantWoodland } from "./environment/DistantWoodland";
 import { ProceduralDome } from "./environment/ProceduralDome";
 import { PhysicalPathRibbon } from "./environment/LivingPathRibbon";
 import type { EulerTuple, Slipper3DEntry, Slipper3DVisual, Vector3Tuple } from "../../data/slipper3dTypes";
@@ -6677,7 +6678,8 @@ function WorldStoryNode({
   const isKeystone = journeyRole === "keystone";
   const isEcho = journeyRole === "echo";
   const isIntegratedFinale = isIntegratedFinaleEntry(node.entry.id);
-  const suppressLegacyActiveLandmark = isIntegratedFinale || usesAuthoredCausalComposition(node.entry.id);
+  const authoredScene = getJourneySceneForEntry(node.entry.id);
+  const suppressLegacyActiveLandmark = Boolean(authoredScene) || isIntegratedFinale || usesAuthoredCausalComposition(node.entry.id);
   const opacity = node.isActive
     ? 1
     : (node.isVisited ? 0.68 : 0.48) * (isEcho ? 0.72 : 1);
@@ -6704,7 +6706,7 @@ function WorldStoryNode({
       position={node.position}
       userData={{ journeyRole, keystone: isKeystone }}
     >
-      {!node.isActive ? <NodeLandmarkSilhouette node={node} activeEntry={activeEntry} narrativeWorldState={narrativeWorldState} qualityProfile={qualityProfile} /> : null}
+      {!node.isActive && !authoredScene ? <NodeLandmarkSilhouette node={node} activeEntry={activeEntry} narrativeWorldState={narrativeWorldState} qualityProfile={qualityProfile} /> : null}
       <group>
         {node.isActive && !suppressLegacyActiveLandmark ? <SymbolicObjects entry={node.entry} visitedCount={narrativeWorldState.visitedCount} /> : null}
         {node.isActive && isKeystone && !suppressLegacyActiveLandmark ? (
@@ -6730,7 +6732,7 @@ function WorldStoryNode({
         {node.isActive && isKeystone && !suppressLegacyActiveLandmark ? <ChapterShrine visual={visual} entry={node.entry} narrativeWorldState={narrativeWorldState} /> : null}
       </group>
       {node.isActive && mode === "explore" && !suppressLegacyActiveLandmark ? <StoryText entry={node.entry} /> : null}
-      {!node.isActive ? (
+      {!node.isActive && !authoredScene ? (
         <mesh position={[0, -1.05, 0]} rotation={[Math.PI / 2, 0, 0]}>
           <ringGeometry args={[2.8, 3.05, 96]} />
           <meshBasicMaterial color={activeEntry.engine3d.environmentGradient?.[2] ?? "#d8d0ba"} transparent opacity={0.05 * opacity} side={THREE.DoubleSide} depthWrite={false} />
@@ -6784,6 +6786,7 @@ export function StoryScene({
   const cameraAssistance = useSettingsStore((state) => state.cameraAssistance);
   const eventFlags = useJourneyStore((state) => state.worldFlags);
   const eventIds = useJourneyStore((state) => state.completedStoryEventIds);
+  const witnessedEntryIds = useJourneyStore((state) => state.witnessedEntryIds);
   const reducedMotion = useSettingsStore((state) => state.reducedMotion);
   const audioEnabled = useSettingsStore((state) => state.audioEnabled);
   const showDebugOverlay = useMemo(() => shouldShowDebugOverlay() || qualityProfile.showDebugByDefault, [qualityProfile.showDebugByDefault]);
@@ -7044,7 +7047,9 @@ export function StoryScene({
         guidanceLookTarget={cameraGuidanceTarget}
         reducedMotion={reducedMotion}
       />
-      <ContinuousForestBed entries={entries} pathSegments={pathSegments} narrativeWorldState={narrativeWorldState} activeEntry={entry} qualityProfile={qualityProfile} showClearingFrame={openingResolved} />
+      {/* Authored chapters already frame their footprint. The legacy eight-metre
+          ring put trunks and colliders through water, furniture and sightlines. */}
+      <ContinuousForestBed entries={entries} pathSegments={pathSegments} narrativeWorldState={narrativeWorldState} activeEntry={entry} qualityProfile={qualityProfile} showClearingFrame={openingResolved && !narrativeScene} />
       <FirstPersonPlayer
         enabled={mode === "explore" && controls === "walk"}
         movementEnabled={openingResolved}
@@ -7060,7 +7065,7 @@ export function StoryScene({
         qualityProfile={qualityProfile}
         reducedEffects={reducedEffects}
         reducedMotion={reducedMotion}
-        renderAdjacent
+        renderAdjacent={false}
         interactionsEnabled={mode === "explore"}
         openingResolved={openingResolved}
         onFinalConstellationFormationComplete={
@@ -7068,7 +7073,7 @@ export function StoryScene({
         }
       />
       {narrativeScene && mode === "explore" ? <>
-        <SpatialProseDirector entry={entry} scene={narrativeScene} position={authoredSceneOrigin} headingRadians={getJourneySceneLayout(narrativeScene.id).anchor.headingRadians} active witnessed={visitedEntryIds.includes(entry.id)} reducedMotion={reducedMotion}
+        <SpatialProseDirector entry={entry} scene={narrativeScene} position={authoredSceneOrigin} headingRadians={getJourneySceneLayout(narrativeScene.id).anchor.headingRadians} active witnessed={witnessedEntryIds.includes(entry.id)} reducedMotion={reducedMotion}
           suppressed={narrativeScene.id === "broken-floor.confession" && !eventIds.includes("broken-floor.first-wipe")} />
       </> : null}
       {/* MasterPlayerLantern is mounted by StorySceneWithMasterLantern and is the sole carried lantern. */}
@@ -7128,7 +7133,8 @@ export function StoryScene({
         visualState={visualState}
         showDepthPlate={visualState.biome === "firstWood" && qualityProfile.quality !== "low"}
       />}
-      <DistantForestSilhouetteRing visualState={visualState} qualityProfile={qualityProfile} />
+      {narrativeScene ? <DistantWoodland origin={authoredSceneOrigin} quality={qualityProfile.quality} sampleGroundY={sampleGroundY} quiet={narrativeScene.id === "epilogue.constellation"} />
+        : <DistantForestSilhouetteRing visualState={visualState} qualityProfile={qualityProfile} />}
       {fallbackEnvironmentSrc ? <EnvironmentSphere src={fallbackEnvironmentSrc} radius={activeRadius * 0.98} /> : null}
       {openingResolved ? (
         <>

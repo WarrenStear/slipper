@@ -196,15 +196,15 @@ export function WorldEngineLayer(props: WorldEngineLayerProps) {
 
   return (
     <>
-      <PerfectWorldGround {...props} enabled={enabled} />
+      <PerfectWorldGround {...props} enabled={enabled && !presentation} />
       {ambientEffectsEnabled ? (
         <>
           <WorldEnvironmentParticles worldDirector={worldDirector} visualState={visualState} />
-          <BoundaryVeil {...props} enabled />
-          <StillnessBreathField {...props} enabled />
+          <BoundaryVeil {...props} enabled={!presentation} />
+          <StillnessBreathField {...props} enabled={!presentation} />
         </>
       ) : null}
-      <PathGuidancePool {...props} enabled={enabled} />
+      <PathGuidancePool {...props} enabled={enabled && !presentation} />
     </>
   );
 }

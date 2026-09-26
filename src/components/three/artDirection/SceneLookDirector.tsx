@@ -9,6 +9,7 @@ import type { JourneySceneId } from "../../../lib/storyJourneyState";
 import { resolveSceneLook, type LookPoint, type LookQuality } from "./SceneLookRegistry";
 import { SceneLookContext, type ScenePresentation } from "./SceneLookContext";
 import { AuthoredLightShafts } from "./VolumetricLightShaft";
+import { GroundMist } from "./GroundMist";
 import { SceneLighting } from "./SceneLighting";
 import { SceneAtmosphere } from "./SceneAtmosphere";
 import { ScenePostProcessing } from "./ScenePostProcessing";
@@ -46,7 +47,7 @@ export function SceneLookDirector({ sceneId, quality, reducedEffects, reducedMot
     openingInverted: objects["broken-floor.reflection"] === "inverted",
   }), [sceneId, quality, reducedEffects, flags, objects, measuredStillness, assisted]);
   const presentation = useRef<ScenePresentation>({ look: target, reducedMotion, reducedEffects, stillness: Number(target.stillness), motion: { ...target.motion }, time: { vegetation: 0, cloth: 0, water: 0, particles: 0, flame: 0 } });
-  const context = useMemo<ScenePresentation>(() => ({ look: target, reducedMotion, reducedEffects, stillness: presentation.current.stillness, motion: presentation.current.motion, time: presentation.current.time }), [target, reducedMotion, reducedEffects]);
+  const context = useMemo<ScenePresentation>(() => ({ look: target, reducedMotion, reducedEffects, origin, heading, stillness: presentation.current.stillness, motion: presentation.current.motion, time: presentation.current.time }), [target, reducedMotion, reducedEffects, origin, heading]);
   presentation.current = context;
   useEffect(() => activateCinematicProfile(), []);
   useFrame((_, delta) => {
@@ -57,7 +58,7 @@ export function SceneLookDirector({ sceneId, quality, reducedEffects, reducedMot
   return <SceneLookContext.Provider value={context}>
     <group name="scene-look-authority" userData={{ sceneId, hero: target.composition.heroLandmark, quality }}>
       <SceneAtmosphere heading={heading} />
-      <group position={origin} rotation={[0, heading, 0]}><SceneLighting /><AuthoredLightShafts /></group>
+      <group position={origin} rotation={[0, heading, 0]}><SceneLighting /><AuthoredLightShafts /><GroundMist /></group>
       <CinematicCameraDirector sceneId={sceneId} reducedMotion={reducedMotion} cameraAssistance={cameraAssistance} focusPosition={focusPosition} />
       {target.budget.edgeSmoothing ? <ScenePostProcessing bloomIntensity={bloomIntensity} vignetteIntensity={vignetteIntensity} /> : null}
     </group>

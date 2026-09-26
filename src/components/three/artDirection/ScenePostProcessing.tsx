@@ -28,7 +28,9 @@ export const FINISH_FRAGMENT = /* glsl */ `
     if(hi-lo<max(.025,hi*.12))return c;
     vec2 dir=vec2(-((nw+ne)-(sw+se)),(nw+sw)-(ne+se));
     float reduce=max((nw+ne+sw+se)*.03125,.0078125);
-    dir=clamp(dir/(min(abs(dir.x),abs(dir.y))+reduce),vec2(-4.),vec2(4.))*px;
+    // Limit the outer tap to one pixel. A two-pixel offset produced detached
+    // bright edges on the small canonical glyphs and narrow bridge joints.
+    dir=clamp(dir/(min(abs(dir.x),abs(dir.y))+reduce),vec2(-2.),vec2(2.))*px;
     vec3 a=.5*(texture2D(beauty,vUv-dir/6.).rgb+texture2D(beauty,vUv+dir/6.).rgb);
     vec3 b=a*.5+.25*(texture2D(beauty,vUv-dir*.5).rgb+texture2D(beauty,vUv+dir*.5).rgb);
     float lb=luma(b);return lb<lo||lb>hi?a:b;

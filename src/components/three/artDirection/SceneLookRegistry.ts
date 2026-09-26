@@ -24,7 +24,7 @@ const worlds = {
   seer: { source: "sunset", keyColor: "#dbb08c", keyPosition: [-16, 5, 10], keyIntensity: 1.5, sky: "#192b3e", horizon: "#967465", fog: "#35434c", ground: "#252c2a", leaf: "#374640", reflection: "mirror", wetness: .54, wear: .9, saturation: .7 },
   house: { source: "domestic", keyColor: "#e8c69b", keyPosition: [-3.8, 3.1, -.4], keyIntensity: 28, sky: "#151b20", horizon: "#343c40", fog: "#302a24", ground: "#2d2720", leaf: "#3b4234", reflection: "none", wetness: .12, wear: .9, saturation: .76 },
   integration: { source: "sky", keyColor: "#c5d3d1", keyPosition: [-8, 14, 5], keyIntensity: 1.4, sky: "#405a6d", horizon: "#889a99", fog: "#506464", ground: "#323b30", leaf: "#425b43", reflection: "none", wetness: .35, wear: .65, saturation: .85 },
-  fire: { source: "fire", keyColor: "#ebbd8c", keyPosition: [-6.8, 2, 4.1], keyIntensity: 30, sky: "#0d1a27", horizon: "#3b515d", fog: "#263840", ground: "#272b26", leaf: "#304236", reflection: "none", wetness: .22, wear: .95, saturation: .8 },
+  fire: { source: "fire", keyColor: "#ebbd8c", keyPosition: [0, 2, 4], keyIntensity: 30, sky: "#0d1a27", horizon: "#3b515d", fog: "#263840", ground: "#272b26", leaf: "#304236", reflection: "none", wetness: .22, wear: .95, saturation: .8 },
   river: { source: "moon", keyColor: "#c5d5db", keyPosition: [12, 18, 6], keyIntensity: 1.3, sky: "#1e3346", horizon: "#637b87", fog: "#3d545c", ground: "#29352d", leaf: "#3a5143", reflection: "none", wetness: .64, wear: .7, saturation: .76 },
   fork: { source: "sky", keyColor: "#c9d2d0", keyPosition: [14, 12, 10], keyIntensity: 1.3, sky: "#3b5669", horizon: "#a2b0ad", fog: "#687e81", ground: "#404535", leaf: "#52634a", reflection: "none", wetness: .15, wear: .72, saturation: .77 },
   climb: { source: "sky", keyColor: "#d9dcd4", keyPosition: [-6, 18, 8], keyIntensity: 1.5, sky: "#5c7b94", horizon: "#b3beb6", fog: "#81958f", ground: "#414b3c", leaf: "#56684d", reflection: "none", wetness: .14, wear: .6, saturation: .87 },
@@ -56,7 +56,7 @@ export const SCENE_LOOKS = {
   "thorned.self-owned-world": image("house", "outside air through a readable exit", [0, 1.8, 8], .62, .35, .55, { source: "window", keyPosition: [0, 5, 12], keyIntensity: 1.5, keyColor: "#cbd8d9" }),
   "wolf-swan.false-choice": image("integration", "wood and water sharing the same stone", [0, 1.5, 4], .55, .38, .55),
   "wolf-swan.convergence": image("integration", "one open passage through three familiar materials", [0, 1.5, 8], .72, .24, .72),
-  "fire.boundary": image("fire", "contained fire beside a broad dark river", [-5, 1.5, 4], .6, .3, .52),
+  "fire.boundary": image("fire", "contained fire beside a broad dark river", [0, 1.5, 4], .6, .3, .52),
   "river.wash": image("river", "open water with remembered embers in view", [5, .2, 5], .78, .2, .74),
   "river.release-surrender": image("river", "still cloth between water and extinguished ash", [0, 1.8, 8], .9, .12, .8, { saturation: .66, keyIntensity: 1.1 }),
   "fork.weighing": image("fork", "enclosed familiar bend beside an unreadable horizon", [0, 1, 9], .72, .38, .85),
@@ -84,7 +84,10 @@ export function sceneParticleProfile(sceneId: JourneySceneId) {
 
 function fillFloor(sceneId: JourneySceneId) {
   if (sceneId === "broken-floor.confession") return .13;
-  if (sceneId === "thorned.old-memory-bedroom" || sceneId === "fire.boundary") return .055;
+  // Let pressure come from the close architecture while retaining enough
+  // reflected room light to read the stored objects and walking surface.
+  if (sceneId === "thorned.old-memory-bedroom") return .16;
+  if (sceneId === "fire.boundary") return .055;
   // Outdoor readability reveals bark/cloth without adding another light.
   // Water remains dark; the motivated key still establishes the composition.
   if (sceneId.startsWith("enchanted.")) return .3;
