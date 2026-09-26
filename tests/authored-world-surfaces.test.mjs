@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readFileSync } from 'node:fs';
-import { woodlandHabitatLayout, habitatTier } from '../src/components/three/environment/woodlandHabitat.ts';
+import { woodlandHabitatLayout, habitatTier } from '../src/components/three/environment/woodlandHabitatLayout.ts';
 import { createFernGeometry, createRushGeometry, createLeafLitterGeometry, createDeadwoodGeometry, createRootThresholdGeometry } from '../src/components/three/environmentArt/woodlandHabitatGeometry.ts';
 import { createOrganicCrownGeometry } from '../src/components/three/environment/forestGeometry.ts';
 import { STORY_SURFACES, applyTactileShader, tactileProgramKey } from '../src/components/three/storyEvents/tactileShader.ts';
@@ -86,7 +86,7 @@ test('every surface finish initializes its roughness term before using it', () =
     const s=applyTactileShader(template(),surface,detail);
     assert.match(s.fragmentShader,/float authoredRoughness = 0\./);
     assert.ok(s.fragmentShader.indexOf('float authoredRoughness')<s.fragmentShader.indexOf('roughnessFactor + authoredRoughness'));
-    assert.match(tactileProgramKey(surface,detail),/-v8-/);
+    assert.match(tactileProgramKey(surface,detail),/-v9-/);
     for(const chunk of ['colorspace_fragment','fog_fragment','normal_fragment_maps'])assert.ok(s.fragmentShader.includes(`#include <${chunk}>`));
   }
 });

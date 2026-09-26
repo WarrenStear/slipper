@@ -10,12 +10,72 @@ export type ConstructionPiece = {
   color?: string;
 };
 
+/** Re-map only construction timber. The shared chair/actor source stays intact.
+ * Separate caps preserve end grain; side UVs measure the actual perimeter and
+ * length, including the short worn end rings. Every board remains 60 triangles. */
+function constructionTimber(size: ArtVector, seed: number) {
+  const source = createWornTimberGeometry(size, seed);
+  const sourcePosition = source.getAttribute("position");
+  const dimensions = size.map(Math.abs), axis = dimensions.indexOf(Math.max(...dimensions));
+  const across = (axis + 1) % 3, thickness = (axis + 2) % 3;
+  const positions: number[] = [], coordinates: number[] = [], uvs: number[] = [], indices: number[] = [];
+  const point = (index: number) => [sourcePosition.getX(index), sourcePosition.getY(index), sourcePosition.getZ(index)];
+  const perimeter = [0];
+  for (let corner = 0; corner < 8; corner++) {
+    const a = point(8 + corner), b = point(8 + (corner + 1) % 8);
+    perimeter.push(perimeter[corner] + Math.hypot(b[across] - a[across], b[thickness] - a[thickness]));
+  }
+  const append = (vertex: number, u: number, v: number) => {
+    const p = point(vertex); positions.push(...p);
+    // Long grain is always local Y, regardless of a board's construction axis.
+    coordinates.push(p[across], p[axis], p[thickness]); uvs.push(u, v);
+  };
+  for (let ring = 0; ring < 4; ring++) for (let corner = 0; corner <= 8; corner++) {
+    const vertex = ring * 8 + corner % 8;
+    append(vertex, perimeter[corner], point(vertex)[axis] / 2.2 + seed * .173);
+    if (ring < 3 && corner < 8) {
+      const i = ring * 9 + corner; indices.push(i, i + 1, i + 9, i + 1, i + 10, i + 9);
+    }
+  }
+  for (let end = 0; end < 2; end++) {
+    const offset = positions.length / 3, ring = end ? 3 : 0;
+    for (let corner = 0; corner < 8; corner++) {
+      const vertex = ring * 8 + corner, p = point(vertex);
+      append(vertex, p[across] + seed * .137, p[thickness] + seed * .173);
+    }
+    for (let corner = 1; corner < 7; corner++) {
+      if (end) indices.push(offset, offset + corner, offset + corner + 1);
+      else indices.push(offset, offset + corner + 1, offset + corner);
+    }
+  }
+  source.dispose();
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
+  geometry.setAttribute("storySurfacePosition", new THREE.Float32BufferAttribute(coordinates, 3));
+  geometry.setIndex(indices); geometry.computeVertexNormals();
+  const normal = geometry.getAttribute("normal");
+  // The duplicated wrap edge has one shared lighting normal, but distinct UVs.
+  for (let ring = 0; ring < 4; ring++) {
+    const a = ring * 9, b = a + 8;
+    const n = new THREE.Vector3(normal.getX(a) + normal.getX(b), normal.getY(a) + normal.getY(b), normal.getZ(a) + normal.getZ(b)).normalize();
+    normal.setXYZ(a, n.x, n.y, n.z); normal.setXYZ(b, n.x, n.y, n.z);
+  }
+  const grainNormals: number[] = [];
+  for (let i = 0; i < normal.count; i++) {
+    const n = [normal.getX(i), normal.getY(i), normal.getZ(i)];
+    grainNormals.push(n[across], n[axis], n[thickness]);
+  }
+  geometry.setAttribute("storySurfaceNormal", new THREE.Float32BufferAttribute(grainNormals, 3));
+  return geometry;
+}
+
 /** One material batch, with joinery and wear authored into each bounded piece. */
 export function createConstructionGeometry(pieces: readonly ConstructionPiece[], plaster = false) {
   const geometries = pieces.slice(0, 256).map((piece, index) => {
     const geometry = plaster
       ? createWeatheredPanelGeometry(piece.size, index + 17)
-      : createWornTimberGeometry(piece.size, index + 17);
+      : constructionTimber(piece.size, index + 17);
     const transform = new THREE.Matrix4().compose(
       new THREE.Vector3(...piece.position),
       new THREE.Quaternion().setFromEuler(new THREE.Euler(...(piece.rotation ?? [0, 0, 0]))),

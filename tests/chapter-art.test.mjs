@@ -82,3 +82,26 @@ test('art keeps the existing house doorway gap, wax batching, and store-free geo
   assert.match(shared, /shared-departing-bird-silhouettes/);
   assert.doesNotMatch(read('../src/components/three/chapters/chapterArtGeometry.ts'), /Math\.random|Date\.now|useFrame|dispatchStoryEvent|useJourneyStore|WebGLRenderTarget/);
 });
+
+
+test('construction grain stays in each board frame through assembly transforms', () => {
+  for (const size of [[3.65,.18,.408],[.18,1.52,.19],[.23,.35,15.5]]) {
+    const original=createConstructionGeometry([{position:[0,0,0],size}]);
+    const moved=createConstructionGeometry([{position:[7,3,-5],rotation:[.3,.8,-.2],size}]);
+    try {
+      for (const name of ['storySurfacePosition','storySurfaceNormal','uv']) {
+        assert.deepEqual(original.getAttribute(name).array,moved.getAttribute(name).array,name);
+        assert.ok([...original.getAttribute(name).array].every(Number.isFinite));
+      }
+      assert.equal(original.index.count/3,60,'construction remains one 60-triangle board');
+      const grain=original.getAttribute('storySurfacePosition');
+      const ys=Array.from({length:grain.count},(_,i)=>grain.getY(i));
+      assert.ok(Math.abs(Math.max(...ys)-Math.min(...ys)-Math.max(...size))<1e-5,'grain Y follows longest board dimension');
+      const n=original.getAttribute('storySurfaceNormal');
+      for(let i=36;i<52;i++)assert.ok(Math.abs(n.getY(i))>.999,'cut caps have distinct end-grain normals');
+      const uv=original.getAttribute('uv');
+      assert.ok(Math.abs((uv.getY(18)-uv.getY(9))*2.2-Math.max(...size)*.91)<1e-5,'UV length follows the actual long middle span');
+      assert.notDeepEqual(original.getAttribute('position').array,moved.getAttribute('position').array);
+    } finally {original.dispose();moved.dispose()}
+  }
+});

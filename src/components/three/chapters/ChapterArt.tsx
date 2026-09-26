@@ -11,7 +11,7 @@ export const TimberAssembly = memo(function TimberAssembly({ pieces, color, plas
   const geometry = useMemo(() => createConstructionGeometry(pieces, plaster), [pieces, plaster]);
   useEffect(() => () => geometry.dispose(), [geometry]);
   return <mesh name={name} geometry={geometry} castShadow receiveShadow>
-    <TactileMaterial surface={surface ?? (plaster ? "plaster" : "wood")} color={color} vertexColors roughness={plaster ? .96 : .86} />
+    <TactileMaterial surface={surface ?? (plaster ? "plaster" : "wood")} constructionCoordinates={!plaster} color={color} vertexColors roughness={plaster ? .96 : .86} />
   </mesh>;
 });
 
@@ -80,7 +80,7 @@ export const WritingDesk = memo(function WritingDesk({ width = 2.8, depth = 1.34
 }) {
   const pieces = useMemo<ConstructionPiece[]>(() => [
     ...[-1, 0, 1].map(i => ({ position: [0, 0, i * depth / 3] as ArtVector, size: [width, .15, depth / 3 - .007] as ArtVector })),
-    ...[-1, 1].flatMap(x => [-1, 1].map(z => ({ position: [x * width * .386, -height * .47, z * depth * .313] as ArtVector, size: [.14, height * .87, .14] as ArtVector }))),
+    ...[-1, 1].flatMap(x => [-1, 1].map(z => ({ position: [x * width * .386, -(height + .075) / 2, z * depth * .313] as ArtVector, size: [.14, height - .075, .14] as ArtVector }))),
     ...[-1, 1].map(z => ({ position: [0, -.19, z * depth * .313] as ArtVector, size: [width * .8, .24, .09] as ArtVector })),
     ...[-1, 1].map(x => ({ position: [x * width * .386, -.19, 0] as ArtVector, size: [.09, .24, depth * .67] as ArtVector })),
   ], [width, depth, height]);

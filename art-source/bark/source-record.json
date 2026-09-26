@@ -1,0 +1,63 @@
+{
+  "generatedAt": "2026-09-26",
+  "generator": "OpenAI ImageGen built-in tool",
+  "sourceType": "AI-generated material approximation; not photogrammetry or measured PBR",
+  "licence": "Generated for this project by its owner through OpenAI ImageGen; no third-party source texture supplied.",
+  "records": [
+    {
+      "channel": "albedo",
+      "file": "bark-albedo-v1.ktx2",
+      "sourceSha256": "4e0d8aae9d9d4d912deebc73fcb731ae00d37bccf01c660f057d700972b3034e",
+      "runtimeSha256": "a91ee3faa6001afbde63ab9070bd6e55554d55ef2aae3c1fbb22e77bb98627d6",
+      "dimension": 512,
+      "levels": 10,
+      "downloadBytes": 857000,
+      "residentBytes": 1398100,
+      "format": "RGBA8 sRGB",
+      "supercompression": "Zstandard",
+      "greenChannelConverted": false
+    },
+    {
+      "channel": "roughness",
+      "file": "bark-roughness-v1.ktx2",
+      "sourceSha256": "15881b2f7de2351c4162600630e73dcb495892ce6ba7cbb80561c3a0dc5b1ffc",
+      "runtimeSha256": "1bd05c800ad5181143ef02635cf49211348f59cbbbbea656cacb4e1fe0c8d51f",
+      "dimension": 256,
+      "levels": 9,
+      "downloadBytes": 141895,
+      "residentBytes": 349524,
+      "format": "RGBA8 linear",
+      "supercompression": "Zstandard",
+      "greenChannelConverted": false
+    },
+    {
+      "channel": "normal",
+      "file": "bark-normal-v1.ktx2",
+      "sourceSha256": "212dce62630ccca72f84d12175de846fd9cbc63b3744bfd2dbc2ed83391d2244",
+      "runtimeSha256": "6f497bdb4bfd9e5611d35402bea36a179b1f83c3cae5a95c3faa4e90f30f03de",
+      "dimension": 256,
+      "levels": 9,
+      "downloadBytes": 281830,
+      "residentBytes": 349524,
+      "format": "RGBA8 linear",
+      "supercompression": "Zstandard",
+      "greenChannelConverted": true
+    }
+  ],
+  "sourceImages": "Original generated PNGs alongside this record; albedo, roughness and normal share a matching image composition.",
+  "encoding": "Albedo 512px, normal/roughness 256px; Lanczos downsampling; complete mip chain; Zstandard supercompression of RGBA8, not GPU block compression. Bottom image row stored first, KTXorientation ru, runtime flipY=false.",
+  "normalConvention": "OpenGL tangent space. Normal strength .24. Bark source green channel inverted during packing after directional comparison; oak source retained.",
+  "orientationCheck": {
+    "method": "Compare smoothed source-scale luminance gradients with normal R/G, plus inspect relief under directional light. Luminance is only a diagnostic approximation to height, not a measured displacement source.",
+    "oak": {
+      "redHorizontalGradientCorrelation": -0.8036,
+      "greenImageDownGradientCorrelation": 0.1123
+    },
+    "barkSource": {
+      "redHorizontalGradientCorrelation": -0.7879,
+      "greenImageDownGradientCorrelation": -0.3543
+    },
+    "barkRuntimeGreen": "inverted to positive image-down gradient direction; bottom-row-first packing keeps OpenGL UV direction"
+  },
+  "promptSummary": "Neutral, evenly lit, tileable aged temperate oak bark with irregular vertical fissures and sparse desaturated lichen. Matching generated grayscale roughness and tangent-space normal requested as data textures; no measured material capture claimed."
+}

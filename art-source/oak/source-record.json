@@ -1,0 +1,60 @@
+{
+  "generatedAt": "2026-09-26",
+  "generator": "OpenAI ImageGen built-in tool",
+  "sourceType": "AI-generated material approximation; not photogrammetry or measured PBR",
+  "licence": "Generated for this project by its owner through OpenAI ImageGen; no third-party source texture supplied.",
+  "records": [
+    {
+      "channel": "albedo",
+      "file": "oak-albedo-v1.ktx2",
+      "sourceSha256": "4ea9f332711d1559738f630d187d6bc8d6103b62a863b7c13a754d7b750513c5",
+      "runtimeSha256": "233708fa18e8f92a2a2b8bbcf7d843a9efb5ffe27e20b1eded7d26a3aec8be87",
+      "dimension": 512,
+      "levels": 10,
+      "downloadBytes": 724358,
+      "residentBytes": 1398100,
+      "format": "RGBA8 sRGB",
+      "supercompression": "Zstandard"
+    },
+    {
+      "channel": "roughness",
+      "file": "oak-roughness-v1.ktx2",
+      "sourceSha256": "5b04531e1dfeaf610c26f5eb9f978a73a64a313bc6066ce6bf7ab7659e5ab623",
+      "runtimeSha256": "1d1753fc8d1fec720dcb0bf7f03bc62ae5ea19ea9a902621518a77a5e4017f6d",
+      "dimension": 256,
+      "levels": 9,
+      "downloadBytes": 130817,
+      "residentBytes": 349524,
+      "format": "RGBA8 linear",
+      "supercompression": "Zstandard"
+    },
+    {
+      "channel": "normal",
+      "file": "oak-normal-v1.ktx2",
+      "sourceSha256": "b93d3f38ca43da0650dfd977f855efc428182efb5942b10dac5e74609fda740a",
+      "runtimeSha256": "32bde39ac9128444cbc426e6f7e63043fec80ec37380c12c0c3edf5788798d02",
+      "dimension": 256,
+      "levels": 9,
+      "downloadBytes": 193061,
+      "residentBytes": 349524,
+      "format": "RGBA8 linear",
+      "supercompression": "Zstandard"
+    }
+  ],
+  "sourceImages": "Original generated PNGs alongside this record; albedo, roughness and normal share a matching image composition.",
+  "encoding": "Albedo 512px, normal/roughness 256px; Lanczos downsampling; complete mip chain; Zstandard supercompression of RGBA8, not GPU block compression. Bottom image row stored first, KTXorientation ru, runtime flipY=false.",
+  "normalConvention": "OpenGL tangent space. Normal strength .24. Bark source green channel inverted during packing after directional comparison; oak source retained.",
+  "orientationCheck": {
+    "method": "Compare smoothed source-scale luminance gradients with normal R/G, plus inspect relief under directional light. Luminance is only a diagnostic approximation to height, not a measured displacement source.",
+    "oak": {
+      "redHorizontalGradientCorrelation": -0.8036,
+      "greenImageDownGradientCorrelation": 0.1123
+    },
+    "barkSource": {
+      "redHorizontalGradientCorrelation": -0.7879,
+      "greenImageDownGradientCorrelation": -0.3543
+    },
+    "barkRuntimeGreen": "inverted to positive image-down gradient direction; bottom-row-first packing keeps OpenGL UV direction"
+  },
+  "promptSummary": "Neutral, evenly lit, tileable weathered oak timber with vertical fibres, knots and cracks. Matching generated grayscale roughness and tangent-space normal requested as data textures; no measured material capture claimed."
+}

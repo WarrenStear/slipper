@@ -2,11 +2,11 @@ import { memo, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { TactileMaterial, useTactileDetail } from "../storyEvents/TactileMaterial";
 import { FoliageMaterial } from "./FoliageMaterial";
-import { woodlandHabitatLayout, type HabitatPlacement, type WoodlandVariant } from "./woodlandHabitat";
+import { woodlandHabitatLayout, type HabitatPlacement, type WoodlandVariant } from "./woodlandHabitatLayout";
 import { createDeadwoodGeometry, createFernGeometry, createLeafLitterGeometry, createRootThresholdGeometry, createRushGeometry } from "../environmentArt/woodlandHabitatGeometry";
 
-function HabitatInstances({ geometry, placements, name, color, foliage = false }: {
-  geometry: THREE.BufferGeometry; placements: readonly HabitatPlacement[]; name: string; color: string; foliage?: boolean;
+function HabitatInstances({ geometry, placements, name, color, foliage = false, flexibility = 0 }: {
+  geometry: THREE.BufferGeometry; placements: readonly HabitatPlacement[]; name: string; color: string; foliage?: boolean; flexibility?: number;
 }) {
   const ref = useRef<THREE.InstancedMesh>(null);
   useLayoutEffect(() => {
@@ -22,11 +22,11 @@ function HabitatInstances({ geometry, placements, name, color, foliage = false }
     mesh.computeBoundingBox(); mesh.computeBoundingSphere();
   }, [geometry, placements]);
   return <instancedMesh ref={ref} name={name} args={[geometry, undefined, placements.length]} receiveShadow>
-    {foliage ? <FoliageMaterial color={color} doubleSided /> : <TactileMaterial surface="bark" color={color} roughness={.96} side={THREE.DoubleSide} />}
+    {foliage ? <FoliageMaterial color={color} doubleSided flexibility={flexibility} /> : <TactileMaterial surface="bark" color={color} roughness={.96} side={THREE.DoubleSide} />}
   </instancedMesh>;
 }
 
-/** Three static batches, deliberately kept off all playable central surfaces. */
+/** Three fixed instance batches, kept off all playable central surfaces. */
 export const WoodlandHabitat = memo(function WoodlandHabitat({ variant, quality, reducedEffects }: {
   variant: WoodlandVariant; quality: string; reducedEffects: boolean;
 }) {
@@ -37,7 +37,7 @@ export const WoodlandHabitat = memo(function WoodlandHabitat({ variant, quality,
   useEffect(() => () => plant.dispose(), [plant]);
   useEffect(() => () => { litter.dispose(); timber.dispose(); }, [litter, timber]);
   return <group name={`${variant}-ground-habitat`} userData={{ decorativeOnly: true, drawCallBudget: 3 }}>
-    <HabitatInstances name="clustered-forest-understory" geometry={plant} placements={layout.plants} color={shore ? "#718367" : "#6c8051"} foliage />
+    <HabitatInstances name="clustered-forest-understory" geometry={plant} placements={layout.plants} color={shore ? "#718367" : "#6c8051"} foliage flexibility={shore ? .025 : .012} />
     <HabitatInstances name="curled-ground-leaves" geometry={litter} placements={layout.litter} color={shore ? "#615749" : "#8c7955"} />
     <HabitatInstances name="fallen-wood-at-forest-edge" geometry={timber} placements={layout.timber} color="#645d48" />
   </group>;
@@ -47,6 +47,6 @@ export const RootThreshold = memo(function RootThreshold() {
   const geometry = useMemo(createRootThresholdGeometry, []);
   useEffect(() => () => geometry.dispose(), [geometry]);
   return <mesh name="root-woven-rabbit-threshold" geometry={geometry} position={[0, -.2, 2.8]} receiveShadow>
-    <TactileMaterial surface="bark" color="#655842" roughness={.95} />
+    <TactileMaterial surface="bark" barkCoordinates color="#9b907a" roughness={.95} />
   </mesh>;
 });

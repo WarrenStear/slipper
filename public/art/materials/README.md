@@ -1,18 +1,32 @@
 # Reviewed material maps
 
-This directory contains documentation only: **no production textures are approved
-or activated**. The eleven entries in
-[`MATERIAL_MAPS`](../../../src/components/three/materials/materialMapRegistry.ts)
-remain `procedural-fallback`: wood, wet wood, bark, plaster, linen, velvet, stone,
-earth, ash, metal and paper. Other finishes also retain their procedural material.
-Adding a file here does not enable it. Concept PNGs and placeholder GLB materials
-are not reviewed surface art.
+The `wood`, `wet-wood`, and `bark` entries in `MATERIAL_MAPS` now use two local
+**AI-generated material approximations**. They are authored appearance assets,
+not photogrammetry or measured PBR scans. Other finishes retain their procedural
+fallbacks. The source PNGs, generation records, SHA-256 hashes, dimensions and
+encoded byte counts are in [`art-source`](../../../art-source/README.md).
+
+Timber is applied only to construction assemblies with reviewed per-board UVs;
+legacy timber meshes keep their procedural finish. Bark is applied to the root
+threshold and continuous instanced forest. Albedo is 512px; normal and roughness
+are 256px, with complete mip chains. The two sets total **2,328,961 download
+bytes** and **4,194,296 decoded RGBA/mip bytes** at source level. KTX2 uses Zstandard
+supercompression, not GPU block compression. This estimate excludes renderer,
+decoder, driver and duplicate-upload overhead; it is not a device measurement.
+
+Generated normal maps use a restrained `.24` strength. The bark source's green
+axis was corrected to OpenGL after directional inspection; oak retained its
+original orientation. No AO is added. Material memory still controls local
+wetting, wear and damage. Low/medium quality and reduced effects request no maps.
+
 
 ## Admission and delivery contract
 
-Set `status: "reviewed-production"` only after the actual files and their receiving
-meshes have been reviewed. `approvedMaterialMaps` is the shared runtime/manifest
-admission function. Required metadata is deliberately small:
+Generated approximations use `status: "reviewed-generated"` after source and receiving
+mesh review. `status: "reviewed-production"` remains available for separately reviewed
+production assets; generated sets do not use it. Both statuses pass the same strict
+`approvedMaterialMaps` runtime/manifest admission checks and are counted separately
+in the generated manifest. Required metadata is deliberately small:
 
 | Field | Contract |
 | --- | --- |
@@ -50,7 +64,7 @@ response, normal orientation, texture swimming, saturation and black levels stil
 need visual inspection on the actual receiving mesh. UV1 provided by a review
 fixture does not prove that a scene mesh has a valid AO atlas.
 
-Production maps supplement the existing physically lit surface and material-memory
+Admitted maps supplement the existing physically lit surface and material-memory
 shader. Wetness, wear, damage and reintegration remain active, including retained
 scars. Do not bake chapter lighting, text or story state into material images.
 
@@ -93,8 +107,8 @@ landscape are available through `REVIEW_MATRIX=1`. `REVIEW_STATES=dry,wet` and
 `REVIEW_MATERIALS=wood` narrow a pass. `REVIEW_OUT`, `REVIEW_PORT` and
 `REVIEW_ANGLE=metal` are optional; default ANGLE is software SwiftShader. Screenshots
 and `material-review.json` include actual renderer, delivery status, applied map
-channels, requests and render counts. With this registry, reviewed views are
-explicitly labelled **unavailable**, with procedural fallback shown.
+channels, requests and render counts. Unmapped finishes are explicitly labelled **unavailable**, with procedural
+fallback shown. Wood, wet wood and bark exercise the admitted generated maps.
 
 For decoder/failure/UV testing only, the script can copy the official Three ETC1S
 diagnostic from `tests/fixtures/production-delivery/` into its temporary output.

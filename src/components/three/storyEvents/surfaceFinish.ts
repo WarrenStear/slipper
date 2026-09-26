@@ -1,6 +1,6 @@
 /** Authored albedo/roughness variation. Uses the existing local metre coordinates;
  * no downloads, displacement, new lights, or extra renderer passes. */
-export function authoredSurfaceFinish(surface: string, relief: boolean): string {
+export function authoredSurfaceFinish(surface: string, relief: boolean, constructionCoordinates = false): string {
   const init = "float authoredRoughness = 0.;\n";
   if (["wood", "wet-wood", "painted-wood"].includes(surface)) return init + `
     // Long fibres divert around occasional oval knots, rather than zebra stripes.
@@ -16,6 +16,16 @@ export function authoredSurfaceFinish(surface: string, relief: boolean): string 
     diffuseColor.rgb *= .91 + timberAge * .16 - knotMask * .19;
     diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * vec3(.86, .79, .68), timberFibre * timberFilter * .16);
     authoredRoughness = (timberAge - .5) * .11 + knotMask * .055;
+    ${constructionCoordinates ? `
+      // A cut end exposes compact growth rings; long fibres follow each board.
+      float cutEnd = smoothstep(.72, .96, abs(vStoryNormal.y));
+      float endRadius = length(p.xz + vec2(.045, .073));
+      float endFlow = endRadius * 145. + storyNoise(p * 7.) * 1.4;
+      float endFilter = 1. - smoothstep(.4, 1.6, fwidth(endFlow));
+      float endRings = (.5 + .5 * sin(endFlow)) * endFilter;
+      diffuseColor.rgb *= 1. - cutEnd * (.08 + endRings * .16);
+      authoredRoughness += cutEnd * .06;
+    ` : ""}
   `;
   if (surface === "bark") return init + `
     float barkAge = storyNoise(vec3(p.x * 2.3, p.y * .46, p.z * 2.3));

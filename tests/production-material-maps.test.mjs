@@ -7,10 +7,27 @@ import { createKeyGeometry, createLanternHousingGeometry } from '../src/componen
 const reviewed = { status: 'reviewed-production', maxDimension: 1024, repeat: [2, 2], normalConvention: 'opengl', provenance: 'Test review contract only; no shipping asset', licence: 'Test fixture', reviewedBy: 'Material test', reviewedAt: '2026-09-26', channels: { map: '/art/materials/timber/albedo.ktx2', normalMap: '/art/materials/timber/normal.ktx2' } };
 
 test('material maps require reviewed bounded local compressed assets', () => {
-  Object.values(MATERIAL_MAPS).forEach(entry => assert.equal(approvedMaterialMaps(entry), null));
+  for (const [surface, candidate] of Object.entries(MATERIAL_MAPS)) {
+    const admitted = approvedMaterialMaps(candidate);
+    if (['wood', 'wet-wood', 'bark'].includes(surface)) {
+      assert.equal(admitted, candidate); assert.equal(candidate.maxDimension, 512);
+      assert.equal(candidate.status, 'reviewed-generated');
+      assert.deepEqual(Object.keys(candidate.channels), ['map','normalMap','roughnessMap']);
+      assert.match(candidate.provenance, /generated material approximation/);
+    } else assert.equal(admitted, null, surface);
+  }
   const entry=reviewed;
   assert.equal(approvedMaterialMaps(entry),entry);
   for(const bad of [{status:'procedural-fallback'},{maxDimension:2048},{maxDimension:NaN},{repeat:[0,2]},{channels:{map:'https://example.com/albedo.ktx2'}},{channels:{map:'/art/materials/../secret.ktx2'}},{channels:{map:'/art/materials/albedo.png'}}])assert.equal(approvedMaterialMaps({...entry,...bad}),null);
+});
+test('generated approximations use the same eligibility contract without claiming production review', () => {
+  const generated = { ...reviewed, status: 'reviewed-generated' };
+  assert.equal(approvedMaterialMaps(generated), generated);
+  for (const bad of [{ status: 'generated' }, { provenance: '' }, { licence: '' }, { reviewedBy: '' },
+    { reviewedAt: '2026-02-30' }, { maxDimension: 2048 }, { normalConvention: 'directx' },
+    { repeat: [0, 1] }, { channels: { map: 'https://example.com/map.ktx2' } },
+    { channels: { aoMap: '/art/materials/ao.ktx2' } },
+  ]) assert.equal(approvedMaterialMaps({ ...generated, ...bad }), null);
 });
 test('material memory updates uniforms without generating a shader variant for each history', () => {
   const memory={value:[.8,.7,.4,1]}, shader={vertexShader:ShaderLib.standard.vertexShader,fragmentShader:ShaderLib.standard.fragmentShader};
@@ -220,7 +237,7 @@ test('the actual tactile component gates both automatic and override maps by cha
   for (const quality of ['low', 'medium', 'high', 'cinematic']) for (const reduced of [false, true]) for (const override of [false, true]) {
     inherited = tactileShader.tactileDetailFor(quality, reduced);
     const allowed = !reduced && ['high', 'cinematic'].includes(quality);
-    const element = exports.TactileMaterial({ surface: 'wet-wood', detail: 'relief', color: '#776644', memory: { wetness: .7, wear: .6, damage: .5, reintegrated: true }, ...(override ? { maps: { map } } : {}) });
+    const element = exports.TactileMaterial({ surface: 'wet-wood', constructionCoordinates: true, detail: 'relief', color: '#776644', memory: { wetness: .7, wear: .6, damage: .5, reintegrated: true }, ...(override ? { maps: { map } } : {}) });
     assert.equal(requested, allowed && !override, `${quality}/${reduced}: local relief detail cannot escalate map delivery`);
     const material = new MeshStandardMaterial(); guard(element.props.onBeforeRender, material, uvGeometry());
     assert.equal(material.map, allowed ? map : null);
@@ -228,4 +245,7 @@ test('the actual tactile component gates both automatic and override maps by cha
     element.props.onBeforeCompile(shader);
     assert.deepEqual(Array.from(shader.uniforms.storyMemory.value), [.7, .6, .5, 1]);
   }
+  inherited = 'relief';
+  exports.TactileMaterial({surface:'wood', color:'#776644'});
+  assert.equal(requested, false, 'legacy wood without reviewed construction UVs retains its procedural material');
 });

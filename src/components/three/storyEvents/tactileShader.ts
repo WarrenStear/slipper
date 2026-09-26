@@ -142,7 +142,9 @@ export const TACTILE_PATTERNS: Record<StorySurface, string> = {
 
 /** Surface identity includes broad roughness variation even on low quality. */
 export const TACTILE_ROUGHNESS: Partial<Record<StorySurface, string>> = {
-  "wet-wood": "roughnessFactor = clamp(roughnessFactor * (.87 + wet * .1), .3, .9);",
+  // A damp weathered board keeps raised fibres matte. Material memory lowers
+  // only its local damp patches afterwards, instead of varnishing the whole top.
+  "wet-wood": "roughnessFactor = clamp(max(roughnessFactor, .76 + wet * .1), .64, .94);",
   "charred-wood": "roughnessFactor = clamp(roughnessFactor + .09 + charcoal * .06, .88, 1.0);",
   "painted-wood": "roughnessFactor = clamp(roughnessFactor * .77 + wear * .22, .35, .99);",
   plaster: "roughnessFactor = clamp(roughnessFactor + trowel * .04, .88, 1.0);",
@@ -165,19 +167,19 @@ export const TACTILE_RELIEF_NORMAL = `
   normal = normalize(normal - storyGradient);
 `;
 
-export function tactileProgramKey(surface: StorySurface, detail: TactileDetail) {
-  return `sidtw-tactile-${surface}-v8-${detail}`;
+export function tactileProgramKey(surface: StorySurface, detail: TactileDetail, constructionCoordinates = false) {
+  return `sidtw-tactile-${surface}-v9-${detail}-${constructionCoordinates ? "construction" : "object"}`;
 }
 
 /** Extend the standard light/shadow/fog/colour pipeline, never replace it. */
-export function applyTactileShader(shader: TactileShader, surface: StorySurface, detail: TactileDetail, memory = { value: [0, 0, 0, 0] }) {
+export function applyTactileShader(shader: TactileShader, surface: StorySurface, detail: TactileDetail, memory = { value: [0, 0, 0, 0] }, constructionCoordinates = false) {
   shader.uniforms ??= {};
   shader.uniforms.storyMemory = memory;
   shader.vertexShader = shader.vertexShader
-    .replace("#include <common>", "#include <common>\nvarying vec3 vStoryPosition;\nvarying vec3 vStoryNormal;")
+    .replace("#include <common>", `#include <common>\nvarying vec3 vStoryPosition;\nvarying vec3 vStoryNormal;\n${constructionCoordinates ? "attribute vec3 storySurfacePosition; attribute vec3 storySurfaceNormal;" : ""}`)
     .replace("#include <begin_vertex>", `#include <begin_vertex>
-      vStoryPosition = position;
-      vStoryNormal = normal;
+      vStoryPosition = ${constructionCoordinates ? "storySurfacePosition" : "position"};
+      vStoryNormal = ${constructionCoordinates ? "storySurfaceNormal" : "normal"};
       #ifdef USE_INSTANCING
         // Local scale keeps grain size consistent across differently sized instances.
         // Translation seeds variation; rotating the camera or object does not slide it.
@@ -185,10 +187,23 @@ export function applyTactileShader(shader: TactileShader, surface: StorySurface,
         float storySeed = fract(sin(dot(instanceMatrix[3].xyz, vec3(12.9898, 78.233, 37.719))) * 43758.5453);
         vStoryPosition += vec3(storySeed * 17.0, storySeed * 3.0, storySeed * 13.0);
       #endif`);
+  if (surface === "bark") shader.vertexShader = shader.vertexShader.replace("#include <uv_vertex>", `#include <uv_vertex>
+    #ifdef USE_INSTANCING
+      vec2 barkMetres = vec2(length(instanceMatrix[0].xyz) * 5., length(instanceMatrix[1].xyz) / 1.6);
+      #ifdef USE_MAP
+        vMapUv *= barkMetres;
+      #endif
+      #ifdef USE_NORMALMAP
+        vNormalMapUv *= barkMetres;
+      #endif
+      #ifdef USE_ROUGHNESSMAP
+        vRoughnessMapUv *= barkMetres;
+      #endif
+    #endif`);
   shader.fragmentShader = shader.fragmentShader
     .replace("#include <common>", `#include <common>\nvarying vec3 vStoryPosition;\nvarying vec3 vStoryNormal;\nuniform vec4 storyMemory;\n${SURFACE_NOISE}`)
     .replace("#include <color_fragment>", `#include <color_fragment>\n${SURFACE_COORDINATES}\n${detail === "relief" ? TACTILE_PATTERNS[surface] : TACTILE_BASE_PATTERNS[surface]}\ndiffuseColor.rgb *= grain;
-      ${authoredSurfaceFinish(surface, detail === "relief")}
+      ${authoredSurfaceFinish(surface, detail === "relief", constructionCoordinates)}
       float memoryField = max(max(storyMemory.x, storyMemory.y), storyMemory.z) > 0. ? storyNoise(p * 2.8) : .5;
       float broadMemory = storyNoise(p * .43 + vec3(3.7, .8, 2.1));
       float dampPatch = smoothstep(.34, .72, memoryField * .42 + broadMemory * .58) * storyMemory.x;

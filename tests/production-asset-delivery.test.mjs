@@ -23,8 +23,13 @@ function glb(json) {
 test('shipping manifest derives every gated slot without admitting legacy models', () => {
   const report = productionAssetManifest();
   assert.equal(report.assets.length, 34); assert.equal(report.approvedProductionAssets, 0);
+  assert.equal(report.reviewedGeneratedAssets, 3);
   assert.deepEqual(report.assets.reduce((counts, asset) => ({ ...counts, [asset.kind]: (counts[asset.kind] ?? 0) + 1 }), {}), { hero: 13, material: 11, audio: 10 });
-  assert.ok(report.assets.every(asset => asset.runtimeUrls.length === 0 && asset.fallback && asset.validationDate));
+  const generated = report.assets.filter(asset => asset.status === 'reviewed-generated');
+  assert.deepEqual(generated.map(asset => asset.asset).sort(), ['bark', 'wet-wood', 'wood']);
+  assert.ok(generated.every(asset => asset.kind === 'material' && asset.runtimeUrls.length === 3 && /generated material approximation/.test(asset.review.provenance)));
+  assert.ok(report.assets.filter(asset => asset.status !== 'reviewed-generated').every(asset => asset.runtimeUrls.length === 0));
+  assert.ok(report.assets.every(asset => asset.fallback && asset.validationDate));
 });
 test('published decoder bytes and manifest match the locked Three distribution', () => {
   const result = syncAssetDecoders(); assert.equal(result.files.length, 5);
@@ -53,11 +58,19 @@ test('material manifest checks real KTX2 containers and 1024 dimension budget', 
   writeFileSync(file, 'invalid'); assert.throws(() => productionAssetManifest(options), /Invalid material KTX2/);
   const data = readFileSync(new URL('./fixtures/production-delivery/diagnostic-etc1s.ktx2', import.meta.url));
   writeFileSync(file, data); const report = productionAssetManifest(options); assert.equal(report.assets[0].files[0].bytes, data.length);
+  assert.equal(report.approvedProductionAssets, 1); assert.equal(report.reviewedGeneratedAssets, 0);
+  const generatedOptions = { ...options, materials: { wood: { ...maps, status: 'reviewed-generated' } } };
+  const generatedReport = productionAssetManifest(generatedOptions);
+  assert.equal(generatedReport.approvedProductionAssets, 0); assert.equal(generatedReport.reviewedGeneratedAssets, 1);
+  assert.deepEqual(generatedReport.assets[0].files, report.assets[0].files);
+  assert.throws(() => productionAssetManifest({ ...generatedOptions, materials: { wood: { ...generatedOptions.materials.wood, provenance: '' } } }), /Invalid reviewed material/);
   const oversized = Buffer.from(data); oversized.writeUInt32LE(2048, 20); writeFileSync(file, oversized);
   assert.throws(() => productionAssetManifest(options), /bounded 2D/);
+  assert.throws(() => productionAssetManifest(generatedOptions), /bounded 2D/);
   for (const levels of [0, 32]) {
     const invalid = Buffer.from(data); invalid.writeUInt32LE(levels, 40); writeFileSync(file, invalid);
     assert.throws(() => productionAssetManifest(options), /bounded 2D/);
+    assert.throws(() => productionAssetManifest(generatedOptions), /bounded 2D/);
   }
 });
 test('stable art/audio/decoder URLs revalidate while version metadata remains uncached', () => {

@@ -50,7 +50,7 @@ those header rules automatically.
 | Registry / admission helper | Required reviewed entry |
 | --- | --- |
 | [`HERO_ASSETS`](../src/components/three/actors/heroAssetRegistry.ts) / `approvedHeroAsset` | `status: "reviewed-production"`, safe local `/art/heroes/…glb` URL, existing `contract`, and nested `review`. |
-| [`MATERIAL_MAPS`](../src/components/three/materials/materialMapRegistry.ts) / `approvedMaterialMaps` | Reviewed status, `maxDimension`, two-axis `repeat`, nonempty `channels`, and flat `provenance`, `licence`, `reviewedBy`, `reviewedAt`. |
+| [`MATERIAL_MAPS`](../src/components/three/materials/materialMapRegistry.ts) / `approvedMaterialMaps` | `"reviewed-production"` or `"reviewed-generated"` status (generated approximations counted separately), `maxDimension`, two-axis `repeat`, nonempty `channels`, and flat `provenance`, `licence`, `reviewedBy`, `reviewedAt`. |
 | [`PRODUCTION_AUDIO_REGISTRY`](../src/components/three/audio/productionAudioRegistry.ts) / `reviewedProductionAudio` | Reviewed status, local `/audio/…mp3` or `…ogg` URL, matching `format`, `loop`, `nominalLevelDb`, `provenance`, `reviewedBy`, `reviewedAt`. |
 
 **Hero review:** requires `provenance`, `licence`, `reviewedBy`, `revision`,

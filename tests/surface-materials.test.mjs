@@ -113,3 +113,15 @@ test('chapter comparison fixtures use the candidate quality policy without chang
   assert.match(s,/<TactileDetailProvider quality=\{quality\} reducedEffects=\{quality==='low'\}>/);
   assert.match(s,/Material review fixture anchor missing/);
 });
+
+
+test('construction grain programs use explicit piece attributes without changing object-space fallbacks', () => {
+  const assembled=applyTactileShader(template(),'wood','relief',undefined,true);
+  const ordinary=applyTactileShader(template(),'wood','relief');
+  assert.match(assembled.vertexShader,/attribute vec3 storySurfacePosition/);
+  assert.match(assembled.vertexShader,/vStoryPosition = storySurfacePosition/);
+  assert.match(assembled.fragmentShader,/float cutEnd/);
+  assert.doesNotMatch(ordinary.vertexShader,/attribute vec3 storySurfacePosition/);
+  assert.doesNotMatch(ordinary.fragmentShader,/float cutEnd/);
+  assert.notEqual(tactileProgramKey('wood','relief',true),tactileProgramKey('wood','relief'));
+});

@@ -26,7 +26,7 @@ export function productionAssetManifest({ root = repositoryRoot, heroes = HERO_A
     return { data, evidence: { runtimeUrl: url, bytes: size, sha256: createHash('sha256').update(data).digest('hex') } };
   }
   function record(kind, id, entry, source, fallback, files, review) {
-    inventory.push({ kind, asset: id, status: entry.status, source, reviewState: entry.status === 'reviewed-production' ? 'review metadata and file preflight valid; artistic/device review remains required' : 'no production asset approved', runtimeUrls: files.map(file => file.runtimeUrl), fallback, review: review ?? null, validationDate: validatedAt, files });
+    inventory.push({ kind, asset: id, status: entry.status, source, reviewState: entry.status === 'reviewed-production' ? 'review metadata and file preflight valid; artistic/device review remains required' : entry.status === 'reviewed-generated' ? 'generated approximation; review metadata and file preflight valid; device review remains required' : 'no runtime asset admitted', runtimeUrls: files.map(file => file.runtimeUrl), fallback, review: review ?? null, validationDate: validatedAt, files });
   }
   for (const [id, entry] of Object.entries(heroes)) {
     let files = [];
@@ -41,7 +41,8 @@ export function productionAssetManifest({ root = repositoryRoot, heroes = HERO_A
   }
   for (const [id, entry] of Object.entries(materials)) {
     const files = [];
-    if (entry.status === 'reviewed-production') {
+    const reviewed = entry.status === 'reviewed-production' || entry.status === 'reviewed-generated';
+    if (reviewed) {
       const approved = approvedMaterialMaps(entry);
       if (!approved) throw new Error(`Invalid reviewed material registry entry: ${id}`);
       for (const [channel, url] of Object.entries(approved.channels)) {
@@ -52,7 +53,7 @@ export function productionAssetManifest({ root = repositoryRoot, heroes = HERO_A
         files.push({ ...file.evidence, channel, width, height });
       }
     } else if (entry.status !== 'procedural-fallback' || Object.keys(entry.channels).length) throw new Error(`Invalid fallback material registry entry: ${id}`);
-    record('material', id, entry, entry.provenance ?? 'Procedural material-memory shader', 'TactileMaterial with scene wetness, wear, damage and reintegration', files, entry.status === 'reviewed-production' ? { provenance: entry.provenance, licence: entry.licence, reviewedBy: entry.reviewedBy, reviewedAt: entry.reviewedAt, revision: entry.revision ?? null } : null);
+    record('material', id, entry, entry.provenance ?? 'Procedural material-memory shader', 'TactileMaterial with scene wetness, wear, damage and reintegration', files, reviewed ? { provenance: entry.provenance, licence: entry.licence, reviewedBy: entry.reviewedBy, reviewedAt: entry.reviewedAt, revision: entry.revision ?? null } : null);
   }
   for (const [id, entry] of Object.entries(audio)) {
     const files = [];
@@ -68,7 +69,7 @@ export function productionAssetManifest({ root = repositoryRoot, heroes = HERO_A
     } else if (entry.status !== 'procedural-fallback' || entry.url !== null) throw new Error(`Invalid fallback audio registry entry: ${id}`);
     record('audio', id, entry, entry.provenance, `Deterministic procedural ${id} stem`, files, entry.status === 'reviewed-production' ? { reviewedBy: entry.reviewedBy, reviewedAt: entry.reviewedAt } : null);
   }
-  return { schemaVersion: 1, validatedAt, authority: ['HERO_ASSETS', 'MATERIAL_MAPS', 'PRODUCTION_AUDIO_REGISTRY'], approvedProductionAssets: inventory.filter(asset => asset.status === 'reviewed-production').length, assets: inventory };
+  return { schemaVersion: 1, validatedAt, authority: ['HERO_ASSETS', 'MATERIAL_MAPS', 'PRODUCTION_AUDIO_REGISTRY'], approvedProductionAssets: inventory.filter(asset => asset.status === 'reviewed-production').length, reviewedGeneratedAssets: inventory.filter(asset => asset.status === 'reviewed-generated').length, assets: inventory };
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
@@ -78,6 +79,6 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
     const decoders = syncAssetDecoders();
     const manifest = productionAssetManifest();
     if (args.length) writeFileSync(resolve(args[1]), JSON.stringify({ ...manifest, decoders }, null, 2) + '\n');
-    console.log(`[production-assets] ${manifest.assets.length} registry slots, ${manifest.approvedProductionAssets} reviewed assets activated; ${decoders.files.length} local decoder files verified.`);
+    console.log(`[production-assets] ${manifest.assets.length} registry slots, ${manifest.approvedProductionAssets} production assets and ${manifest.reviewedGeneratedAssets} generated approximations activated; ${decoders.files.length} local decoder files verified.`);
   } catch (error) { console.error(error.message); process.exitCode = 1; }
 }

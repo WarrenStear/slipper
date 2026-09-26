@@ -90,7 +90,7 @@ test('camera consumer retains a single owner, explicit scene, multi-pointer inpu
 test('bark, stone and wood detail remains on lit, derivative-filtered materials',()=>{
   const s=(source('src/components/three/storyEvents/TactileMaterial.tsx') + source('src/components/three/storyEvents/tactileShader.ts'));
   assert.match(s,/bark:/);assert.match(s,/stone:/);assert.match(s,/fwidth/);
-  assert.match(s,/roughnessFactor = clamp/);assert.match(s,/sidtw-tactile-\$\{surface\}-v8/);
+  assert.match(s,/roughnessFactor = clamp/);assert.match(s,/sidtw-tactile-\$\{surface\}-v9/);
   assert.doesNotMatch(s,/TextureLoader|WebGLRenderTarget|requestAnimationFrame|useFrame/);
 });
 test('existing environment batches receive material detail without new instance batches',()=>{
