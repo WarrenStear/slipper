@@ -21,3 +21,19 @@ export function resolveEnvironmentalChoreography(states: Readonly<Record<string,
   };
 }
 export type EnvironmentalCueState = ReturnType<typeof resolveEnvironmentalChoreography>;
+
+/** Read elapsed active time from the existing scene clock. Paused clocks and
+ * resets contribute nothing; a resumed frame cannot replay background time. */
+export function environmentalResponseDelta(now: number, previous: number, motion: number) {
+  if (![now, previous, motion].every(Number.isFinite) || motion <= .0001 || now <= previous) return 0;
+  return Math.min(.05, (now - previous) / motion);
+}
+
+/** Three finite wavefronts follow an accepted touch, then leave still water. */
+export function acceptedWaterWave(elapsed: number, index: number, target = { scale: .5, opacity: 0 }) {
+  const age = elapsed - index * .62;
+  const progress = Math.max(0, Math.min(1, age / 4.8));
+  target.scale = .5 + progress * 3.6;
+  target.opacity = age > 0 && age < 4.8 ? Math.sin(progress * Math.PI) * (1 - progress) * .2 : 0;
+  return target;
+}

@@ -1,70 +1,101 @@
 import { TimberAssembly, WritingDesk } from "../chapters/ChapterArt";
 import { useSceneLook } from "../artDirection/SceneLookContext";
-import { memo, useEffect, useMemo, useRef } from "react";
+import { memo, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import type { JourneySceneId } from "../../../lib/storyJourneyState";
 import type { RenderQualityProfile } from "../renderQuality";
 import { useJourneyStore } from "../../../stores/useJourneyStore";
-import { resolveEnvironmentalChoreography, type EnvironmentalCueState } from "../../../cinematics/environmentalChoreography";
+import { acceptedWaterWave, environmentalResponseDelta, resolveEnvironmentalChoreography, type EnvironmentalCueState } from "../../../cinematics/environmentalChoreography";
 import { getCurrentCinematicProfile } from "../../../cinematics/emotionalCinematography";
 import { StoryObjectModel } from "./StoryObjectModel";
 import { Beam, DoorFrame, FabricVeil, WaterSurface } from "../chapters/ChapterPrimitives";
 import { createFlameGeometry, createWaxCandleGeometry } from "../environmentArt/authoredGeometry.ts";
 import { TactileMaterial } from "./TactileMaterial";
+import { subscribeAcceptedStoryEvents } from "../../../storyEvents/acceptedStoryEvents";
 
 type ChoreographyProps = { sceneId: JourneySceneId; reducedMotion: boolean; reducedEffects: boolean; qualityProfile: RenderQualityProfile };
+const WATER_RESPONSE_EVENTS = {
+  blue: ["blue-moon.water-reveal"],
+  river: ["river.entered", "river.ash-washed"],
+  home: ["home.water.visited"],
+} as const;
 
 function CandleChain({ lit, reducedMotion, count }: { lit: boolean; reducedMotion: boolean; count: number }) {
+  const presentation = useSceneLook();
+  const relocation = useJourneyStore(state => state.sceneRelocationRevision);
+  const previousTime = useRef(presentation?.time.flame ?? 0);
   const flameColor = useMemo(() => new THREE.Color("#efcf91").multiplyScalar(3.2), []);
   const flames = useRef<THREE.InstancedMesh>(null);
   const wax = useRef<THREE.InstancedMesh>(null);
   const light = useRef<THREE.PointLight>(null);
-  const time = useRef(lit ? 12 : 0);
+  const time = useRef(12);
   const dummy = useMemo(() => new THREE.Object3D(), []);
   const geometry = useMemo(() => ({ wax: createWaxCandleGeometry(.085, .5, 5), flame: createFlameGeometry(.055, .13) }), []);
   useEffect(() => () => { geometry.wax.dispose(); geometry.flame.dispose(); }, [geometry]);
-  useFrame((_, delta) => {
-    if (lit) time.current = Math.min(12, time.current + Math.min(delta, 0.05));
+  useEffect(() => { time.current = 12; }, [relocation]);
+  useEffect(() => subscribeAcceptedStoryEvents(event => {
+    if (event.eventIds.includes("blue-moon.candle-chain")) time.current = 0;
+  }), []);
+  useLayoutEffect(() => {
     for (let index = 0; index < count; index += 1) {
       const progress = index / Math.max(1, count - 1);
       dummy.position.set(-3.3 + Math.sin(progress * Math.PI) * 0.7, 0.25, -1.5 + progress * 9);
       dummy.scale.set(1, 1 + (index % 3) * 0.2, 1); dummy.updateMatrix(); wax.current?.setMatrixAt(index, dummy.matrix);
+    }
+    if (wax.current) { wax.current.instanceMatrix.needsUpdate = true; wax.current.computeBoundingBox(); wax.current.computeBoundingSphere(); }
+    if (flames.current) flames.current.boundingSphere = new THREE.Sphere(new THREE.Vector3(-3, 1, 3), 6);
+  }, [count, dummy]);
+  useFrame(() => {
+    const now = presentation?.time.flame ?? 0;
+    const delta = environmentalResponseDelta(now, previousTime.current, presentation?.motion.flame ?? 0);
+    previousTime.current = now;
+    if (lit) time.current = reducedMotion || presentation?.reducedEffects ? 12 : Math.min(12, time.current + delta);
+    for (let index = 0; index < count; index += 1) {
+      const progress = index / Math.max(1, count - 1);
       const strength = lit ? Math.max(0, Math.min(1, (time.current - progress * (reducedMotion ? 0 : 5)) * 1.4)) : 0;
-      dummy.position.y = 0.51 + (index % 3) * 0.1;
+      dummy.position.set(-3.3 + Math.sin(progress * Math.PI) * .7, .51 + (index % 3) * .1, -1.5 + progress * 9);
       dummy.scale.set(strength, strength * 1.7, strength); dummy.updateMatrix(); flames.current?.setMatrixAt(index, dummy.matrix);
     }
-    if (wax.current) wax.current.instanceMatrix.needsUpdate = true;
     if (flames.current) flames.current.instanceMatrix.needsUpdate = true;
-    if (light.current) light.current.intensity += ((lit ? 1.5 : 0) - light.current.intensity) * Math.min(delta, 0.05);
+    if (light.current) light.current.intensity = lit ? Math.min(1, time.current / 5) * 1.5 : 0;
   });
   return <group name="candle-chain-response" userData={{ lit }}>
     <instancedMesh ref={wax} geometry={geometry.wax} args={[undefined, undefined, count]}><TactileMaterial surface="wax" color="#cec2a7" roughness={0.82} /></instancedMesh>
     <instancedMesh ref={flames} geometry={geometry.flame} args={[undefined, undefined, count]}><meshBasicMaterial color={flameColor} /></instancedMesh>
-    <pointLight ref={light} position={[-3.1, 0.9, 2]} color="#e4bd83" intensity={0} distance={11} decay={2} />
+    <pointLight ref={light} position={[-3.1, 0.9, 2]} color="#e4bd83" intensity={lit ? 1.5 : 0} distance={11} decay={2} />
   </group>;
 }
 
-function WaterResponse({ position, active, washed = false, includeSoot = false, reducedMotion }: { position: [number, number, number]; active: boolean; washed?: boolean; includeSoot?: boolean; reducedMotion: boolean }) {
+function WaterResponse({ position, active, cue, washed = false, includeSoot = false, reducedMotion }: { position: [number, number, number]; active: boolean; cue: keyof typeof WATER_RESPONSE_EVENTS; washed?: boolean; includeSoot?: boolean; reducedMotion: boolean }) {
   const presentation = useSceneLook();
+  const relocation = useJourneyStore(state => state.sceneRelocationRevision);
   const rings = useRef<THREE.Group>(null);
   const soot = useRef<THREE.Mesh>(null);
-  const time = useRef(0);
-  useEffect(() => { time.current = 0; }, [active, washed]);
-  useFrame((_, delta) => {
-    const activity = presentation ? Math.min(1, presentation.motion.water * 4) : 1;
-    time.current += Math.min(delta, 0.05) * activity;
+  const waveFrame = useMemo(() => ({ scale: .5, opacity: 0 }), []);
+  const time = useRef(8);
+  const previousTime = useRef(presentation?.time.water ?? 0);
+  useEffect(() => { time.current = 8; }, [relocation]);
+  useEffect(() => subscribeAcceptedStoryEvents(event => {
+    if (event.eventIds.some(id => (WATER_RESPONSE_EVENTS[cue] as readonly string[]).includes(id))) time.current = 0;
+  }), [cue]);
+  useFrame(() => {
+    const now = presentation?.time.water ?? 0;
+    const delta = environmentalResponseDelta(now, previousTime.current, presentation?.motion.water ?? 0);
+    previousTime.current = now;
+    const still = reducedMotion || presentation?.reducedEffects;
+    time.current = still ? 8 : Math.min(8, time.current + delta);
     if (rings.current) rings.current.children.forEach((child, index) => {
-      const progress = reducedMotion ? 0.4 + index * 0.15 : ((time.current * 0.13 + index * 0.23) % 1);
-      child.scale.setScalar(0.5 + progress * 3.6);
+      const wave = acceptedWaterWave(time.current, index, waveFrame);
+      child.scale.setScalar(wave.scale * (cue === "home" ? .22 : cue === "river" ? .82 : 1));
       const material = (child as THREE.Mesh).material as THREE.MeshBasicMaterial;
-      material.opacity = active ? (1 - progress) * 0.19 * activity : 0;
+      material.opacity = active && !still ? wave.opacity : 0;
     });
     if (soot.current) {
       const material = soot.current.material as THREE.MeshBasicMaterial;
       const target = washed ? 0 : active ? 0.16 : 0.34;
-      material.opacity += (target - material.opacity) * (1 - Math.exp(-Math.min(delta, 0.05) * 0.7));
-      if (!reducedMotion && active) soot.current.rotation.z += Math.min(delta, 0.05) * activity * 0.02;
+      material.opacity = still || time.current >= 8 ? target : material.opacity + (target - material.opacity) * (1 - Math.exp(-delta * .7));
+      if (!still && active) soot.current.rotation.z += delta * .02;
     }
   });
   return <group position={position} name="water-and-ash-response">
@@ -73,11 +104,22 @@ function WaterResponse({ position, active, washed = false, includeSoot = false, 
   </group>;
 }
 
-function CageResponse({ physical, reflected }: { physical: boolean; reflected: boolean }) {
+function CageResponse({ physical, reflected, reducedMotion }: { physical: boolean; reflected: boolean; reducedMotion: boolean }) {
+  const presentation = useSceneLook();
+  const relocation = useJourneyStore(state => state.sceneRelocationRevision);
+  const previousTime = useRef(presentation?.time.cloth ?? 0);
   const physicalRef = useRef<THREE.Group>(null);
-  useFrame((_, delta) => {
+  useLayoutEffect(() => {
+    if (physicalRef.current) physicalRef.current.scale.y = physical ? 1 : .001;
+  }, [relocation]);
+  useFrame(() => {
+    const now = presentation?.time.cloth ?? 0;
+    const delta = environmentalResponseDelta(now, previousTime.current, presentation?.motion.cloth ?? 0);
+    previousTime.current = now;
     if (!physicalRef.current) return;
-    physicalRef.current.scale.y += ((physical ? 1 : 0.001) - physicalRef.current.scale.y) * (1 - Math.exp(-Math.min(delta, 0.05) * 0.65));
+    const target = physical ? 1 : .001;
+    physicalRef.current.scale.y = reducedMotion || presentation?.reducedEffects ? target
+      : physicalRef.current.scale.y + (target - physicalRef.current.scale.y) * (1 - Math.exp(-delta * .65));
   });
   return <group name="reflection-becomes-captivity" userData={{ physical, reflected }}>
     {reflected ? <group position={[1, 1.3, 2.9]}>{[-0.4, -0.2, 0, 0.2, 0.4].map(x => <mesh key={x} position={[x, 0.6, 0]}><boxGeometry args={[0.018, 1.3, 0.018]} /><meshBasicMaterial color="#323d43" /></mesh>)}</group> : null}
@@ -114,29 +156,37 @@ function DomesticResponse({ state, house, reducedMotion }: { state: Environmenta
 
 function WhiteFabric({ raised, reducedMotion }: { raised: boolean; reducedMotion: boolean }) {
   const presentation = useSceneLook();
+  const relocation = useJourneyStore(state => state.sceneRelocationRevision);
+  const previousTime = useRef(presentation?.time.cloth ?? 0);
   const cloth = useRef<THREE.Group>(null);
-  useFrame(({ clock }, delta) => {
+  useLayoutEffect(() => {
+    if (cloth.current) cloth.current.position.y = raised ? 2.3 : .8;
+  }, [relocation]);
+  useFrame(({ clock }) => {
+    const now = presentation?.time.cloth ?? 0;
+    const delta = environmentalResponseDelta(now, previousTime.current, presentation?.motion.cloth ?? 0);
+    previousTime.current = now;
     if (!cloth.current) return;
-    cloth.current.position.y += ((raised ? 2.3 : 0.8) - cloth.current.position.y) * (1 - Math.exp(-Math.min(delta, 0.05) * 0.6));
+    const target = raised ? 2.3 : .8;
+    cloth.current.position.y = reducedMotion || presentation?.reducedEffects ? target
+      : cloth.current.position.y + (target - cloth.current.position.y) * (1 - Math.exp(-delta * .6));
     cloth.current.rotation.z = reducedMotion ? 0 : Math.sin((presentation?.time.cloth ?? clock.elapsedTime) * .42) * (presentation ? presentation.motion.cloth * .13 : getCurrentCinematicProfile().airMovement * .13);
   });
   return <group position={[1, 0, 4]} name="surrender-white-fabric-response"><Beam from={[-0.7, 0, 0]} to={[-0.7, 3.4, 0]} radius={0.025} color="#6a6558" /><group ref={cloth} position={[0, raised ? 2.3 : 0.8, 0]}><mesh><planeGeometry args={[1.4, 0.85]} /><meshStandardMaterial color="#e5e4d9" roughness={1} side={THREE.DoubleSide} /></mesh></group></group>;
 }
 
 function ChosenContinuity({ memory, creation, atHome, reducedMotion }: { memory: string; creation: string; atHome: boolean; reducedMotion: boolean }) {
-  const grown = useRef<THREE.Group>(null);
-  useFrame((_, delta) => { if (grown.current) grown.current.scale.y += (1 - grown.current.scale.y) * (1 - Math.exp(-Math.min(delta, 0.05) * 0.55)); });
   return <group name="chosen-memory-and-creation-continuity" userData={{ memory, creation }}>
     {atHome && memory ? <group position={[-2.5, 1.15, 2.5]}><StoryObjectModel kind={memory === "blush-rose" ? "rose" : memory === "swan-feather" ? "feather" : "mirror"} reducedMotion={reducedMotion} /><TimberAssembly name="remembered-object-side-table" color="#8c7960" pieces={[
       {position:[0,-.12,0],size:[1,.12,.9]},
       ...[-1,1].flatMap(x=>[-1,1].map(z=>({position:[x*.38,-.65,z*.33] as [number,number,number],size:[.07,1,.07] as [number,number,number]}))),
       {position:[0,-.27,.33],size:[.82,.2,.06]},
     ]} /></group> : null}
-    {creation ? <group ref={grown} scale={[1, reducedMotion ? 1 : 0.02, 1]} position={atHome ? [2.8, 0, 2.8] : [0, 0, 4.5]}>
+    {creation ? <group position={atHome ? [2.8, 0, 2.8] : [0, 0, 4.5]}>
       {creation === "rest" ? <><TimberAssembly name="created-rest-supported-frame" color="#8f7c64" pieces={[
         {position:[0,.5,0],size:[2.4,.25,1.2]},
         ...[-1,1].flatMap(x=>[-1,1].map(z=>({position:[x*.98,.19,z*.43] as [number,number,number],size:[.14,.38,.14] as [number,number,number]}))),
-      ]} /><group position={[0, 0.67, 0]} scale={[2.2, 1, 2]}><StoryObjectModel kind="fabric" reducedMotion={reducedMotion} /></group></> : creation === "home" ? <><DoorFrame width={2.8} height={3.6} depth={0.3} color="#998b70" /><TimberAssembly name="created-home-practical-bracket" color="#75634c" pieces={[{position:[.9,.52,0],size:[.35,.1,.35]},{position:[.9,.23,0],size:[.12,.5,.12]}]} /><group position={[0.9, 0.6, 0]}><StoryObjectModel kind="candle" state="lit" /></group><pointLight position={[0.9, 1, 0]} intensity={1.2} distance={7} color="#dfcba5" /></> : <><group position={[0,.85,0]}><WritingDesk width={2.2} depth={1.1} height={.85 / .905} color="#8c7963" /></group><group position={[0, 0.95, 0]}><StoryObjectModel kind="page" /></group><group position={[0, 0, 0.9]}><StoryObjectModel kind="chair" /></group></>}
+      ]} /><group position={[0, 0.67, 0]} scale={[2.2, 1, 2]}><StoryObjectModel kind="fabric" reducedMotion={reducedMotion} /></group></> : creation === "home" ? <><DoorFrame width={2.8} height={3.6} depth={0.3} color="#998b70" /><TimberAssembly name="created-home-practical-bracket" color="#75634c" pieces={[{position:[.9,.52,0],size:[.35,.1,.35]},{position:[.9,.23,0],size:[.12,.5,.12]}]} /><group position={[0.9, 0.6, 0]}><StoryObjectModel kind="candle" state="lit" /></group><pointLight position={[0.9, 1, 0]} intensity={1.2} distance={7} color="#dfcba5" /></> : <><group position={[0,.85,0]}><WritingDesk width={2.2} depth={1.1} height={.85} color="#8c7963" /></group><group position={[0, 0.95, 0]}><StoryObjectModel kind="page" /></group><group position={[0, 0, 0.9]}><StoryObjectModel kind="chair" /></group></>}
     </group> : null}
   </group>;
 }
@@ -148,13 +198,13 @@ export const EnvironmentalChoreography = memo(function EnvironmentalChoreography
   const house = sceneId.startsWith("thorned.");
   const home = sceneId.startsWith("crowned.");
   return <group name="EnvironmentalChoreography" userData={{ sceneId }}>
-    {blue ? <><CandleChain lit={state.candlesLit} reducedMotion={reducedMotion} count={reducedEffects ? 6 : qualityProfile.quality === "low" ? 10 : 18} /><WaterResponse position={[3.3, 0.08, 1.8]} active={state.waterTouched} reducedMotion={reducedMotion} />{sceneId === "blue-moon.caged-bird" ? <CageResponse physical={state.cagePhysical} reflected={state.cageReflected} /> : null}</> : null}
+    {blue ? <><CandleChain lit={state.candlesLit} reducedMotion={reducedMotion} count={reducedEffects ? 6 : qualityProfile.quality === "low" ? 10 : 18} /><WaterResponse cue="blue" position={[3.3, 0.08, 1.8]} active={state.waterTouched} reducedMotion={reducedMotion} />{sceneId === "blue-moon.caged-bird" ? <CageResponse physical={state.cagePhysical} reflected={state.cageReflected} reducedMotion={reducedMotion} /> : null}</> : null}
     {sceneId.startsWith("nest.") || house ? <DomesticResponse state={state} house={house} reducedMotion={reducedMotion} reducedEffects={reducedEffects} /> : null}
-    {sceneId === "river.wash" ? <WaterResponse position={[0, 0.09, 3]} active={state.sootLoosening || state.sootWashed} washed={state.sootWashed} includeSoot reducedMotion={reducedMotion} /> : null}
+    {sceneId === "river.wash" ? <WaterResponse cue="river" position={[0, 0.09, 3]} active={state.sootLoosening || state.sootWashed} washed={state.sootWashed} includeSoot reducedMotion={reducedMotion} /> : null}
     {sceneId === "river.release-surrender" ? <WhiteFabric raised={state.surrendered} reducedMotion={reducedMotion} /> : null}
     {sceneId.startsWith("fork.") ? <group position={[-5.5, 0, 2]} name="past-motifs-remain-behind"><pointLight position={[0, 2, 0]} color="#d9ad77" intensity={state.pastQuiet ? 0.08 : state.pastReturned ? 1.7 : 0.9} distance={9} decay={2} /><DoorFrame width={2} height={3.2} color="#65503f" /><WaterSurface position={[0, 0.02, -1.2]} size={[2, 2]} color="#3e5360" /><FabricVeil position={[-0.8, 1.6, 0]} size={[0.8, 2.6]} opacity={state.pastQuiet ? 0.22 : 0.65} reducedMotion={reducedMotion} />{state.pastReturned ? <DoorFrame position={[-1.4, 0, -2]} width={1.8} height={2.8} color="#574537" /> : null}</group> : null}
     {sceneId === "climb.womb" || home ? <ChosenContinuity memory={state.heartMemory} creation={state.creation} atHome={home} reducedMotion={reducedMotion} /> : null}
-    {home && objectStates["home.water"] === "rippled" ? <WaterResponse position={[-4, 0.08, 3]} active reducedMotion={reducedMotion} /> : null}
+    {home ? <WaterResponse cue="home" position={[-2, .355, 2]} active={objectStates["home.water"] === "rippled"} reducedMotion={reducedMotion} /> : null}
   </group>;
 });
 export default EnvironmentalChoreography;
