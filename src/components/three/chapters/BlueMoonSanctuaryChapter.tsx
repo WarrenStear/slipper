@@ -6,13 +6,13 @@ import { memo, useMemo } from "react";
 import { SwanModel } from "../storyEvents/SwanModel";
 import { BotanicalBatch, BotanicalCluster } from "../environmentArt/EnvironmentArt";
 import { TimberAssembly } from "./ChapterArt";
+import { SanctuaryShoreline } from "./SanctuaryShoreline";
 import type { ConstructionPiece } from "./chapterArtGeometry";
 import {
   Beam,
   CandleField,
   DoorFrame,
   FabricVeil,
-  FloatingMotes,
   MoonDisc,
   SceneGround,
   StonePath,
@@ -44,9 +44,19 @@ export function WornSanctuaryBridge() {
   ]).concat([-6.9, -2.35, 2.3, 6.85].map(z => ({
     position: [0, -.26, z] as [number, number, number], size: [4.15, .16, .2] as [number, number, number],
   }))), []);
+  const joinery = useMemo<ConstructionPiece[]>(() => [-1, 1].flatMap(side => [
+    // Fascia hides exposed board undersides; a darker wet foot meets the water.
+    { position: [side * 1.87, -.07, 0] as [number, number, number], size: [.105, .17, 15.35] as [number, number, number] },
+    ...[-6.9, -2.35, 2.3, 6.85].flatMap(z => [
+      { position: [side * 1.96, -.35, z] as [number, number, number], size: [.205, .56, .225] as [number, number, number] },
+      { position: [side * 1.96, 1.18, z] as [number, number, number], size: [.245, .08, .26] as [number, number, number] },
+      { position: [side * 1.92, .57, z + (z > 0 ? -.33 : .33)] as [number, number, number], size: [.08, 1, .09] as [number, number, number], rotation: [z > 0 ? -.64 : .64, 0, 0] as [number, number, number] },
+    ]),
+  ]), []);
   return <group position={[0, .3, 0]} name="weathered-sanctuary-bridge">
-    <TimberAssembly pieces={boards} color="#685441" surface="wet-wood" />
-    <TimberAssembly pieces={supports} color="#3c332a" surface="wet-wood" />
+    <TimberAssembly pieces={boards} color="#b8ad98" surface="wet-wood" />
+    <TimberAssembly pieces={supports} color="#756955" surface="wet-wood" />
+    <TimberAssembly name="bridge-post-caps-and-knee-braces" pieces={joinery} color="#8b7c62" surface="wet-wood" />
     <TimberAssembly name="bridge-iron-fasteners" surface="metal" color="#393b34" pieces={BRIDGE_PLANKS.flatMap(i => [-1, 1].map(side => ({ position: [side * 1.47, .096 + Math.sin(i * .45) * .018, -7.38 + i * .438], size: [.028, .009, .04] })))} />
   </group>;
 }
@@ -99,6 +109,7 @@ function BlueMoonSanctuaryChapterComponent({
     <group>
       <SceneGround radius={21} color="#82928a" textured />
       <SanctuaryWater reducedMotion={reducedMotion} reducedEffects={reducedEffects} />
+      <SanctuaryShoreline />
       <ForestDepth quality={qualityProfile.quality} reducedEffects={reducedEffects} />
       <SanctuaryMoon
         qualityProfile={qualityProfile}
@@ -134,8 +145,6 @@ function BlueMoonSanctuaryChapterComponent({
           </mesh>
         </group>
       ) : null}
-      <FabricVeil position={[-6.4, 2.25, 3]} size={[1.15, 3.4]} rotation={[0, 0.18, 0]} color="#b4c0c4" opacity={.38} reducedMotion={reducedMotion} />
-      <FabricVeil position={[6.2, 2.2, 2.4]} size={[.8, 2.9]} rotation={[0, -0.22, 0]} color="#b5bfc3" opacity={.32} reducedMotion={reducedMotion} phase={2.1} />
 
       {isIntimacy ? (
         <group>
@@ -181,14 +190,6 @@ function BlueMoonSanctuaryChapterComponent({
         </group>
       ) : null}
 
-      <FloatingMotes
-        qualityProfile={qualityProfile}
-        reducedEffects={reducedEffects}
-        reducedMotion={reducedMotion}
-        color="#c8ddeb"
-        radius={11}
-        height={7}
-      />
       <ChapterLightRig family="blue-moon" reducedMotion={reducedMotion} />
     </group>
   );

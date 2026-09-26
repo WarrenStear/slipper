@@ -1,8 +1,7 @@
 import { LegacyChapterLight } from "../artDirection/LegacyChapterLight";
 import { memo } from "react";
+import { TimberAssembly } from "./ChapterArt";
 import {
-  FabricVeil,
-  FloatingMotes,
   SceneGround,
   StonePath,
   TreeGrove,
@@ -18,7 +17,6 @@ function SunsetSeerChapterComponent({
   reducedMotion,
 }: ChapterSceneProps) {
   const isTruthful = scene.id === "sunset.true-mirror";
-  const isStillness = scene.id === "sunset.stillness";
 
   return (
     <group>
@@ -33,22 +31,10 @@ function SunsetSeerChapterComponent({
         reducedEffects={reducedEffects}
         reducedMotion={reducedMotion}
       />
-      <FabricVeil
-          position={[-5.2, 3.1, -1.2]}
-          rotation={[0, 0.2, 0]}
-          size={[1.7, 4.9]}
-          color="#c4b8ab"
-          opacity={0.38}
-          reducedMotion={reducedMotion}
-      />
-      <FloatingMotes
-        qualityProfile={qualityProfile}
-        reducedEffects={reducedEffects || isStillness}
-        reducedMotion={reducedMotion}
-        color="#e49a64"
-        radius={10}
-        height={6}
-      />
+      <TimberAssembly name="mirror-grounded-rear-stand" color="#7b6954" pieces={[-1, 1].flatMap(side => [
+        { position: [side * 2.52, .065, 5.67] as [number, number, number], size: [.4, .13, 1.8] as [number, number, number] },
+        { position: [side * 2.52, 1.4, 6.06] as [number, number, number], size: [.14, 2.95, .16] as [number, number, number], rotation: [-.32, 0, 0] as [number, number, number] },
+      ])} />
       <LegacyChapterLight><directionalLight position={[10, 4, -8]} color="#ef945d" intensity={reducedEffects ? 0.48 : 0.88} /></LegacyChapterLight>
 
     </group>

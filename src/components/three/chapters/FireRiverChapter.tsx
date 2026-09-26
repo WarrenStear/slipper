@@ -58,10 +58,6 @@ function FireRiverChapterComponent({
 
       <group name="fork-threshold" position={[0, 0, -3.7]}>
         <StonePath color="#5c554a" count={6} length={8.5} />
-        <mesh position={[0, 0.035, 3.9]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-          <ringGeometry args={[1.8, 2.15, 32]} />
-          <meshStandardMaterial color="#6d6252" roughness={0.96} />
-        </mesh>
       </group>
 
       <FirePath

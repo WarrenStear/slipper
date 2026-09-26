@@ -7,8 +7,10 @@ import { memo, useLayoutEffect, useRef, useMemo, useEffect } from "react";
 import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { BotanicalBatch, TimberPiece } from "../environmentArt/EnvironmentArt";
-import { createWornTimberGeometry, createTaperedBranchGeometry } from "../environmentArt/authoredGeometry";
-import { TimberAssembly, Upholstery, WindowJoinery } from "./ChapterArt";
+import { createTaperedBranchGeometry } from "../environmentArt/authoredGeometry";
+import { RestingThrow, TimberAssembly, Upholstery, WindowJoinery } from "./ChapterArt";
+import { WindowLinen } from "./DomesticDetails";
+import { createStorageCaseGeometry } from "./storageCaseGeometry";
 import type { ConstructionPiece } from "./chapterArtGeometry";
 import {
   THORNED_HOUSE_MEMORY_OBJECTS as MEMORY_OBJECTS,
@@ -145,8 +147,9 @@ function RefilledSurfaces({
   reorganisationReleased: boolean;
 }) {
   const clutterRef = useRef<THREE.InstancedMesh>(null);
-  const clutterGeometry = useMemo(() => createWornTimberGeometry([1, 1, 1], 81), []);
-  useEffect(() => () => clutterGeometry.dispose(), [clutterGeometry]);
+  const fittingsRef = useRef<THREE.InstancedMesh>(null);
+  const clutterGeometry = useMemo(createStorageCaseGeometry, []);
+  useEffect(() => () => { clutterGeometry.wood.dispose(); clutterGeometry.fittings.dispose(); }, [clutterGeometry]);
   const surfaceCount = thornedHouseSurfaceCount(stage, reducedEffects);
   const clutterCount = thornedHouseClutterCount({
     stage,
@@ -170,8 +173,11 @@ function RefilledSurfaces({
       dummy.scale.set(...transform.size);
       dummy.updateMatrix();
       clutterRef.current?.setMatrixAt(index, dummy.matrix);
+      fittingsRef.current?.setMatrixAt(index, dummy.matrix);
     }
-    if (clutterRef.current) { clutterRef.current.instanceMatrix.needsUpdate = true; clutterRef.current.computeBoundingSphere(); clutterRef.current.computeBoundingBox(); }
+    for (const mesh of [clutterRef.current, fittingsRef.current]) if (mesh) {
+      mesh.instanceMatrix.needsUpdate = true; mesh.computeBoundingSphere(); mesh.computeBoundingBox();
+    }
   }, [clutterCount, reorganisationReleased, stage, pressure]);
 
   return (
@@ -179,22 +185,20 @@ function RefilledSurfaces({
       {MEMORY_SURFACES.slice(0, surfaceCount).map((surface, index) => (
         <group key={surface.position.join(":")} position={[houseSurfaceInset(index, pressure), 0, 0]}>
           <TimberPiece position={surface.position} size={surface.size} seed={index} color={index % 2 === 0 ? "#614738" : "#49362d"} />
-          <Beam
-            from={[surface.position[0] - surface.size[0] * 0.36, 0, surface.position[2]]}
-            to={[surface.position[0] - surface.size[0] * 0.36, surface.position[1], surface.position[2]]}
-            radius={0.07}
-            color="#352820"
-          />
-          <Beam
-            from={[surface.position[0] + surface.size[0] * 0.36, 0, surface.position[2]]}
-            to={[surface.position[0] + surface.size[0] * 0.36, surface.position[1], surface.position[2]]}
-            radius={0.07}
-            color="#352820"
-          />
+          <TimberAssembly name="memory-table-four-legs-and-apron" color="#79604b" pieces={[
+            ...[-1, 1].flatMap(x => [-1, 1].map(z => ({
+              position: [surface.position[0] + x * surface.size[0] * .37, (surface.position[1] - surface.size[1] / 2) / 2, surface.position[2] + z * surface.size[2] * .35] as Vec3,
+              size: [.1, surface.position[1] - surface.size[1] / 2, .1] as Vec3,
+            }))),
+            ...[-1, 1].map(z => ({ position: [surface.position[0], surface.position[1] - .16, surface.position[2] + z * surface.size[2] * .35] as Vec3, size: [surface.size[0] * .78, .18, .065] as Vec3 })),
+          ]} />
         </group>
       ))}
-      <instancedMesh ref={clutterRef} geometry={clutterGeometry} args={[undefined, undefined, clutterCount]} castShadow={!reducedEffects} receiveShadow>
-        <meshStandardMaterial color={stage === "bedroom" ? "#312722" : "#4a392f"} roughness={0.99} />
+      <instancedMesh name="memory-storage-cases" ref={clutterRef} geometry={clutterGeometry.wood} args={[undefined, undefined, clutterCount]} castShadow={!reducedEffects} receiveShadow>
+        <TactileMaterial surface="wood" color="#a38d73" roughness={.86} vertexColors />
+      </instancedMesh>
+      <instancedMesh name="memory-storage-case-grips" ref={fittingsRef} geometry={clutterGeometry.fittings} args={[undefined, undefined, clutterCount]} receiveShadow>
+        <TactileMaterial surface="metal" color="#7b7568" metalness={.42} roughness={.68} />
       </instancedMesh>
       {WALL_MEMORY_MARKS.slice(0, reducedEffects ? 2 : 3 + Math.min(2, detail)).map((memory, index) => (
         <mesh key={memory.position.join(":")} position={memory.position} rotation={memory.rotation}>
@@ -343,10 +347,12 @@ function OldMemoryBedroom({ reducedEffects }: { reducedEffects: boolean }) {
     <group name="thorned-house-old-memory-bedroom" position={[-3.22, 0.36, 2.72]}>
       <TimberAssembly color="#594136" pieces={[
         ...[-1, 1].map(side => ({ position: [0, .5, side * 1.24] as Vec3, size: [4.05, .38, .14] as Vec3 })),
-        ...[-1, 1].map(side => ({ position: [side * 1.94, .42, 0] as Vec3, size: [.16, .84, 2.62] as Vec3 })),
-        ...[-1, 1].flatMap(x => [-1, 1].map(z => ({ position: [x * 1.86, .21, z * 1.16] as Vec3, size: [.18, .42, .18] as Vec3 }))),
+        ...[-1, 1].map(side => ({ position: [side * 1.94, .24, 0] as Vec3, size: [.16, 1.2, 2.62] as Vec3 })),
+        ...[-1, 1].flatMap(x => [-1, 1].map(z => ({ position: [x * 1.86, .03, z * 1.16] as Vec3, size: [.18, .78, .18] as Vec3 }))),
       ]} />
-      <Upholstery position={[0, .9, -.08]} size={[3.9, .14, 2.48]} color="#765650" />
+      <Upholstery position={[0, .76, -.08]} size={[3.9, .14, 2.48]} color="#9c8f7e" surface="linen" />
+      <Upholstery position={[-1.28, .9, -.03]} size={[.8, .15, 1.5]} color="#bab19c" surface="linen" />
+      <RestingThrow position={[.48, .85, -.12]} size={[2.1, 2.9]} maxDrop={.57} color="#817c69" />
       {MEMORY_OBJECTS.slice(14, reducedEffects ? 17 : 20).map((_, index) => (
         <mesh key={index} position={[-1.25 + index * 0.68, 0.12 + (index % 2) * 0.06, 1.68 + (index % 3) * 0.32]} rotation={[0, index * 0.56, 0]}>
           <boxGeometry args={[0.54 + (index % 2) * 0.18, 0.22 + (index % 3) * 0.08, 0.7]} />
@@ -366,6 +372,7 @@ function DarkeningWindows({ stage }: { stage: HouseStage }) {
         <group key={side} position={[side * 5.65, 2.55, 1.1]} rotation={[0, side * -Math.PI / 2, 0]}>
           <mesh><planeGeometry args={[1.35, 2.1]} /><meshStandardMaterial color={color} emissive={color} emissiveIntensity={emissiveIntensity} roughness={.72} side={THREE.DoubleSide} /></mesh>
           <group rotation={[0, Math.PI, 0]}><WindowJoinery width={1.35} height={2.1} color="#584535" /></group>
+          <group rotation={[0, Math.PI, 0]}><WindowLinen width={1.35} height={2.1} color={stage === "leaving" ? "#b4ab93" : "#938675"} /></group>
         </group>
       ))}
     </group>

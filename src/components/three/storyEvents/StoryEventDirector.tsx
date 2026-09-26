@@ -18,7 +18,7 @@ import { useWorldStore } from "../../../stores/useWorldStore";
 import { StoryObjectModel } from "./StoryObjectModel";
 import { beginFloorStroke, breakFloorStroke, brushFloor, cancelFloorStroke, floorStrokeReady } from "./storyInteractionRuntime";
 import { StoryObjectIdentity, StoryObjectPose } from "./StoryObjectPose";
-import { TimberAssembly } from "../chapters/ChapterArt";
+import { StoneBasin, TimberAssembly } from "../chapters/ChapterArt";
 import type { ConstructionPiece } from "../chapters/chapterArtGeometry";
 import "./StoryObjects.css";
 
@@ -335,6 +335,7 @@ export function StoryEventDirector({ sceneId, reducedMotion, enabled = true }: {
       const chapterOwnsVisual = (sceneId.startsWith("sunset.") && object.kind === "mirror")
         || (sceneId === "blue-moon.intimacy" && object.kind === "swan")
         || (sceneId === "blue-moon.sanctuary" && object.id === "blue-moon.water")
+        || (sceneId === "fire.boundary" && object.id === "fire.flame")
         || (sceneId === "fork.weighing" && object.id === "fork.weighing-stone");
       const placement = state === "reset" || state === "resting" ? undefined : object.targets?.find(item => item.id === placements[object.id]);
       const preservedAt = state === "preserved" ? object.targets?.[0]?.localPosition : undefined;
@@ -342,6 +343,7 @@ export function StoryEventDirector({ sceneId, reducedMotion, enabled = true }: {
       return <StoryObjectPose key={object.id} object={object} state={state} position={location} placementId={placements[object.id]} reducedMotion={reducedMotion}>
         {chapterOwnsVisual ? null : <StoryObjectModel kind={object.kind} state={state ?? (object.id === "fork.door" ? "open" : undefined)} reducedMotion={reducedMotion} />}
         {object.id === "home.crown-mirror" ? <TimberAssembly name="crown-mirror-grounded-stand" color="#66503d" pieces={CROWN_MIRROR_STAND} /> : null}
+        {object.id === "home.water" ? <group name="home-water-basin-support"><StoneBasin position={[0, -.16, 0]} radius={1.12} height={.34} color="#827b69" /></group> : null}
       </StoryObjectPose>;
     })}
     {surfaces.map(surface => <group key={surface.id} name={`story-placement:${surface.id}`} position={surface.localPosition} userData={{ targetId: surface.id }}>

@@ -1,12 +1,16 @@
 import { useSceneLook } from "../artDirection/SceneLookContext";
 import { AuthoredNpcSilhouette } from "../environmentArt/AuthoredNpc";
-import { memo, useMemo, useRef } from "react";
+import { memo, useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
+import { createFlameGeometry } from "../environmentArt/authoredGeometry";
+import { TactileMaterial } from "../storyEvents/TactileMaterial";
+import { TimberAssembly } from "./ChapterArt";
+import type { ConstructionPiece } from "./chapterArtGeometry";
+import { FIRE_SOURCE_LOCAL_POSITION, firePathPlacement } from "./firePathLayout";
 import type { RenderQualityProfile } from "../renderQuality";
 import {
   Beam,
-  CandleField,
   FlickerLight,
   StonePath,
   qualityStep,
@@ -67,24 +71,24 @@ function EmberAndAsh({
     return positions;
   }, [count]);
 
-  useFrame(({ clock }, delta) => {
+  useFrame(({ clock }) => {
     const activity = presentation ? Math.min(1, presentation.motion.particles * 4) : 1;
     const time = presentation?.time.particles ?? clock.elapsedTime;
     if (emberRef.current) (emberRef.current.material as THREE.PointsMaterial).opacity = (active ? .65 : .35) * activity;
     if (ashRef.current) (ashRef.current.material as THREE.PointsMaterial).opacity = .24 * activity;
     if (reducedMotion) return;
     if (emberRef.current) {
-      emberRef.current.rotation.y += Math.min(delta, 0.05) * activity * (active ? 0.22 : 0.08);
+      emberRef.current.rotation.y = time * (active ? 0.22 : 0.08);
       emberRef.current.position.y = Math.sin(time * 0.8) * 0.08;
     }
     if (ashRef.current) {
-      ashRef.current.rotation.y -= Math.min(delta, 0.05) * activity * 0.035;
+      ashRef.current.rotation.y = -time * 0.035;
       ashRef.current.position.y = Math.sin(time * 0.24 + 1.2) * 0.12;
     }
   });
 
   return (
-    <group position={[0, 0, 3.5]}>
+    <group position={FIRE_SOURCE_LOCAL_POSITION}>
       {resolved ? null : (
         <points ref={emberRef}>
           <bufferGeometry>
@@ -147,6 +151,54 @@ function WolfGuardian({ resting }: { resting: boolean }) {
   );
 }
 
+/** One concentrated fire reads against quiet ash, with no candle-ring proxy. */
+function BoundaryFire({ resolved, reducedMotion }: { resolved: boolean; reducedMotion: boolean }) {
+  const presentation = useSceneLook();
+  const tongues = useRef<THREE.InstancedMesh>(null);
+  const transform = useMemo(() => new THREE.Object3D(), []);
+  const geometry = useMemo(() => {
+    const flame = createFlameGeometry(1, 1), p = flame.getAttribute("position");
+    const colors = new Float32Array(p.count * 3), color = new THREE.Color();
+    const base = new THREE.Color("#ffe1a2"), tip = new THREE.Color("#d65b24");
+    for (let i = 0; i < p.count; i++) {
+      color.copy(base).lerp(tip, Math.min(1, Math.max(0, p.getY(i) + .5))).multiplyScalar(1.5);
+      color.toArray(colors, i * 3);
+    }
+    flame.setAttribute("color", new THREE.BufferAttribute(colors, 3)); return flame;
+  }, []);
+  const ash = useMemo(() => {
+    const ground = new THREE.CircleGeometry(3, 40), p = ground.getAttribute("position");
+    for (let i = 1; i < p.count; i++) {
+      const angle = Math.atan2(p.getY(i), p.getX(i));
+      const radius = .92 + Math.sin(angle * 5) * .07 + Math.cos(angle * 9) * .025;
+      p.setXYZ(i, p.getX(i) * radius, p.getY(i) * radius * .79, 0);
+    }
+    ground.computeVertexNormals(); return ground;
+  }, []);
+  const logs = useMemo<ConstructionPiece[]>(() => Array.from({ length: 7 }, (_, i) => ({
+    position: [Math.sin(i * 2.7) * .55, .1 + i % 2 * .12, Math.cos(i * 2.7) * .4],
+    size: [1.7 + i % 3 * .25, .2, .23], rotation: [0, i * .82, Math.sin(i * 3) * .075],
+  })), []);
+  useEffect(() => () => { geometry.dispose(); ash.dispose(); }, [geometry, ash]);
+  useFrame(() => {
+    if (!tongues.current) return;
+    const time = reducedMotion ? 0 : presentation?.time.flame ?? 0;
+    for (let i = 0; i < 7; i++) {
+      const height = (1.3 + i % 3 * .32) * (1 + Math.sin(time * (5.1 + i * .43) + i) * .08);
+      transform.position.set(Math.sin(i * 2.4) * .55, .22 + height * .5, Math.cos(i * 2.4) * .42);
+      transform.scale.set(.24 + i % 3 * .055, height, .22 + i % 2 * .035);
+      transform.rotation.set(Math.sin(time * 2 + i) * .035, i * .9, Math.cos(time * 2.7 + i) * .04);
+      transform.updateMatrix(); tongues.current.setMatrixAt(i, transform.matrix);
+    }
+    tongues.current.instanceMatrix.needsUpdate = true;
+  });
+  return <group name="contained-ash-and-timber-fire" position={FIRE_SOURCE_LOCAL_POSITION}>
+    <mesh geometry={ash} position={[0, .014, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow><TactileMaterial surface="earth" color="#3e3b32" roughness={1} /></mesh>
+    <TimberAssembly pieces={logs} color="#302823" surface="charred-wood" />
+    {resolved ? null : <instancedMesh ref={tongues} geometry={geometry} args={[undefined, undefined, 7]} frustumCulled={false}><meshBasicMaterial vertexColors /></instancedMesh>}
+  </group>;
+}
+
 function FirePathComponent({
   qualityProfile,
   reducedEffects,
@@ -157,35 +209,17 @@ function FirePathComponent({
   actorsEnabled = true,
 }: FirePathProps) {
   const intensity = surrendered ? 0.2 : resolved ? 0.28 : active ? 3.2 : 1.45;
-  const flameCount = active ? 24 : 14;
+  const placement = firePathPlacement(active);
 
   return (
     <group
       name="fire-path"
-      position={[-5.8, 0, 0.8]}
-      rotation={[0, -0.36, 0]}
+      position={placement.position}
+      rotation={placement.rotation}
       userData={{ storyRoute: "fire", ritual: "burn-what-cannot-continue", active, resolved }}
     >
       <StonePath color={resolved ? "#53514a" : active ? "#5d3a2b" : "#49382f"} count={10} length={17} fork={-0.28} />
-      <mesh position={[0, 0.02, 3.5]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-        <ringGeometry args={[2.6, 3.25, 32]} />
-        <meshStandardMaterial color={resolved ? "#45413b" : active ? "#44231a" : "#30241f"} roughness={1} />
-      </mesh>
-      <mesh position={[0, 0.22, 3.5]} receiveShadow>
-        <cylinderGeometry args={[2.55, 2.9, 0.42, 24]} />
-        <meshStandardMaterial color="#191513" roughness={1} />
-      </mesh>
-      <group position={[0, 0.28, 3.5]}>
-        {resolved ? null : (
-          <CandleField
-            qualityProfile={qualityProfile}
-            reducedEffects={reducedEffects}
-            count={flameCount}
-            radius={2.25}
-            color={active ? "#ff7436" : "#ba4f2d"}
-          />
-        )}
-      </group>
+      <BoundaryFire resolved={resolved} reducedMotion={reducedMotion} />
       <CharredThreshold active={active && !resolved} />
       <EmberAndAsh
         qualityProfile={qualityProfile}
@@ -195,7 +229,7 @@ function FirePathComponent({
         resolved={resolved}
       />
       {resolved ? (
-        <group name="fire-path-new-growth" position={[0, 0, 3.5]}>
+        <group name="fire-path-new-growth" position={FIRE_SOURCE_LOCAL_POSITION}>
           {FIRE_RECOVERY_SHOOTS.map(([x, y, z, rotation]) => (
             <mesh key={`${x}:${z}`} position={[x, y, z - 3.5]} rotation={[0, rotation, rotation * 0.75]}>
               <coneGeometry args={[0.09, y * 1.7, 5]} />

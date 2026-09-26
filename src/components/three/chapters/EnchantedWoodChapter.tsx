@@ -1,6 +1,8 @@
 import { RootThreshold } from "../environment/WoodlandHabitat";
 import { LegacyChapterLight } from "../artDirection/LegacyChapterLight";
 import { memo } from "react";
+import { CuboidCollider, RigidBody } from "@react-three/rapier";
+import { useJourneyStore } from "../../../stores/useJourneyStore";
 import {
   CandleField,
   FabricVeil,
@@ -23,6 +25,7 @@ function EnchantedWoodChapterComponent({
 }: ChapterSceneProps) {
   const isRabbitHole = scene.id === "enchanted.rabbit-hole";
   const isMeadow = scene.id === "enchanted.friendship-meadow";
+  const eventDriven = useJourneyStore(state => state.worldFlags["story-events.started"] === true);
 
   return (
     <group>
@@ -38,17 +41,21 @@ function EnchantedWoodChapterComponent({
       />
 
       {isRabbitHole ? <RootThreshold /> : null}
+      {isRabbitHole ? <RigidBody type="fixed" colliders={false}>
+        <CuboidCollider args={[.66, 1.4, .66]} position={[-2.9, 1.2, 2.55]} />
+        <CuboidCollider args={[.58, 1.4, .58]} position={[3, 1.2, 2.95]} />
+      </RigidBody> : null}
 
       {isMeadow ? (
         <>
           <WaterSurface reducedMotion={reducedMotion} reducedEffects={reducedEffects} position={[-4.8, 0.02, 1.4]} size={[5.5, 5.5]} color="#263d43" opacity={0.82} circle />
           <MeadowFlowers reducedEffects={reducedEffects} />
         </>
-      ) : (
+      ) : !eventDriven ? (
         <CandleField qualityProfile={qualityProfile} reducedEffects={reducedEffects} count={10} radius={4.8} />
-      )}
+      ) : null}
 
-      {!isRabbitHole ? (
+      {!eventDriven && !isRabbitHole ? (
         <FabricVeil
           position={[-4.7, 3.2, -1]}
           rotation={[0, 0.24, 0]}
@@ -58,7 +65,7 @@ function EnchantedWoodChapterComponent({
           reducedMotion={reducedMotion}
         />
       ) : null}
-      <LanternProp position={[0.4, 0.15, 7.6]} scale={0.78} reducedMotion={reducedMotion} />
+      {!eventDriven ? <LanternProp position={[0.4, 0.15, 7.6]} scale={0.78} reducedMotion={reducedMotion} /> : null}
       <ChapterLightRig family="enchanted-wood" reducedMotion={reducedMotion} reducedEffects={reducedEffects} />
       <LegacyChapterLight><hemisphereLight args={["#b6c3ad", "#15160f", reducedEffects ? 0.18 : 0.34]} /></LegacyChapterLight>
     </group>

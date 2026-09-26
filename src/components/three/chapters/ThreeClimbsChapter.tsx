@@ -9,7 +9,6 @@ import { TactileMaterial } from "../storyEvents/TactileMaterial";
 import { memo, useEffect, useMemo } from "react";
 import {
   Beam,
-  FabricVeil,
   KeyProp,
   MoonDisc,
   SceneGround,
@@ -24,14 +23,6 @@ import {
   WOMB_FUTURE_WORLD_TARGETS,
 } from "../../../lib/journeyPlayerActions";
 
-const PAPER_FRAGMENTS = Array.from({ length: 16 }, (_, index) => ({
-  position: [
-    -5 + (index * 2.7) % 10,
-    1.2 + (index % 5) * 0.85,
-    -5 + Math.floor(index / 4) * 2.8,
-  ] as [number, number, number],
-  rotation: [0.2 * (index % 3), index * 0.51, 0.16 * (index % 4)] as [number, number, number],
-}));
 const SCENIC_BOULDER_INDICES = [0, 1, 2, 3, 4, 5] as const;
 const NO_SCENIC_BOULDERS: readonly number[] = [];
 
@@ -243,14 +234,8 @@ function ProtectedCreationSpace({
           />
         );
       })}
-      <FabricVeil
-        position={[-3.25, .4, 2.15]}
-        rotation={[0, .72, 0]}
-        size={[1.6, .52]}
-        color="#d8c6a2"
-        opacity={chosen ? 0.48 : 0.26}
-        reducedMotion={reducedMotion}
-      />
+      <RestingThrow position={[-3.25, .06, 2.15]} rotation={[0, .72, 0]}
+        size={[1.6, .8]} maxDrop={.07} color={chosen ? "#c0b398" : "#a59a82"} />
 
     </group>
   );
@@ -293,9 +278,6 @@ function ThreeClimbsChapterComponent({
   const voiceSelected = useJourneyStore(
     (journey) => journey.inventory.symbolicObjects.includes("creation.future.voice"),
   );
-  const paperCount = questionsReleased
-    ? 0
-    : reducedEffects ? 5 : qualityProfile.quality === "low" ? 8 : PAPER_FRAGMENTS.length;
   const scenicBoulderIndices = isHeart || isWomb ? NO_SCENIC_BOULDERS : SCENIC_BOULDER_INDICES;
   const arrivalHeading = getJourneySceneArrivalHeading(scene.id);
 
@@ -318,12 +300,6 @@ function ThreeClimbsChapterComponent({
 
       {isMind ? (
         <group>
-          {PAPER_FRAGMENTS.slice(0, paperCount).map((paper, index) => (
-            <mesh key={index} position={paper.position} rotation={paper.rotation}>
-              <planeGeometry args={[1.15, 0.72]} />
-              <meshStandardMaterial color="#c9c5b8" roughness={0.96} side={2} />
-            </mesh>
-          ))}
           <LegacyChapterLight><directionalLight position={[-8, 8, -4]} color="#abb7c2" intensity={0.7} /></LegacyChapterLight>
         </group>
       ) : null}

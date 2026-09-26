@@ -1,6 +1,7 @@
 import { LegacyChapterLight } from "../artDirection/LegacyChapterLight";
-import { memo, useLayoutEffect, useMemo, useRef } from "react";
-import * as THREE from "three";
+import { memo, useEffect, useMemo } from "react";
+import { createTaperedBranchGeometry, mergeArtGeometries } from "../environmentArt/authoredGeometry";
+import { TactileMaterial } from "../storyEvents/TactileMaterial";
 import {
   CandleField,
   FlickerLight,
@@ -30,47 +31,36 @@ function WovenNest({
   detail: number;
   reducedEffects: boolean;
 }) {
-  const weaveRef = useRef<THREE.InstancedMesh>(null);
-  const strandCount = reducedEffects ? 10 : 14 + detail * 3;
-
-  useLayoutEffect(() => {
-    const dummy = new THREE.Object3D();
-    const sag = .08; // Responsibility gathers outside; the protected centre never sags.
-
-    for (let index = 0; index < strandCount; index += 1) {
-      const angle = (index / strandCount) * Math.PI * 2;
-      const alternating = index % 2 === 0 ? 1 : -1;
-      const radius = 2.15 + alternating * 0.22;
-      dummy.position.set(
-        Math.cos(angle) * radius,
-        0.68 - sag + Math.sin(angle * 3) * 0.08,
-        Math.sin(angle) * radius * 0.65,
-      );
-      dummy.rotation.set(alternating * 0.08, -angle + alternating * 0.2, alternating * 0.12);
-      dummy.scale.set(1.7 + (index % 3) * 0.18, 0.12, 0.12);
-      dummy.updateMatrix();
-      weaveRef.current?.setMatrixAt(index, dummy.matrix);
+  const weave = useMemo(() => {
+    const pieces = [];
+    const arcs = reducedEffects ? 8 : 10 + Math.min(detail, 2) * 2;
+    // Three overlapping courses rest on shallow radial ribs. The open centre
+    // stays available for the existing linen and responsibility interaction.
+    for (let course = 0; course < 3; course++) for (let i = 0; i < arcs; i++) {
+      const start = i / arcs * Math.PI * 2 + course * .19;
+      const radius = 1.82 + course * .16;
+      const points = Array.from({ length: 5 }, (_, j) => {
+        const angle = start + j * .25;
+        return [Math.cos(angle) * radius, .17 + course * .23 + Math.sin(angle * 5 + course) * .035, Math.sin(angle) * radius * .65] as [number, number, number];
+      });
+      pieces.push(createTaperedBranchGeometry(points, .057 - course * .006, i + course * 17, 5, 8));
     }
-    if (weaveRef.current) { weaveRef.current.instanceMatrix.needsUpdate = true; weaveRef.current.computeBoundingBox(); weaveRef.current.computeBoundingSphere(); }
-  }, [state, strandCount]);
-
-  return (
-    <group name="nest-stable-shelter" position={[0, 0, 2.5]}>
-      <mesh position={[0, .48, 0]}>
-        <sphereGeometry args={[2.28, 24, 10, 0, Math.PI * 2, Math.PI * 0.5, Math.PI * 0.5]} />
-        <meshStandardMaterial
-          color="#8f7350"
-          roughness={0.98}
-          side={THREE.DoubleSide}
-        />
-      </mesh>
-      <instancedMesh ref={weaveRef} args={[undefined, undefined, strandCount]} castShadow receiveShadow>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color={state === "protected" ? "#a28158" : "#806044"} roughness={1} />
-      </instancedMesh>
-      {/* The resting linen occupies the open centre; no solid plinth hides it. */}
-    </group>
-  );
+    for (let i = 0; i < arcs; i++) {
+      const angle = i / arcs * Math.PI * 2;
+      pieces.push(createTaperedBranchGeometry([
+        [Math.cos(angle) * 1.53, .04, Math.sin(angle) * .99],
+        [Math.cos(angle) * 1.9, .26, Math.sin(angle) * 1.23],
+        [Math.cos(angle) * 2.2, .73, Math.sin(angle) * 1.43],
+      ], .046, i + 53, 5, 8));
+    }
+    return mergeArtGeometries(pieces);
+  }, [detail, reducedEffects]);
+  useEffect(() => () => weave.dispose(), [weave]);
+  return <group name="nest-stable-shelter" position={[0, 0, 2.5]}>
+    <mesh name="interlaced-grounded-willow" geometry={weave} castShadow receiveShadow>
+      <TactileMaterial surface="bark" color={state === "protected" ? "#a08a65" : "#877252"} roughness={.97} />
+    </mesh>
+  </group>;
 }
 
 /** Two joined supports take the weight at opposite edges of the same fragile centre. */
@@ -177,15 +167,6 @@ function NestChapterComponent({
       {state === "repairing" ? <TwoHandRepair balanced={twoHandsBalanced} /> : null}
       <UnsupportedWeight pressure={pressure} reducedEffects={reducedEffects} />
       {isProtection ? <ProtectionShelter detail={reducedEffects ? 0 : detail} /> : null}
-
-      <mesh position={[2.7, 1.25, 3.1]} rotation={[0, 0.03, 0]}>
-        <boxGeometry args={[2.2, 1.5, 0.08]} />
-        <meshStandardMaterial color="#ddd2b8" roughness={0.98} />
-      </mesh>
-      <mesh position={[2.7, 1.25, 3.04]}>
-        <planeGeometry args={[1.7, 1.05]} />
-        <meshBasicMaterial color={isProtection ? "#d6b36c" : "#c89b6f"} transparent opacity={.44} />
-      </mesh>
 
       {isProtection ? (
         <KeyProp

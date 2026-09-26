@@ -15,6 +15,7 @@ import {
 import { BotanicalBatch, BotanicalCluster } from "../environmentArt/EnvironmentArt";
 import { TimberAssembly, Upholstery, StoneBasin, WindowJoinery, WritingDesk, ShelvedBooks, RestingThrow } from "./ChapterArt";
 import { TactileMaterial } from "../storyEvents/TactileMaterial";
+import { WindowLinen } from "./DomesticDetails";
 import type { ConstructionPiece } from "./chapterArtGeometry";
 import type { ChapterSceneProps } from "./types";
 import { useJourneyStore } from "../../../stores/useJourneyStore";
@@ -38,9 +39,9 @@ function arrivalHeadingForScene(scene: ChapterSceneProps["scene"]) {
 
 
 export function LivingWaterFountain({ reducedEffects }: { reducedEffects: boolean }) {
-  return <group name="home-living-water-fountain" position={[-3.7, .08, 4.9]} userData={{ element: "water" }}>
+  return <group name="home-living-water-fountain" position={[-3.7, .025, 4.9]} userData={{ element: "water" }}>
     <HeroAssetSlot id="fountain"><StoneBasin position={[0, .28, 0]} radius={1.05} /><TimberAssembly surface="stone" color="#807864" pieces={[{position:[0,.09,0],size:[1.4,.18,1.36]}, {position:[0,.73,.79],size:[.23,.8,.27]}, {position:[0,1.1,.54],size:[.2,.12,.68]}]} /></HeroAssetSlot>
-    <WaterSurface position={[0, .52, 0]} size={[1.66, 1.66]} circle color="#304f57" opacity={.92} reducedEffects={reducedEffects} />
+    <WaterSurface position={[0, .49, 0]} size={[1.66, 1.66]} circle color="#304f57" opacity={.92} reducedEffects={reducedEffects} />
 
   </group>;
 }
@@ -51,7 +52,7 @@ function BooksReadingAndWriting({ reducedEffects }: { reducedEffects: boolean })
     ...[.3, 1.18, 2.06, 2.94].map(y => ({ position: [0, y, .4] as [number, number, number], size: [2.55, .12, .74] as [number, number, number] })),
     ...[-1.23, 1.23].map(x => ({ position: [x, 1.6, .3] as [number, number, number], size: [.12, 3.2, .66] as [number, number, number] })),
   ], []);
-  return <group name="home-books-reading-writing" position={[4.9, .08, 8.85]} userData={{ practices: ["reading", "writing"] }}>
+  return <group name="home-books-reading-writing" position={[4.9, .025, 8.85]} userData={{ practices: ["reading", "writing"] }}>
     <TimberAssembly color="#62503e" pieces={shelf} />
     <ShelvedBooks count={reducedEffects ? 6 : 11} startY={.63} rowHeight={.88} />
     <group name="home-writing-desk" position={[-.55, .78, -1.3]}>
@@ -66,8 +67,8 @@ function BooksReadingAndWriting({ reducedEffects }: { reducedEffects: boolean })
 }
 
 export function VelvetReadingNook() {
-  return <group name="home-velvet-reading-nook" position={[-4.7, .06, 8.3]} rotation={[0, .16, 0]} userData={{ fabric: "velvet" }}>
-    <Upholstery position={[.15,-.02,-.12]} size={[2.8,.025,2.2]} surface="linen" color="#7a7564" />
+  return <group name="home-velvet-reading-nook" position={[-4.7, .025, 8.3]} rotation={[0, .16, 0]} userData={{ fabric: "velvet" }}>
+    <Upholstery position={[.15,.014,-.12]} size={[2.8,.025,2.2]} surface="linen" color="#7a7564" />
     <HeroAssetSlot id="reading-chair"><TimberAssembly color="#493d31" pieces={[
       { position: [0, .34, 0], size: [1.25, .16, 1.03] },
       ...[-1, 1].flatMap(x => [-1, 1].map(z => ({ position: [x * .5, .2, z * .4] as [number, number, number], size: [.105, .4, .11] as [number, number, number], rotation: [z * .07, 0, x * -.06] as [number, number, number] }))),
@@ -88,7 +89,7 @@ export function VelvetReadingNook() {
 }
 
 function ProtectedChildSpace() {
-  return <group name="home-protected-child-space" position={[1.6, .06, 9.35]} rotation={[0, -.03, 0]} userData={{ protected: true }}>
+  return <group name="home-protected-child-space" position={[1.6, .025, 9.35]} rotation={[0, -.03, 0]} userData={{ protected: true }}>
     <TimberAssembly color="#725d48" pieces={[
       { position: [0, .31, 0], size: [2.02, .13, 1.12] },
       ...[-1, 1].flatMap(x => [
@@ -173,6 +174,7 @@ function KylieInnerHome({ qualityProfile, reducedEffects, arrivalHeading }: Pick
           <group key={x} position={[x, 2.4, 10.67]}>
             <mesh rotation={[0, Math.PI, 0]}><planeGeometry args={[2.05, 1.8]} /><meshStandardMaterial color="#c6d1cf" transparent opacity={.09} roughness={.18} depthWrite={false} side={2} /></mesh>
             <WindowJoinery width={2.05} height={1.8} />
+            <WindowLinen width={2.05} height={1.8} />
           </group>
         ))}
         <LegacyChapterLight><pointLight position={[0, 5.2, 4.6]} color="#ffe0a8" intensity={reducedEffects ? 0.62 : 1.04} distance={15} /></LegacyChapterLight>
@@ -187,7 +189,8 @@ function KylieInnerHome({ qualityProfile, reducedEffects, arrivalHeading }: Pick
       <ProtectedChildSpace />
       <IntentionallyUnusedSpace />
       <group name="home-candles-and-roses">
-        <CandleField qualityProfile={qualityProfile} reducedEffects={reducedEffects} count={6} radius={6.15} color="#ffd18b" />
+        <group name="window-sill-candle" position={[-4.2, 1.49, 10.47]}><CandleField qualityProfile={qualityProfile} reducedEffects={reducedEffects} count={1} radius={0} color="#e8c696" /></group>
+        <group name="writing-desk-candle" position={[3.33, .883, 7.82]}><CandleField qualityProfile={qualityProfile} reducedEffects={reducedEffects} count={1} radius={0} color="#e8c696" /></group>
         <BotanicalBatch kind="rose" seed={41} placements={ROSES.slice(1, roseCount).map(rose => ({ position: [rose.x, .24, rose.z], scale: .8 }))} color="#c69398" />
         <BotanicalCluster kind="rose" position={[-6.15, .24, 2.35]} scale={.8} seed={41} color="#b49391" />
         <TimberAssembly name="shallow-window-planters" color="#71634d" pieces={[-1,1].flatMap(side => [

@@ -1,11 +1,11 @@
 import { useFrame } from "@react-three/fiber";
-import { memo, useEffect, useLayoutEffect, useMemo, useRef } from "react";
+import { memo, useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { openingMotionDelta, openingRoomTarget, openingStage } from "../../../cinematics/openingPresentation";
 import { useSettingsStore } from "../../../stores/useSettingsStore";
 import { useWorldStore } from "../../../stores/useWorldStore";
-import { createWornTimberGeometry } from "../environmentArt/authoredGeometry";
 import { StoneBasin, TimberAssembly } from "./ChapterArt";
+import type { ConstructionPiece } from "./chapterArtGeometry";
 import { applyTactileShader, tactileProgramKey } from "../storyEvents/tactileShader";
 import { TactileMaterial, useTactileDetail } from "../storyEvents/TactileMaterial";
 import { useJourneyStore } from "../../../stores/useJourneyStore";
@@ -22,28 +22,14 @@ import {
 } from "./ChapterPrimitives";
 import type { ChapterSceneProps } from "./types";
 
-/** Exact original board positions, one draw call instead of one per board. */
+/** Exact original board centres and envelope, merged for per-board metre UVs. */
 function OpeningFloorboards({ count }: { count: number }) {
-  const boards = useRef<THREE.InstancedMesh>(null);
-  const geometry = useMemo(() => createWornTimberGeometry([.96, .14, 16], 37), []);
-  useEffect(() => () => geometry.dispose(), [geometry]);
-  useLayoutEffect(() => {
-    if (!boards.current) return;
-    const transform = new THREE.Object3D();
-    const light = new THREE.Color("#2c251f"), dark = new THREE.Color("#211d19");
-    for (let i = 0; i < count; i++) {
-      transform.position.set(-7.2 + i * (14.4 / Math.max(1, count - 1)), 0, 0);
-      transform.updateMatrix();
-      boards.current.setMatrixAt(i, transform.matrix);
-      boards.current.setColorAt(i, i % 3 === 0 ? light : dark);
-    }
-    boards.current.instanceMatrix.needsUpdate = true;
-    if (boards.current.instanceColor) boards.current.instanceColor.needsUpdate = true;
-    boards.current.computeBoundingBox(); boards.current.computeBoundingSphere();
-  }, [count]);
-  return <instancedMesh ref={boards} geometry={geometry} args={[undefined, undefined, count]} receiveShadow name="opening-original-floorboards">
-    <TactileMaterial surface="wood" color="#ffffff" roughness={.58} />
-  </instancedMesh>;
+  const pieces = useMemo<ConstructionPiece[]>(() => Array.from({ length: count }, (_, i) => ({
+    position: [-7.2 + i * (14.4 / Math.max(1, count - 1)), 0, 0],
+    size: [.96, .14, 16],
+    color: i % 3 === 0 ? "#a5967f" : "#91836f",
+  })), [count]);
+  return <TimberAssembly name="opening-original-floorboards" pieces={pieces} color="#796b55" surface="wet-wood" />;
 }
 
 function BrokenFloorChapterComponent({
@@ -66,6 +52,7 @@ function BrokenFloorChapterComponent({
     const geometry = new THREE.BoxGeometry(16.6, 6.9, 17);
     const index = geometry.getIndex();
     if (index) geometry.setIndex(roomShellWithoutFloor(index.array, geometry.getAttribute("normal").array));
+    geometry.computeBoundingBox(); geometry.computeBoundingSphere();
     return geometry;
   }, []);
   useEffect(() => () => roomGeometry.dispose(), [roomGeometry]);
