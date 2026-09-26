@@ -53,11 +53,54 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
+  asset-delivery:
+    name: Local Draco and Basis delivery, fallback, and lifecycle
+    needs: check
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Use Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Use the declared npm version
+        run: npm install --global npm@10.9.2
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Exercise temporary technical fixtures and local decoder payloads
+        env:
+          REVIEW_ANGLE: swiftshader
+          REVIEW_OUT: asset-delivery-report
+        run: npm run assets:review-delivery
+
+      - name: Preserve decoder delivery evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: asset-delivery-${{ github.sha }}
+          path: asset-delivery-report
+          if-no-files-found: ignore
+          retention-days: 7
+
   browsers:
-    name: Chromium, Firefox, WebKit, Pixel, and iPhone projects
+    name: Browser regression (${{ matrix.project }})
     needs: check
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [chromium, firefox, webkit, mobile-chromium, mobile-webkit]
     steps:
       - name: Check out source
         uses: actions/checkout@v4
@@ -90,14 +133,14 @@ jobs:
           tar -xzf /tmp/validated-preview/validated-preview.tgz
           node scripts/build-artifact.mjs verify "$BUILD_REVISION" build-validation.json
 
-      - name: Run every configured browser project
-        run: npm run test:e2e
+      - name: Run the configured browser project
+        run: npm run test:e2e -- --project=${{ matrix.project }}
 
       - name: Preserve browser diagnostics on failure
-        if: failure()
+        if: failure() || cancelled()
         uses: actions/upload-artifact@v4
         with:
-          name: browser-diagnostics
+          name: browser-diagnostics-${{ matrix.project }}
           path: |
             playwright-report
             test-results

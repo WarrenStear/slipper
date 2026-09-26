@@ -1,6 +1,7 @@
 import { NARRATIVE_AUDIO_STEM_IDS, type NarrativeAudioStemId } from "./narrativeAudioProfiles.ts";
 import {
   MAX_PRODUCTION_AUDIO_BYTES, MAX_PRODUCTION_AUDIO_SAMPLES, PRODUCTION_AUDIO_LOAD_CONCURRENCY,
+  MIN_PRODUCTION_AUDIO_SAMPLE_RATE, MAX_PRODUCTION_AUDIO_SAMPLE_RATE,
   PRODUCTION_AUDIO_REGISTRY, reviewedProductionAudio,
   type ProductionAudioRegistry, type ReviewedProductionAudio,
 } from "./productionAudioRegistry.ts";
@@ -13,8 +14,9 @@ export const PRODUCTION_AUDIO_NETWORK_TIMEOUT_MS = 15_000;
 
 /** Trim to the reviewed loop region; a tiny cosine edge makes the wrap continuous. */
 export function prepareProductionAudioLoop(context: BaseAudioContext, decoded: AudioBuffer, asset: ReviewedProductionAudio) {
-  if (!reviewedProductionAudio(asset) || decoded.numberOfChannels < 1 || decoded.numberOfChannels > 2 ||
-      !Number.isFinite(decoded.sampleRate) || decoded.sampleRate <= 0 ||
+  if (!reviewedProductionAudio(asset) || !Number.isInteger(decoded.numberOfChannels) || decoded.numberOfChannels < 1 || decoded.numberOfChannels > 2 ||
+      !Number.isFinite(decoded.sampleRate) || decoded.sampleRate < MIN_PRODUCTION_AUDIO_SAMPLE_RATE || decoded.sampleRate > MAX_PRODUCTION_AUDIO_SAMPLE_RATE ||
+      !Number.isSafeInteger(decoded.length) || decoded.length <= 0 ||
       decoded.length * decoded.numberOfChannels > MAX_PRODUCTION_AUDIO_SAMPLES) throw new Error("Unsupported production audio buffer");
   const duration = decoded.length / decoded.sampleRate;
   const start = asset.loop.startSeconds ?? 0;
@@ -22,6 +24,15 @@ export function prepareProductionAudioLoop(context: BaseAudioContext, decoded: A
   if (start >= duration || end > duration || end - start < .1) throw new Error("Production audio loop region is outside the recording");
   const first = Math.floor(start * decoded.sampleRate);
   const length = Math.min(decoded.length, Math.floor(end * decoded.sampleRate)) - first;
+  // Validate the entire decoded recording, including discarded material, before
+  // allocating the retained copy. Review admission applies to the whole asset.
+  for (let channel = 0; channel < decoded.numberOfChannels; channel += 1) {
+    const input = decoded.getChannelData(channel);
+    if (input.length !== decoded.length) throw new Error("Invalid production audio channel length");
+    for (let index = 0; index < input.length; index += 1) {
+      if (!Number.isFinite(input[index])) throw new Error("Non-finite production audio sample");
+    }
+  }
   const buffer = context.createBuffer(decoded.numberOfChannels, length, decoded.sampleRate);
   const level = Math.pow(10, asset.nominalLevelDb / 20);
   const edge = Math.min(Math.floor((asset.loop.edgeFadeSeconds ?? .025) * decoded.sampleRate), Math.floor(length / 2));
@@ -30,7 +41,6 @@ export function prepareProductionAudioLoop(context: BaseAudioContext, decoded: A
     const output = buffer.getChannelData(channel);
     for (let index = 0; index < length; index += 1) {
       const sample = input[first + index];
-      if (!Number.isFinite(sample)) throw new Error("Non-finite production audio sample");
       output[index] = sample * level;
     }
     for (let index = 0; index < edge; index += 1) {
@@ -72,6 +82,7 @@ async function boundedAudioBytes(response: Response, signal: AbortSignal) {
     signal.removeEventListener("abort", cancel);
     reader.releaseLock();
   }
+  if (length === 0) throw new Error("Production audio response is empty");
   const bytes = new Uint8Array(length);
   let offset = 0;
   for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
@@ -120,7 +131,7 @@ export function createProductionAudioLoader({ context, active, ready, registry =
           // One deadline covers headers and body for this codec, never its decode.
           const timer = setTimeout(abort, PRODUCTION_AUDIO_NETWORK_TIMEOUT_MS);
           try {
-            const response = await fetchFile(source.url, { signal: attempt.signal, credentials: "same-origin" });
+            const response = await fetchFile(source.url, { signal: attempt.signal, credentials: "same-origin", redirect: "error" });
             if (attempt.signal.aborted) {
               await response.body?.cancel();
               attempt.signal.throwIfAborted();

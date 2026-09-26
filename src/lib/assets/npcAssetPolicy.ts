@@ -4,8 +4,12 @@ import { clone } from "three/examples/jsm/utils/SkeletonUtils.js";
 /** Only explicit placeholder metadata selects the fallback; small authored assets remain valid. */
 export function isPlaceholderNpcAsset(asset: { asset?: { generator?: string }; scene: THREE.Object3D; parser?: { json?: { asset?: { generator?: string } } } }) {
   const generator = asset.asset?.generator ?? asset.parser?.json?.asset?.generator ?? "";
-  if (/SIDTW placeholder NPC generator/i.test(generator)) return true;
-  return asset.scene.userData.sidtwPlaceholder === true;
+  if (/(?:SIDTW|SITW).*placeholder|placeholder.*(?:generator|asset|model)/i.test(generator)) return true;
+  let placeholder = false;
+  asset.scene.traverse(object => {
+    if (object.userData.sidtwPlaceholder === true || object.userData.sitwPlaceholder === true || object.userData.placeholder === true || object.userData.isPlaceholder === true) placeholder = true;
+  });
+  return placeholder;
 }
 
 /** Own materials and skeletons, while retaining cached geometry/textures shared by the loader. */
@@ -26,11 +30,17 @@ export function cloneNpcPresentation(source: THREE.Object3D, opacity = 1) {
   }
   scene.traverse(object => {
     if (!(object instanceof THREE.Mesh)) return;
+    if (object instanceof THREE.SkinnedMesh) object.skeleton.boneInverses = object.skeleton.boneInverses.map(inverse => inverse.clone());
     object.castShadow = false; object.receiveShadow = true; object.frustumCulled = true;
     object.material = Array.isArray(object.material) ? object.material.map(ownMaterial) : ownMaterial(object.material);
   });
+  let disposed = false;
   return { scene, dispose: () => {
+    if (disposed) return;
+    disposed = true;
     for (const material of materials.values()) material.dispose();
-    scene.traverse(object => { if (object instanceof THREE.SkinnedMesh) object.skeleton.dispose(); });
+    const skeletons = new Set<THREE.Skeleton>();
+    scene.traverse(object => { if (object instanceof THREE.SkinnedMesh) skeletons.add(object.skeleton); });
+    skeletons.forEach(skeleton => skeleton.dispose());
   } };
 }

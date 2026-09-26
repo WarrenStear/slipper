@@ -63,7 +63,7 @@ test('material weathering preserves identity and cannot poison GPU values', () =
 
 test('production assets require both an explicit review and the hero namespace', () => {
   for (const asset of Object.values(HERO_ASSETS)) assert.equal(productionHeroUrl(asset), null);
-  const asset = { status: 'reviewed-production', url: '/art/heroes/wolf.glb', contract: 'metres' };
+  const asset = { status: 'reviewed-production', url: '/art/heroes/wolf.glb', contract: 'metres', review: { provenance: 'Test-only review', licence: 'Fixture', reviewedBy: 'Test', reviewedAt: '2026-09-26T00:00:00Z', revision: '1', maxTriangles: 5000, maxMaterials: 3, maxTextures: 0, maxTextureDimension: 1024, bounds: { min: [-1, 0, -1], max: [1, 2, 1] } } };
   assert.equal(productionHeroUrl(asset), asset.url);
   assert.equal(productionHeroUrl({ ...asset, status: 'authored-fallback' }), null);
   assert.equal(productionHeroUrl({ ...asset, url: '/models/wolf.glb' }), null);

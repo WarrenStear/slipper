@@ -5,6 +5,13 @@ type OwnedVoice = { sound: Audio; filter: BiquadFilterNode; fade?: GainNode };
 export type OwnedNarrativeStem = OwnedVoice & { volume: number; retiring?: OwnedVoice };
 export const PRODUCTION_STEM_CROSSFADE_SECONDS = .35;
 
+/** Observe interruptions without resuming a context or owning its lifetime. */
+export function observeNarrativeAudioContext(context: BaseAudioContext, paused: () => void, running: () => void) {
+  const sync = () => { if (context.state === "running") running(); else paused(); };
+  context.addEventListener("statechange", sync);
+  return () => context.removeEventListener("statechange", sync);
+}
+
 export function createNarrativeStemVoice(listener: AudioListener, buffer: AudioBuffer, cutoff = 600): OwnedVoice {
   const filter = listener.context.createBiquadFilter();
   filter.type = "lowpass";

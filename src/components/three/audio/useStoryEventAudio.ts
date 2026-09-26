@@ -4,6 +4,7 @@ import type { AudioListener } from "three";
 import { subscribeAcceptedStoryEvents } from "../../../storyEvents/acceptedStoryEvents";
 import { getGestureActivatedNarrativeAudioContext } from "../../../lib/narrativeAudioActivation";
 import { MAX_CACHED_EVENT_BUFFERS, MAX_STORY_EVENT_VOICES, eventSilenceGain, materialSoundSamples, resolveStoryEventAudioCue } from "./storyEventAudio";
+import { observeNarrativeAudioContext } from "./narrativeAudioRuntime";
 
 type Voice = { source: AudioBufferSourceNode; filter: BiquadFilterNode; gain: GainNode; pan: StereoPannerNode; requestedGain: number; stop: () => void };
 type Silence = { start: number; hold: number; floor: number };
@@ -37,6 +38,15 @@ export function useStoryEventAudio({ listener, enabled, audioVolume, reducedEffe
     document.addEventListener("visibilitychange", pauseHidden);
     return () => document.removeEventListener("visibilitychange", pauseHidden);
   }, []);
+
+  useEffect(() => {
+    if (!listener) return;
+    return observeNarrativeAudioContext(listener.context, () => {
+      for (const voice of [...voices.current]) voice.stop();
+      silence.current = null;
+      ambientGain.current = 1;
+    }, () => {});
+  }, [listener]);
 
   useEffect(() => subscribeAcceptedStoryEvents(({ eventIds }) => {
     // Hydration never publishes: a restored grief/recognition beat stays silent.

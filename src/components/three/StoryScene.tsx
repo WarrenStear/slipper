@@ -3558,7 +3558,7 @@ class NPCEncounterErrorBoundary extends Component<
 
 function NPCEncounterModel({ config }: { config: NPCEncounterConfig }) {
   const gltf = useCompressedGLTF(config.src);
-  return isPlaceholderNpcAsset(gltf) ? <ProceduralNPCFallback config={config} /> : <LoadedNPCEncounterModel config={config} source={gltf.scene} />;
+  return !gltf || isPlaceholderNpcAsset(gltf) ? <ProceduralNPCFallback config={config} /> : <LoadedNPCEncounterModel config={config} source={gltf.scene} />;
 }
 
 function LoadedNPCEncounterModel({ config, source }: { config: NPCEncounterConfig; source: THREE.Group }) {

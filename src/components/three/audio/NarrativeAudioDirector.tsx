@@ -9,7 +9,7 @@ import { getCurrentCinematicProfile } from "../../../cinematics/emotionalCinemat
 import { getJourneyScene } from "../../../data/journeyBlueprint";
 import { useSceneLook } from "../artDirection/SceneLookContext";
 import { useStoryEventAudio } from "./useStoryEventAudio";
-import { createNarrativePlaybackGate, createNarrativeStemVoice, disposeNarrativeAudioNodes, getNarrativeStemBuffers, pauseNarrativeAudioNodes, replaceNarrativeStemBuffer, type OwnedNarrativeStem } from "./narrativeAudioRuntime";
+import { createNarrativePlaybackGate, createNarrativeStemVoice, disposeNarrativeAudioNodes, getNarrativeStemBuffers, observeNarrativeAudioContext, pauseNarrativeAudioNodes, replaceNarrativeStemBuffer, type OwnedNarrativeStem } from "./narrativeAudioRuntime";
 import { createProductionAudioLoader } from "./productionAudioLoader";
 import type { RenderQualityProfile } from "../renderQuality";
 import {
@@ -98,11 +98,12 @@ export function NarrativeAudioDirector({ qualityProfile, enabled = true }: Narra
       dispose: () => { production.dispose(); disposeNarrativeAudioNodes(listener, stems); },
     });
     current.sync = () => {
-      if (!allowed()) gate.pause();
+      if (!allowed() || listener.context.state !== "running") gate.pause();
       else if (getGestureActivatedNarrativeAudioContext() === listener.context && listener.context.state === "running") void gate.start();
     };
     const handleGesture = (event: Event) => { if (event.isTrusted) void gate.start(); };
     const unsubscribe = useSettingsStore.subscribe(current.sync);
+    const unobserveContext = observeNarrativeAudioContext(listener.context, () => gate.pause(), current.sync);
     camera.add(listener);
     runtimeRef.current = current;
     setRuntime(current);
@@ -113,6 +114,7 @@ export function NarrativeAudioDirector({ qualityProfile, enabled = true }: Narra
     document.addEventListener("visibilitychange", current.sync);
     return () => {
       unsubscribe();
+      unobserveContext();
       window.removeEventListener("pointerdown", handleGesture);
       window.removeEventListener("keydown", handleGesture);
       window.removeEventListener(NARRATIVE_AUDIO_ACTIVATION_EVENT, current.sync);

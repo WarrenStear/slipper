@@ -20,8 +20,8 @@ class NpcAssetBoundary extends Component<{ children: ReactNode; fallback: ReactN
 
 function LoadedNpc({ kind, opacity }: { kind: AuthoredNpcKind; opacity: number }) {
   const gltf = useCompressedGLTF(MODEL_PATHS[kind]);
-  const placeholder = isPlaceholderNpcAsset(gltf);
-  const model = useMemo(() => placeholder ? null : cloneNpcPresentation(gltf.scene, opacity), [gltf.scene, opacity, placeholder]);
+  const placeholder = !gltf || isPlaceholderNpcAsset(gltf);
+  const model = useMemo(() => placeholder || !gltf ? null : cloneNpcPresentation(gltf.scene, opacity), [gltf?.scene, opacity, placeholder]);
   useEffect(() => () => model?.dispose(), [model]);
   if (!model) return <AuthoredNpcSilhouette kind={kind} opacity={opacity} />;
   return <primitive object={model.scene} dispose={null} />;

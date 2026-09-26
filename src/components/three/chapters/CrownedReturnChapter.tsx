@@ -37,7 +37,7 @@ function arrivalHeadingForScene(scene: ChapterSceneProps["scene"]) {
 
 
 
-function LivingWaterFountain({ reducedEffects }: { reducedEffects: boolean }) {
+export function LivingWaterFountain({ reducedEffects }: { reducedEffects: boolean }) {
   return <group name="home-living-water-fountain" position={[-3.7, .08, 4.9]} userData={{ element: "water" }}>
     <HeroAssetSlot id="fountain"><StoneBasin position={[0, .28, 0]} radius={1.05} /><TimberAssembly surface="stone" color="#807864" pieces={[{position:[0,.09,0],size:[1.4,.18,1.36]}, {position:[0,.73,.79],size:[.23,.8,.27]}, {position:[0,1.1,.54],size:[.2,.12,.68]}]} /></HeroAssetSlot>
     <WaterSurface position={[0, .52, 0]} size={[1.66, 1.66]} circle color="#304f57" opacity={.92} reducedEffects={reducedEffects} />
@@ -65,7 +65,7 @@ function BooksReadingAndWriting({ reducedEffects }: { reducedEffects: boolean })
   </group>;
 }
 
-function VelvetReadingNook() {
+export function VelvetReadingNook() {
   return <group name="home-velvet-reading-nook" position={[-4.7, .06, 8.3]} rotation={[0, .16, 0]} userData={{ fabric: "velvet" }}>
     <Upholstery position={[.15,-.02,-.12]} size={[2.8,.025,2.2]} surface="linen" color="#7a7564" />
     <HeroAssetSlot id="reading-chair"><TimberAssembly color="#493d31" pieces={[

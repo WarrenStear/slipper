@@ -192,6 +192,9 @@ try {
   const openSettings = async () => {
     await page.getByRole('button', { name: 'Settings', exact: true }).last().click();
     await expect(dialog()).toBeVisible();
+    // The drawer schedules its initial keyboard focus on the next frame. Wait
+    // for that handoff before focusing the slider, or it can steal Home/End.
+    await expect(dialog().getByRole('button', { name: 'Close settings', exact: true })).toBeFocused();
   };
   const closeSettings = async () => {
     await dialog().getByRole('button', { name: 'Close settings', exact: true }).click();
@@ -269,14 +272,16 @@ try {
   await openSettings();
   const volume = dialog().getByRole('slider', { name: 'Audio volume' });
   await volume.focus();
-  await page.keyboard.press('Home');
+  await expect(volume).toBeFocused();
+  await volume.press('Home');
   await expect(volume).toHaveValue('0');
   await closeSettings();
   await loops(0);
   sameBank(await checkpoint('zero-volume-remains-silent-after-settings-close'));
   await openSettings();
   await volume.focus();
-  await page.keyboard.press('End');
+  await expect(volume).toBeFocused();
+  await volume.press('End');
   await expect(volume).toHaveValue('1');
   await closeSettings();
   await loops(10);

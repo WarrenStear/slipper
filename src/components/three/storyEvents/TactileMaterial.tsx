@@ -4,6 +4,7 @@ import * as THREE from "three";
 import { applyTactileShader, tactileDetailFor, tactileProgramKey, type StorySurface, type TactileDetail } from "./tactileShader";
 import { useSceneLook } from "../artDirection/SceneLookContext";
 import { resolveMaterialMemory, type MaterialMemory } from "../materials/materialLibrary";
+import { createMaterialMapGuard } from "../materials/productionMaterialRuntime";
 
 export { TACTILE_PATTERNS, TACTILE_RELIEF_NORMAL, tactileDetailFor } from "./tactileShader";
 export type { StorySurface, TactileDetail } from "./tactileShader";
@@ -43,7 +44,10 @@ export const TactileMaterial = memo(function TactileMaterial({ surface, detail, 
   const state = resolveMaterialMemory(surface, roughness, memory ?? { wetness: look?.look.materials.wetness, wear: look?.look.materials.environmentalWear, damage: look?.look.materials.damage, reintegrated: look?.look.materials.reintegrated });
   const tint = useMemo(() => new THREE.Color(color).multiplyScalar(state.brightness), [color, state.brightness]);
   const resolved = detail ?? inherited;
-  const productionMaps = useProductionMaterialMaps(surface, resolved === "relief" && !maps);
+  // A local shader-detail override must not bypass the chapter's delivery tier.
+  const mapsAllowed = inherited === "relief" && resolved === "relief";
+  const productionMaps = useProductionMaterialMaps(surface, mapsAllowed && !maps);
+  const mapGuard = useMemo(() => createMaterialMapGuard(mapsAllowed ? maps ?? productionMaps : undefined), [maps, productionMaps, mapsAllowed]);
   const shaderMemory = useMemo(() => ({ value: [0, 0, 0, 0] }), []);
   shaderMemory.value[0] = state.wetness; shaderMemory.value[1] = state.wear;
   shaderMemory.value[2] = state.damage; shaderMemory.value[3] = (memory?.reintegrated ?? look?.look.materials.reintegrated) ? 1 : 0;
@@ -52,5 +56,5 @@ export const TactileMaterial = memo(function TactileMaterial({ surface, detail, 
   }, [surface, resolved, shaderMemory]);
   const cacheKey = useCallback(() => tactileProgramKey(surface, resolved), [surface, resolved]);
   return <meshStandardMaterial key={cacheKey()} color={tint} roughness={state.roughness} metalness={metalness} side={side}
-    {...(maps ?? productionMaps)} {...appearance} onBeforeCompile={compile} customProgramCacheKey={cacheKey} />;
+    {...appearance} onBeforeRender={mapGuard} onBeforeCompile={compile} customProgramCacheKey={cacheKey} />;
 });

@@ -1,44 +1,47 @@
-import { useGLTF, useKTX2 } from "@react-three/drei";
+import { useEffect, useState } from "react";
 import { useThree } from "@react-three/fiber";
-import { KTX2Loader } from "three-stdlib";
+import { HERO_ASSETS, approvedHeroAsset, type HeroAssetId } from "../../components/three/actors/heroAssetRegistry.ts";
+import { acquireHeroAsset } from "./heroAssetRuntime.ts";
+import { cloneNpcPresentation } from "./npcAssetPolicy.ts";
+import type { GLTF } from "three/examples/jsm/loaders/GLTFLoader.js";
+export { acquireAssetDecoders, DRACO_DECODER_PATH, BASIS_TRANSCODER_PATH } from "./assetDecoderPool.ts";
 
-export const DRACO_DECODER_PATH = "/draco/";
-export const BASIS_TRANSCODER_PATH = "/basis/";
-
-let sharedKtx2Loader: KTX2Loader | null = null;
-
-export function useSharedKtx2Loader() {
-  const gl = useThree((state) => state.gl);
-
-  if (!sharedKtx2Loader) {
-    sharedKtx2Loader = new KTX2Loader();
-    sharedKtx2Loader.setTranscoderPath(BASIS_TRANSCODER_PATH);
-    sharedKtx2Loader.detectSupport(gl);
-  }
-
-  return sharedKtx2Loader;
+/** Optional heroes never suspend the scene. Effects own loads and instance clones,
+ * so abandoned renders and StrictMode cannot leave orphan materials or workers. */
+export function useHeroPresentation(id: HeroAssetId) {
+  const gl = useThree(state => state.gl), entry = approvedHeroAsset(HERO_ASSETS[id]);
+  const [loaded, setLoaded] = useState<{ entry: typeof entry; renderer: typeof gl; model: ReturnType<typeof cloneNpcPresentation> } | null>(null);
+  useEffect(() => {
+    if (!entry) return;
+    let active = true, model: ReturnType<typeof cloneNpcPresentation> | undefined;
+    let lease: ReturnType<typeof acquireHeroAsset>;
+    try { lease = acquireHeroAsset(gl, id, entry); }
+    catch { return; }
+    void lease.pending.then(result => {
+      if (!active) return;
+      model = cloneNpcPresentation(result.asset.scene);
+      model.scene.userData.reviewedHero = { id, url: entry.url, revision: entry.review.revision, metrics: result.metrics };
+      setLoaded({ entry, renderer: gl, model });
+    }).catch(() => { if (active) setLoaded(null); });
+    return () => { active = false; model?.dispose(); lease.release(); };
+  }, [entry, gl, id]);
+  return loaded && loaded.entry === entry && loaded.renderer === gl ? loaded.model.scene : null;
 }
 
-export function useCompressedGLTF(path: string) {
-  const ktx2Loader = useSharedKtx2Loader();
-
-  return useGLTF(path, DRACO_DECODER_PATH, true, (loader) => {
-    loader.setKTX2Loader(ktx2Loader);
-  });
+/** Legacy callers also require registry approval; replacing a /models/ placeholder
+ * file cannot opt into production. Their authored fallback renders immediately. */
+export function useCompressedGLTF(path: string): GLTF | null {
+  const gl = useThree(state => state.gl);
+  const match = (Object.entries(HERO_ASSETS) as [HeroAssetId, (typeof HERO_ASSETS)[HeroAssetId]][]).find(([, value]) => approvedHeroAsset(value)?.url === path);
+  const id = match?.[0], entry = match?.[1];
+  const [loaded, setLoaded] = useState<{ asset: GLTF; entry: typeof entry; renderer: typeof gl } | null>(null);
+  useEffect(() => {
+    if (!entry || !id) return;
+    let active = true;
+    let lease: ReturnType<typeof acquireHeroAsset>;
+    try { lease = acquireHeroAsset(gl, id, entry); } catch { return; }
+    void lease.pending.then(result => { if (active) setLoaded({ asset: result.asset, entry, renderer: gl }); }, () => { if (active) setLoaded(null); });
+    return () => { active = false; lease.release(); };
+  }, [entry, id, gl]);
+  return loaded && loaded.entry === entry && loaded.renderer === gl ? loaded.asset : null;
 }
-
-export function useForestKtx2Textures() {
-  const [bark, crown, marsh] = useKTX2(
-    [
-      "/textures/forest/bark.ktx2",
-      "/textures/forest/crown.ktx2",
-      "/textures/forest/marsh.ktx2",
-    ],
-    BASIS_TRANSCODER_PATH,
-  );
-
-  return { bark, crown, marsh };
-}
-
-// KTX2 support is detected from the renderer before the first model load.
-// Eager preload without that loader can cache a failed compressed-asset request.

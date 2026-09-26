@@ -7,6 +7,18 @@
 /textures/*
   Cache-Control: public, max-age=0, must-revalidate
 
+/art/*
+  Cache-Control: public, max-age=0, must-revalidate
+
+/audio/*
+  Cache-Control: public, max-age=0, must-revalidate
+
+/draco/*
+  Cache-Control: public, max-age=0, must-revalidate
+
+/basis/*
+  Cache-Control: public, max-age=0, must-revalidate
+
 /visuals/*
   Cache-Control: public, max-age=0, must-revalidate
 

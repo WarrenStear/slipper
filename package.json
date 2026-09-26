@@ -11,7 +11,7 @@
     "lint": "node scripts/validate-mobile-integration.mjs --lint",
     "content:qa": "node scripts/compile-world-state.js --check-only",
     "world:compile": "node scripts/compile-world-state.js",
-    "prebuild": "npm run final:world && npm run content:qa && npm run world:compile",
+    "prebuild": "npm run assets:validate && npm run final:world && npm run content:qa && npm run world:compile",
     "final:world": "node scripts/check-final-4d-world.mjs",
     "repair:world": "node scripts/build-final-4d-world.mjs",
     "repair:world:legacy": "node scripts/apply-world-object-optimisations.mjs && node scripts/enforce-single-master-lantern.mjs && node scripts/optimise-world-rendering.mjs && node scripts/upgrade-ground-environment.mjs && node scripts/upgrade-ground-surface.mjs && node scripts/optimise-visual-cleanup.mjs && node scripts/upgrade-player-collision.mjs && node scripts/final-world-polish.mjs && node scripts/harden-4d-world.mjs && node scripts/rebuild-smooth-4d-world.mjs && node scripts/fix-smooth-world-markers.mjs && node scripts/fix-terrain-worker-type-narrowing.mjs",
@@ -41,7 +41,14 @@
     "typecheck:functions": "tsc -p tsconfig.cloudflare.json --pretty",
     "assets:inspect": "gltf-transform inspect public/models/*.glb",
     "assets:compress": "bash scripts/compress-models.sh",
-    "assets:compress:all": "bash scripts/compress-models.sh"
+    "assets:compress:all": "bash scripts/compress-models.sh",
+    "assets:sync-decoders": "node scripts/sync-asset-decoders.mjs --write",
+    "assets:validate": "node --experimental-strip-types scripts/validate-production-assets.mjs",
+    "assets:manifest": "node --experimental-strip-types scripts/validate-production-assets.mjs --manifest",
+    "assets:review-delivery": "node scripts/review-production-delivery.mjs",
+    "assets:review-heroes": "node scripts/review-hero-art.mjs",
+    "assets:review-materials": "node scripts/review-material-maps.mjs",
+    "assets:audition-audio": "node scripts/audition-audio.mjs"
   },
   "engines": {
     "node": ">=22 <25"

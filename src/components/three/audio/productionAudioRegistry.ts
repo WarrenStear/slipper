@@ -30,6 +30,8 @@ export const PRODUCTION_AUDIO_REGISTRY: ProductionAudioRegistry = Object.freeze(
 
 export const MAX_PRODUCTION_AUDIO_BYTES = 2 * 1024 * 1024;
 export const MAX_PRODUCTION_AUDIO_SAMPLES = 2_000_000;
+export const MIN_PRODUCTION_AUDIO_SAMPLE_RATE = 8_000;
+export const MAX_PRODUCTION_AUDIO_SAMPLE_RATE = 192_000;
 export const PRODUCTION_AUDIO_LOAD_CONCURRENCY = 2;
 
 function validSource(source: ProductionAudioSource) {
@@ -39,18 +41,25 @@ function validSource(source: ProductionAudioSource) {
     source.url.endsWith(`.${source.format}`);
 }
 
+/** A calendar date, or a canonical UTC timestamp, with no Date.parse rollover. */
+function validReviewDate(value: unknown) {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}:\d{2}\.\d{3}Z)?$/.test(value)) return false;
+  const date = new Date(value);
+  return Number.isFinite(date.getTime()) && (value.length === 10 ? date.toISOString().slice(0, 10) : date.toISOString()) === value;
+}
+
 /** Admission is checked before fetch, including when metadata comes from future tooling. */
 export function reviewedProductionAudio(asset: ProductionAudioAsset | undefined): ReviewedProductionAudio | null {
   if (!asset || asset.status !== "reviewed-production" || !validSource(asset)) return null;
   if (typeof asset.provenance !== "string" || !asset.provenance.trim() ||
       typeof asset.reviewedBy !== "string" || !asset.reviewedBy.trim() ||
-      typeof asset.reviewedAt !== "string" || !Number.isFinite(Date.parse(asset.reviewedAt)) ||
-      !asset.loop || typeof asset.loop !== "object") return null;
+      !validReviewDate(asset.reviewedAt) ||
+      !asset.loop || typeof asset.loop !== "object" || Array.isArray(asset.loop)) return null;
   if (!Number.isFinite(asset.nominalLevelDb) || asset.nominalLevelDb < -48 || asset.nominalLevelDb > 0) return null;
   const { startSeconds = 0, endSeconds, edgeFadeSeconds = .025 } = asset.loop ?? {};
   if (!Number.isFinite(startSeconds) || startSeconds < 0 ||
       (endSeconds !== undefined && (!Number.isFinite(endSeconds) || endSeconds <= startSeconds)) ||
       !Number.isFinite(edgeFadeSeconds) || edgeFadeSeconds < .005 || edgeFadeSeconds > .1) return null;
-  if (asset.alternatives && (asset.alternatives.length > 2 || !asset.alternatives.every(validSource))) return null;
+  if (asset.alternatives !== undefined && (!Array.isArray(asset.alternatives) || asset.alternatives.length > 2 || !Array.from(asset.alternatives).every(validSource))) return null;
   return asset;
 }

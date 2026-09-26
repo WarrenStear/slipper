@@ -1,58 +1,118 @@
 # Reviewed material maps
 
-This directory is reserved for compact reviewed material maps. It currently
-contains no production textures. The 11 entries in
+This directory contains documentation only: **no production textures are approved
+or activated**. The eleven entries in
 [`MATERIAL_MAPS`](../../../src/components/three/materials/materialMapRegistry.ts)
-remain `procedural-fallback`: wet wood, bark, plaster, linen, velvet, stone,
-earth, ash, metal, paper and wood. Other surfaces also retain their procedural
-finish when no approved entry exists. Creating a file here does not enable it.
+remain `procedural-fallback`: wood, wet wood, bark, plaster, linen, velvet, stone,
+earth, ash, metal and paper. Other finishes also retain their procedural material.
+Adding a file here does not enable it. Concept PNGs and placeholder GLB materials
+are not reviewed surface art.
 
-Concept art in `docs/visual-concepts/` is reference material; do not use those
-PNGs as texture maps or backgrounds. Existing placeholder models do not establish
-approval for their materials.
+## Admission and delivery contract
 
-## Registry and texture contract
+Set `status: "reviewed-production"` only after the actual files and their receiving
+meshes have been reviewed. `approvedMaterialMaps` is the shared runtime/manifest
+admission function. Required metadata is deliberately small:
 
-Each enabled entry must explicitly use `status: "reviewed-production"`, a
-declared `maxDimension`, a two-axis `repeat`, and at least one approved channel.
-Keep `procedural-fallback` until provenance, surface appearance and runtime
-delivery have been reviewed.
-
-| Property | Existing admission contract |
+| Field | Contract |
 | --- | --- |
-| URL | Local `/art/materials/` path ending in `.ktx2`; lowercase letters, digits, `/`, `_` and `-` in the asset path. No remote URLs or traversal. |
-| Channels | `map`, `normalMap`, `roughnessMap`, `aoMap` only. |
-| Dimensions | Declared finite maximum from 1 through 1024 pixels; decoded width and height must also fit that maximum. |
-| Repeat | Two finite values greater than 0 and at most 32; review against the scene's actual UV scale. |
-| Colour space | Albedo (`map`) is sRGB; normal, roughness and AO are non-colour data. |
-| Runtime tier | Automatic loading is limited to high/cinematic relief detail without an explicit map override. Low, medium and reduced effects keep the procedural finish. |
+| `channels` | At least one of `map`, `normalMap`, `roughnessMap`, `aoMap`; no other channels. |
+| Channel URL | Local `/art/materials/` path ending in `.ktx2`. Lowercase letters, digits, underscores and hyphens in nonempty path segments; no traversal, URL queries, fragments or remote hosts. Prefer revisioned filenames. |
+| `maxDimension` | Integer 1–1024. Every decoded width and height must be a positive integer within this declared maximum. |
+| `repeat` | Exactly two finite values greater than zero and at most 32, reviewed at actual scene scale. |
+| `offset`, `rotation` | Optional finite two-axis offset (−32–32) and rotation (−2π–2π radians, about UV centre [0.5, 0.5]); defaults are zero. |
+| `normalConvention` | Required as `"opengl"` when a normal map exists. Convert and review DirectX maps before delivery; the runtime does not silently invert normals. |
+| `aoUvChannel` | Required as 0 or 1 when AO exists. Three r171 channel 0 means geometry `uv`; channel 1 means geometry `uv1` (not the legacy `uv2` name). |
+| `provenance`, `licence` | Nonempty source/artist/source-record reference and permission/licence summary. Keep the full source record alongside editable art. |
+| `reviewedBy`, `reviewedAt` | Reviewer and valid `YYYY-MM-DD` review date. Filename alone never grants approval. |
+| `revision` | Optional nonempty revision identifier; recommended for connecting screenshots and source exports. |
 
-The approved maps supplement the existing lit material and material-memory
-shader. Preserve wear, dampness, scars, reintegration and SceneLook authority;
-do not bake chapter lighting, text or story state into albedo maps. Check the
-normal-map convention and the actual mesh UVs, including the UV channel used
-for AO, in the receiving scene rather than assuming a file alone is compatible.
+Albedo uses sRGB. Normal, roughness and AO are non-colour data. Consumer clones
+own transforms, channel selection and colour space; loading-cache sources are
+never edited. KTX2 uploads use `flipY: false`. The maximum source-cache population
+is 44 textures (eleven slots × four useful channels).
+Primary requests use same-origin fetch with redirects rejected, a 15-second
+network timeout and an 8 MiB streaming byte cap. KTX2 header dimensions, mip count
+and single-2D-image topology are checked before transcoding; array/cube/volume
+textures are outside this surface-map contract.
 
-## Delivery and review
+## UV safety and material memory
 
-1. Record source/artist, licence or permission, editable source location, export
-   settings, actual dimensions and bytes, revision and reviewer/date. Use only
-   maps needed by the surface; do not fill all channels with meaningless images.
-2. Deliver compressed KTX2 maps and verify transcoding on the browser matrix.
-   The loader expects its Basis runtime at `/basis/`; those transcoder files are
-   not currently bundled. Supply and verify them before enabling reviewed maps.
-3. Compare the actual material in dry, wet, worn and damaged states where
-   applicable. Inspect seams, UV scale, grazing highlights, black levels and
-   silhouette against the procedural version under the same camera and lighting.
-4. Measure downloads, texture memory and frame/render cost. Keep the existing
-   1024-pixel bound and avoid extra lights, render targets or material variants.
-   Review desktop, mobile portrait/landscape, quality changes and reduced effects.
-5. Exercise missing-file and decode-failure fallback, repeated mount/unmount,
-   and tier changes before changing the entry to `reviewed-production`. Retain
-   evidence; automated acceptance does not substitute for art or device review.
+Albedo, normal and roughness use UV0. Before Three chooses the material program,
+the receiving geometry must have finite two-component UVs for every position and
+noncollapsed coverage. AO independently requires its declared UV channel. Missing,
+partial or invalid coordinates omit the affected maps and keep the procedural
+finish. The runtime never fabricates UV1, rewrites geometry, or moves story targets.
+Checks are cached by attribute identity/count/version and revalidate changed UVs.
 
-Unreviewed entries create no texture loader or request. Loading failures retain
-the procedural finish. The runtime shares source maps per renderer, creates
-consumer-owned transform/colour-space clones, and releases the source cache and
-its bounded two-worker transcoder pool after the last consumer leaves. Consumers
-must not dispose borrowed maps or add a second independent loading/cache system.
+This is a compatibility gate, not an art approval: repeated seams, scale, grazing
+response, normal orientation, texture swimming, saturation and black levels still
+need visual inspection on the actual receiving mesh. UV1 provided by a review
+fixture does not prove that a scene mesh has a valid AO atlas.
+
+Production maps supplement the existing physically lit surface and material-memory
+shader. Wetness, wear, damage and reintegration remain active, including retained
+scars. Do not bake chapter lighting, text or story state into material images.
+
+## Runtime ownership and quality
+
+Automatic delivery is limited to high/cinematic relief detail, without reduced
+effects. A local shader-detail override cannot bypass the chapter policy. Low,
+medium and reduced effects keep procedural materials and make no map requests.
+Borrowed overrides are also omitted under that policy.
+
+No approved maps means no asset-loader lease, decoder workers or map requests.
+Approved maps load asynchronously while the complete procedural material remains
+visible. Any missing file, decode error, invalid dimension or invalid metadata keeps
+that fallback. A partial set is not published after another channel fails.
+
+Material sources are shared per renderer and use the same bounded decoder lease
+as hero GLBs. Basis support is detected on the actual renderer and uses the locally
+shipped `/basis/` payload from the locked Three version. Each Basis pool has at most
+two workers. A zero-consumer cache with work in flight remains reusable until its
+transcodes settle, so remounts cannot create overlapping pools. The last consumer
+releases clones immediately; sources and the shared decoder lease are released
+after pending work settles. Late asynchronous results cannot attach to an unmounted
+material or a changed renderer. Concurrent hero users retain their own leases.
+
+## Development review
+
+Run from the repository root after installing dependencies. The script creates an
+isolated temporary build; it adds no player UI or production route:
+
+```sh
+REVIEW_MATERIALS=wood,wet-wood,plaster,linen,metal \
+REVIEW_MODES=procedural,reviewed \
+REVIEW_MATRIX=1 \
+node scripts/review-material-maps.mjs
+```
+
+The fixture compares dry, wet, worn, damaged and reintegrated states using the same
+camera and studio lights. Low/high desktop, reduced effects and mobile portrait/
+landscape are available through `REVIEW_MATRIX=1`. `REVIEW_STATES=dry,wet` and
+`REVIEW_MATERIALS=wood` narrow a pass. `REVIEW_OUT`, `REVIEW_PORT` and
+`REVIEW_ANGLE=metal` are optional; default ANGLE is software SwiftShader. Screenshots
+and `material-review.json` include actual renderer, delivery status, applied map
+channels, requests and render counts. With this registry, reviewed views are
+explicitly labelled **unavailable**, with procedural fallback shown.
+
+For decoder/failure/UV testing only, the script can copy the official Three ETC1S
+diagnostic from `tests/fixtures/production-delivery/` into its temporary output.
+This uses separate fixture metadata and never changes the shipping registry:
+
+```sh
+REVIEW_MATERIALS=wood REVIEW_STATES=dry \
+REVIEW_MODES=diagnostic,diagnostic-missing,diagnostic-invalid,diagnostic-offline,diagnostic-slow \
+node scripts/review-material-maps.mjs
+```
+
+`REVIEW_UV=missing-uv` confirms all maps are omitted. Default `REVIEW_UV=uv0`
+confirms that diagnostic AO requiring UV1 is omitted while the other channels work.
+`REVIEW_UV=ao1` gives the fixture an explicit duplicate atlas to exercise the AO
+channel; this is not an atlas generated for runtime scene geometry. Diagnostic
+imagery is labelled technical test content, never accepted material art.
+
+Before activating any set, retain matched actual-scene evidence, source metadata,
+dimensions/bytes, mobile/reduced-effects checks, missing/decode failure results and
+repeated mount/tier-change results. Device review and texture craft remain external
+deliverables; a passing loader test does not certify either.
