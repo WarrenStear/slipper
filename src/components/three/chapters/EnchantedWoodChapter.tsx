@@ -1,3 +1,4 @@
+import { RootThreshold } from "../environment/WoodlandHabitat";
 import { LegacyChapterLight } from "../artDirection/LegacyChapterLight";
 import { memo } from "react";
 import {
@@ -25,7 +26,7 @@ function EnchantedWoodChapterComponent({
 
   return (
     <group>
-      <SceneGround radius={16} color="#23251b" />
+      <SceneGround radius={16} color="#8a886c" textured />
       <ForestDepth quality={qualityProfile.quality} reducedEffects={reducedEffects} variant="enchanted-wood" />
       <StonePath color="#716756" count={11} length={18} />
       <FloatingMotes
@@ -36,16 +37,7 @@ function EnchantedWoodChapterComponent({
         radius={9}
       />
 
-      {isRabbitHole ? (
-        <group position={[0, 0.2, 2.8]} rotation={[Math.PI / 2, 0, 0]}>
-          {[1, 1.35, 1.7].map((scale) => (
-            <mesh key={scale} scale={scale}>
-              <torusGeometry args={[2.15, 0.18, 8, 32, Math.PI * 1.62]} />
-              <meshStandardMaterial color="#44362a" roughness={1} />
-            </mesh>
-          ))}
-        </group>
-      ) : null}
+      {isRabbitHole ? <RootThreshold /> : null}
 
       {isMeadow ? (
         <>

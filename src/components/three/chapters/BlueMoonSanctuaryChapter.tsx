@@ -97,7 +97,7 @@ function BlueMoonSanctuaryChapterComponent({
 
   return (
     <group>
-      <SceneGround radius={21} color="#15202a" />
+      <SceneGround radius={21} color="#82928a" textured />
       <SanctuaryWater reducedMotion={reducedMotion} reducedEffects={reducedEffects} />
       <ForestDepth quality={qualityProfile.quality} reducedEffects={reducedEffects} />
       <SanctuaryMoon

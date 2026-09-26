@@ -85,9 +85,10 @@ export function sceneParticleProfile(sceneId: JourneySceneId) {
 function fillFloor(sceneId: JourneySceneId) {
   if (sceneId === "broken-floor.confession") return .13;
   if (sceneId === "thorned.old-memory-bedroom" || sceneId === "fire.boundary") return .055;
-  // Matched .18/.22/.28 captures retain the Swan, linen and bridge at .18.
-  // Keep unlit water dark and let the Moon remain the dominant source.
-  if (sceneId === "blue-moon.sanctuary" || sceneId === "blue-moon.intimacy") return .18;
+  // Outdoor readability reveals bark/cloth without adding another light.
+  // Water remains dark; the motivated key still establishes the composition.
+  if (sceneId.startsWith("enchanted.")) return .3;
+  if (sceneId === "blue-moon.sanctuary" || sceneId === "blue-moon.intimacy") return .24;
   if (sceneId.startsWith("blue-moon.") || sceneId.startsWith("epilogue.")) return .09;
   if (sceneId.startsWith("crowned.")) return .32;
   return .17;
@@ -122,7 +123,7 @@ export function resolveSceneLook(sceneId: JourneySceneId, quality: LookQuality =
       surrenderRelease: sceneId === "river.release-surrender" && state.surrenderComplete ? 1 : 0,
       domesticCompression: sceneId === "thorned.self-owned-world" ? 0 : Math.max(0, Math.min(1, state.compression ?? 0)),
     },
-    lighting: { source: authored.source, color: authored.keyColor, position: authored.keyPosition, intensity: authored.keyIntensity, fill: emotional.fillIntensity, fillFloor: fillFloor(sceneId), shadowProfile: quality === "cinematic" && !reducedEffects },
+    lighting: { source: authored.source, color: authored.keyColor, groundColor: sceneId.startsWith("enchanted.") ? "#766e52" : sceneId.startsWith("blue-moon.") ? "#41565a" : authored.ground, position: authored.keyPosition, intensity: authored.keyIntensity, fill: emotional.fillIntensity, fillFloor: fillFloor(sceneId), shadowProfile: quality === "cinematic" && !reducedEffects },
     atmosphere: { sky: authored.sky, horizon: authored.horizon, fog: authored.fog, density: Math.min(.025, emotional.fogDensity * Math.min(1.3, 90 / emotional.visibility)), visibility: emotional.visibility },
     grade: { exposure: emotional.exposure, contrast: 1 + (emotional.contrast - 1) * .16, saturation: authored.saturation, warmth: emotional.warmth, vignette: reducedEffects ? 0 : .09, grain: reducedEffects ? 0 : .0012 },
     materials: { damage: sceneId.startsWith("crowned.") && state.surrenderComplete ? .18 : 0, reintegrated: sceneId.startsWith("crowned."), wetness: authored.wetness, roughnessBias: quiet ? .03 : 0, environmentalWear: authored.wear },

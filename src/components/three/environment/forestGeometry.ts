@@ -23,10 +23,9 @@ const ORGANIC_CROWN_LOBES: OrganicCrownLobe[] = [
 
 export function createOrganicCrownGeometry(detail: 0 | 1 | 2 = 0) {
   const lobes = ORGANIC_CROWN_LOBES.map((specification, shelfIndex) => {
-    // Broad rounded leaf shelves remove the triangular crystal contour. The
-    // full crown retains the original 140 / 560 / 260 triangle budgets.
-    const fine = detail === 1 || (detail === 2 && shelfIndex < 2);
-    const geometry = new THREE.SphereGeometry(1, fine ? 10 : 5, fine ? 5 : 3);
+    // A small opaque core supports distinct folded leaves at the silhouette.
+    // 140 triangles on low; 560/532 on the richer variants, still below 600.
+    const geometry = new THREE.SphereGeometry(1, 5, 3);
     const position = geometry.getAttribute("position") as THREE.BufferAttribute;
 
     for (let index = 0; index < position.count; index += 1) {
@@ -52,6 +51,53 @@ export function createOrganicCrownGeometry(detail: 0 | 1 | 2 = 0) {
       smoothNormals[index * 3 + 2] = z * inverseLength;
     }
     geometry.setAttribute("normal", new THREE.Float32BufferAttribute(smoothNormals, 3));
+    // Soft self-occlusion is baked once, not a new screen-space pass. The
+    // brighter upper leaf shelves remain distinct from their sheltered centres.
+    const shades = new Float32Array(position.count * 3);
+    for (let index = 0; index < position.count; index += 1) {
+      const x = position.getX(index), y = position.getY(index), z = position.getZ(index);
+      const sunward = THREE.MathUtils.clamp((y + 1) * .5, 0, 1);
+      const dapple = Math.sin(x * 9.1 + z * 8.4 + specification.phase) * .035;
+      const shade = .75 + sunward * .24 + dapple;
+      shades[index * 3] = shade * (.97 + shelfIndex % 3 * .013);
+      shades[index * 3 + 1] = shade;
+      shades[index * 3 + 2] = shade * .94;
+    }
+    geometry.setAttribute("color", new THREE.Float32BufferAttribute(shades, 3));
+    if (detail !== 0) {
+      geometry.scale(.76, .76, .76);
+      const leafPositions: number[] = [], leafUvs: number[] = [], leafColors: number[] = [], leafIndices: number[] = [];
+      const leafCount = detail === 1 ? 15 : 14;
+      for (let leaf = 0; leaf < leafCount; leaf++) {
+        const a = leaf * 2.39996 + specification.phase;
+        const y = -.72 + (leaf + .5) / leafCount * 1.44;
+        const ring = Math.sqrt(Math.max(.1, 1 - y * y));
+        const centre = new THREE.Vector3(Math.cos(a) * ring, y, Math.sin(a) * ring);
+        const forward = new THREE.Vector3(Math.cos(a + .55), .22, Math.sin(a + .55)).normalize();
+        const across = new THREE.Vector3(-forward.z, 0, forward.x).multiplyScalar(.17 + leaf % 3 * .024);
+        const stem = centre.clone().addScaledVector(forward, -.29);
+        const tip = centre.clone().addScaledVector(forward, .32 + leaf % 2 * .055);
+        const ridge = centre.clone(); ridge.y += .075;
+        const points = [stem, centre.clone().add(across), tip, centre.clone().sub(across), ridge];
+        const offset = leafPositions.length / 3;
+        points.forEach((point, i) => {
+          leafPositions.push(point.x, point.y, point.z);
+          const shade = .84 + (leaf % 4) * .04 + (i === 4 ? .04 : 0);
+          leafColors.push(shade * .96, shade, shade * .9);
+        });
+        leafUvs.push(.5, 0, 0, .46, .5, 1, 1, .46, .5, .46);
+        leafIndices.push(...[0,4,1,1,4,2,2,4,3,3,4,0].map(i => i + offset));
+      }
+      const leaves = new THREE.BufferGeometry();
+      leaves.setAttribute("position", new THREE.Float32BufferAttribute(leafPositions, 3));
+      leaves.setAttribute("uv", new THREE.Float32BufferAttribute(leafUvs, 2));
+      leaves.setAttribute("color", new THREE.Float32BufferAttribute(leafColors, 3));
+      leaves.setIndex(leafIndices); leaves.computeVertexNormals();
+      const detailed = mergeGeometries([geometry, leaves], false);
+      leaves.dispose();
+      if (!detailed) throw new Error("Incompatible crown leaf attributes");
+      geometry.copy(detailed); detailed.dispose();
+    }
     geometry.scale(...specification.scale);
     geometry.rotateX(specification.rotation[0]);
     geometry.rotateY(specification.rotation[1]);

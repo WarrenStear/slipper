@@ -1,5 +1,6 @@
+import { applyFoliageFinish } from "./foliageFinish";
 import { memo, useCallback } from "react";
-import type { ColorRepresentation, Texture, MeshStandardMaterial } from "three";
+import { DoubleSide, FrontSide, type ColorRepresentation, type Texture, type MeshStandardMaterial } from "three";
 import { applyTactileShader, tactileDetailFor } from "../storyEvents/tactileShader";
 import type { RenderQualityProfile } from "../renderQuality";
 
@@ -43,15 +44,10 @@ export const ForestSurfaceMaterial = memo(function ForestSurfaceMaterial({ finis
           roughnessFactor = clamp(roughnessFactor - damp * .3 - vTerrainHabitat.x * .07 + moss * .13 + litter * .06, .46, .99);
         `);
     } else if (finish === "canopy") {
-      shader.fragmentShader = shader.fragmentShader
-        .replace("#include <color_fragment>", `#include <color_fragment>
-          float leafMass = storyNoise(vStoryPosition * 2.8);
-          float leafEdge = max(0., vStoryNormal.y);
-          diffuseColor.rgb *= .8 + leafMass * .3 + leafEdge * .08;
-        `);
+      applyFoliageFinish(shader, detail === "relief");
     }
   }, [detail, finish]);
-  const programKey = useCallback(() => `sidtw-forest-${finish}-${detail}-v1`, [detail, finish]);
-  return <meshStandardMaterial key={programKey()} {...appearance} roughness={finish === "ground" ? .86 : .93} metalness={0}
+  const programKey = useCallback(() => `sidtw-forest-${finish}-${detail}-v2`, [detail, finish]);
+  return <meshStandardMaterial key={programKey()} {...appearance} roughness={finish === "ground" ? .86 : .93} metalness={0} side={finish === "canopy" ? DoubleSide : FrontSide}
     onBeforeCompile={compile} customProgramCacheKey={programKey} />;
 });

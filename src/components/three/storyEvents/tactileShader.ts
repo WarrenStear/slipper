@@ -1,3 +1,5 @@
+import { authoredSurfaceFinish } from "./surfaceFinish.ts";
+
 /** Shader-only surface policy. No scene, input, narrative or persistent state. */
 export const STORY_SURFACES = ["wood", "linen", "paper", "bark", "stone", "earth", "wax", "metal", "wet-wood", "charred-wood", "painted-wood", "plaster", "velvet", "ash", "moss"] as const;
 export type StorySurface = typeof STORY_SURFACES[number];
@@ -164,7 +166,7 @@ export const TACTILE_RELIEF_NORMAL = `
 `;
 
 export function tactileProgramKey(surface: StorySurface, detail: TactileDetail) {
-  return `sidtw-tactile-${surface}-v7-${detail}`;
+  return `sidtw-tactile-${surface}-v8-${detail}`;
 }
 
 /** Extend the standard light/shadow/fog/colour pipeline, never replace it. */
@@ -186,6 +188,7 @@ export function applyTactileShader(shader: TactileShader, surface: StorySurface,
   shader.fragmentShader = shader.fragmentShader
     .replace("#include <common>", `#include <common>\nvarying vec3 vStoryPosition;\nvarying vec3 vStoryNormal;\nuniform vec4 storyMemory;\n${SURFACE_NOISE}`)
     .replace("#include <color_fragment>", `#include <color_fragment>\n${SURFACE_COORDINATES}\n${detail === "relief" ? TACTILE_PATTERNS[surface] : TACTILE_BASE_PATTERNS[surface]}\ndiffuseColor.rgb *= grain;
+      ${authoredSurfaceFinish(surface, detail === "relief")}
       float memoryField = max(max(storyMemory.x, storyMemory.y), storyMemory.z) > 0. ? storyNoise(p * 2.8) : .5;
       float broadMemory = storyNoise(p * .43 + vec3(3.7, .8, 2.1));
       float dampPatch = smoothstep(.34, .72, memoryField * .42 + broadMemory * .58) * storyMemory.x;
@@ -195,7 +198,7 @@ export function applyTactileShader(shader: TactileShader, surface: StorySurface,
       diffuseColor.rgb *= 1. - dampPatch * .14 - scar * .24;
       diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * .9 + vec3(.025), wornPatch * .32);
     `)
-    .replace("#include <roughnessmap_fragment>", `#include <roughnessmap_fragment>\n${TACTILE_ROUGHNESS[surface] ?? "roughnessFactor = clamp(roughnessFactor + (1.0 - grain) * .24, .08, 1.0);"}\nroughnessFactor = clamp(roughnessFactor - dampPatch * .14 + scar * .15 + (memoryField - .5) * storyMemory.y * mix(.12, .08, storyMemory.w), .22, 1.);`);
+    .replace("#include <roughnessmap_fragment>", `#include <roughnessmap_fragment>\n${TACTILE_ROUGHNESS[surface] ?? "roughnessFactor = clamp(roughnessFactor + (1.0 - grain) * .24, .08, 1.0);"}\nroughnessFactor = clamp(roughnessFactor + authoredRoughness - dampPatch * .14 + scar * .15 + (memoryField - .5) * storyMemory.y * mix(.12, .08, storyMemory.w), .22, 1.);`);
   if (detail === "relief") shader.fragmentShader = shader.fragmentShader
     .replace("#include <normal_fragment_maps>", `#include <normal_fragment_maps>\n${TACTILE_RELIEF_NORMAL}`);
   return shader;

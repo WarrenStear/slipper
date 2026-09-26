@@ -1,3 +1,5 @@
+import { WoodlandHabitat } from "./WoodlandHabitat";
+import { FoliageMaterial } from "./FoliageMaterial";
 import { createWornTimberGeometry } from "../environmentArt/authoredGeometry";
 import { createOrganicCrownGeometry } from "./forestGeometry";
 import { memo, useEffect, useLayoutEffect, useMemo, useRef } from "react";
@@ -43,7 +45,7 @@ export const Forms = memo(function Forms({ forms, name, color, kind = "box", woo
   }, [forms]);
   return <instancedMesh ref={mesh} name={name} args={[organicGeometry ?? undefined, undefined, forms.length]} receiveShadow castShadow={shadows}>
     {organicGeometry ? null : kind === "stem" ? <cylinderGeometry args={[.025, .035, 1, 5]} /> : kind === "flower" ? <sphereGeometry args={[.11, 7, 5]} /> : kind === "branch" ? <cylinderGeometry args={[.46, .68, 1, 6]} /> : kind === "stone" ? <icosahedronGeometry args={[1, 0]} /> : <boxGeometry args={[1, 1, 1]} />}
-    {(wood || surface) ? <TactileMaterial surface={surface ?? "wood"} color={color} roughness={wood ? .96 : roughness} /> : <meshStandardMaterial color={color} roughness={roughness} />}
+    {kind === "crown" ? <FoliageMaterial color={color} vertexColors doubleSided /> : (wood || surface) ? <TactileMaterial surface={surface ?? "wood"} color={color} roughness={wood ? .96 : roughness} /> : <meshStandardMaterial color={color} roughness={roughness} />}
   </instancedMesh>;
 });
 
@@ -73,13 +75,12 @@ export const ForestDepth = memo(function ForestDepth({ quality, reducedEffects, 
     return { trunks, crowns, roots };
   }, [budget.trees, variant]);
   const stones = useMemo(() => shorelineLayout(budget.stones), [budget.stones]);
-  const reeds = useMemo(() => shorelineLayout(budget.reeds, true), [budget.reeds]);
-  return <group name={enchanted ? "enchanted-layered-forest" : "sanctuary-layered-forest"} userData={{ trees: budget.trees, decorativeOnly: true, drawCallBudget: 5 }}>
-    <Forms forms={layout.trunks} name="depth-trunks-and-branches" color={enchanted ? "#4a4b36" : "#344139"} kind="branch" surface="bark" />
-    <Forms forms={layout.crowns} name="opaque-depth-canopies" color={enchanted ? "#536346" : "#344d42"} kind="crown" />
+  return <group name={enchanted ? "enchanted-layered-forest" : "sanctuary-layered-forest"} userData={{ trees: budget.trees, decorativeOnly: true, drawCallBudget: 7 }}>
+    <Forms forms={layout.trunks} name="depth-trunks-and-branches" color={enchanted ? "#817562" : "#657468"} kind="branch" surface="bark" />
+    <Forms forms={layout.crowns} name="opaque-depth-canopies" color={enchanted ? "#687c4e" : "#526c5a"} kind="crown" />
     <Forms forms={layout.roots} name="shoreline-roots" color="#3c4034" kind="stone" surface="bark" />
     <Forms forms={stones} name="shoreline-stones" color="#65726f" kind="stone" surface="stone" />
-    <Forms forms={reeds} name="shoreline-reeds" color="#64745a" kind="branch" />
+    <WoodlandHabitat variant={variant} quality={quality} reducedEffects={reducedEffects} />
   </group>;
 });
 

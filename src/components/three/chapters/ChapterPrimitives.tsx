@@ -1,3 +1,4 @@
+import { ChapterGroundMaterial } from "../environment/ChapterGroundMaterial";
 import { HeroAssetSlot } from "../actors/HeroAssetSlot";
 import { createKeyGeometry, createLanternHousingGeometry, createLanternGlassGeometry, createMirrorFrameGeometry } from "../environmentArt/heroGeometry";
 import { useSceneLook } from "../artDirection/SceneLookContext";
@@ -136,17 +137,20 @@ export const SceneGround = memo(function SceneGround({
   y = -0.16,
   roughness = 0.96,
   metalness = 0,
+  textured = false,
 }: {
   radius?: number;
   color: string;
   y?: number;
   roughness?: number;
   metalness?: number;
+  textured?: boolean;
 }) {
   return (
     <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, y, 0]} receiveShadow>
       <circleGeometry args={[radius, 48]} />
-      <TactileMaterial surface="earth" color={color} roughness={roughness} metalness={metalness} />
+      {textured ? <ChapterGroundMaterial radius={radius} color={color} roughness={roughness} metalness={metalness} />
+        : <TactileMaterial surface="earth" color={color} roughness={roughness} metalness={metalness} />}
     </mesh>
   );
 });
