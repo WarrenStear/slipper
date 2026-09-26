@@ -133,7 +133,26 @@ jobs:
           tar -xzf /tmp/validated-preview/validated-preview.tgz
           node scripts/build-artifact.mjs verify "$BUILD_REVISION" build-validation.json
 
+      - name: Install Firefox software graphics
+        if: matrix.project == 'firefox'
+        run: sudo apt-get update && sudo apt-get install -y xvfb libgl1-mesa-dri libglx-mesa0
+
+      - name: Verify Firefox has a real WebGL2 context
+        if: matrix.project == 'firefox'
+        env:
+          LIBGL_ALWAYS_SOFTWARE: '1'
+          GALLIUM_DRIVER: llvmpipe
+        run: xvfb-run -a node scripts/check-firefox-webgl.mjs
+
+      - name: Run the complete Firefox project with software graphics
+        if: matrix.project == 'firefox'
+        env:
+          LIBGL_ALWAYS_SOFTWARE: '1'
+          GALLIUM_DRIVER: llvmpipe
+        run: xvfb-run -a npm run test:e2e -- --project=firefox --headed
+
       - name: Run the configured browser project
+        if: matrix.project != 'firefox'
         run: npm run test:e2e -- --project=${{ matrix.project }}
 
       - name: Preserve browser diagnostics on failure
