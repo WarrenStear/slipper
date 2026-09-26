@@ -7,6 +7,7 @@ import { forestCrownHabit } from "../../lib/forestArt";
 import { useJourneyStore } from "../../stores/useJourneyStore";
 import { getCurrentCinematicProfile } from "../../cinematics/emotionalCinematography";
 import { getAuthoredSceneArrival } from "../../cinematics/sceneArrival";
+import { openingEnclosed } from "../../cinematics/openingPresentation";
 import { SceneLookDirector } from "./artDirection/SceneLookDirector";
 import { SpatialProseDirector } from "./storyText/SpatialProseDirector";
 import { Component, memo, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ErrorInfo, type ReactNode } from "react";
@@ -2750,6 +2751,7 @@ function HillyForestGround({
   visualState,
   textures,
   qualityProfile,
+  renderVisible = true,
 }: {
   entries: Slipper3DEntry[];
   pathSegments: MazePathSegment[];
@@ -2757,6 +2759,7 @@ function HillyForestGround({
   visualState: WorldVisualState;
   textures: ForestTexturePack;
   qualityProfile: RenderQualityProfile;
+  renderVisible?: boolean;
 }) {
   const geometry = useMemo(() => {
     const geometry = new THREE.PlaneGeometry(
@@ -2932,7 +2935,7 @@ function HillyForestGround({
           friction={1.45}
         />
       ) : null}
-      <mesh geometry={geometry} receiveShadow>
+      <mesh geometry={geometry} visible={renderVisible} receiveShadow>
         <ForestSurfaceMaterial finish="ground" qualityProfile={qualityProfile} map={textures.marshMap} vertexColors color="#ffffff" />
       </mesh>
     </RigidBody>
@@ -3109,6 +3112,7 @@ function ContinuousForestBed({
   activeEntry,
   qualityProfile,
   showClearingFrame = true,
+  renderVisible = true,
 }: {
   entries: Slipper3DEntry[];
   pathSegments: MazePathSegment[];
@@ -3116,6 +3120,7 @@ function ContinuousForestBed({
   activeEntry: Slipper3DEntry;
   qualityProfile: RenderQualityProfile;
   showClearingFrame?: boolean;
+  renderVisible?: boolean;
 }) {
   const { camera } = useThree();
 
@@ -3324,7 +3329,10 @@ function ContinuousForestBed({
         ))}
       </RigidBody>
 
-      <HillyForestGround qualityProfile={qualityProfile} entries={entries} pathSegments={pathSegments} narrativeWorldState={narrativeWorldState} visualState={visualState} textures={forestTextures} />
+      <HillyForestGround renderVisible={renderVisible} qualityProfile={qualityProfile} entries={entries} pathSegments={pathSegments} narrativeWorldState={narrativeWorldState} visualState={visualState} textures={forestTextures} />
+      {/* Keep terrain/forest workers and collisions mounted while the opening
+          room occludes the exterior; only its visual submissions are deferred. */}
+      <group name="continuous-forest-visuals" visible={renderVisible}>
       {showClearingFrame ? (
         <ClearingForestFrame
           center={activePosition}
@@ -3355,6 +3363,7 @@ function ContinuousForestBed({
         <boxGeometry args={[1, 1, 1]} />
         <meshStandardMaterial map={forestTextures.ruinMap} normalMap={forestTextures.ruinNormalMap} roughnessMap={forestTextures.ruinRoughnessMap} vertexColors color="#ffffff" roughness={0.9} metalness={0.045} transparent opacity={0.64 * visualState.semanticOpacity} />
       </instancedMesh>
+      </group>
     </group>
   );
 }
@@ -6896,6 +6905,7 @@ export function StoryScene({
     storyWorldMemory?.inventory.lantern ||
       storyWorldMemory?.completedRitualIds?.includes("ritual.accept-lantern"),
   );
+  const exteriorVisible = !openingEnclosed(narrativeScene?.id, openingResolved);
 
   const start = entry?.engine3d.cameraStart ?? DEFAULT_CAMERA_POSITION;
   const authoredArrival = useMemo(() => narrativeScene && mode === "explore" && controls === "walk"
@@ -7049,7 +7059,7 @@ export function StoryScene({
       />
       {/* Authored chapters already frame their footprint. The legacy eight-metre
           ring put trunks and colliders through water, furniture and sightlines. */}
-      <ContinuousForestBed entries={entries} pathSegments={pathSegments} narrativeWorldState={narrativeWorldState} activeEntry={entry} qualityProfile={qualityProfile} showClearingFrame={openingResolved && !narrativeScene} />
+      <ContinuousForestBed entries={entries} pathSegments={pathSegments} narrativeWorldState={narrativeWorldState} activeEntry={entry} qualityProfile={qualityProfile} showClearingFrame={openingResolved && !narrativeScene} renderVisible={exteriorVisible} />
       <FirstPersonPlayer
         enabled={mode === "explore" && controls === "walk"}
         movementEnabled={openingResolved}
@@ -7133,8 +7143,10 @@ export function StoryScene({
         visualState={visualState}
         showDepthPlate={visualState.biome === "firstWood" && qualityProfile.quality !== "low"}
       />}
-      {narrativeScene ? <DistantWoodland origin={authoredSceneOrigin} quality={qualityProfile.quality} sampleGroundY={sampleGroundY} quiet={narrativeScene.id === "epilogue.constellation"} />
-        : <DistantForestSilhouetteRing visualState={visualState} qualityProfile={qualityProfile} />}
+      <group name="distant-woodland-visibility" visible={exteriorVisible}>
+        {narrativeScene ? <DistantWoodland origin={authoredSceneOrigin} quality={qualityProfile.quality} sampleGroundY={sampleGroundY} quiet={narrativeScene.id === "epilogue.constellation"} />
+          : <DistantForestSilhouetteRing visualState={visualState} qualityProfile={qualityProfile} />}
+      </group>
       {fallbackEnvironmentSrc ? <EnvironmentSphere src={fallbackEnvironmentSrc} radius={activeRadius * 0.98} /> : null}
       {openingResolved ? (
         <>

@@ -13,8 +13,10 @@ import { useSceneLook } from "../artDirection/SceneLookContext";
 export function useUnderfloorForest(surface: RefObject<Mesh>, stage: number) {
   const presentation = useSceneLook();
   const resolution = presentation?.look.budget.reflectionSize ?? 0;
+  const enabled = resolution > 0;
   const root = useRef<Group>(null), tick = useRef(0), valid = useRef(false);
   const forest = useMemo(() => {
+    if (!enabled) return null;
     const trunks: DressingForm[] = [], crowns: DressingForm[] = [];
     for (let i = 0; i < 34; i++) {
       const side = i % 2 ? 1 : -1, row = Math.floor(i / 2);
@@ -34,15 +36,15 @@ export function useUnderfloorForest(surface: RefObject<Mesh>, stage: number) {
       createTaperedBranchGeometry([[4.7,3.8,20],[2.8,4.9,21],[1.8,5.1,22.4]],.12,14),
     ]);
     return { trunks, crowns, branches };
-  }, []);
-  useEffect(() => () => forest.branches.dispose(), [forest]);
+  }, [enabled]);
+  useEffect(() => () => forest?.branches.dispose(), [forest]);
   const resources = useMemo(() => {
-    if (!resolution) return null;
+    if (!forest || !resolution) return null;
     const scene = new Scene(); scene.background = new Color("#081216"); scene.fog = new FogExp2("#101e23", .042);
     const target = new WebGLRenderTarget(resolution, resolution, { type: HalfFloatType, depthBuffer: true });
     target.texture.name = "bounded-underfloor-world";
     return { scene, target };
-  }, [resolution]);
+  }, [forest, resolution]);
   useEffect(() => { valid.current = false; return () => { resources?.target.dispose(); }; }, [resources]);
   useFrame(({ gl, camera }) => {
     if (!resources || !root.current || !surface.current || stage < 1 || document.hidden) return;
@@ -55,7 +57,7 @@ export function useUnderfloorForest(surface: RefObject<Mesh>, stage: number) {
     try { gl.xr.enabled = false; gl.shadowMap.autoUpdate = false; gl.setRenderTarget(resources.target); gl.clear(); gl.render(resources.scene, camera); valid.current = true; }
     finally { gl.setRenderTarget(previous); gl.xr.enabled = xr; gl.shadowMap.autoUpdate = shadows; }
   }, -.5);
-  const portal = resources ? createPortal(<group ref={root} matrixAutoUpdate={false} name="underfloor-parallax-volume">
+  const portal = resources && forest ? createPortal(<group ref={root} matrixAutoUpdate={false} name="underfloor-parallax-volume">
     <group position={[0, -11.5, 1]}>
       <Forms name="underfloor-depth-trunks" forms={forest.trunks} kind="tree" surface="bark" color="#7b9183" />
       <Forms name="underfloor-depth-canopy" forms={forest.crowns} kind="crown" color="#506d59" />

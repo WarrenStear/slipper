@@ -150,18 +150,24 @@ function BrokenFloorChapterComponent({
         opacity={0.64}
         reducedMotion={reducedMotion}
       />
-      <group ref={lanternRef} visible={revealStage >= 1} name="distant-light-recedes-into-wood" position={[0, 0, openingResolved ? 10.4 : 5.6]}>
-        <LanternProp position={[0, 0.1, 0]} scale={0.78} reducedMotion={reducedMotion} />
+      <group ref={lanternRef} name="distant-light-recedes-into-wood" position={[0, 0, openingResolved ? 10.4 : 5.6]}>
+        <group visible={revealStage >= 1}>
+          <LanternProp position={[0, 0.1, 0]} scale={0.78} reducedMotion={reducedMotion} light={false} />
+        </group>
+        {/* Keep the existing lamp light in the renderer from the first frame.
+            Its former parent transform is .1 + .64 * .78; only geometry hides. */}
+        <FlickerLight position={[0, .5992, 0]} color="#ffc778"
+          intensity={revealStage >= 1 ? 1.8 : 0} distance={9} reducedMotion={reducedMotion} />
       </group>
-      {!openingResolved && revealStage >= 1 ? (
-        <FlickerLight
-          position={[0, 1.5, 5.6]}
-          color="#f1b86a"
-          intensity={1.7}
-          distance={11}
-          reducedMotion={reducedMotion}
-        />
-      ) : null}
+      {/* A zero-intensity practical preserves the point-light shader variant
+          across both reveal and inversion without lighting the unearned stage. */}
+      <FlickerLight
+        position={[0, 1.5, 5.6]}
+        color="#f1b86a"
+        intensity={!openingResolved && revealStage >= 1 ? 1.7 : 0}
+        distance={11}
+        reducedMotion={reducedMotion}
+      />
       <ChapterLightRig family="broken-floor" reducedMotion={reducedMotion} />
       <pointLight position={[0, -2.4, 1]} color="#6da2b8" intensity={reducedEffects ? 0.35 : 0.75} distance={18} />
     </group>
