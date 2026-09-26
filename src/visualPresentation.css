@@ -155,6 +155,34 @@
     animation: none; opacity: 1; visibility: visible;
   }
 }
+/* The presentation selectors include #root, so the shared high-contrast
+   rules alone cannot override them. Keep the reader's setting authoritative. */
+@media not all and (forced-colors: active) {
+  html.sidtw-high-contrast #root .onboarding-gate.is-story-first {
+    background: #000;
+    color: #fff;
+  }
+  html.sidtw-high-contrast #root .onboarding-gate.is-story-first::before {
+    background: none;
+  }
+  html.sidtw-high-contrast #root .onboarding-gate.is-story-first .onboarding-grain {
+    opacity: 0;
+  }
+  html.sidtw-high-contrast #root .onboarding-gate.is-story-first .onboarding-card h1,
+  html.sidtw-high-contrast #root .onboarding-gate.is-story-first .onboarding-copy,
+  html.sidtw-high-contrast #root .onboarding-gate.is-story-first .onboarding-settings {
+    color: #fff;
+  }
+  html.sidtw-high-contrast #root .onboarding-gate.is-story-first .onboarding-actions button.primary {
+    color: #000;
+    background: #fff;
+    border-color: #fff;
+  }
+  html.sidtw-high-contrast #root .onboarding-gate.is-story-first .onboarding-actions button.primary:focus-visible {
+    outline: 3px solid #fff;
+    outline-offset: 3px;
+  }
+}
 @media (forced-colors: active) {
   #root .onboarding-gate.is-story-first { background: Canvas; color: CanvasText; }
   #root .onboarding-gate.is-story-first .onboarding-card h1,

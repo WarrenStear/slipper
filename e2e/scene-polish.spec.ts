@@ -1,6 +1,12 @@
 import { expect, test } from "@playwright/test";
 import { readCinematicStory } from "./cinematic-story-controls";
 
+// This case already captures both reveal stages explicitly. Continuous video
+// and trace screencasts add competing GPU readbacks to software-rendered CI,
+// which stalled after reload even after every restored-state assertion passed.
+// Keep DOM/action/network traces and both required PNGs without those streams.
+test.use({ video: "off", trace: { mode: "retain-on-failure", screenshots: false } });
+
 test("surface coverage rejects jitter and preserves the two-stage accessible reveal on reload", async ({ page }, testInfo) => {
   test.skip(!testInfo.project.name.includes("chromium"), "Physical WebGL coverage uses Chromium; the semantic full route still runs on every configured project.");
   // Software-rendered CI reached restored state before its aggregate timeout;

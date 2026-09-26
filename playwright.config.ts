@@ -50,7 +50,19 @@ export default defineConfig({
     },
     {
       name: "firefox",
-      use: { ...devices["Desktop Firefox"] },
+      use: {
+        ...devices["Desktop Firefox"],
+        // GPU-less Linux runners otherwise reject WebGL2 with
+        // AllowWebgl2:false and correctly enter the text-only fallback.
+        // Enable the real software renderer for this 3D regression project;
+        // production capability detection and fallback tests stay unchanged.
+        launchOptions: process.env.CI ? {
+          firefoxUserPrefs: {
+            "webgl.force-enabled": true,
+            "webgl.disable-fail-if-major-performance-caveat": true,
+          },
+        } : undefined,
+      },
     },
     {
       name: "webkit",

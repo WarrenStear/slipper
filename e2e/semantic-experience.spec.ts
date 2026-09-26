@@ -248,6 +248,11 @@ test.describe("threshold, settings, and recovery", () => {
     ).toBeVisible();
     await expect(settingsThresholdAction).toBeFocused();
     await expect(threshold).toHaveCSS("background-color", "rgb(0, 0, 0)");
+    await expect(threshold.locator("h1")).toHaveCSS("color", "rgb(255, 255, 255)");
+    await expect(threshold.locator(".onboarding-copy")).toHaveCSS("color", "rgb(255, 255, 255)");
+    await expect(settingsThresholdAction).toHaveCSS("color", "rgb(255, 255, 255)");
+    await expect(primaryThresholdAction).toHaveCSS("background-color", "rgb(255, 255, 255)");
+    await expect(primaryThresholdAction).toHaveCSS("color", "rgb(0, 0, 0)");
     await expect
       .poll(() =>
         page.evaluate(
