@@ -147,7 +147,7 @@ test("the Archive retains a deterministic, traversable, physically bounded fores
 
   assert.equal(result.trunkCount, repeated.trunkCount);
   assert.deepEqual(result.colliders, repeated.colliders);
-  assert.ok(result.trunkCount > 0, "Archive must not collapse into an empty open field");
+  assert.ok(result.trunkCount >= 120, "Archive should read as a continuous woodland, not isolated wall trees");
   assert.ok(result.colliders.length >= 24, "nearby Archive maze walls need physical coverage");
   assert.ok(result.colliders.length <= config.treeColliderLimit, "collision remains within its fixed budget");
   assert.ok(result.colliders.length < result.trunkCount, "visible trees must remain instanced rather than each owning a collider");

@@ -442,6 +442,27 @@ export function buildForest(request: BuildForestWorkerRequest): BuildForestWorke
         const ridgeWallCandidate = mazeWallScore > wallThreshold;
         const baseVisible = !tooCloseToClearing && !nearCorridor && (edgeWallCandidate || ridgeWallCandidate);
 
+        // A believable woodland has a body between the authored wall trees. The
+        // old rule only allowed edge/ridge candidates through, which left the
+        // continuous bed reading as isolated silhouettes over open terrain. A
+        // low-frequency grove roll now fills the interior while preserving the
+        // exact clearing and corridor exclusions that keep navigation readable.
+        const groveRoll = worldSeededUnit(worldCellX, worldCellZ, salt + 101.7);
+        const groveNoise = valueNoise2D(x * 0.06, z * 0.06, 33.7);
+        const interiorGroveBase =
+          biome === "firstWood" ? 0.34 :
+          biome === "mirror" ? 0.18 :
+          biome === "archive" ? 0.08 :
+          biome === "fireRiver" ? 0.24 :
+          biome === "crowned" ? 0.12 : 0.2;
+        const interiorGroveChance = clamp(
+          interiorGroveBase + forestDensity * 0.54 + groveNoise * 0.16 - mazeEdgeInfluence * 0.12,
+          0.08,
+          0.9,
+        );
+        const interiorGroveCandidate =
+          !tooCloseToClearing && !nearCorridor && groveRoll < interiorGroveChance;
+
         if (biome === "mirror") {
           const marshVisible = !tooCloseToClearing && !nearCorridor && randomA > 0.48;
           if (marshVisible && marshCount < instanceCapacity) {
@@ -455,14 +476,18 @@ export function buildForest(request: BuildForestWorkerRequest): BuildForestWorke
 
         const sparseTreeMultiplier =
           (biome === "mirror" ? 0.36 : biome === "archive" ? 0.54 : biome === "crowned" ? 0.42 : biome === "fireRiver" ? 0.66 : 0.8) * forestDensity;
-        const treeVisible = baseVisible && randomA < Math.min(0.96, sparseTreeMultiplier + mazeEdgeInfluence * 0.34);
+        const treeVisible =
+          (baseVisible && randomA < Math.min(0.96, sparseTreeMultiplier + mazeEdgeInfluence * 0.34)) ||
+          interiorGroveCandidate;
 
         if ((biome === "firstWood" || biome === "mirror" || biome === "archive" || biome === "fireRiver" || biome === "crowned") && treeVisible) {
           const edgeScale = 1 + mazeEdgeInfluence * 0.08;
-          const trunkHeight = (7.8 + worldSeededUnit(worldCellX, worldCellZ, salt + 8.8) * (7.4 + chapterPressure * 1.4)) * tuning.objectHeightScale * edgeScale;
-          const trunkWidth = (0.2 + worldSeededUnit(worldCellX, worldCellZ, salt + 9.7) * 0.14) * (1 + mazeEdgeInfluence * 0.12);
+          const growthRoll = worldSeededUnit(worldCellX, worldCellZ, salt + 107.3);
+          const growthScale = growthRoll < 0.24 ? 0.62 : growthRoll < 0.62 ? 0.82 : 1;
+          const trunkHeight = (7.8 + worldSeededUnit(worldCellX, worldCellZ, salt + 8.8) * (7.4 + chapterPressure * 1.4)) * tuning.objectHeightScale * edgeScale * growthScale;
+          const trunkWidth = (0.2 + worldSeededUnit(worldCellX, worldCellZ, salt + 9.7) * 0.14) * (0.84 + growthScale * 0.16) * (1 + mazeEdgeInfluence * 0.12);
           const lean = (worldSeededUnit(worldCellX, worldCellZ, salt + 12.2) - 0.5) * (0.075 + chapterPressure * 0.045);
-          const crownScale = (1.18 + worldSeededUnit(worldCellX, worldCellZ, salt + 19.4) * (1.12 + chapterPressure * 0.36)) * tuning.objectHeightScale * edgeScale;
+          const crownScale = (1.18 + worldSeededUnit(worldCellX, worldCellZ, salt + 19.4) * (1.12 + chapterPressure * 0.36)) * tuning.objectHeightScale * edgeScale * (0.86 + growthScale * 0.14);
           const yawA = worldSeededUnit(worldCellX, worldCellZ, salt + 15.5) * Math.PI * 2;
           const yawB = worldSeededUnit(worldCellX, worldCellZ, salt + 27.2) * Math.PI * 2;
           const crownedTint = biome === "crowned" ? 1.2 : 1;
