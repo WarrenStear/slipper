@@ -16,9 +16,14 @@ export function openingRoomTarget(stage: number): number {
   return stage >= 3 ? 1 : Math.max(0, stage) / 5;
 }
 
-/** Ignore unwitnessed/stalled time; normal interpolation retains Three's damp. */
+/**
+ * Pause unwitnessed time, but keep an earned reveal moving on a slow renderer.
+ * Discarding every frame above 250 ms can freeze the room indefinitely while
+ * the wet-floor reveal continues. A capped slice avoids both that deadlock and
+ * a jump after a long frame; normal interpolation retains Three's damp.
+ */
 export function openingMotionDelta(delta: number, active: boolean): number {
-  return active && Number.isFinite(delta) && delta > 0 && delta <= .25 ? Math.min(delta, .05) : 0;
+  return active && Number.isFinite(delta) && delta > 0 ? Math.min(delta, .05) : 0;
 }
 
 export function openingEnclosed(sceneId: string | null | undefined, resolved: boolean): boolean {

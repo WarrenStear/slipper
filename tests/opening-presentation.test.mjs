@@ -33,8 +33,11 @@ test('reduced motion snaps rather than accelerating involuntary room motion', ()
 test('paused room cannot accrue presentation time', () => {
   for (const delta of [0, 1/60, .2, 100]) assert.equal(openingMotionDelta(delta, false), 0);
 });
-test('stall and invalid frame durations do not fast-forward the room', () => {
-  for (const delta of [NaN,Infinity,-1,0,.251,20]) assert.equal(openingMotionDelta(delta,true),0);
+test('invalid frame durations do not advance the room', () => {
+  for (const delta of [NaN,Infinity,-Infinity,-1,0]) assert.equal(openingMotionDelta(delta,true),0);
+});
+test('stalled but active frames are clamped without freezing or fast-forwarding the room', () => {
+  for (const delta of [.251,.5,20]) assert.equal(openingMotionDelta(delta,true),.05);
 });
 test('normal witnessed frame deltas are bounded without changing the authored damping formula', () => {
   assert.equal(openingMotionDelta(1/60,true),1/60);
