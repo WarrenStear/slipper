@@ -58,7 +58,7 @@ export function SceneLookDirector({ sceneId, quality, reducedEffects, reducedMot
   return <SceneLookContext.Provider value={context}>
     <group name="scene-look-authority" userData={{ sceneId, hero: target.composition.heroLandmark, quality }}>
       <SceneAtmosphere heading={heading} />
-      <group position={origin} rotation={[0, heading, 0]}><SceneLighting /><AuthoredLightShafts /><GroundMist /></group>
+      <group position={origin} rotation={[0, heading, 0]}><SceneLighting quality={quality} /><AuthoredLightShafts /><GroundMist /></group>
       <CinematicCameraDirector sceneId={sceneId} reducedMotion={reducedMotion} cameraAssistance={cameraAssistance} focusPosition={focusPosition} />
       {target.budget.edgeSmoothing ? <ScenePostProcessing bloomIntensity={bloomIntensity} vignetteIntensity={vignetteIntensity} /> : null}
     </group>

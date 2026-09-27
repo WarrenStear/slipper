@@ -2,6 +2,7 @@ import { memo, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { TactileMaterial, useTactileDetail } from "../storyEvents/TactileMaterial";
 import { FoliageMaterial } from "./FoliageMaterial";
+import { WoodlandAccents } from "./WoodlandAccents";
 import { woodlandHabitatLayout, type HabitatPlacement, type WoodlandVariant } from "./woodlandHabitatLayout";
 import { createDeadwoodGeometry, createFernGeometry, createLeafLitterGeometry, createRootThresholdGeometry, createRushGeometry } from "../environmentArt/woodlandHabitatGeometry";
 
@@ -26,7 +27,7 @@ function HabitatInstances({ geometry, placements, name, color, foliage = false, 
   </instancedMesh>;
 }
 
-/** Three fixed instance batches, kept off all playable central surfaces. */
+/** The original three habitat draws plus a separately bounded accent layer. */
 export const WoodlandHabitat = memo(function WoodlandHabitat({ variant, quality, reducedEffects }: {
   variant: WoodlandVariant; quality: string; reducedEffects: boolean;
 }) {
@@ -36,11 +37,14 @@ export const WoodlandHabitat = memo(function WoodlandHabitat({ variant, quality,
   const litter = useMemo(createLeafLitterGeometry, []), timber = useMemo(createDeadwoodGeometry, []);
   useEffect(() => () => plant.dispose(), [plant]);
   useEffect(() => () => { litter.dispose(); timber.dispose(); }, [litter, timber]);
-  return <group name={`${variant}-ground-habitat`} userData={{ decorativeOnly: true, drawCallBudget: 3 }}>
-    <HabitatInstances name="clustered-forest-understory" geometry={plant} placements={layout.plants} color={shore ? "#718367" : "#6c8051"} foliage flexibility={shore ? .025 : .012} />
-    <HabitatInstances name="curled-ground-leaves" geometry={litter} placements={layout.litter} color={shore ? "#615749" : "#8c7955"} />
-    <HabitatInstances name="fallen-wood-at-forest-edge" geometry={timber} placements={layout.timber} color="#645d48" />
-  </group>;
+  return <>
+    <group name={`${variant}-ground-habitat`} userData={{ decorativeOnly: true, drawCallBudget: 3 }}>
+      <HabitatInstances name="clustered-forest-understory" geometry={plant} placements={layout.plants} color={shore ? "#718367" : "#6c8051"} foliage flexibility={shore ? .025 : .012} />
+      <HabitatInstances name="curled-ground-leaves" geometry={litter} placements={layout.litter} color={shore ? "#615749" : "#8c7955"} />
+      <HabitatInstances name="fallen-wood-at-forest-edge" geometry={timber} placements={layout.timber} color="#645d48" />
+    </group>
+    <WoodlandAccents variant={variant} quality={quality} reducedEffects={reducedEffects} />
+  </>;
 });
 
 export const RootThreshold = memo(function RootThreshold() {
