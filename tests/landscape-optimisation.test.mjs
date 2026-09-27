@@ -141,7 +141,7 @@ test('landscape keeps terrain/collision topology, resource disposal and renderin
   const code = read('OutdoorLandscape.tsx');
   assert.match(code, /colliderArgs: \[vertices, indices\]/);
   assert.match(code, /args=\{land.colliderArgs\}/); assert.match(code, /createLandscapeTerrain\(spec\), \[spec\]/);
-  assert.match(code, /drawCallBudget: river \? 7 : 6/); assert.match(code, /expandByScalar\(\.4\)/);
+  assert.match(code, /drawCallBudget: \(river \? 7 : 6\) \+ extraDraws/); assert.match(code, /expandByScalar\(\.4\)/);
   assert.match(code, /args=\{\[undefined, undefined, capacity\]\}/);
   assert.doesNotMatch(code, /useFrame|pointLight|spotLight|new WebGLRenderTarget|dispatchStoryEvent/);
   for (const name of ['bark', 'leaves', 'stone', 'timber', 'reeds']) assert.match(code, new RegExp(`${name}\\.dispose\\(\\)`));
