@@ -1,3 +1,4 @@
+import { OutdoorLandscape } from "../environment/OutdoorLandscape";
 import { EnvironmentalChoreography } from "../storyEvents/EnvironmentalChoreography";
 import { StoryEventDirector } from "../storyEvents/StoryEventDirector";
 import { StoryActorDirector } from "../storyEvents/StoryActorDirector";
@@ -149,6 +150,7 @@ function JourneySceneDirectorComponent({
               {interactionsEnabled ? <StoryEventDirector sceneId={entry.sceneId} reducedMotion={reducedMotion} /> : null}
               {interactionsEnabled ? <ActiveStoryActors sceneId={entry.sceneId} qualityProfile={qualityProfile} reducedEffects={reducedEffects} reducedMotion={reducedMotion} /> : null}
               <EnvironmentalChoreography sceneId={entry.sceneId} qualityProfile={qualityProfile} reducedEffects={reducedEffects} reducedMotion={reducedMotion} />
+              <OutdoorLandscape sceneId={entry.sceneId} quality={qualityProfile.quality} reducedEffects={reducedEffects} reducedMotion={reducedMotion} collidable={interactionsEnabled} />
               <ActiveChapter
                 scene={scene}
                 qualityProfile={qualityProfile}

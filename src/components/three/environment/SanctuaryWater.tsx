@@ -12,13 +12,15 @@ export type NarrativeWaterProps = {
   width?: number; depth?: number; color?: string; opacity?: number; roughness?: number;
   circle?: boolean; flow?: number; warm?: boolean;
   reducedMotion?: boolean; reducedEffects?: boolean;
+  /** Borrowed XY geometry with normalized UVs; the caller owns its lifetime. */
+  geometry?: THREE.BufferGeometry;
 };
 
 /** One lit, opaque dielectric surface. Reflected sky is an approximation;
  * there is no scene capture, transmission, framebuffer copy, or extra pass. */
 export const NarrativeWater = memo(function NarrativeWater({
   width = 20, depth = 17, color = "#1b3540", opacity = .9, roughness = .24,
-  circle = false, flow = 0, warm = false, reducedMotion = false, reducedEffects = false,
+  circle = false, flow = 0, warm = false, reducedMotion = false, reducedEffects = false, geometry,
 }: NarrativeWaterProps) {
   const detail = useTactileDetail();
   const presentation = useSceneLook();
@@ -48,8 +50,8 @@ export const NarrativeWater = memo(function NarrativeWater({
     uniforms.waterTime.value = reducedMotion || reducedEffects ? 0 : presentation ? presentation.time.water * 3 : time.current;
     uniforms.waterDetail.value = reducedEffects ? .5 : presentation ? Math.min(1, presentation.motion.water * 4) : 1;
   });
-  return <mesh name={flow ? "directional-river-water" : "still-reflective-water"} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-    {circle ? <circleGeometry args={[width * .5, 48]} /> : <planeGeometry args={[width, depth]} />}
+  return <mesh name={flow ? "directional-river-water" : "still-reflective-water"} rotation={[-Math.PI / 2, 0, 0]} geometry={geometry} receiveShadow>
+    {geometry ? null : circle ? <circleGeometry args={[width * .5, 48]} /> : <planeGeometry args={[width, depth]} />}
     <meshStandardMaterial color={color} roughness={roughness} metalness={0}
       onBeforeCompile={compile} customProgramCacheKey={() => "sidtw-narrative-water-v2"} />
   </mesh>;
