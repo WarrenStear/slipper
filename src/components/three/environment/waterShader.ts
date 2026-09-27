@@ -10,6 +10,7 @@ export function applyWaterShader(shader: WaterShader) {
     varying vec2 vWaterUv;
     uniform vec2 waterSize;
     uniform float waterTime, waterDetail, waterFlow, waterFine, waterCircle, waterDepth;
+    uniform float waterRiverBanks;
     uniform vec3 waterSky;
     float waterHeight(vec2 p) {
       float travel=waterTime*waterFlow*.32;
@@ -24,13 +25,23 @@ export function applyWaterShader(shader: WaterShader) {
     float waterBank() {
       float rectangle=min(min(vWaterUv.x,1.-vWaterUv.x)*waterSize.x,min(vWaterUv.y,1.-vWaterUv.y)*waterSize.y);
       float radial=(1.-length((vWaterUv-.5)*2.))*waterSize.x*.5;
-      return smoothstep(0.,1.35,mix(rectangle,radial,waterCircle));
+      // River ends are open reaches, not artificial shores across the current.
+      float sideBanks=min(vWaterUv.x,1.-vWaterUv.x)*waterSize.x;
+      float edge=mix(mix(rectangle,radial,waterCircle),sideBanks,waterRiverBanks);
+      return smoothstep(0.,mix(1.35,.92,waterRiverBanks),edge);
     }`)
     .replace("#include <color_fragment>", `#include <color_fragment>
       float bank=waterBank();
       vec2 waterP=(vWaterUv-.5)*waterSize;
       float depthVariation=sin(waterP.x*.26+sin(waterP.y*.31))*.035;
-      diffuseColor.rgb*=mix(.53,1.+depthVariation,bank);
+      float originalDepth=mix(.53,1.+depthVariation,bank);
+      float riverDepth=mix(1.12,.9+depthVariation,bank);
+      diffuseColor.rgb*=mix(originalDepth,riverDepth,waterRiverBanks);
+      float bankDistance=min(vWaterUv.x,1.-vWaterUv.x)*waterSize.x;
+      float shoreBand=smoothstep(.025,.12,bankDistance)*(1.-smoothstep(.12,.32,bankDistance));
+      float ripplet=.5+.5*sin(waterP.y*4.2-waterTime*waterFlow*.9);
+      float foam=shoreBand*ripplet*waterRiverBanks*waterFine*abs(waterFlow)*.08;
+      diffuseColor.rgb=mix(diffuseColor.rgb,waterSky*.24,foam);
       diffuseColor.rgb*=mix(1.18,.86,waterDepth);`)
     .replace("#include <roughnessmap_fragment>", `#include <roughnessmap_fragment>
       roughnessFactor=clamp(roughnessFactor+(1.-waterBank())*.23+abs(waterFlow)*.035,.16,.56);`)

@@ -9,6 +9,10 @@ export function sceneSkyReturn(sceneId: string): SkyReturn | null {
   if (sceneId === "blue-moon.sanctuary" || sceneId === "blue-moon.intimacy") return { position: [-10, 6, -8], color: "#8cacc8", intensity: .14 };
   if (sceneId === "nest.two-hands" || sceneId === "nest.protection") return { position: [-8, 5, 8], color: "#bbcdd1", intensity: .16 };
   if (["crowned.threshold", "crowned.home", "crowned.sovereignty"].includes(sceneId)) return { position: [9, 6, 12], color: "#bdcdd5", intensity: .18 };
+  // Grazing sky return exposes ridge and bark silhouettes without flattening
+  // the existing key. The existing renderer gates it to high/cinematic quality.
+  if (["fork.weighing", "fork.four-verbs"].includes(sceneId)) return { position: [-12, 7, -8], color: "#c0cfca", intensity: .13 };
+  if (["climbs.arrival", "climb.mind", "climb.heart"].includes(sceneId)) return { position: [12, 8, -10], color: "#bacdda", intensity: .16 };
   return null;
 }
 
@@ -35,6 +39,9 @@ export const AUTHORED_SHAFTS: Readonly<Record<string, readonly LightShaftSpec[]>
   "thorned.self-owned-world": [{ from: [0, 5, 12], to: [0, .2, 3], radius: 2.2, opacity: .035 }],
   "wolf-swan.convergence": [{ from: [-8, 14, 5], to: [3.8, .1, 6], radius: 1.8, opacity: .016 }],
   "river.wash": [{ from: [12, 18, 6], to: [8, .1, 9], radius: 1.5, opacity: .012 }],
+  "fork.weighing": [{ from: [14, 12, 10], to: [8, .2, 4], radius: 1.8, opacity: .014 }],
+  "climbs.arrival": [{ from: [-6, 18, 8], to: [-8, 1, 7], radius: 2, opacity: .017 }],
+  "climb.heart": [{ from: [-6, 18, 8], to: [5.6, .2, 5], radius: 1.4, opacity: .012 }],
   "crowned.threshold": [{ from: [-12, 9, -6], to: [-3.5, .1, 6], radius: 2, opacity: .018 }],
   "crowned.home": [{ from: [-8, 6, -4], to: [1, .1, 4], radius: 3.4, opacity: .025 }],
   "crowned.sovereignty": [{ from: [-8, 6, -4], to: [1, .1, 4], radius: 3.4, opacity: .025 }],
