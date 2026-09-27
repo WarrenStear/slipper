@@ -6,6 +6,8 @@ import * as THREE from "three";
 import { environmentTime } from "./chapterEnvironment";
 import { useTactileDetail } from "../storyEvents/TactileMaterial";
 import { applyWaterShader } from "./waterShader";
+import { worldTransitionAlpha } from "../artDirection/worldVisualContinuity";
+import { writeWaterSkyTarget } from "./waterSkyResponse";
 
 type Shader = Parameters<THREE.MeshStandardMaterial["onBeforeCompile"]>[0];
 export type NarrativeWaterProps = {
@@ -24,7 +26,9 @@ export const NarrativeWater = memo(function NarrativeWater({
 }: NarrativeWaterProps) {
   const detail = useTactileDetail();
   const presentation = useSceneLook();
-  const time = useRef(0);
+  const time = useRef(0), skyReady = useRef(false);
+  const hasSceneLook = Boolean(presentation);
+  const sky = useMemo(() => ({ horizon: new THREE.Color(), key: new THREE.Color(), target: new THREE.Color() }), []);
   // Never replace a compiled material's uniform objects when settings change.
   const uniforms = useMemo(() => ({ waterTime: { value: 0 }, waterDetail: { value: 1 } }), []);
   const appearance = useMemo(() => ({
@@ -39,14 +43,26 @@ export const NarrativeWater = memo(function NarrativeWater({
     appearance.waterCircle.value = circle ? 1 : 0;
     // The legacy opacity control now describes depth; the water remains opaque.
     appearance.waterDepth.value = THREE.MathUtils.clamp(opacity, 0, 1);
-    appearance.waterSky.value.set(warm ? "#baa08c" : "#a1bbc2");
-  }, [appearance, circle, depth, detail, flow, opacity, reducedEffects, warm, width]);
+    // Standalone/legacy water retains its original palette. Canonical water is
+    // updated from the scene below; resizing it must not reset an ongoing fade.
+    if (!hasSceneLook) appearance.waterSky.value.set(warm ? "#baa08c" : "#a1bbc2");
+  }, [appearance, circle, depth, detail, flow, opacity, reducedEffects, warm, width, hasSceneLook]);
   const compile = useCallback((shader: Shader) => {
     Object.assign(shader.uniforms, uniforms, appearance);
     applyWaterShader(shader);
   }, [appearance, uniforms]);
   useFrame((_, delta) => {
-    time.current = environmentTime(time.current, delta, !document.hidden, reducedMotion || reducedEffects);
+    if (presentation) {
+      sky.horizon.set(presentation.look.atmosphere.horizon);
+      sky.key.set(presentation.look.lighting.color);
+      writeWaterSkyTarget(sky.target, sky.horizon, sky.key, warm);
+      const alpha = worldTransitionAlpha(delta, reducedMotion || presentation.reducedMotion || !skyReady.current);
+      appearance.waterSky.value.lerp(sky.target, alpha);
+      skyReady.current = true;
+    } else {
+      skyReady.current = false;
+      time.current = environmentTime(time.current, delta, !document.hidden, reducedMotion || reducedEffects);
+    }
     uniforms.waterTime.value = reducedMotion || reducedEffects ? 0 : presentation ? presentation.time.water * 3 : time.current;
     uniforms.waterDetail.value = reducedEffects ? .5 : presentation ? Math.min(1, presentation.motion.water * 4) : 1;
   });

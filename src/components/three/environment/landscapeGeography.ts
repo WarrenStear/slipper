@@ -1,3 +1,5 @@
+import { createLandscapeHeightIndex } from "./landscapeHeightIndex.ts";
+
 /** Deterministic chapter-local landscape. Metres, +Y up; no story/store dependency. */
 export type LandscapePoint = [number, number, number];
 export type LandscapePlacement = { position: LandscapePoint; rotation: LandscapePoint; scale: LandscapePoint };
@@ -144,6 +146,7 @@ export function landscapeObjectRadius(kind: keyof typeof LANDSCAPE_CAPACITY, siz
 }
 /** Build the richest deterministic layout once; all quality levels draw its prefixes. */
 export function createLandscapeObjects(spec: LandscapeSpec, terrain: LandscapeBuffers) {
+  const { sampleHeight } = createLandscapeHeightIndex(terrain);
   const result: Record<keyof typeof LANDSCAPE_CAPACITY, LandscapePlacement[]> = { trees: [], stones: [], timber: [], reeds: [] };
   for (const kind of Object.keys(result) as (keyof typeof result)[]) {
     for (let trial = 0; trial < 1800 && result[kind].length < LANDSCAPE_CAPACITY[kind]; trial++) {
@@ -154,7 +157,7 @@ export function createLandscapeObjects(spec: LandscapeSpec, terrain: LandscapeBu
       const z = mix(-spec.length + radius + 1.5, spec.length - radius - 1.5, unit(salt + 2));
       const distance = Math.abs(r - landscapeRiverCentre(spec, z));
       if (side === spec.riverSide && distance < landscapeRiverWidth(spec, z) + radius + .45) continue;
-      const x = side * r, y = heightOnLandscape(terrain, x, z);
+      const x = side * r, y = sampleHeight(x, z);
       if (y === null || y < .18) continue;
       if (kind === "trees" && result.trees.some(tree => Math.hypot(tree.position[0] - x, tree.position[2] - z) < (tree.scale[0] + size) * .88)) continue;
       result[kind].push({ position: [x, y - .035, z], rotation: [0, unit(salt + 3) * Math.PI * 2, 0], scale: [size, size * (kind === "trees" ? .88 + unit(salt + 4) * .38 : 1), size] });

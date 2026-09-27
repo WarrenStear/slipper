@@ -28,7 +28,8 @@ type ScatterProps = {
   geometry: THREE.BufferGeometry; placements: readonly LandscapePlacement[]; capacity: number; count: number;
   name: string; finish: "bark" | "stone" | "leaves" | "reeds";
 };
-function LandscapeInstances({ geometry, placements, capacity, count, name, finish }: ScatterProps) {
+const LandscapeInstances = memo(function LandscapeInstances({ geometry, placements, capacity, count: requestedCount, name, finish }: ScatterProps) {
+  const count = Number.isFinite(requestedCount) ? Math.max(0, Math.floor(requestedCount)) : 0;
   const ref = useRef<THREE.InstancedMesh>(null);
   useLayoutEffect(() => {
     const mesh = ref.current; if (!mesh) return;
@@ -43,19 +44,30 @@ function LandscapeInstances({ geometry, placements, capacity, count, name, finis
     }
     mesh.instanceMatrix.needsUpdate = true;
     if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
-    // Full-capacity bounds remain valid when a quality tier grows its visible prefix.
+  }, [placements, capacity]);
+  useLayoutEffect(() => {
+    const mesh = ref.current; if (!mesh) return;
+    const available = Math.min(placements.length, mesh.instanceMatrix.count);
+    // Geometry changes affect bounds, not transforms. Quality-only count changes
+    // must not re-upload matrices, colours or recompute the full-capacity bounds.
     mesh.count = available; mesh.computeBoundingBox(); mesh.computeBoundingSphere();
     if (finish === "leaves" || finish === "reeds") {
       mesh.boundingBox?.expandByScalar(.4); if (mesh.boundingSphere) mesh.boundingSphere.radius += .4;
     }
+  }, [geometry, placements, capacity, finish]);
+  useLayoutEffect(() => {
+    const mesh = ref.current; if (!mesh) return;
+    const available = Math.min(placements.length, mesh.instanceMatrix.count);
+    // Also runs after either setup effect, restoring the active prefix before draw.
     mesh.count = Math.min(available, count);
-  }, [geometry, placements, finish, count]);
+    mesh.visible = mesh.count > 0;
+  }, [count, geometry, placements, capacity, finish]);
   return <instancedMesh ref={ref} name={name} args={[undefined, undefined, capacity]} geometry={geometry} receiveShadow raycast={IGNORE_RAYCAST}>
     {finish === "leaves" || finish === "reeds" ? <FoliageMaterial color={finish === "leaves" ? "#859566" : "#8c9973"}
       vertexColors={finish === "leaves"} doubleSided flexibility={finish === "leaves" ? .014 : .023} />
       : <TactileMaterial surface={finish} color={finish === "stone" ? "#ffffff" : "#9c8f77"} vertexColors={finish === "stone"} roughness={.95} />}
   </instancedMesh>;
-}
+});
 
 function LandscapeBasin({ spec, quality, reducedEffects, reducedMotion, collidable }: {
   spec: LandscapeSpec; quality: string; reducedEffects: boolean; reducedMotion: boolean; collidable: boolean;
