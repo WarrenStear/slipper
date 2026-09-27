@@ -7,7 +7,7 @@ import { AUTHORED_SHAFTS, sceneSkyReturn } from '../src/components/three/artDire
 const qualities = ['low', 'medium', 'high', 'cinematic'];
 const variants = ['enchanted-wood', 'blue-moon'];
 const read = path => readFileSync(new URL(`../src/components/three/${path}`, import.meta.url), 'utf8');
-const radius = (kind, item) => ({ saplings: 1.65, stones: 1.15, twigs: .85 }[kind] * item.scale[0]);
+const radius = (kind, item) => ({ saplings: 1.65, stones: 1.15, twigs: .85, fungi: .7 }[kind] * item.scale[0]);
 
 test('woodland accents have deterministic positive finite transforms at every tier', () => {
   for (const variant of variants) for (const quality of qualities) for (const reduced of [false, true]) {
@@ -37,8 +37,8 @@ test('reduced effects and unknown quality use the bounded low tier', () => {
 test('additional instance counts remain capped and sanctuary gets no extra trees', () => {
   for (const variant of variants) {
     const layout = woodlandAccentsLayout(variant, 'cinematic');
-    assert.equal(layout.saplings.length, variant === 'blue-moon' ? 0 : 8);
-    assert.equal(layout.stones.length, 10); assert.equal(layout.twigs.length, 18);
+    assert.equal(layout.saplings.length, variant === 'blue-moon' ? 0 : 12);
+    assert.equal(layout.stones.length, 10); assert.equal(layout.twigs.length, 18); assert.equal(layout.fungi.length, 12);
   }
 });
 test('complete accent envelopes stay on the existing ground and outside the central path', () => {
@@ -89,18 +89,18 @@ test('sky returns are much weaker than the key and use finite scene-local positi
 test('accent wiring retains the original habitat and stays decorative', () => {
   assert.match(read('environment/WoodlandHabitat.tsx'), /<WoodlandAccents variant=\{variant\} quality=\{quality\} reducedEffects=\{reducedEffects\}/);
   const layer = read('environment/WoodlandAccents.tsx');
-  for (const pattern of [/computeBoundingBox/, /computeBoundingSphere/, /expandByScalar/, /instanceMatrix\.needsUpdate/, /geometry\?\.dispose/, /raycast=\{IGNORE_RAYCAST\}/]) assert.match(layer, pattern);
+  for (const pattern of [/computeBoundingBox/, /computeBoundingSphere/, /expandByScalar/, /instanceMatrix\.needsUpdate/, /fungi\?\.dispose/, /raycast=\{IGNORE_RAYCAST\}/]) assert.match(layer, pattern);
   assert.doesNotMatch(layer, /useFrame|Math\.random|Date\.now|RigidBody|dispatchStoryEvent|useJourneyStore|scene\.fog/);
 });
 test('light and fog effects stay quality-gated, near-camera faded and scene-clock driven', () => {
   for (const path of ['artDirection/VolumetricLightShaft.tsx', 'artDirection/GroundMist.tsx']) {
     const code = read(path);
     assert.match(code, /look\.budget\.shafts/); assert.match(code, /presentation\.time\.vegetation/);
-    assert.match(code, /float nearby=smoothstep/); assert.match(code, /depthWrite=\{false\}/);
+    assert.match(path.endsWith('GroundMist.tsx') ? read('artDirection/groundMistField.ts') : code, /float nearby=smoothstep/); assert.match(code, /depthWrite=\{false\}/);
     assert.doesNotMatch(code, /getElapsedTime|Date\.now|requestAnimationFrame/);
   }
   const lighting = read('artDirection/SceneLighting.tsx');
-  assert.match(lighting, /look\.budget\.shafts && accent/);
-  assert.match(lighting, /intensity=\{accent\.intensity\} castShadow=\{false\}/);
+  assert.match(lighting, /returnStrength > 0 && accent/);
+  assert.match(lighting, /intensity=\{accent\.intensity \* returnStrength\} castShadow=\{false\}/);
   assert.match(read('artDirection/VolumetricLightShaft.tsx'), /forceSinglePass/);
 });

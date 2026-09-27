@@ -38,9 +38,12 @@ export function SceneAtmosphere({ heading = 0 }: { heading?: number }) {
         float hash(vec3 p){return fract(sin(dot(p,vec3(127.1,311.7,74.7)))*43758.5453);}
         float cloud(vec3 p){vec3 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(mix(hash(i),hash(i+vec3(1,0,0)),f.x),mix(hash(i+vec3(0,1,0)),hash(i+vec3(1,1,0)),f.x),f.y),mix(mix(hash(i+vec3(0,0,1)),hash(i+vec3(1,0,1)),f.x),mix(hash(i+vec3(0,1,1)),hash(i+vec3(1,1,1)),f.x),f.y),f.z);}
         void main(){vec3 d=normalize(direction);float h=pow(smoothstep(-.08,.72,d.y),.65);vec3 color=mix(horizon,zenith,h);
+        // Uniform branch skips both noise octaves on low/medium/reduced effects.
+        if (structure > .001) {
         float veil=cloud(d*5.+vec3(time*.002,0.,0.))*.7+cloud(d*11.-vec3(0.,0.,time*.001))*.3;
         float glow=pow(max(0.,dot(d,sun)),24.);float haze=exp(-abs(d.y)*12.);
         color=mix(color,horizon,(veil*.55+glow*.4+haze*.15)*structure);
+        }
         gl_FragColor=vec4(color,1.);
         #include <tonemapping_fragment>
         #include <colorspace_fragment>
