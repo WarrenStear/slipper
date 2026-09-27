@@ -33,7 +33,8 @@ export const LANDSCAPE_SCENES: Readonly<Record<string, LandscapeFamily>> = Objec
 });
 for (const spec of Object.values(FAMILIES)) Object.freeze(spec);
 export function landscapeForScene(sceneId: string): LandscapeSpec | null {
-  return Object.hasOwn(LANDSCAPE_SCENES, sceneId) ? FAMILIES[LANDSCAPE_SCENES[sceneId]] : null;
+  // Preserve own-property checks without requiring an ES2022 browser API.
+  return Object.prototype.hasOwnProperty.call(LANDSCAPE_SCENES, sceneId) ? FAMILIES[LANDSCAPE_SCENES[sceneId]] : null;
 }
 const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
 const smooth = (a: number, b: number, v: number) => { const t = clamp01((v - a) / (b - a)); return t * t * (3 - 2 * t); };
