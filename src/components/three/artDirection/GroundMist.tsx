@@ -2,13 +2,14 @@ import { useLayoutEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Color, FrontSide, Object3D, type InstancedMesh } from "three";
 import { useSceneLook } from "./SceneLookContext";
+import { readAtmosphereFogDensity } from "./atmosphereFog";
 import { groundMistPatches, GROUND_MIST_FRAGMENT, GROUND_MIST_VERTEX, type MistPatch } from "./groundMistField";
 
 const IGNORE_RAYCAST = () => undefined;
 function MistBatch({ patches }: { patches: readonly MistPatch[] }) {
   const presentation = useSceneLook()!;
   const ref = useRef<InstancedMesh>(null);
-  const uniforms = useMemo(() => ({ tint: { value: new Color() }, time: { value: 0 }, opacity: { value: 0 } }), []);
+  const uniforms = useMemo(() => ({ tint: { value: new Color() }, time: { value: 0 }, opacity: { value: 0 }, fogDensity: { value: 0 } }), []);
   useLayoutEffect(() => {
     const mesh = ref.current; if (!mesh) return;
     const transform = new Object3D();
@@ -19,9 +20,10 @@ function MistBatch({ patches }: { patches: readonly MistPatch[] }) {
     mesh.instanceMatrix.needsUpdate = true;
     mesh.computeBoundingBox(); mesh.computeBoundingSphere();
   }, [patches]);
-  useFrame(() => {
+  useFrame(({ scene }) => {
     uniforms.tint.value.set(presentation.look.atmosphere.horizon);
     uniforms.time.value = presentation.time.vegetation;
+    uniforms.fogDensity.value = readAtmosphereFogDensity(scene.fog);
     uniforms.opacity.value = (presentation.look.sceneId.startsWith("blue-moon.") ? .065 : .085) * (1 - presentation.stillness * .8);
   });
   return <instancedMesh ref={ref} name="scene-local-ground-mist" args={[undefined, undefined, patches.length]} renderOrder={2} raycast={IGNORE_RAYCAST} userData={{ decorativeOnly: true, drawCallBudget: 1, patches: patches.length }}>

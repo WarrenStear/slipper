@@ -24,7 +24,7 @@ export const GROUND_MIST_VERTEX = `
 `;
 export const GROUND_MIST_FRAGMENT = `
   uniform vec3 tint;
-  uniform float time, opacity;
+  uniform float time, opacity, fogDensity;
   varying vec3 local, viewNormal, viewPosition;
   varying float patchPhase;
   float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1,311.7))) * 43758.5453); }
@@ -33,13 +33,19 @@ export const GROUND_MIST_FRAGMENT = `
     return mix(mix(hash(i),hash(i+vec2(1.,0.)),f.x),mix(hash(i+vec2(0.,1.)),hash(i+vec2(1.,1.)),f.x),f.y);
   }
   void main() {
+    // Fade into the same exponential fog as the opaque scene. Negligible
+    // contributions exit before normalisation and the two noise octaves.
+    float nearby=smoothstep(.8,3.,length(viewPosition));
+    float depth = max(0., viewPosition.z);
+    float fogFade = exp(-fogDensity * fogDensity * depth * depth);
+    float visibility = opacity * nearby * fogFade;
+    if (visibility <= .0005) discard;
     float edge = pow(max(0.,dot(normalize(viewNormal),normalize(viewPosition))),1.8);
     vec2 drift = vec2(time*.018,-time*.012) + vec2(patchPhase, -patchPhase*.7);
     float billow = noise(local.xz*2.3+drift)*.65 + noise(local.xz*5.1-drift*.7)*.35;
     float breakup = smoothstep(.16,.78,billow);
     float base = smoothstep(-1.,-.35,local.y)*(1.-smoothstep(.2,1.,local.y));
-    float nearby=smoothstep(.8,3.,length(viewPosition));
-    gl_FragColor = vec4(tint,opacity*edge*base*breakup*nearby);
+    gl_FragColor = vec4(tint,visibility*edge*base*breakup);
     #include <tonemapping_fragment>
     #include <colorspace_fragment>
   }

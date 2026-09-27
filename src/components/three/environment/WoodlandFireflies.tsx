@@ -2,6 +2,7 @@ import { memo, useEffect, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
 import { AdditiveBlending, BufferGeometry, Color, Float32BufferAttribute } from "three";
 import { useSceneLook } from "../artDirection/SceneLookContext";
+import { readAtmosphereFogDensity } from "../artDirection/atmosphereFog";
 import { createFireflyField, fireflyCount, FIREFLY_FRAGMENT, FIREFLY_VERTEX } from "./woodlandFireflyField";
 
 const IGNORE_RAYCAST = () => undefined;
@@ -23,7 +24,7 @@ function FireflyBatch({ count }: { count: number }) {
     uniforms.pointScale.value = 65 * Math.min(2, gl.getPixelRatio());
     uniforms.opacity.value = .62 * (1 - presentation.stillness);
     // Match the active, interpolated scene fog rather than the target look.
-    uniforms.fogDensity.value = scene.fog && "density" in scene.fog ? scene.fog.density : 0;
+    uniforms.fogDensity.value = readAtmosphereFogDensity(scene.fog);
   });
   return <points name="woodland-firefly-field" geometry={geometry} raycast={IGNORE_RAYCAST} renderOrder={4} userData={{ decorativeOnly: true, drawCallBudget: 1 }}>
     <shaderMaterial uniforms={uniforms} vertexShader={FIREFLY_VERTEX} fragmentShader={FIREFLY_FRAGMENT} transparent depthWrite={false} blending={AdditiveBlending} />
