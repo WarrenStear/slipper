@@ -17,7 +17,27 @@ export const MATERIAL_LIBRARY = {
   oxidisedBrass: { surface: "metal", roughness: .62, metalness: .74 },
   agedPaper: { surface: "paper", roughness: .96, metalness: 0 },
   candleWax: { surface: "wax", roughness: .82, metalness: 0 },
+  paintedTimber: { surface: "painted-wood", roughness: .9, metalness: 0 },
 } satisfies Record<string, { surface: StorySurface; roughness: number; metalness: number }>;
+
+/** Shared defaults, not forced overrides. Authored colours, textures and explicit
+ * finish choices retain priority in every chapter and at every quality tier. */
+export const SURFACE_DEFAULTS = Object.freeze({
+  wood: MATERIAL_LIBRARY.wornTimber, "wet-wood": MATERIAL_LIBRARY.wetTimber,
+  "charred-wood": MATERIAL_LIBRARY.charredWood, "painted-wood": MATERIAL_LIBRARY.paintedTimber,
+  bark: MATERIAL_LIBRARY.bark, moss: MATERIAL_LIBRARY.moss, earth: MATERIAL_LIBRARY.dampSoil,
+  stone: MATERIAL_LIBRARY.riverStone, linen: MATERIAL_LIBRARY.linen, velvet: MATERIAL_LIBRARY.readingVelvet,
+  paper: MATERIAL_LIBRARY.agedPaper, plaster: MATERIAL_LIBRARY.livedPlaster, ash: MATERIAL_LIBRARY.ash,
+  wax: MATERIAL_LIBRARY.candleWax, metal: MATERIAL_LIBRARY.oxidisedBrass,
+} satisfies Record<StorySurface, { roughness: number; metalness: number }>);
+
+export function resolveSurfaceDefaults(surface: StorySurface, roughness?: number, metalness?: number) {
+  const defaults = SURFACE_DEFAULTS[surface];
+  return {
+    roughness: typeof roughness === "number" && Number.isFinite(roughness) ? Math.max(0, Math.min(1, roughness)) : defaults.roughness,
+    metalness: typeof metalness === "number" && Number.isFinite(metalness) ? Math.max(0, Math.min(1, metalness)) : defaults.metalness,
+  };
+}
 
 export type MaterialMemory = { wetness?: number; wear?: number; damage?: number; reintegrated?: boolean };
 const unit = (value = 0) => Number.isFinite(value) ? Math.min(1, Math.max(0, value)) : 0;

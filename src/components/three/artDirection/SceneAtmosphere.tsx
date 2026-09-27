@@ -3,6 +3,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { BackSide, Color, FogExp2, Vector3, type Mesh } from "three";
 import { getCurrentCinematicProfile } from "../../../cinematics/emotionalCinematography";
 import { useSceneLook } from "./SceneLookContext";
+import { worldTransitionAlpha } from "./worldVisualContinuity";
 
 export function SceneAtmosphere({ heading = 0 }: { heading?: number }) {
   const presentation = useSceneLook()!;
@@ -17,7 +18,7 @@ export function SceneAtmosphere({ heading = 0 }: { heading?: number }) {
   }, [scene, owned]);
   useFrame(({ camera }, delta) => {
     const { look } = presentation, profile = getCurrentCinematicProfile();
-    const alpha = presentation.reducedMotion ? 1 : 1 - Math.exp(-Math.min(delta, .05) * 2);
+    const alpha = worldTransitionAlpha(delta, presentation.reducedMotion);
     owned.background.lerp(owned.target.set(look.atmosphere.sky), alpha);
     owned.zenith.copy(owned.background);
     owned.horizon.lerp(owned.target.set(look.atmosphere.horizon), alpha);

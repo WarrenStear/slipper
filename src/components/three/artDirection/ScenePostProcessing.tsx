@@ -3,6 +3,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { DepthTexture, HalfFloatType, ShaderMaterial, UnsignedByteType, UnsignedIntType, Vector2, WebGLRenderTarget } from "three";
 import { FullScreenQuad } from "three/examples/jsm/postprocessing/Pass.js";
 import { useSceneLook } from "./SceneLookContext";
+import { blendWorldValue, worldTransitionAlpha, WORLD_GRADE_FRAGMENT } from "./worldVisualContinuity";
 
 const VERTEX = "varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.,1.);}";
 // Threshold BEFORE blur so ordinary surfaces and fog cannot bleed into bloom.
@@ -47,13 +48,10 @@ export const FINISH_FRAGMENT = /* glsl */ `
       }
       float contact=centre<min(cameraFar*.98,45.)?occlusion*.01375:0.;
       color=color*(1.-contact)+bloom*(texture2D(bloomHalf,vUv).rgb*.65+texture2D(bloomQuarter,vUv).rgb*.35);
-      float luminance=dot(color,vec3(.2126,.7152,.0722));
-      color=mix(vec3(luminance),color,saturation);
-      color=.18*pow(max(color/.18,vec3(0.)),vec3(contrast));
-      vec2 edge=(vUv-.5)*2.;color*=1.-vignette*smoothstep(.35,1.45,dot(edge,edge));
     #else
       vec3 color=edgeSmooth();
     #endif
+    ${WORLD_GRADE_FRAGMENT}
     gl_FragColor=vec4(color,1.);
     #include <tonemapping_fragment>
     #include <colorspace_fragment>
@@ -68,6 +66,9 @@ export function ScenePostProcessing({ bloomIntensity, vignetteIntensity }: { blo
   const presentation = useSceneLook()!;
   const cinematic = presentation.look.budget.finishing;
   const { gl, size } = useThree();
+  // Survives High/Cinematic resource changes without resetting the chapter grade.
+  const grade = useMemo(() => ({ contrast: presentation.look.grade.contrast, saturation: presentation.look.grade.saturation,
+    vignette: Math.min(.14, vignetteIntensity * .6 + presentation.look.grade.vignette * .4) }), []);
   const resources = useMemo(() => {
     const hdr = gl.extensions.has("EXT_color_buffer_float"), type = hdr ? HalfFloatType : UnsignedByteType;
     const target = new WebGLRenderTarget(1, 1, { type, samples: cinematic ? Math.min(4, gl.capabilities.maxSamples) : 0, depthBuffer: true });
@@ -79,8 +80,8 @@ export function ScenePostProcessing({ bloomIntensity, vignetteIntensity }: { blo
     const material = new ShaderMaterial({ defines: cinematic ? { CINEMATIC: 1 } : {}, depthTest: false, depthWrite: false, uniforms: {
       beauty: { value: target.texture }, depthMap: { value: target.depthTexture ?? target.texture },
       bloomHalf: { value: levels[0]?.texture ?? target.texture }, bloomQuarter: { value: levels[2]?.texture ?? target.texture }, resolution: { value: new Vector2(1, 1) },
-      cameraNear: { value: .05 }, cameraFar: { value: 200 }, contrast: { value: 1 }, saturation: { value: 1 },
-      vignette: { value: 0 }, bloom: { value: 0 }, grain: { value: 0 },
+      cameraNear: { value: .05 }, cameraFar: { value: 200 }, contrast: { value: grade.contrast }, saturation: { value: grade.saturation },
+      vignette: { value: grade.vignette }, bloom: { value: 0 }, grain: { value: 0 },
     }, vertexShader: VERTEX, fragmentShader: FINISH_FRAGMENT });
     const intermediate = (fragmentShader: string) => new ShaderMaterial({ depthTest: false, depthWrite: false, toneMapped: false, uniforms: { inputMap: { value: target.texture }, stepSize: { value: new Vector2() } }, vertexShader: VERTEX, fragmentShader });
     return { metadata: { width: 1, height: 1, bloomTargets: levels.length, samples: target.samples, method: cinematic ? "msaa-bloom-contact" : "fxaa" }, target, levels, material, bright: intermediate(BRIGHT), blur: intermediate(BLUR), quad: new FullScreenQuad(material), hdr };
@@ -89,7 +90,7 @@ export function ScenePostProcessing({ bloomIntensity, vignetteIntensity }: { blo
     resources.target.depthTexture?.dispose(); resources.target.dispose(); resources.levels.forEach(t => t.dispose());
     resources.material.dispose(); resources.bright.dispose(); resources.blur.dispose(); resources.quad.dispose();
   }, [resources]);
-  useFrame(({ scene, camera }) => {
+  useFrame(({ scene, camera }, delta) => {
     const { look } = presentation, { target, material, quad, levels, bright, blur } = resources;
     const scale = Math.min(gl.getPixelRatio(), look.budget.finishingMaxDimension / Math.max(size.width, size.height));
     const w = Math.max(1, Math.round(size.width * scale)), h = Math.max(1, Math.round(size.height * scale));
@@ -101,8 +102,11 @@ export function ScenePostProcessing({ bloomIntensity, vignetteIntensity }: { blo
     resources.metadata.width = w; resources.metadata.height = h;
     u.resolution.value.set(w, h);
     if ("near" in camera) { u.cameraNear.value = camera.near; u.cameraFar.value = camera.far; }
-    u.contrast.value = look.grade.contrast; u.saturation.value = look.grade.saturation;
-    u.vignette.value = Math.min(.14, vignetteIntensity * .6 + look.grade.vignette * .4);
+    const alpha = worldTransitionAlpha(delta, presentation.reducedMotion);
+    grade.contrast = blendWorldValue(grade.contrast, look.grade.contrast, alpha);
+    grade.saturation = blendWorldValue(grade.saturation, look.grade.saturation, alpha);
+    grade.vignette = blendWorldValue(grade.vignette, Math.min(.14, vignetteIntensity * .6 + look.grade.vignette * .4), alpha);
+    u.contrast.value = grade.contrast; u.saturation.value = grade.saturation; u.vignette.value = grade.vignette;
     u.bloom.value = levels.length ? Math.min(.14, bloomIntensity * .12) : 0;
     u.grain.value = cinematic ? look.grade.grain : 0;
     const previous = gl.getRenderTarget(), autoReset = gl.info.autoReset;

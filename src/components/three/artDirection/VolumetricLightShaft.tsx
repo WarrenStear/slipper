@@ -3,6 +3,7 @@ import { useFrame } from "@react-three/fiber";
 import { Color, DoubleSide, Quaternion, Vector3 } from "three";
 import { useSceneLook } from "./SceneLookContext";
 import { readAtmosphereFogDensity } from "./atmosphereFog";
+import { blendWorldValue, worldTransitionAlpha } from "./worldVisualContinuity";
 import { AUTHORED_SHAFTS, type LightShaftSpec } from "./sceneLightAccents";
 
 function VolumetricLightShaft({ from, to, radius, opacity }: LightShaftSpec) {
@@ -11,12 +12,14 @@ function VolumetricLightShaft({ from, to, radius, opacity }: LightShaftSpec) {
     const a = new Vector3(...from), b = new Vector3(...to), direction = a.clone().sub(b);
     return { centre: a.clone().add(b).multiplyScalar(.5), length: direction.length(), rotation: new Quaternion().setFromUnitVectors(new Vector3(0, 1, 0), direction.normalize()) };
   }, [from, to]);
-  const uniforms = useMemo(() => ({ tint: { value: new Color() }, opacity: { value: opacity }, time: { value: 0 }, fogDensity: { value: 0 } }), [opacity]);
-  useFrame(({ scene }) => {
-    uniforms.tint.value.set(presentation.look.lighting.color);
+  const uniforms = useMemo(() => ({ tint: { value: new Color(presentation.look.lighting.color) }, opacity: { value: opacity }, time: { value: 0 }, fogDensity: { value: 0 } }), [opacity]);
+  const tintTarget = useMemo(() => new Color(), []);
+  useFrame(({ scene }, delta) => {
+    const alpha = worldTransitionAlpha(delta, presentation.reducedMotion);
+    uniforms.tint.value.lerp(tintTarget.set(presentation.look.lighting.color), alpha);
     uniforms.time.value = presentation.time.vegetation;
     uniforms.fogDensity.value = readAtmosphereFogDensity(scene.fog);
-    uniforms.opacity.value = opacity * (1 - presentation.stillness * .8);
+    uniforms.opacity.value = blendWorldValue(uniforms.opacity.value, opacity * (1 - presentation.stillness * .8), alpha);
   });
   return <mesh name="authored-light-shaft" position={pose.centre} quaternion={pose.rotation} renderOrder={3}>
     <cylinderGeometry args={[.15, radius, pose.length, 20, 1, true]} />

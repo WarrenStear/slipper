@@ -1,47 +1,68 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Color, Object3D, MathUtils, type DirectionalLight, type HemisphereLight, type PointLight, type SpotLight } from "three";
+import { Color, Object3D, Vector3, type DirectionalLight, type HemisphereLight, type SpotLight } from "three";
 import { getCurrentCinematicProfile } from "../../../cinematics/emotionalCinematography";
 import { useSceneLook } from "./SceneLookContext";
 import { sceneSkyReturn } from "./sceneLightAccents";
 import { skyReturnStrength } from "./lightingQuality";
-import type { LookQuality } from "./SceneLookRegistry";
+import { blendWorldValue, worldTransitionAlpha } from "./worldVisualContinuity";
+import type { LookPoint, LookQuality } from "./SceneLookRegistry";
 
-/** One motivated key, sky/ground fill, and a bounded non-shadowing outdoor return. */
+/** One presentation owner. Stable constructor props cannot reset an eased light. */
 export function SceneLighting({ quality = "medium" }: { quality?: LookQuality }) {
   const presentation = useSceneLook()!;
   const { look } = presentation;
-  const key = useRef<DirectionalLight & SpotLight & PointLight>(null);
+  const key = useRef<DirectionalLight & SpotLight>(null);
   const fill = useRef<HemisphereLight>(null);
   const skyReturn = useRef<DirectionalLight>(null);
-  const accent = useMemo(() => sceneSkyReturn(look.sceneId), [look.sceneId]);
-  const returnStrength = skyReturnStrength(quality, presentation.reducedEffects);
-  const target = useMemo(() => new Object3D(), []);
-  const colors = useMemo(() => ({ key: new Color(), sky: new Color(), ground: new Color(), return: new Color() }), []);
-  useEffect(() => { target.position.set(...look.composition.focalPoint); target.updateMatrixWorld(); }, [target, look]);
+  const desiredReturn = useMemo(() => sceneSkyReturn(look.sceneId), [look.sceneId]);
+  const desiredReturnStrength = skyReturnStrength(quality, presentation.reducedEffects);
+  const localKey = look.lighting.source === "domestic" || look.lighting.source === "fire";
+  // Re-seed only when the physical light type changes. A directional key and
+  // a local spot use different intensity units; never interpolate between them.
+  const initialKey = useMemo(() => ({
+    position: [...look.lighting.position] as LookPoint, color: look.lighting.color,
+    intensity: look.lighting.intensity, angle: look.lighting.source === "fire" ? 1.24 : 1.05,
+  }), [localKey]);
+  const initialFill = useMemo<[string, string, number]>(() => [look.lighting.color, look.lighting.groundColor, Math.max(look.lighting.fillFloor, look.lighting.fill * 1.05)], []);
+  const returnEnabled = desiredReturnStrength > 0 && desiredReturn !== null;
+  // Freeze only JSX starting values. The frame loop reads live targets below,
+  // so a scene/quality change cannot overwrite an in-progress transition.
+  const { accent, returnStrength } = useMemo(() => ({
+    accent: desiredReturn, returnStrength: desiredReturnStrength,
+  }), [returnEnabled]);
+  const target = useMemo(() => {
+    const object = new Object3D(); object.position.set(...look.composition.focalPoint); return object;
+  }, []);
+  const scratch = useMemo(() => ({ color: new Color(), position: new Vector3() }), []);
   useFrame(({ gl }, delta) => {
-    const profile = getCurrentCinematicProfile(), alpha = presentation.reducedMotion ? 1 : 1 - Math.exp(-Math.min(delta, .05) * 2.4);
+    const profile = getCurrentCinematicProfile(), alpha = worldTransitionAlpha(delta, presentation.reducedMotion);
     gl.toneMappingExposure = profile.exposure;
-    colors.key.set(look.lighting.color); colors.sky.set(look.lighting.color); colors.ground.set(look.lighting.groundColor);
+    target.position.lerp(scratch.position.set(...look.composition.focalPoint), alpha);
+    target.updateMatrixWorld();
     if (key.current) {
-      key.current.color.lerp(colors.key, alpha);
-      key.current.intensity = MathUtils.lerp(key.current.intensity, look.lighting.intensity, alpha);
+      key.current.position.lerp(scratch.position.set(...look.lighting.position), alpha);
+      key.current.color.lerp(scratch.color.set(look.lighting.color), alpha);
+      key.current.intensity = blendWorldValue(key.current.intensity, look.lighting.intensity, alpha);
+      if (localKey) key.current.angle = blendWorldValue(key.current.angle, look.lighting.source === "fire" ? 1.24 : 1.05, alpha);
     }
     if (fill.current) {
-      fill.current.color.lerp(colors.sky, alpha); fill.current.groundColor.lerp(colors.ground, alpha);
-      fill.current.intensity = MathUtils.lerp(fill.current.intensity, Math.max(look.lighting.fillFloor, profile.fillIntensity * 1.05), alpha);
+      fill.current.color.lerp(scratch.color.set(look.lighting.color), alpha);
+      fill.current.groundColor.lerp(scratch.color.set(look.lighting.groundColor), alpha);
+      fill.current.intensity = blendWorldValue(fill.current.intensity, Math.max(look.lighting.fillFloor, profile.fillIntensity * 1.05), alpha);
     }
-    if (skyReturn.current && accent) {
-      colors.return.set(accent.color); skyReturn.current.color.lerp(colors.return, alpha);
-      skyReturn.current.intensity = MathUtils.lerp(skyReturn.current.intensity, accent.intensity * returnStrength * (1 - presentation.stillness * .7), alpha);
+    if (skyReturn.current && desiredReturn) {
+      skyReturn.current.position.lerp(scratch.position.set(...desiredReturn.position), alpha);
+      skyReturn.current.color.lerp(scratch.color.set(desiredReturn.color), alpha);
+      skyReturn.current.intensity = blendWorldValue(skyReturn.current.intensity, desiredReturn.intensity * desiredReturnStrength * (1 - presentation.stillness * .7), alpha);
     }
   }, -1);
-  const common = { position: look.lighting.position, color: look.lighting.color, intensity: look.lighting.intensity, ref: key };
+  const common = { position: initialKey.position, color: initialKey.color, intensity: initialKey.intensity, ref: key };
   return <group name={`motivated-light:${look.lighting.source}`}>
     <primitive object={target} />
-    <hemisphereLight ref={fill} args={[look.lighting.color, look.lighting.groundColor, Math.max(look.lighting.fillFloor, look.lighting.fill * 1.05)]} />
-    {look.lighting.source === "domestic" || look.lighting.source === "fire" ? <spotLight {...common} target={target}
-      angle={look.lighting.source === "fire" ? 1.24 : 1.05} penumbra={.95} distance={21} decay={2}
+    <hemisphereLight ref={fill} args={initialFill} />
+    {localKey ? <spotLight {...common} target={target}
+      angle={initialKey.angle} penumbra={.95} distance={21} decay={2}
       castShadow={look.lighting.shadowProfile} shadow-mapSize-width={1024} shadow-mapSize-height={1024}
       shadow-camera-near={.35} shadow-camera-far={21} shadow-bias={-.0003} shadow-normalBias={.025} />
       : <directionalLight {...common} target={target} castShadow={look.lighting.shadowProfile}

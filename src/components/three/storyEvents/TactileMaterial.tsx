@@ -3,7 +3,7 @@ import { createContext, memo, useCallback, useContext, useMemo, type ReactNode }
 import * as THREE from "three";
 import { applyTactileShader, tactileDetailFor, tactileProgramKey, type StorySurface, type TactileDetail } from "./tactileShader";
 import { useSceneLook } from "../artDirection/SceneLookContext";
-import { resolveMaterialMemory, type MaterialMemory } from "../materials/materialLibrary";
+import { resolveMaterialMemory, resolveSurfaceDefaults, type MaterialMemory } from "../materials/materialLibrary";
 import { createMaterialMapGuard } from "../materials/productionMaterialRuntime";
 
 export { TACTILE_PATTERNS, TACTILE_RELIEF_NORMAL, tactileDetailFor } from "./tactileShader";
@@ -42,10 +42,11 @@ type TactileMaterialProps = {
 };
 
 /** Standard-lit surface finishes using the shared optional map delivery path. */
-export const TactileMaterial = memo(function TactileMaterial({ surface, detail, color, roughness = .88, metalness = 0, side = THREE.FrontSide, memory, maps, constructionCoordinates = false, barkCoordinates = false, ...appearance }: TactileMaterialProps) {
+export const TactileMaterial = memo(function TactileMaterial({ surface, detail, color, roughness, metalness, side = THREE.FrontSide, memory, maps, constructionCoordinates = false, barkCoordinates = false, ...appearance }: TactileMaterialProps) {
   const inherited = useContext(TactileDetailContext);
   const look = useSceneLook();
-  const state = resolveMaterialMemory(surface, roughness, memory ?? { wetness: look?.look.materials.wetness, wear: look?.look.materials.environmentalWear, damage: look?.look.materials.damage, reintegrated: look?.look.materials.reintegrated });
+  const finish = resolveSurfaceDefaults(surface, roughness, metalness);
+  const state = resolveMaterialMemory(surface, finish.roughness, memory ?? { wetness: look?.look.materials.wetness, wear: look?.look.materials.environmentalWear, damage: look?.look.materials.damage, reintegrated: look?.look.materials.reintegrated });
   const resolved = detail ?? inherited;
   // A local shader-detail override must not bypass the chapter's delivery tier.
   const mapsAllowed = inherited === "relief" && resolved === "relief";
@@ -70,6 +71,6 @@ export const TactileMaterial = memo(function TactileMaterial({ surface, detail, 
   }, [surface, resolved, shaderMemory, constructionCoordinates]);
   const cacheKey = useCallback(() => tactileProgramKey(surface, resolved, constructionCoordinates), [surface, resolved, constructionCoordinates]);
   const normalScale = useMemo(() => new THREE.Vector2(.24, .24), []);
-  return <meshStandardMaterial key={cacheKey()} normalScale={normalScale} color={tint} roughness={state.roughness} metalness={metalness} side={side}
+  return <meshStandardMaterial key={cacheKey()} normalScale={normalScale} color={tint} roughness={state.roughness} metalness={finish.metalness} side={side}
     {...appearance} onBeforeRender={mapGuard} onBeforeCompile={compile} customProgramCacheKey={cacheKey} />;
 });
