@@ -1,6 +1,7 @@
 import { createLandscapeHeightIndex } from "./landscapeHeightIndex.ts";
 import { landscapeRiverCentre, landscapeRiverWidth, type LandscapeBuffers, type LandscapePlacement, type LandscapeSpec } from "./landscapeGeography.ts";
 import { BIOME_ECOLOGY_CAPACITY, ENVIRONMENT_THEMES } from "./environmentThemes.ts";
+import { terrainScatterRotation, type ScatterRotation } from "./terrainScatterRotation.ts";
 
 type EcologyKind = keyof typeof BIOME_ECOLOGY_CAPACITY;
 const unit = (seed: number) => { const n = Math.sin(seed * 127.1 + 61.7) * 43758.5453; return n - Math.floor(n); };
@@ -41,11 +42,13 @@ export function createLandscapeEcology(spec: LandscapeSpec, terrain: LandscapeBu
         if (existingTrees.some(tooClose) || result.evergreens.some(tooClose)) continue;
       }
       if (result[kind].some(item => Math.hypot(x - item.position[0], z - item.position[2]) < radius * .65)) continue;
-      // Keep trees upright. Low vegetation follows the local surface, capped to
-      // avoid aggressive tilts while embedding the small base below the triangles.
-      const tiltX = kind === "evergreens" ? 0 : Math.max(-.35, Math.min(.35, Math.atan(slopeZ)));
-      const tiltZ = kind === "evergreens" ? 0 : Math.max(-.35, Math.min(.35, -Math.atan(slopeX)));
-      result[kind].push({ position: [x, y - .055, z], rotation: [tiltX, unit(salt + 5) * Math.PI * 2, tiltZ], scale: [scale, scale, scale] });
+      // Keep the existing heading seed and upright trees. Low vegetation aligns
+      // to the capped ground normal before a local heading turn; random heading
+      // must not reverse the slope or lift one side of a cluster off the bank.
+      const heading = unit(salt + 5) * Math.PI * 2;
+      const rotation: ScatterRotation = kind === "evergreens" ? [0, heading, 0]
+        : terrainScatterRotation(slopeX, slopeZ, heading);
+      result[kind].push({ position: [x, y - .055, z], rotation, scale: [scale, scale, scale] });
     }
   }
   return result;
