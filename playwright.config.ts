@@ -44,6 +44,8 @@ export default defineConfig({
       name: "chromium",
       use: {
         ...devices["Desktop Chrome"],
+        // Full Chromium's headless mode uses the same browser as headed runs.
+        channel: "chromium",
         launchOptions: {
           args: [
             "--enable-webgl",
@@ -77,6 +79,7 @@ export default defineConfig({
       name: "mobile-chromium",
       use: {
         ...devices["Pixel 7"],
+        channel: "chromium",
         launchOptions: {
           args: [
             "--enable-webgl",
