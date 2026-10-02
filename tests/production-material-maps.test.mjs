@@ -217,7 +217,7 @@ import { runInNewContext } from 'node:vm';
 import ts from 'typescript';
 import * as THREE from 'three';
 import * as tactileShader from '../src/components/three/storyEvents/tactileShader.ts';
-import { resolveMaterialMemory } from '../src/components/three/materials/materialLibrary.ts';
+import * as materialLibrary from '../src/components/three/materials/materialLibrary.ts';
 
 test('the actual tactile component gates both automatic and override maps by chapter tier while preserving memory', () => {
   const code = ts.transpileModule(readFileSync(new URL('../src/components/three/storyEvents/TactileMaterial.tsx', import.meta.url), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX } }).outputText;
@@ -231,7 +231,7 @@ test('the actual tactile component gates both automatic and override maps by cha
     '../materials/productionMaterialRuntime': { createMaterialMapGuard },
     './tactileShader': tactileShader,
     '../artDirection/SceneLookContext': { useSceneLook: () => null },
-    '../materials/materialLibrary': { resolveMaterialMemory },
+    '../materials/materialLibrary': materialLibrary,
   };
   runInNewContext(code, { exports, require: id => { assert.ok(id in imports, id); return imports[id]; } });
   for (const quality of ['low', 'medium', 'high', 'cinematic']) for (const reduced of [false, true]) for (const override of [false, true]) {
@@ -246,6 +246,8 @@ test('the actual tactile component gates both automatic and override maps by cha
     assert.deepEqual(Array.from(shader.uniforms.storyMemory.value), [.7, .6, .5, 1]);
   }
   inherited = 'relief';
-  exports.TactileMaterial({surface:'wood', color:'#776644'});
+  const legacyWood = exports.TactileMaterial({surface:'wood', color:'#776644'});
   assert.equal(requested, false, 'legacy wood without reviewed construction UVs retains its procedural material');
+  assert.equal(legacyWood.props.roughness, materialLibrary.SURFACE_DEFAULTS.wood.roughness);
+  assert.equal(legacyWood.props.metalness, materialLibrary.SURFACE_DEFAULTS.wood.metalness);
 });
