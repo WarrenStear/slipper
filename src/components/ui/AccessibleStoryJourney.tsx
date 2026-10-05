@@ -8,19 +8,16 @@ import {
   getJourneyRitualBeat,
   getJourneyScene,
   journeyChapters,
-  type JourneyOutcome,
 } from "../../data/journeyBlueprint";
 import type { Slipper3DEntry } from "../../data/slipper3dTypes";
 import {
   nextJourneyPlayerAction,
   type JourneyPlayerAction,
   type JourneyPlayerActionChoice,
-  type JourneyPlayerActionOutcome,
 } from "../../lib/journeyPlayerActions";
 import {
   canEnterNarrativeEntry,
   canResolveRitual,
-  nextRequiredEntry,
   nextResolvableRitualForEntry,
 } from "../../lib/journeyProgression";
 import {
@@ -31,6 +28,9 @@ import {
 import { resolveStoryTransitionDurations } from "../../lib/storyTransitionPacing";
 import { useJourneyStore } from "../../stores/useJourneyStore";
 import { useSettingsStore } from "../../stores/useSettingsStore";
+import { applyJourneyOutcome, applyPlayerActionOutcome } from "../../narrative/StoryActions";
+import { canReadStoryEntry } from "../../narrative/StorySelectors";
+import { selectStoryProgression } from "../../narrative/StoryRuntime";
 import AccessibleStoryObjects from "./AccessibleStoryObjects";
 import "./AccessibleStoryJourney.css";
 
@@ -46,27 +46,6 @@ export type AccessibleStoryJourneyProps = {
 
 function entryParagraphs(entry: Slipper3DEntry) {
   return entry.paragraphs.length > 0 ? entry.paragraphs : [entry.body];
-}
-
-function applyRitualOutcome(outcome: JourneyOutcome) {
-  const journey = useJourneyStore.getState();
-  if (outcome.type === "complete-ritual") journey.completeRitual(outcome.ritualId);
-  if (outcome.type === "set-world-flag") journey.setWorldFlag(outcome.flagId, outcome.value);
-  if (outcome.type === "set-landmark-state") journey.setLandmarkState(outcome.landmarkId, outcome.state);
-  if (outcome.type === "add-resonance") journey.addResonance(outcome.resonance, outcome.amount);
-  if (outcome.type === "award-lantern") journey.awardLantern();
-  if (outcome.type === "recover-key") journey.recoverKey(outcome.keyId);
-  if (outcome.type === "collect-symbolic-object") journey.collectSymbolicObject(outcome.objectId);
-  if (outcome.type === "release-word") journey.releaseWord(outcome.word);
-  if (outcome.type === "complete-act") journey.completeAct(outcome.actId);
-  if (outcome.type === "complete-story") journey.completeStory();
-}
-
-function applyPlayerActionOutcome(outcome: JourneyPlayerActionOutcome) {
-  const journey = useJourneyStore.getState();
-  if (outcome.type === "set-world-flag") journey.setWorldFlag(outcome.flagId);
-  if (outcome.type === "collect-symbolic-object") journey.collectSymbolicObject(outcome.objectId);
-  if (outcome.type === "award-lantern") journey.awardLantern();
 }
 
 function accessibleActionLabel(action: JourneyPlayerAction) {
@@ -165,7 +144,7 @@ export function AccessibleStoryJourney({
   const activeContext = activeEntry ? getJourneyEntryContext(activeEntry.id) : undefined;
   const activeChapter = activeContext ? getJourneyChapter(activeContext.chapterId) : undefined;
   const activeScene = activeContext ? getJourneyScene(activeContext.sceneId) : undefined;
-  const isWitnessed = Boolean(activeEntry && journey.witnessedEntryIds.includes(activeEntry.id));
+  const isWitnessed = Boolean(activeEntry && canReadStoryEntry(activeEntry.id, journey));
   const isBookmarked = Boolean(activeEntry && journey.bookmarkedEntryIds.includes(activeEntry.id));
   const capabilities = getSlipperExperienceCapabilities(experienceMode);
   const directedJourney = isDirectedJourneyMode(experienceMode);
@@ -225,7 +204,7 @@ export function AccessibleStoryJourney({
       journey.witnessedEntryIds.includes(activeScene.keystoneEntryId)
     ? nextJourneyPlayerAction(activeScene.id, journey.worldFlags)
     : undefined;
-  const requiredEntryId = nextRequiredEntry(progressionState);
+  const requiredEntryId = selectStoryProgression(progressionState).nextEntryId;
   const requiredEntry = requiredEntryId ? entryById.get(requiredEntryId) : undefined;
   const canContinue = Boolean(
     requiredEntry &&
@@ -258,7 +237,7 @@ export function AccessibleStoryJourney({
     if (ritualBeat.entryId === activeEntry.id) {
       latest.enterBeat(ritualBeat.actId, ritualBeat.id);
     }
-    for (const outcome of ritualBeat.outcomes ?? []) applyRitualOutcome(outcome);
+    for (const outcome of ritualBeat.outcomes ?? []) applyJourneyOutcome(outcome, useJourneyStore.getState());
     setAnnouncement(`The world remembers: ${ritualInteraction.label}.`);
   }, [activeEntry, ritualBeat, ritualInteraction]);
 
@@ -275,7 +254,7 @@ export function AccessibleStoryJourney({
 
       const outcomes = choice?.outcomes ?? action.outcomes ?? [];
       if (outcomes.length === 0) return;
-      for (const outcome of outcomes) applyPlayerActionOutcome(outcome);
+      for (const outcome of outcomes) applyPlayerActionOutcome(outcome, useJourneyStore.getState());
       setAnnouncement(
         choice
           ? `${action.rememberedAs} ${choice.label}.`

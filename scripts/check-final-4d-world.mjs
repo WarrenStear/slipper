@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { spawnSync } from "node:child_process";
 
 const ROOT = process.cwd();
 
@@ -20,6 +21,10 @@ const requiredFiles = [
   "src/lib/narrativeJourneyState.ts",
   "src/data/journeyBlueprint.ts",
   "src/components/three/journey/JourneyDirector.tsx",
+  "src/narrative/StorySelectors.ts",
+  "src/narrative/StoryActions.ts",
+  "src/narrative/StoryRuntime.ts",
+  "tests/narrative-foundation.test.mjs",
   "src/components/three/journey/JourneyWorldComposition.tsx",
   "src/components/three/journey/EnvironmentalThreshold.tsx",
   "src/components/three/rituals/RitualInteraction.tsx",
@@ -60,7 +65,6 @@ const terrainWorker = read("src/workers/forestWorker.ts");
 const worldLayout = read("src/lib/worldLayout.ts");
 const perfectGround = read("src/components/three/world/PerfectWorldGround.tsx");
 const journeyBlueprint = read("src/data/journeyBlueprint.ts");
-const journeyDirector = read("src/components/three/journey/JourneyDirector.tsx");
 const journeyStore = read("src/stores/useJourneyStore.ts");
 const worldMemory = read("src/components/three/worldMemory/WorldMemoryDirector.tsx");
 const wrapper = read("src/components/three/StorySceneWithMasterLantern.tsx");
@@ -89,7 +93,14 @@ if (
   !journeyBlueprint.includes("COMPATIBILITY_PHASES.map") ||
   !journeyBlueprint.includes("journeyChapters.filter")
 ) hardFailures.push("narrative-derived compatibility phases are missing");
-if (!journeyDirector.includes("completionRequirements.every") || !journeyDirector.includes("applyJourneyOutcome")) hardFailures.push("ritual-to-transformation journey progression is incomplete");
+// Exercise the shared narrative boundary and every authored act/outcome instead
+// of requiring its implementation to remain inside a presentation component.
+const narrativeContract = spawnSync(process.execPath, [
+  "--experimental-strip-types", "--test", "tests/narrative-foundation.test.mjs",
+], { cwd: ROOT, encoding: "utf8" });
+if (narrativeContract.error || narrativeContract.status !== 0) {
+  hardFailures.push(`shared narrative progression contract failed: ${narrativeContract.error?.message ?? narrativeContract.stderr ?? ""}\n${narrativeContract.stdout ?? ""}`);
+}
 if (!journeyStore.includes("JOURNEY_ENTRY_PROGRESS") || !journeyStore.includes("JOURNEY_RITUAL_IDS")) hardFailures.push("journey persistence is not governed by the authored blueprint");
 if (!worldMemory.includes('name="persistent-world-memory"')) hardFailures.push("persistent landmark transformation layer is missing");
 if (

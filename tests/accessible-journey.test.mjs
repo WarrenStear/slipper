@@ -12,11 +12,13 @@ function read(relativePath) {
 
 test("the accessible route is deterministic and never mounts the WebGL world", () => {
   const app = read("src/App.tsx");
+  const router = read("src/experience/ExperienceRouter.ts");
   const accessibleBranch = app.indexOf("if (accessibleJourney) {");
   const worldBranch = app.indexOf("<WorldCanvas");
 
-  assert.match(app, /params\.get\("accessible"\) === "1"/);
-  assert.match(app, /canvas\.getContext\("webgl2"/);
+  assert.match(router, /params\.get\("accessible"\) === "1"/);
+  assert.match(router, /canvas\.getContext\("webgl2"/);
+  assert.match(app, /requiresAccessibleJourney.*ExperienceRouter|ExperienceRouter.*requiresAccessibleJourney/s);
   assert.match(app, /<AccessibleStoryJourney/);
   assert.ok(accessibleBranch >= 0 && accessibleBranch < worldBranch);
 });
@@ -28,7 +30,10 @@ test("the text journey uses canonical gates, outcomes, and explicit choices", ()
   assert.match(journey, /canResolveRitual\(ritualInteraction\.ritualId, latest\)/);
   assert.match(journey, /nextJourneyPlayerAction\(activeScene\.id, latest\.worldFlags\)/);
   assert.match(journey, /canEnterNarrativeEntry\(entryId, latest\)/);
-  assert.match(journey, /for \(const outcome of ritualBeat\.outcomes \?\? \[\]\) applyRitualOutcome\(outcome\)/);
+  assert.match(journey, /from "\.\.\/\.\.\/narrative\/StoryActions"/);
+  assert.match(journey, /for \(const outcome of ritualBeat\.outcomes \?\? \[\]\) applyJourneyOutcome\(outcome, useJourneyStore\.getState\(\)\)/);
+  assert.match(journey, /applyPlayerActionOutcome\(outcome, useJourneyStore\.getState\(\)\)/);
+  assert.doesNotMatch(journey, /function apply(?:Ritual|Journey|PlayerAction)Outcome/);
   assert.match(journey, /const outcomes = choice\?\.outcomes \?\? action\.outcomes \?\? \[\]/);
   assert.match(journey, /storyAction\.choices\?\.map\(\(choice\) =>/);
   assert.match(journey, /data-accessible-choice-id=\{choice\.id\}/);
@@ -64,6 +69,7 @@ test("unwitnessed prose remains absent from both accessible surfaces", () => {
   const archive = read("src/components/ui/AccessibleArchive.tsx");
 
   assert.match(journey, /\{isWitnessed \? \([\s\S]*entryParagraphs\(activeEntry\)\.map/);
+  assert.match(journey, /canReadStoryEntry\(activeEntry\.id, journey\)/);
   assert.match(journey, /Witness and reveal this memory/);
   assert.match(archive, /new Set\(witnessedEntryIds \?\? visitedEntryIds\)/);
   assert.match(archive, /const searchableProse = remembered\.has\(entry\.id\)/);

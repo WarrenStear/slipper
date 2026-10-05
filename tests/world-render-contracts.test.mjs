@@ -123,8 +123,10 @@ test("authored world geometry replaces generic portals while thresholds remain a
   assert.doesNotMatch(scene, /<WorldGateway\b|<Portals\b|<PortalPathBeams\b/);
   assert.match(layout, /buildPhysicalStoryLinks/);
   assert.match(journeyDirector, /canEnterJourneyEntry/);
-  assert.match(journeyDirector, /completionRequirements\.every/);
-  assert.match(journeyDirector, /applyJourneyOutcome/);
+  assert.match(journeyDirector, /selectReadyActTransformation\(actId, state\)/);
+  assert.match(journeyDirector, /applyJourneyOutcome\(outcome, useJourneyStore\.getState\(\)\)/);
+  assert.match(journeyDirector, /from "\.\.\/\.\.\/\.\.\/narrative\/StoryActions"/);
+  assert.doesNotMatch(journeyDirector, /function applyJourneyOutcome|export function canEnterJourneyEntry/);
   assert.match(threshold, /the way is not ready/);
   assert.match(threshold, /import \{ CapsuleCollider, RigidBody \} from "@react-three\/rapier"/);
   assert.match(

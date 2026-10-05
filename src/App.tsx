@@ -16,11 +16,8 @@ import OnboardingGate from "./components/ui/OnboardingGate";
 import { RenderRecoveryBoundary } from "./components/ui/RenderRecovery";
 import { TEXT_JOURNEY_REQUEST_EVENT, textJourneyUrl } from "./lib/textJourney";
 import { resetPlayerInput } from "./stores/usePlayerInputStore";
-import {
-  getJourneyChapterForEntry,
-  getJourneySceneForEntry,
-  journeyChapters,
-} from "./data/journeyNarrative";
+import { journeyChapters } from "./data/journeyNarrative";
+import { selectStoryLocation } from "./narrative/StorySelectors";
 import { contentDiagnostics, entries, visuals } from "./data/slipperContent";
 import type { Slipper3DEntry, Vector3Tuple } from "./data/slipper3dTypes";
 import { loadStoredJourney } from "./lib/journeyStorage";
@@ -72,6 +69,9 @@ import {
   storyTransitionSuppressesAudio,
 } from "./lib/storyTransitionPacing";
 import "./styles.css";
+import { requiresAccessibleJourney } from "./experience/ExperienceRouter";
+
+export { requiresAccessibleJourney } from "./experience/ExperienceRouter";
 
 const WorldCanvas = lazy(() => import("./components/three/WorldCanvas"));
 const ConstellationMap = lazy(
@@ -79,24 +79,6 @@ const ConstellationMap = lazy(
 );
 const FIRST_ENTRY_ID = entries[0]?.id ?? "";
 const VALID_ENTRY_IDS = entries.map((entry) => entry.id);
-
-export function requiresAccessibleJourney() {
-  if (typeof window === "undefined" || typeof document === "undefined") return true;
-
-  const params = new URLSearchParams(window.location.search);
-  if (params.get("accessible") === "1") return true;
-
-  try {
-    const canvas = document.createElement("canvas");
-    // Three.js r171 requires WebGL2. Release this probe before the real scene
-    // allocates a context, including StrictMode's repeated initialization.
-    const context = canvas.getContext("webgl2", { failIfMajorPerformanceCaveat: true });
-    context?.getExtension("WEBGL_lose_context")?.loseContext();
-    return !context;
-  } catch {
-    return true;
-  }
-}
 
 type AppMode = StorySceneMode;
 
@@ -317,6 +299,7 @@ export default function App() {
   const narrativeWorldState = useJourneyStore((state) => state.narrativeWorldState);
   const storyChapterId = useJourneyStore((state) => state.chapterId);
   const storySceneId = useJourneyStore((state) => state.sceneId);
+  const storyBeatId = useJourneyStore((state) => state.beatId);
   const completedRitualIds = useJourneyStore((state) => state.completedRitualIds);
   const completedChapterIds = useJourneyStore((state) => state.completedChapterIds);
   const completedSceneIds = useJourneyStore((state) => state.completedSceneIds);
@@ -489,14 +472,12 @@ export default function App() {
 
   const activeEntry = useMemo(() => getEntryById(entries, activeEntryId) ?? entries[0], [activeEntryId]);
   const resolvedActiveEntryId = activeEntry?.id ?? FIRST_ENTRY_ID;
-  const activeJourneyChapter = useMemo(
-    () => getJourneyChapterForEntry(resolvedActiveEntryId),
-    [resolvedActiveEntryId],
+  const storyLocation = useMemo(
+    () => selectStoryLocation({ activeEntryId: resolvedActiveEntryId, beatId: storyBeatId }),
+    [resolvedActiveEntryId, storyBeatId],
   );
-  const activeNarrativeScene = useMemo(
-    () => getJourneySceneForEntry(resolvedActiveEntryId),
-    [resolvedActiveEntryId],
-  );
+  const activeJourneyChapter = storyLocation.chapter;
+  const activeNarrativeScene = storyLocation.scene;
   const transitionAllowsProse = storyTransitionAllowsProse(
     storyTransitionPhase,
   );
