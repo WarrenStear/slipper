@@ -11,8 +11,8 @@ import { openingEnclosed } from "../../cinematics/openingPresentation";
 import { SceneLookDirector } from "./artDirection/SceneLookDirector";
 import { SpatialProseDirector } from "./storyText/SpatialProseDirector";
 import { Component, memo, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ErrorInfo, type ReactNode } from "react";
-import { Float, Html, OrbitControls, Sparkles, Stars, useTexture } from "@react-three/drei";
-import { BallCollider, CapsuleCollider, CuboidCollider, InstancedRigidBodies, RigidBody, TrimeshCollider, useRapier, type RapierRigidBody } from "@react-three/rapier";
+import { Float, Html, Sparkles, Stars, useTexture } from "@react-three/drei";
+import { BallCollider, CuboidCollider, InstancedRigidBodies, RigidBody, TrimeshCollider } from "@react-three/rapier";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
@@ -46,9 +46,8 @@ import WorldMemoryDirector, { type WorldMemoryState } from "./worldMemory/WorldM
 import { resolveWorldVisualState, type WorldVisualState } from "./worldVisualState";
 import { resolveChapterDirector, type ChapterDirector } from "./chapterDirector";
 import { resolveNarrativeRenderScale, shouldShowDebugOverlay, type RenderQualityProfile } from "./renderQuality";
-import { classifyRouteSegment, nearestPathStatus, resolveNavigationTarget, routeClassWeight, yawFromDirection, type TrailState } from "../../lib/navigationResolver";
+import { classifyRouteSegment, nearestPathStatus, routeClassWeight, yawFromDirection, type TrailState } from "../../lib/navigationResolver";
 import { useBreadcrumbStore, type BreadcrumbKind, type BreadcrumbTrace } from "../../stores/useBreadcrumbStore";
-import { usePlayerInputStore } from "../../stores/usePlayerInputStore";
 import { useSettingsStore } from "../../stores/useSettingsStore";
 import {
   createTerrainSurfaceSampler,
@@ -61,8 +60,19 @@ import {
 } from "../../lib/terrainModel";
 import "./StoryScene.css";
 
-export type StorySceneControls = "orbit" | "walk" | "none";
-export type StorySceneMode = "explore" | "read" | "map";
+// Stable public import paths for consumers during the staged migration.
+import type { PlayerControls as StorySceneControls, ExperienceMode as StorySceneMode } from "../../player/playerTypes";
+import { createPlayerPose } from "../../player/playerTypes";
+import { PlayerController } from "../../player/PlayerController";
+import { CameraController } from "../../player/CameraController";
+import { PLAYER_FOOT_OFFSET, PLAYER_GROUND_CLEARANCE, PLAYER_SPEED } from "../../player/playerMovement";
+import { PLAYER_CAMERA_OFFSET_Y, PLAYER_EYE_HEIGHT } from "../../player/cameraModel";
+import { cameraPresentationActive } from "../../cinematics/shotComposition";
+import { useWorldStore } from "../../stores/useWorldStore";
+import { GuidanceController } from "../../world/guidance/GuidanceController";
+import type { PlayerSpatialWindow, SceneProximityState } from "../../world/guidance/guidanceTypes";
+export type { PlayerControls as StorySceneControls, ExperienceMode as StorySceneMode } from "../../player/playerTypes";
+export type { SceneProximityState } from "../../world/guidance/guidanceTypes";
 
 export type NarrativeWorldState = {
   visitedCount: number;
@@ -77,38 +87,6 @@ export type NarrativeWorldState = {
   explorationDepth: number;
   memoryPressure: number;
   symbolicWeight: number;
-};
-
-export type SceneProximityState = {
-  activeEntryId: string;
-  nearestEntryId: string | null;
-  nearestTitle: string | null;
-  distance: number;
-  uiPresence: number;
-  insideClearing: boolean;
-  playerPosition: Vector3Tuple;
-  activeWorldPosition: Vector3Tuple | null;
-  nearestWorldPosition: Vector3Tuple | null;
-  approachingEntryId: string | null;
-  approachingTitle: string | null;
-  approachingDistance: number;
-  approachingWorldPosition: Vector3Tuple | null;
-  cameraYaw: number;
-  navigationTargetId: string | null;
-  navigationTargetTitle: string | null;
-  navigationTargetWorldPosition: Vector3Tuple | null;
-  navigationTargetDistance: number;
-  navigationTargetReason: string | null;
-  nearestPathDistance: number;
-  trailState: TrailState;
-};
-
-type PlayerSpatialWindow = {
-  position: Vector3Tuple;
-  cameraYaw: number;
-  navigationTargetId: string | null;
-  nearestPathDistance: number;
-  trailState: TrailState;
 };
 
 export type StorySceneProps = {
@@ -139,23 +117,9 @@ const DEFAULT_TEXT_POSITION: Vector3Tuple = [0, 0, -3];
 const DEFAULT_TEXT_ROTATION: EulerTuple = [0, 0, 0];
 const DEFAULT_ENVIRONMENT_RADIUS = 50;
 const DEFAULT_FOV = 65;
-const PLAYER_EYE_HEIGHT = 0.64;
-const PLAYER_CAMERA_OFFSET_Y = 1.16;
-const PLAYER_SPEED = 4.08;
-const PLAYER_ACCELERATION = 10.8;
-const PLAYER_LINEAR_DAMPING = 12.4;
-const HEAD_BOB_AMPLITUDE = 0.014;
-const HEAD_BOB_FREQUENCY = 6.8;
-const PLAYER_LOOK_DOWN_LIMIT = Math.PI * 0.3;
-const PLAYER_LOOK_UP_LIMIT = Math.PI * 0.28;
 const CONSTELLATION_CENTER = 120;
 const CONSTELLATION_WORLD_SCALE = 0.72;
 const AUTHORED_WORLD_SCALE = 1.5;
-const NODE_ACTIVATION_RADIUS = 3.15;
-const NODE_ACTIVATION_RADIUS_SQ = NODE_ACTIVATION_RADIUS * NODE_ACTIVATION_RADIUS;
-const PROXIMITY_UI_UPDATE_INTERVAL = 0.2;
-const PLAYER_SPATIAL_CELL_SIZE = 6;
-const NODE_APPROACH_RADIUS = 11.5;
 const FOREST_CELL_SIZE = 7;
 const FOREST_CELL_RADIUS = 4;
 const FOREST_TREES_PER_CELL = 3;
@@ -430,750 +394,6 @@ function applyGroupOpacity(group: THREE.Group, opacityScale: number) {
 }
 
 
-
-type PlayerControlState = {
-  forward: boolean;
-  backward: boolean;
-  left: boolean;
-  right: boolean;
-};
-
-function setPlayerKey(state: PlayerControlState, event: KeyboardEvent, pressed: boolean) {
-  switch (event.code) {
-    case "KeyW":
-    case "ArrowUp":
-      state.forward = pressed;
-      return true;
-    case "KeyS":
-    case "ArrowDown":
-      state.backward = pressed;
-      return true;
-    case "KeyA":
-    case "ArrowLeft":
-      state.left = pressed;
-      return true;
-    case "KeyD":
-    case "ArrowRight":
-      state.right = pressed;
-      return true;
-    default:
-      return false;
-  }
-}
-
-function resetPlayerKeys(state: PlayerControlState) {
-  state.forward = false;
-  state.backward = false;
-  state.left = false;
-  state.right = false;
-}
-
-function usePlayerControls(enabled: boolean) {
-  const keysRef = useRef<PlayerControlState>({
-    forward: false,
-    backward: false,
-    left: false,
-    right: false,
-  });
-
-  useEffect(() => {
-    const keys = keysRef.current;
-
-    if (!enabled) {
-      resetPlayerKeys(keys);
-      return;
-    }
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      const target = event.target as HTMLElement | null;
-      const isTyping = target?.tagName === "INPUT" || target?.tagName === "TEXTAREA" || target?.isContentEditable;
-      if (isTyping) return;
-
-      if (setPlayerKey(keys, event, true)) {
-        event.preventDefault();
-      }
-    };
-
-    const handleKeyUp = (event: KeyboardEvent) => {
-      if (setPlayerKey(keys, event, false)) {
-        event.preventDefault();
-      }
-    };
-
-    const handleBlur = () => resetPlayerKeys(keys);
-
-    window.addEventListener("keydown", handleKeyDown, { passive: false });
-    window.addEventListener("keyup", handleKeyUp, { passive: false });
-    window.addEventListener("blur", handleBlur);
-
-    return () => {
-      resetPlayerKeys(keys);
-      window.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("keyup", handleKeyUp);
-      window.removeEventListener("blur", handleBlur);
-    };
-  }, [enabled]);
-
-  return keysRef;
-}
-
-const PLAYER_RADIUS = 0.28;
-const PLAYER_HALF_HEIGHT = 0.54;
-const PLAYER_FOOT_OFFSET = PLAYER_HALF_HEIGHT + PLAYER_RADIUS;
-const PLAYER_GROUND_CLEARANCE = 0.035;
-const PLAYER_KCC_OFFSET = 0.045;
-const PLAYER_GRAVITY = 18;
-const PLAYER_MAX_FALL_SPEED = 22;
-const PLAYER_GROUND_SNAP = 0.34;
-const PLAYER_STEP_HEIGHT = 0.42;
-const PLAYER_MIN_STEP_WIDTH = 0.18;
-const PLAYER_SLOPE_LIMIT_RADIANS = THREE.MathUtils.degToRad(48);
-
-function readReducedExperiencePreferences() {
-  if (typeof document === "undefined") {
-    return { reducedMotion: false, reducedEffects: false };
-  }
-
-  const root = document.documentElement;
-  return {
-    reducedMotion:
-      root.dataset.motion === "reduced" ||
-      root.classList.contains("sidtw-reduced-motion"),
-    reducedEffects:
-      root.dataset.effects === "reduced" ||
-      root.classList.contains("sidtw-reduced-effects"),
-  };
-}
-
-function FirstPersonPlayer({
-  enabled,
-  movementEnabled,
-  cameraReadyRef,
-  initialPosition,
-  activeEntry,
-  narrativeWorldState,
-  sampleGroundY,
-}: {
-  enabled: boolean;
-  movementEnabled: boolean;
-  cameraReadyRef: { current: boolean };
-  initialPosition: Vector3Tuple;
-  activeEntry: Slipper3DEntry;
-  narrativeWorldState: NarrativeWorldState;
-  sampleGroundY: (x: number, z: number) => number;
-}) {
-  const { camera } = useThree();
-  const { world } = useRapier();
-
-  const director = useMemo(() => resolveChapterDirector(activeEntry), [activeEntry]);
-  const bodyRef = useRef<RapierRigidBody>(null);
-  const colliderRef = useRef<any>(null);
-  const controllerRef = useRef<any>(null);
-  const hasSpawnedRef = useRef(false);
-  const keysRef = usePlayerControls(enabled && movementEnabled);
-
-  const horizontalVelocityRef = useRef(new THREE.Vector3());
-  const targetVelocityRef = useRef(new THREE.Vector3());
-  const desiredMoveRef = useRef(new THREE.Vector3());
-  const forwardRef = useRef(new THREE.Vector3());
-  const rightRef = useRef(new THREE.Vector3());
-  const lookRotationRef = useRef(new THREE.Euler());
-  const lookDeltaRef = useRef({ x: 0, y: 0 });
-  const verticalVelocityRef = useRef(0);
-  const bobPhaseRef = useRef(0);
-  const reducedPreferencesRef = useRef(readReducedExperiencePreferences());
-  const groundProbeRef = useRef({ x: Number.NaN, z: Number.NaN, y: initialPosition[1] - PLAYER_FOOT_OFFSET - PLAYER_GROUND_CLEARANCE });
-  const groundProbeTimerRef = useRef(0);
-  const cameraHeightRef = useRef(
-    activeEntry.id === "fragment-001" && !movementEnabled ? 0.08 : PLAYER_CAMERA_OFFSET_Y,
-  );
-
-  useEffect(() => {
-    const controller = world.createCharacterController(PLAYER_KCC_OFFSET);
-    controller.setUp({ x: 0, y: 1, z: 0 });
-    controller.enableAutostep(PLAYER_STEP_HEIGHT, PLAYER_MIN_STEP_WIDTH, true);
-    controller.enableSnapToGround(PLAYER_GROUND_SNAP);
-    controller.setMaxSlopeClimbAngle(PLAYER_SLOPE_LIMIT_RADIANS);
-    controller.setMinSlopeSlideAngle(THREE.MathUtils.degToRad(58));
-    controllerRef.current = controller;
-
-    return () => {
-      world.removeCharacterController(controller);
-      controllerRef.current = null;
-    };
-  }, [world]);
-
-  useEffect(() => {
-    const body = bodyRef.current;
-    if (!body || hasSpawnedRef.current) return;
-    body.setTranslation({ x: initialPosition[0], y: initialPosition[1], z: initialPosition[2] }, true);
-    body.setNextKinematicTranslation({ x: initialPosition[0], y: initialPosition[1], z: initialPosition[2] });
-    verticalVelocityRef.current = 0;
-    groundProbeRef.current = { x: initialPosition[0], z: initialPosition[2], y: initialPosition[1] - PLAYER_FOOT_OFFSET - PLAYER_GROUND_CLEARANCE };
-    groundProbeTimerRef.current = 0;
-    hasSpawnedRef.current = true;
-  }, [initialPosition]);
-
-  useEffect(() => {
-    if (typeof document === "undefined") return;
-    const root = document.documentElement;
-    const sync = () => {
-      reducedPreferencesRef.current = readReducedExperiencePreferences();
-    };
-    const observer = new MutationObserver(sync);
-    observer.observe(root, {
-      attributes: true,
-      attributeFilter: ["class", "data-motion", "data-effects"],
-    });
-    sync();
-    return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    if (!enabled || !movementEnabled) {
-      usePlayerInputStore.getState().reset();
-      horizontalVelocityRef.current.set(0, 0, 0);
-      targetVelocityRef.current.set(0, 0, 0);
-      desiredMoveRef.current.set(0, 0, 0);
-      verticalVelocityRef.current = 0;
-    }
-  }, [enabled, movementEnabled]);
-
-  useFrame((_, delta) => {
-    const body = bodyRef.current;
-    const collider = colliderRef.current;
-    const controller = controllerRef.current;
-    if (!body || !collider || !controller) return;
-
-    const step = Math.min(delta, 0.05);
-    const current = body.translation();
-    const openingCameraHeight =
-      activeEntry.id === "fragment-001" && !movementEnabled
-        ? 0.08
-        : PLAYER_CAMERA_OFFSET_Y;
-    cameraHeightRef.current = THREE.MathUtils.lerp(
-      cameraHeightRef.current,
-      openingCameraHeight,
-      1 - Math.exp(-step * (movementEnabled ? 1.45 : 4.2)),
-    );
-
-    if (!enabled || !cameraReadyRef.current) {
-      camera.position.set(current.x, current.y + cameraHeightRef.current, current.z);
-      return;
-    }
-
-    const keys = keysRef.current;
-    const forward = forwardRef.current;
-    const right = rightRef.current;
-    const targetVelocity = targetVelocityRef.current.set(0, 0, 0);
-    const horizontalVelocity = horizontalVelocityRef.current;
-    const mobileInput = usePlayerInputStore.getState();
-    const lookDelta = mobileInput.consumeLookDelta(lookDeltaRef.current);
-    if (lookDelta.x !== 0 || lookDelta.y !== 0) {
-      const rotation = lookRotationRef.current.setFromQuaternion(
-        camera.quaternion,
-        "YXZ",
-      );
-      const motionScale = reducedPreferencesRef.current.reducedMotion ? 0.72 : 1;
-      rotation.y -= lookDelta.x * 0.0032 * motionScale;
-      rotation.x = THREE.MathUtils.clamp(
-        rotation.x - lookDelta.y * 0.0032 * motionScale,
-        -PLAYER_LOOK_DOWN_LIMIT,
-        PLAYER_LOOK_UP_LIMIT,
-      );
-      camera.quaternion.setFromEuler(rotation);
-    }
-
-    if (!movementEnabled) {
-      camera.position.set(current.x, current.y + cameraHeightRef.current, current.z);
-      return;
-    }
-
-    camera.getWorldDirection(forward);
-    forward.y = 0;
-    if (forward.lengthSq() > 0.0001) forward.normalize();
-
-    right.copy(forward).cross(camera.up);
-    if (right.lengthSq() > 0.0001) right.normalize();
-
-    if (keys.forward) targetVelocity.add(forward);
-    if (keys.backward) targetVelocity.addScaledVector(forward, -1);
-    if (keys.right) targetVelocity.add(right);
-    if (keys.left) targetVelocity.addScaledVector(right, -1);
-    if (mobileInput.moveZ !== 0) targetVelocity.addScaledVector(forward, mobileInput.moveZ);
-    if (mobileInput.moveX !== 0) targetVelocity.addScaledVector(right, mobileInput.moveX);
-
-    const emotionalSlowdown = 1 - clamp01(narrativeWorldState.memoryPressure) * 0.055;
-    const directedSpeed = PLAYER_SPEED * director.movementSpeedMultiplier * emotionalSlowdown / getCurrentCinematicProfile().movementWeight;
-    const keyboardMagnitude =
-      keys.forward || keys.backward || keys.right || keys.left ? 1 : 0;
-    const mobileMagnitude = Math.min(
-      1,
-      Math.hypot(mobileInput.moveX, mobileInput.moveZ),
-    );
-    const requestedMagnitude = Math.max(keyboardMagnitude, mobileMagnitude);
-    if (targetVelocity.lengthSq() > 0.0001) {
-      targetVelocity
-        .normalize()
-        .multiplyScalar(directedSpeed * requestedMagnitude);
-    }
-
-    horizontalVelocity.lerp(targetVelocity, 1 - Math.exp(-step * PLAYER_ACCELERATION));
-    verticalVelocityRef.current = Math.max(verticalVelocityRef.current - PLAYER_GRAVITY * step, -PLAYER_MAX_FALL_SPEED);
-
-    const desiredMove = desiredMoveRef.current.set(horizontalVelocity.x * step, verticalVelocityRef.current * step, horizontalVelocity.z * step);
-    controller.computeColliderMovement(collider, { x: desiredMove.x, y: desiredMove.y, z: desiredMove.z });
-    const corrected = controller.computedMovement();
-
-    if (controller.computedGrounded()) verticalVelocityRef.current = Math.max(0, verticalVelocityRef.current);
-
-    const next = { x: current.x + corrected.x, y: current.y + corrected.y, z: current.z + corrected.z };
-
-    // The forest floor is procedural, so the player needs both Rapier collision
-    // resolution and a deterministic terrain probe. The probe is a defensive
-    // guard against a frame where the terrain collider is still mounting or the
-    // KCC misses a steep generated triangle: the capsule is never allowed to
-    // sink below the rendered ground surface.
-    groundProbeTimerRef.current += step;
-    const cachedGround = groundProbeRef.current;
-    const probeDx = next.x - cachedGround.x;
-    const probeDz = next.z - cachedGround.z;
-    if (!Number.isFinite(cachedGround.y) || probeDx * probeDx + probeDz * probeDz > 0.18 || groundProbeTimerRef.current >= 0.065) {
-      cachedGround.x = next.x;
-      cachedGround.z = next.z;
-      cachedGround.y = sampleGroundY(next.x, next.z);
-      groundProbeTimerRef.current = 0;
-    }
-    const groundY = cachedGround.y;
-    const minimumBodyY = groundY + PLAYER_FOOT_OFFSET + PLAYER_GROUND_CLEARANCE;
-    const groundDelta = next.y - minimumBodyY;
-    const isFallingOrGrounded = verticalVelocityRef.current <= 0 || controller.computedGrounded();
-    const shouldTerrainSnap = groundDelta < -0.012 || (isFallingOrGrounded && groundDelta < PLAYER_GROUND_SNAP && horizontalVelocity.lengthSq() > 0.0001);
-
-    if (shouldTerrainSnap) {
-      next.y = minimumBodyY;
-      verticalVelocityRef.current = 0;
-    }
-
-    body.setNextKinematicTranslation(next);
-
-    const speedRatio = clamp01(horizontalVelocity.length() / Math.max(0.001, PLAYER_SPEED));
-    const bobSuppression = 1 - clamp01(narrativeWorldState.memoryPressure) * 0.18;
-    bobPhaseRef.current += step * HEAD_BOB_FREQUENCY * (0.22 + speedRatio);
-    const bob =
-      reducedPreferencesRef.current.reducedMotion ||
-      reducedPreferencesRef.current.reducedEffects
-        ? 0
-        : Math.sin(bobPhaseRef.current) *
-          HEAD_BOB_AMPLITUDE *
-          speedRatio *
-          bobSuppression;
-    camera.position.set(next.x, next.y + cameraHeightRef.current + bob, next.z);
-  });
-
-  return (
-    <RigidBody ref={bodyRef} type="kinematicPosition" position={initialPosition} colliders={false} lockRotations canSleep={false}>
-      <CapsuleCollider ref={colliderRef} args={[PLAYER_HALF_HEIGHT, PLAYER_RADIUS]} position={[0, 0, 0]} friction={0} restitution={0} />
-    </RigidBody>
-  );
-}
-
-type PlayerLanternPalette = {
-  color: string;
-  emissive: string;
-  glassOpacity: number;
-  pointIntensity: number;
-  spotIntensity: number;
-};
-
-function lanternPaletteForWorldState(narrativeWorldState: NarrativeWorldState): PlayerLanternPalette {
-  const balance = narrativeWorldState.fireWaterBalance;
-  const pressure = narrativeWorldState.memoryPressure;
-  const depth = narrativeWorldState.explorationDepth;
-  const pressureDim = THREE.MathUtils.lerp(1, 0.78, clamp01(pressure));
-
-  if (balance > 0.2) {
-    return {
-      color: "#ff9a42",
-      emissive: "#ff6a1a",
-      glassOpacity: 0.42,
-      pointIntensity: (1.45 + depth * 0.12) * pressureDim,
-      spotIntensity: (2.85 + depth * 0.42) * pressureDim,
-    };
-  }
-
-  if (balance < -0.2) {
-    return {
-      color: "#8fd7ff",
-      emissive: "#52bfff",
-      glassOpacity: 0.34,
-      pointIntensity: (1.1 + depth * 0.1) * pressureDim,
-      spotIntensity: (2.35 + depth * 0.36) * pressureDim,
-    };
-  }
-
-  return {
-    color: "#ffd77a",
-    emissive: "#ffb84d",
-    glassOpacity: 0.38,
-    pointIntensity: (1.25 + depth * 0.11) * pressureDim,
-    spotIntensity: (2.55 + depth * 0.38) * pressureDim,
-  };
-}
-
-function PlayerLantern({
-  activeEntry,
-  narrativeWorldState,
-  visualState,
-  qualityProfile,
-  navigationTargetPosition,
-}: {
-  activeEntry: Slipper3DEntry;
-  narrativeWorldState: NarrativeWorldState;
-  visualState: WorldVisualState;
-  qualityProfile: RenderQualityProfile;
-  navigationTargetPosition?: Vector3Tuple | null;
-}) {
-  const { camera } = useThree();
-  const groupRef = useRef<THREE.Group>(null);
-  const pointLightRef = useRef<THREE.PointLight>(null);
-  const spotLightRef = useRef<THREE.SpotLight>(null);
-  const spotTargetRef = useRef<THREE.Object3D>(null);
-
-  const forwardRef = useRef(new THREE.Vector3());
-  const rightRef = useRef(new THREE.Vector3());
-  const toTargetRef = useRef(new THREE.Vector3());
-  const targetPositionRef = useRef(new THREE.Vector3());
-  const lanternWorldPositionRef = useRef(new THREE.Vector3());
-
-  const lanternColorRef = useRef(new THREE.Color("#ffd77a"));
-  const targetLanternColorRef = useRef(new THREE.Color("#ffd77a"));
-  const neutralLanternColorRef = useRef(new THREE.Color("#ffd77a"));
-  const fireLanternColorRef = useRef(new THREE.Color("#ff8a2a"));
-  const waterLanternColorRef = useRef(new THREE.Color("#86d8ff"));
-  const guideColorRef = useRef(new THREE.Color());
-
-  const director = useMemo(() => resolveChapterDirector(activeEntry), [activeEntry]);
-  const palette = useMemo(() => lanternPaletteForWorldState(narrativeWorldState), [narrativeWorldState]);
-
-  useFrame((state, delta) => {
-    const group = groupRef.current;
-    if (!group) return;
-
-    const elapsed = state.clock.elapsedTime;
-    const pressure = clamp01(narrativeWorldState.memoryPressure);
-    const balance = THREE.MathUtils.clamp(narrativeWorldState.fireWaterBalance, -1, 1);
-    const instability = 1 - visualState.lanternStability;
-
-    const carryBobX = Math.sin(elapsed * 2) * (0.075 + instability * 0.035);
-    const carryBobY = Math.cos(elapsed * 3) * (0.035 + instability * 0.02);
-    const carryBobZ = Math.sin(elapsed * 1.55 + 0.7) * (0.025 + instability * 0.012);
-
-    const idleSwayX = Math.sin(elapsed * 1.45) * (0.011 + instability * 0.012);
-    const idleSwayY = Math.cos(elapsed * 1.9) * (0.016 + instability * 0.018);
-    const walkingPulse = Math.sin(elapsed * 8.2) * (0.005 + instability * 0.006);
-    const breathingDriftZ = Math.cos(elapsed * 1.15) * (0.009 + instability * 0.008);
-
-    group.position.copy(camera.position);
-    group.rotation.copy(camera.rotation);
-
-    group.translateX(0.46 + idleSwayX + carryBobX * 0.25);
-    group.translateY(-0.34 + idleSwayY + walkingPulse + carryBobY * 0.35);
-    group.translateZ(-0.78 + breathingDriftZ + carryBobZ);
-
-    group.rotation.z += Math.sin(elapsed * 1.35) * (0.016 + instability * 0.02);
-    group.rotation.x += Math.cos(elapsed * 1.1) * (0.007 + instability * 0.012);
-
-    camera.getWorldDirection(forwardRef.current);
-    rightRef.current.setFromMatrixColumn(camera.matrixWorld, 0).normalize();
-
-    let guidanceAlignment = 0;
-    if (navigationTargetPosition) {
-      toTargetRef.current.set(
-        navigationTargetPosition[0] - camera.position.x,
-        navigationTargetPosition[1] - camera.position.y,
-        navigationTargetPosition[2] - camera.position.z,
-      );
-      if (toTargetRef.current.lengthSq() > 0.001) {
-        toTargetRef.current.normalize();
-        guidanceAlignment = clamp01((forwardRef.current.dot(toTargetRef.current) + 0.12) / 1.12);
-      }
-    }
-
-    const pointLight = pointLightRef.current;
-    const spotLight = spotLightRef.current;
-    const spotTarget = spotTargetRef.current;
-
-    const highPressureDimming = THREE.MathUtils.lerp(1, 0.66, pressure);
-    const emotionalFlicker =
-      1 -
-      pressure * (0.04 + instability * 0.045) +
-      Math.sin(elapsed * (7.4 + pressure * 4.2)) * pressure * (0.025 + instability * 0.05) +
-      Math.sin(elapsed * 17.2) * pressure * (0.01 + instability * 0.024);
-
-    const guidanceStability = THREE.MathUtils.lerp(0.88, 1.14, guidanceAlignment);
-    const reach = visualState.lanternReach * THREE.MathUtils.lerp(0.78, 1.16, guidanceAlignment);
-
-    targetLanternColorRef.current.copy(neutralLanternColorRef.current);
-    if (balance >= 0) {
-      targetLanternColorRef.current.lerp(fireLanternColorRef.current, balance);
-    } else {
-      targetLanternColorRef.current.lerp(waterLanternColorRef.current, Math.abs(balance));
-    }
-
-    guideColorRef.current.set(visualState.palette.particle);
-    targetLanternColorRef.current.lerp(guideColorRef.current, guidanceAlignment * 0.18);
-    lanternColorRef.current.lerp(targetLanternColorRef.current, 1 - Math.exp(-delta * 5.2));
-
-    if (pointLight) {
-      lanternWorldPositionRef.current.copy(camera.position);
-      lanternWorldPositionRef.current.addScaledVector(rightRef.current, 0.16 + carryBobX);
-      lanternWorldPositionRef.current.addScaledVector(forwardRef.current, 0.52 + carryBobZ);
-      lanternWorldPositionRef.current.y += -0.2 + carryBobY;
-
-      pointLight.position.copy(lanternWorldPositionRef.current);
-      pointLight.color.copy(lanternColorRef.current);
-      pointLight.intensity = THREE.MathUtils.lerp(
-        pointLight.intensity,
-        palette.pointIntensity * emotionalFlicker * highPressureDimming * guidanceStability * (0.72 + director.skyOpenness * 0.14 + visualState.clearingGlowIntensity * 0.12),
-        1 - Math.exp(-delta * 4.2),
-      );
-      pointLight.distance = THREE.MathUtils.lerp(pointLight.distance, 4.4 + reach * 0.22, 1 - Math.exp(-delta * 3.2));
-    }
-
-    if (spotLight && spotTarget) {
-      targetPositionRef.current.copy(camera.position).addScaledVector(forwardRef.current, reach);
-      targetPositionRef.current.y -= 0.38;
-      spotTarget.position.copy(targetPositionRef.current);
-      spotTarget.updateMatrixWorld();
-      spotLight.target = spotTarget;
-      spotLight.color.copy(lanternColorRef.current);
-      const targetAngle = THREE.MathUtils.lerp(0.48, 0.25, clamp01(director.lanternNarrowness + pressure * 0.12 - guidanceAlignment * 0.16));
-      spotLight.angle = THREE.MathUtils.lerp(spotLight.angle, targetAngle, 1 - Math.exp(-delta * 3.4));
-      spotLight.distance = THREE.MathUtils.lerp(spotLight.distance, reach, 1 - Math.exp(-delta * 2.8));
-      spotLight.intensity = THREE.MathUtils.lerp(
-        spotLight.intensity,
-        palette.spotIntensity * emotionalFlicker * highPressureDimming * guidanceStability * (0.78 + director.pathClarity * 0.14 + visualState.pathGlowIntensity * 0.12),
-        1 - Math.exp(-delta * 3.5),
-      );
-    }
-  });
-
-  const castLanternShadow = qualityProfile.enableLanternShadows && qualityProfile.quality === "cinematic";
-  const shadowBias = -0.0006 - visualState.shadowStrength * 0.0008;
-
-  return (
-    <>
-      <object3D ref={spotTargetRef} />
-      <pointLight
-        ref={pointLightRef}
-        color={palette.color}
-        intensity={palette.pointIntensity}
-        distance={5.8}
-        decay={1.85}
-        castShadow={castLanternShadow}
-        shadow-mapSize={[256, 256]}
-        shadow-camera-far={10}
-        shadow-bias={shadowBias}
-        shadow-normalBias={0.035}
-      />
-
-      <group ref={groupRef} renderOrder={60}>
-        <spotLight
-          ref={spotLightRef}
-          color={palette.color}
-          intensity={palette.spotIntensity}
-          distance={visualState.lanternReach}
-          angle={0.38}
-          penumbra={0.8}
-          decay={1.42}
-          position={[0, 0.04, -0.18]}
-          castShadow={false}
-        />
-
-        <group scale={[0.72, 0.72, 0.72]}>
-          <mesh position={[0, 0.16, 0]} rotation={[0, 0, Math.PI / 2]}>
-            <torusGeometry args={[0.18, 0.014, 10, 36, Math.PI]} />
-            <meshStandardMaterial color="#2a2118" metalness={0.62} roughness={0.32} emissive={palette.emissive} emissiveIntensity={0.03} />
-          </mesh>
-
-          <mesh position={[0, -0.06, 0]}>
-            <cylinderGeometry args={[0.105, 0.13, 0.12, 18]} />
-            <meshStandardMaterial color="#211811" metalness={0.72} roughness={0.28} emissive={palette.emissive} emissiveIntensity={0.04} />
-          </mesh>
-
-          <mesh position={[0, -0.185, 0]}>
-            <cylinderGeometry args={[0.16, 0.19, 0.08, 20]} />
-            <meshStandardMaterial color="#1a130d" metalness={0.78} roughness={0.26} emissive={palette.emissive} emissiveIntensity={0.05} />
-          </mesh>
-
-          <mesh position={[0, -0.005, 0]}>
-            <cylinderGeometry args={[0.115, 0.135, 0.24, 28, 1, true]} />
-            <meshPhysicalMaterial
-              color={palette.color}
-              emissive={palette.emissive}
-              emissiveIntensity={0.62 + visualState.pathGlowIntensity * 0.08}
-              transparent
-              opacity={palette.glassOpacity}
-              roughness={0.08}
-              metalness={0.02}
-              transmission={0.24}
-              thickness={0.08}
-              depthWrite={false}
-            />
-          </mesh>
-
-          <mesh position={[0, -0.005, 0]}>
-            <sphereGeometry args={[0.075, 16, 10]} />
-            <meshBasicMaterial color={palette.color} transparent opacity={0.58} depthWrite={false} toneMapped={false} />
-          </mesh>
-
-          <mesh position={[0, -0.005, -0.004]}>
-            <sphereGeometry args={[0.18, 20, 12]} />
-            <meshBasicMaterial color={palette.color} transparent opacity={0.11 + narrativeWorldState.memoryPressure * 0.08 + visualState.pathGlowIntensity * 0.025} depthWrite={false} toneMapped={false} />
-          </mesh>
-
-          <mesh position={[0, 0.082, 0]}>
-            <cylinderGeometry args={[0.13, 0.105, 0.035, 24]} />
-            <meshStandardMaterial color="#2a2118" metalness={0.68} roughness={0.3} emissive={palette.emissive} emissiveIntensity={0.03} />
-          </mesh>
-
-          <mesh position={[-0.095, -0.04, 0]}>
-            <cylinderGeometry args={[0.009, 0.009, 0.22, 8]} />
-            <meshStandardMaterial color="#110d09" metalness={0.65} roughness={0.4} />
-          </mesh>
-          <mesh position={[0.095, -0.04, 0]}>
-            <cylinderGeometry args={[0.009, 0.009, 0.22, 8]} />
-            <meshStandardMaterial color="#110d09" metalness={0.65} roughness={0.4} />
-          </mesh>
-          <mesh position={[0, -0.04, -0.095]}>
-            <cylinderGeometry args={[0.009, 0.009, 0.22, 8]} />
-            <meshStandardMaterial color="#110d09" metalness={0.65} roughness={0.4} />
-          </mesh>
-          <mesh position={[0, -0.04, 0.095]}>
-            <cylinderGeometry args={[0.009, 0.009, 0.22, 8]} />
-            <meshStandardMaterial color="#110d09" metalness={0.65} roughness={0.4} />
-          </mesh>
-        </group>
-      </group>
-    </>
-  );
-}
-
-function AnimatedSceneCamera({
-  entry,
-  mode,
-  controls,
-  cameraReadyRef,
-  activePosition,
-  playerInitialPosition,
-  guidanceLookTarget,
-  reducedMotion,
-}: {
-  entry: Slipper3DEntry;
-  mode: StorySceneMode;
-  controls: StorySceneControls;
-  cameraReadyRef: { current: boolean };
-  activePosition: Vector3Tuple;
-  playerInitialPosition: Vector3Tuple;
-  guidanceLookTarget: Vector3Tuple | null;
-  reducedMotion: boolean;
-}) {
-  const { camera } = useThree();
-  const progressRef = useRef(0);
-  const hasInitialisedRef = useRef(false);
-  const fromRef = useRef(new THREE.Vector3());
-  const toRef = useRef(new THREE.Vector3());
-  const lookAtRef = useRef(new THREE.Vector3());
-  const start = entry.engine3d.cameraStart ?? DEFAULT_CAMERA_POSITION;
-  const target = entry.engine3d.cameraTarget ?? [0, 0, -1];
-  const fov = entry.engine3d.cameraFov ?? DEFAULT_FOV;
-  const entryOffset = mode === "read" ? 0.22 : 0.36;
-
-  useEffect(() => {
-    if (hasInitialisedRef.current) {
-      cameraReadyRef.current = true;
-      return;
-    }
-
-    const isWalkMode = mode === "explore" && controls === "walk";
-    const atUnresolvedFloor = isWalkMode && entry.id === "fragment-001" && !useJourneyStore.getState().completedRitualIds.includes("ritual.accept-lantern");
-    const cameraOriginX = isWalkMode ? playerInitialPosition[0] : activePosition[0] + start[0];
-    const cameraOriginY = isWalkMode
-      ? playerInitialPosition[1] + (atUnresolvedFloor ? .08 : PLAYER_CAMERA_OFFSET_Y)
-      : activePosition[1] + start[1];
-    const cameraOriginZ = isWalkMode ? playerInitialPosition[2] : activePosition[2] + start[2];
-
-    cameraReadyRef.current = false;
-    progressRef.current = 0;
-    fromRef.current.set(
-      cameraOriginX + entryOffset,
-      cameraOriginY + 0.04,
-      cameraOriginZ + 0.65,
-    );
-    toRef.current.set(cameraOriginX, cameraOriginY, cameraOriginZ);
-    if (isWalkMode && guidanceLookTarget) {
-      lookAtRef.current.set(...guidanceLookTarget);
-      // Keep the opening composition on the path horizon. A lower sampled
-      // terrain point can otherwise pitch the first-person camera into a hill.
-      lookAtRef.current.y = Math.max(lookAtRef.current.y, cameraOriginY + 0.12);
-    } else {
-      lookAtRef.current.set(
-        activePosition[0] + target[0],
-        activePosition[1] + (isWalkMode ? Math.max(target[1], PLAYER_EYE_HEIGHT * 0.82) : target[1]),
-        activePosition[2] + target[2],
-      );
-    }
-    if (atUnresolvedFloor) {
-      const dx = lookAtRef.current.x - cameraOriginX;
-      const dz = lookAtRef.current.z - cameraOriginZ;
-      const length = Math.max(.1, Math.hypot(dx, dz));
-      lookAtRef.current.set(cameraOriginX + dx / length * 2.3, cameraOriginY - .7, cameraOriginZ + dz / length * 2.3);
-    }
-    camera.position.copy(fromRef.current);
-    camera.lookAt(lookAtRef.current);
-
-    if (camera instanceof THREE.PerspectiveCamera) {
-      camera.fov = mode === "read" ? Math.max(52, fov - 8) : fov;
-      camera.updateProjectionMatrix();
-    }
-
-    if (reducedMotion) {
-      camera.position.copy(toRef.current);
-      camera.lookAt(lookAtRef.current);
-      progressRef.current = 1;
-      cameraReadyRef.current = true;
-    }
-
-    hasInitialisedRef.current = true;
-  }, [activePosition, camera, cameraReadyRef, controls, entryOffset, fov, guidanceLookTarget, mode, playerInitialPosition, reducedMotion, start, target]);
-
-  useFrame((_, delta) => {
-    if (reducedMotion && progressRef.current < 1) {
-      camera.position.copy(toRef.current);
-      camera.lookAt(lookAtRef.current);
-      progressRef.current = 1;
-      cameraReadyRef.current = true;
-      return;
-    }
-
-    if (progressRef.current >= 1) {
-      cameraReadyRef.current = true;
-      return;
-    }
-
-    progressRef.current = Math.min(1, progressRef.current + delta * 1.85);
-    const eased = 1 - Math.pow(1 - progressRef.current, 3);
-    camera.position.lerpVectors(fromRef.current, toRef.current, eased);
-    camera.lookAt(lookAtRef.current);
-
-    if (progressRef.current >= 1) {
-      cameraReadyRef.current = true;
-    }
-  });
-
-  return null;
-}
 
 function EnvironmentSphere({ src, radius }: { src: string; radius: number }) {
   const texture = useTexture(src);
@@ -5289,80 +4509,6 @@ function CarryoverSymbolicObjects({ entry, visitedCount }: { entry: Slipper3DEnt
   );
 }
 
-function SafePointerLockLookControls() {
-  const { camera, gl } = useThree();
-  const rotationRef = useRef(new THREE.Euler(0, 0, 0, "YXZ"));
-
-  useEffect(() => {
-    const canvas = gl.domElement;
-    const requestPointerLock = canvas.requestPointerLock?.bind(canvas);
-    if (!requestPointerLock || !("pointerLockElement" in document)) return;
-
-    const handleCanvasClick = () => {
-      if (document.pointerLockElement === canvas) return;
-      try {
-        const pending = requestPointerLock();
-        if (pending && typeof pending.catch === "function") pending.catch(() => undefined);
-      } catch {
-        // Embedded preview browsers can expose the API while denying the request.
-      }
-    };
-    const handleMouseMove = (event: MouseEvent) => {
-      if (document.pointerLockElement !== canvas) return;
-      const rotation = rotationRef.current.setFromQuaternion(camera.quaternion);
-      rotation.y -= event.movementX * 0.0019;
-      rotation.x = THREE.MathUtils.clamp(
-        rotation.x - event.movementY * 0.0019,
-        -PLAYER_LOOK_DOWN_LIMIT,
-        PLAYER_LOOK_UP_LIMIT,
-      );
-      camera.quaternion.setFromEuler(rotation);
-    };
-
-    canvas.addEventListener("click", handleCanvasClick);
-    document.addEventListener("mousemove", handleMouseMove);
-    return () => {
-      canvas.removeEventListener("click", handleCanvasClick);
-      document.removeEventListener("mousemove", handleMouseMove);
-      if (document.pointerLockElement === canvas) document.exitPointerLock?.();
-    };
-  }, [camera, gl]);
-
-  return null;
-}
-
-function SceneControls({ controls, mode }: { controls: StorySceneControls; mode: StorySceneMode }) {
-  if (controls === "none" || mode !== "explore") return null;
-
-  if (controls === "walk") {
-    const touchLikeInput =
-      typeof document !== "undefined" &&
-      (document.documentElement.dataset.mobile === "true" ||
-        window.matchMedia?.("(pointer: coarse)").matches === true);
-    if (touchLikeInput) return null;
-    const pointerLockAvailable =
-      typeof document !== "undefined" &&
-      "pointerLockElement" in document &&
-      navigator.webdriver !== true &&
-      typeof document.documentElement.requestPointerLock === "function";
-    if (!pointerLockAvailable) return null;
-    return <SafePointerLockLookControls />;
-  }
-
-  return (
-    <OrbitControls
-      enablePan={false}
-      enableZoom={false}
-      rotateSpeed={0.42}
-      dampingFactor={0.08}
-      enableDamping
-      minPolarAngle={Math.PI * 0.22}
-      maxPolarAngle={Math.PI * 0.78}
-    />
-  );
-}
-
-
 function NarrativeLightingRig({
   visualState,
   qualityProfile,
@@ -6342,218 +5488,6 @@ function SceneDebugOverlay({
   );
 }
 
-function NodeProximityActivator({
-  nodes,
-  pathSegments,
-  visitedEntryIds,
-  lockedEntryIds,
-  explicitNavigationTargetId,
-  controls,
-  mode,
-  onNodeEnter,
-  onApproachChange,
-  onPlayerProximityChange,
-  onPlayerSpatialChange,
-}: {
-  nodes: SpatialStoryNode[];
-  pathSegments: MazePathSegment[];
-  visitedEntryIds: string[];
-  lockedEntryIds: readonly string[];
-  explicitNavigationTargetId?: string | null;
-  controls: StorySceneControls;
-  mode: StorySceneMode;
-  onNodeEnter?: (targetEntryId: string) => void;
-  onApproachChange?: (targetEntryId: string | null) => void;
-  onPlayerProximityChange?: (state: SceneProximityState) => void;
-  onPlayerSpatialChange?: (state: PlayerSpatialWindow) => void;
-}) {
-  const { camera } = useThree();
-  const lastApproachRef = useRef<string | null>(null);
-  const lastUiSignatureRef = useRef<string>("");
-  const lastSpatialSignatureRef = useRef<string>("");
-  const lastUpdateTimeRef = useRef(Number.NEGATIVE_INFINITY);
-  const lastSpatialCalcTimeRef = useRef(Number.NEGATIVE_INFINITY);
-  const lastEnteredNodeRef = useRef<string | null>(null);
-  const cameraDirectionRef = useRef(new THREE.Vector3());
-  const lockedEntryIdSet = useMemo(() => new Set(lockedEntryIds), [lockedEntryIds]);
-  const availableNavigationNodes = useMemo(
-    () => nodes.filter((node) => !lockedEntryIdSet.has(node.entry.id)),
-    [lockedEntryIdSet, nodes],
-  );
-  const explicitNavigationTargetNode = useMemo(
-    () =>
-      explicitNavigationTargetId && !lockedEntryIdSet.has(explicitNavigationTargetId)
-        ? nodes.find((node) => node.entry.id === explicitNavigationTargetId)
-        : undefined,
-    [explicitNavigationTargetId, lockedEntryIdSet, nodes],
-  );
-
-  useEffect(() => {
-    lastApproachRef.current = null;
-    lastSpatialSignatureRef.current = "";
-    onApproachChange?.(null);
-  }, [nodes, onApproachChange]);
-
-  useFrame((state) => {
-    if (mode !== "explore" || controls !== "walk" || nodes.length === 0) return;
-    if (state.clock.elapsedTime - lastSpatialCalcTimeRef.current < 0.08) return;
-    lastSpatialCalcTimeRef.current = state.clock.elapsedTime;
-
-    let closestNode: SpatialStoryNode | undefined;
-    let closestDistanceSq = Number.POSITIVE_INFINITY;
-    let closestInactiveNode: SpatialStoryNode | undefined;
-    let closestInactiveDistanceSq = Number.POSITIVE_INFINITY;
-    const activeNode = nodes.find((node) => node.isActive);
-
-    for (const node of nodes) {
-      const dx = camera.position.x - node.position[0];
-      const dz = camera.position.z - node.position[2];
-      const distanceSq = dx * dx + dz * dz;
-      if (distanceSq < closestDistanceSq) {
-        closestDistanceSq = distanceSq;
-        closestNode = node;
-      }
-      if (!node.isActive && distanceSq < closestInactiveDistanceSq) {
-        closestInactiveDistanceSq = distanceSq;
-        closestInactiveNode = node;
-      }
-    }
-
-    const closestDistance = closestNode ? Math.sqrt(closestDistanceSq) : Number.POSITIVE_INFINITY;
-    const playerPosition: Vector3Tuple = [camera.position.x, camera.position.y, camera.position.z];
-    camera.getWorldDirection(cameraDirectionRef.current);
-    const cameraYaw = yawFromDirection(cameraDirectionRef.current.x, cameraDirectionRef.current.z);
-    const insideClearing = closestDistance <= CLEARING_SAFE_RADIUS;
-    const pathStatus = nearestPathStatus({ playerPosition, pathSegments, insideClearing });
-    const automaticNavigationTarget = explicitNavigationTargetNode
-      ? null
-      : resolveNavigationTarget({
-          nodes: availableNavigationNodes,
-          activeEntryId: activeNode?.entry.id ?? "",
-          visitedEntryIds,
-          playerPosition,
-          cameraYaw,
-        });
-    const navigationTargetNode =
-      explicitNavigationTargetNode ??
-      (automaticNavigationTarget
-        ? nodes.find(
-            (node) => node.entry.id === automaticNavigationTarget.entryId,
-          )
-        : undefined);
-    const navigationTargetDistance = explicitNavigationTargetNode
-      ? Math.hypot(
-          explicitNavigationTargetNode.position[0] - playerPosition[0],
-          explicitNavigationTargetNode.position[2] - playerPosition[2],
-        )
-      : (automaticNavigationTarget?.distance ?? 999);
-    const navigationTargetId =
-      explicitNavigationTargetNode?.entry.id ??
-      automaticNavigationTarget?.entryId ??
-      null;
-    const navigationTargetTitle =
-      explicitNavigationTargetNode?.entry.title ??
-      automaticNavigationTarget?.title ??
-      null;
-    const navigationTargetPosition =
-      explicitNavigationTargetNode?.position ??
-      automaticNavigationTarget?.position ??
-      null;
-    const navigationTargetReason = explicitNavigationTargetNode
-      ? explicitNavigationTargetNode.isVisited
-        ? ("return" as const)
-        : ("unvisited" as const)
-      : (automaticNavigationTarget?.reason ?? null);
-    const approachingNode = navigationTargetNode ?? closestInactiveNode;
-    const approachingDistance = navigationTargetNode
-      ? navigationTargetDistance
-      : closestInactiveNode
-        ? Math.sqrt(closestInactiveDistanceSq)
-        : 999;
-    const basePresence = closestNode ? clamp01(1 - Math.max(0, closestDistance - NODE_ACTIVATION_RADIUS) / NODE_APPROACH_RADIUS) : 0;
-    const trailPresence = pathStatus.state === "lost" ? 0.86 : pathStatus.state === "edge-of-trail" ? 0.62 : 0.22;
-    const uiPresence = insideClearing ? 1 : Math.max(basePresence, trailPresence);
-    const proximityState: SceneProximityState = {
-      activeEntryId: activeNode?.entry.id ?? "",
-      nearestEntryId: closestNode?.entry.id ?? null,
-      nearestTitle: closestNode?.entry.title ?? null,
-      distance: closestNode ? closestDistance : 999,
-      uiPresence,
-      insideClearing,
-      playerPosition,
-      activeWorldPosition: activeNode?.position ?? null,
-      nearestWorldPosition: closestNode?.position ?? null,
-      approachingEntryId: approachingNode?.entry.id ?? null,
-      approachingTitle: approachingNode?.entry.title ?? null,
-      approachingDistance,
-      approachingWorldPosition: approachingNode?.position ?? null,
-      cameraYaw,
-      navigationTargetId,
-      navigationTargetTitle,
-      navigationTargetWorldPosition: navigationTargetPosition,
-      navigationTargetDistance,
-      navigationTargetReason,
-      nearestPathDistance: pathStatus.distance,
-      trailState: pathStatus.state,
-    };
-    const signature = `${proximityState.nearestEntryId}:${proximityState.navigationTargetId}:${proximityState.trailState}:${Math.round(proximityState.distance * 10)}:${Math.round(proximityState.nearestPathDistance * 10)}:${Math.round(proximityState.cameraYaw * 10)}:${Math.round(proximityState.uiPresence * 100)}`;
-    const now = state.clock.elapsedTime;
-    const canPublishUiUpdate =
-      now - lastUpdateTimeRef.current >= PROXIMITY_UI_UPDATE_INTERVAL;
-
-    if (signature !== lastUiSignatureRef.current && canPublishUiUpdate) {
-      lastUiSignatureRef.current = signature;
-      lastUpdateTimeRef.current = now;
-      onPlayerProximityChange?.(proximityState);
-    }
-
-    // Scene culling only needs a coarse player window. Keep the live HUD at
-    // its existing cadence, but avoid reconciling the full world tree for
-    // every small movement or camera turn.
-    const spatialSignature = `${navigationTargetId}:${Math.round(playerPosition[0] / PLAYER_SPATIAL_CELL_SIZE)}:${Math.round(playerPosition[2] / PLAYER_SPATIAL_CELL_SIZE)}`;
-    if (spatialSignature !== lastSpatialSignatureRef.current) {
-      lastSpatialSignatureRef.current = spatialSignature;
-      onPlayerSpatialChange?.({
-        position: playerPosition,
-        cameraYaw,
-        navigationTargetId,
-        nearestPathDistance: pathStatus.distance,
-        trailState: pathStatus.state,
-      });
-    }
-
-    const approachingId =
-      navigationTargetId &&
-      navigationTargetDistance < NODE_APPROACH_RADIUS * 1.65
-        ? navigationTargetId
-        : closestInactiveNode &&
-            closestInactiveDistanceSq <
-              NODE_APPROACH_RADIUS * NODE_APPROACH_RADIUS
-          ? closestInactiveNode.entry.id
-          : null;
-    if (approachingId !== lastApproachRef.current) {
-      lastApproachRef.current = approachingId;
-      onApproachChange?.(approachingId);
-    }
-
-    // Physical story travel is continuous: walking through the environmental
-    // threshold activates the clearing. Deliberate holds are reserved for
-    // authored rituals, not ordinary navigation.
-    if (
-      closestInactiveNode &&
-      closestInactiveDistanceSq <= NODE_ACTIVATION_RADIUS_SQ &&
-      closestInactiveNode.entry.id !== lastEnteredNodeRef.current
-    ) {
-      lastEnteredNodeRef.current = closestInactiveNode.entry.id;
-      onNodeEnter?.(closestInactiveNode.entry.id);
-    } else if (closestInactiveDistanceSq > NODE_ACTIVATION_RADIUS_SQ * 2.25) {
-      lastEnteredNodeRef.current = null;
-    }
-  });
-
-  return null;
-}
-
 function NodeLandmarkSilhouette({
   node,
   activeEntry,
@@ -6792,6 +5726,9 @@ export function StoryScene({
   onPlayerProximityChange,
 }: StorySceneProps) {
   const cameraReadyRef = useRef(false);
+  const playerPoseRef = useRef(createPlayerPose(DEFAULT_CAMERA_POSITION));
+  const physicalInputActive = useCallback(() => !document.hidden && document.hasFocus() && !useSettingsStore.getState().drawerOpen && !useWorldStore.getState().physicsPaused, []);
+  const openingReflectionInverted = useJourneyStore(state => state.storyObjectStates["broken-floor.reflection"] === "inverted");
   const cameraAssistance = useSettingsStore((state) => state.cameraAssistance);
   const eventFlags = useJourneyStore((state) => state.worldFlags);
   const eventIds = useJourneyStore((state) => state.completedStoryEventIds);
@@ -6807,6 +5744,9 @@ export function StoryScene({
     () => entry ? resolveWorldVisualState({ entry, nearestEntry: entry, nearestDistance: 0, narrativeWorldState }) : null,
     [entry, narrativeWorldState],
   );
+  const playerChapterDirector = useMemo(() => entry ? resolveChapterDirector(entry) : null, [entry]);
+  const movementBaseSpeed = PLAYER_SPEED * (playerChapterDirector?.movementSpeedMultiplier ?? 1) * (1 - clamp01(narrativeWorldState.memoryPressure) * .055);
+  const movementSpeed = useCallback(() => movementBaseSpeed / getCurrentCinematicProfile().movementWeight, [movementBaseSpeed]);
   const spatialNodes = useMemo(
     () => buildSpatialStoryNodes({ activeEntryId: entry?.id ?? entryId, entries, visitedEntryIds }),
     [entries, entry?.id, entryId, visitedEntryIds],
@@ -6884,6 +5824,11 @@ export function StoryScene({
     () => (entry ? getJourneySceneForEntry(entry.id) : undefined),
     [entry],
   );
+  const cameraPresentationEnabled = useCallback(() => {
+    const state = useWorldStore.getState();
+    return cameraPresentationActive({ visible: !document.hidden, focused: document.hasFocus(), overlayOpen: useSettingsStore.getState().drawerOpen,
+      mode: state.mode, controls: state.controls, physicsPaused: state.physicsPaused, sceneCurrent: useJourneyStore.getState().sceneId === narrativeScene?.id });
+  }, [narrativeScene?.id]);
   const narrativeSceneAnchor = useMemo(
     () => narrativeScene
       ? getJourneyEntryWorldPosition(narrativeScene.keystoneEntryId)
@@ -7047,26 +5992,27 @@ export function StoryScene({
       {reducedEffects || narrativeScene ? null : (
         <CinematicFrameOverlay visualState={visualState} narrativeWorldState={narrativeWorldState} qualityProfile={qualityProfile} />
       )}
-      <AnimatedSceneCamera
-        entry={entry}
-        mode={mode}
-        controls={controls}
-        cameraReadyRef={cameraReadyRef}
-        activePosition={activePosition}
-        playerInitialPosition={playerInitialPosition}
-        guidanceLookTarget={cameraGuidanceTarget}
-        reducedMotion={reducedMotion}
+      <CameraController
+        mode={mode} controls={controls} movementEnabled={openingResolved} cameraReadyRef={cameraReadyRef} pose={playerPoseRef}
+        activePosition={activePosition} playerInitialPosition={playerInitialPosition}
+        cameraStart={entry.engine3d.cameraStart ?? DEFAULT_CAMERA_POSITION} cameraTarget={entry.engine3d.cameraTarget ?? [0, 0, -1]}
+        fov={entry.engine3d.cameraFov ?? DEFAULT_FOV} guidanceLookTarget={cameraGuidanceTarget}
+        lowView={entry.id === "fragment-001" && !openingResolved} bobSuppression={1 - clamp01(narrativeWorldState.memoryPressure) * .18}
+        reducedMotion={reducedMotion} reducedEffects={reducedEffects} sceneId={narrativeScene?.id ?? null} cameraAssistance={cameraAssistance}
+        openingShotOwned={narrativeScene?.id === "broken-floor.confession" && !openingReflectionInverted}
+        presentationActive={cameraPresentationEnabled} inputActive={physicalInputActive}
       />
       {/* Authored chapters already frame their footprint. The legacy eight-metre
           ring put trunks and colliders through water, furniture and sightlines. */}
       <ContinuousForestBed entries={entries} pathSegments={pathSegments} narrativeWorldState={narrativeWorldState} activeEntry={entry} qualityProfile={qualityProfile} showClearingFrame={openingResolved && !narrativeScene} renderVisible={exteriorVisible} />
-      <FirstPersonPlayer
+      <PlayerController
         enabled={mode === "explore" && controls === "walk"}
         movementEnabled={openingResolved}
         cameraReadyRef={cameraReadyRef}
         initialPosition={playerInitialPosition}
-        activeEntry={entry}
-        narrativeWorldState={narrativeWorldState}
+        movementSpeed={movementSpeed}
+        pose={playerPoseRef}
+        inputActive={physicalInputActive}
         sampleGroundY={sampleGroundY}
       />
       <JourneyWorldComposition
@@ -7090,7 +6036,7 @@ export function StoryScene({
       {audioEnabled && !narrativeAudioSuppressed && mode === "explore" ? (
         <NarrativeAudioDirector qualityProfile={qualityProfile} />
       ) : null}
-      <NodeProximityActivator
+      <GuidanceController
         nodes={spatialNodes}
         pathSegments={pathSegments}
         visitedEntryIds={visitedEntryIds}
@@ -7189,7 +6135,6 @@ export function StoryScene({
             : null}
         </>
       ) : null}
-      <SceneControls controls={controls} mode={mode} />
       {showDebugOverlay ? <SceneDebugOverlay entry={entry} narrativeWorldState={narrativeWorldState} qualityProfile={qualityProfile} visualState={visualState} nodes={spatialNodes} /> : null}
     </>
   );
@@ -7197,7 +6142,7 @@ export function StoryScene({
   // owner. Keeping origin/camera resolution here avoids a second scene-state tree.
   return narrativeScene ? <SceneLookDirector sceneId={narrativeScene.id} quality={qualityProfile.quality} reducedEffects={reducedEffects} reducedMotion={reducedMotion}
     cameraAssistance={mode === "explore" && cameraAssistance} origin={authoredSceneOrigin} heading={getJourneySceneLayout(narrativeScene.id).anchor.headingRadians}
-    focusPosition={cameraGuidanceTarget} bloomIntensity={visualState.bloomIntensity} vignetteIntensity={visualState.vignetteIntensity}>{children}{world}</SceneLookDirector> : <>{children}{world}</>;
+    bloomIntensity={visualState.bloomIntensity} vignetteIntensity={visualState.vignetteIntensity}>{children}{world}</SceneLookDirector> : <>{children}{world}</>;
 }
 
 export default memo(StoryScene);

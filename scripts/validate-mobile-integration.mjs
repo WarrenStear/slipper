@@ -317,8 +317,20 @@ function validateIntegration() {
     ["non-3D archive route", /<AccessibleArchive\b/],
   ]);
   requirePatterns("src/components/three/StoryScene.tsx", [
-    ["desktop pointer-lock controls", /<(?:PointerLockControls|SafePointerLockLookControls)\b/],
+    ["canonical player controller", /<PlayerController\b/],
+    ["canonical camera controller", /<CameraController\b/],
+    ["physical observation guidance adapter", /<GuidanceController\b/],
+  ]);
+  requirePatterns("src/player/CameraController.tsx", [
+    ["desktop pointer-lock controls", /usePointerLockLookInput\(/],
+    ["transient mobile look input", /consumeLookDelta\(/],
+    ["look limits", /cameraLookPitch\(/],
+  ]);
+  requirePatterns("src/player/PlayerController.tsx", [
     ["transient mobile player input", /usePlayerInputStore\.getState\(\)/],
+    ["proportional mobile movement", /requestedMovementMagnitude\(/],
+  ]);
+  requirePatterns("src/player/playerMovement.ts", [
     ["proportional mobile movement", /mobileMagnitude/],
   ]);
   requirePatterns("src/components/ui/MobileExploreControls.tsx", [

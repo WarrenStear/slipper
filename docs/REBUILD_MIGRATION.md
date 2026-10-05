@@ -141,7 +141,7 @@ completed desktop/mobile evidence are retained outside source under
 | Phase | Implementation | Validation / status |
 | --- | --- | --- |
 | 1. Foundation | This document first; shared narrative selectors/actions/runtime; used compatibility boundaries. | Complete (`1ae2b98`): full check and 16 desktop/mobile text/cloud browser tests passed. |
-| 2. Player | Input, movement, camera, factual interaction detection; one ordered camera writer. | Pending Phase 1 validation. |
+| 2. Player | Input, movement, camera, factual interaction detection; one ordered camera writer. | Complete: full check, seven applicable mobile tests and three desktop opening/keyboard tests passed. |
 | 3. World | Exact terrain/forest/guidance/atmosphere extraction; preserve ecology and seeded paths. | Pending. |
 | 4. Presentation | Preserve canonical SceneLook owner; consolidate/remove proven redundant rigs. | Pending. |
 | 5. Manifest | Derive presentation, spawn, profiles and interaction references from canonical scenes. | Pending. |
@@ -194,3 +194,40 @@ Manual baseline inspection verified the restored First Wood and Fragment with
 no browser errors. This is baseline inspection, not proof of the later visual
 rebuild. The generated opening concept is a composition reference; its bitmap
 is not a production environment asset or a substitute for the walkable world.
+
+### Phase 2: physical controllers and camera ownership
+
+`StoryScene` decreased from 7,203 to 6,148 lines. Numeric movement, keyboard/touch
+input, Rapier stepping/slopes/gravity and grounded pose belong to
+`player/PlayerController`; it imports no narrative state and never writes the
+camera. `CameraController` owns arrival, pointer lock, queued look, mobile look,
+pitch, head bob and gentle assistance. The shared presentation clock executes
+at -3, movement at -2 and the sole live camera writer at -1. The historic
+cinematic camera is a guarded standalone review adapter. StrictMode readiness
+follows actual arrival rather than an effect replay. Inactive input clears
+queued movement/look to prevent a burst after returning from settings or blur.
+
+`InteractionController` and `interactionFacts` report range, gaze, proximity and
+threshold facts. They cannot dispatch story outcomes. The existing narrative
+receiver still determines admission, eligibility, timers and consequences.
+`world/guidance/GuidanceController` retains the existing ranking, 80 ms sampling,
+200 ms UI publication, six-metre spatial window and threshold hysteresis.
+Saved safe-pose validation, canonical terrain conversion, all IDs/schemas and
+the mounted MasterPlayerLantern remain unchanged. The unreachable local lantern
+function had no mounted instance and was removed; the one-carried-lantern guards
+remain. CI path filters now cover the extracted owners.
+
+Validation: `npm run check` passed with 963 unit tests, seven security tests,
+66-entry content QA, typecheck, integration/lint, asset/world validation,
+production build and Pages Functions compilation. The focused player suite
+passed 104 tests. The initial desktop/mobile browser run passed all seven
+applicable touch cases and skipped five desktop-only cases on mobile, but four
+desktop cases timed out during a host sleep. Mac power logs and trace timestamps
+confirmed the execution interruption; the failed traces/logs are retained in
+`artifacts/rebuild-20261005/phase-2/initial-browser-results`. With no code or
+deadline changes, the desktop rerun of opening and keyboard suites passed all
+three tests in 38.4 seconds. These exercise two real wipes, restored reveal,
+pointer handoff, modified/composing key rejection, touch movement/look,
+interruption cancellation and route-preserving mode changes. Actual desktop and
+mobile stage captures were inspected. Logs and verified captures are retained
+outside source under the phase-2 artifact directory.

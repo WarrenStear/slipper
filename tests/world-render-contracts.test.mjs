@@ -236,6 +236,7 @@ test("persistent world memory renders authored multi-stage consequences within f
 test("the prologue, story roles, and guidance express authored progression", () => {
   const app = read("src/App.tsx");
   const scene = read("src/components/three/StoryScene.tsx");
+  const guidance = read("src/world/guidance/GuidanceController.tsx");
   const brokenFloor = read("src/components/three/chapters/BrokenFloorChapter.tsx");
   const onboarding = read("src/components/ui/OnboardingGate.tsx");
   const onboardingStyles = read("src/components/ui/OnboardingGate.css");
@@ -289,7 +290,8 @@ test("the prologue, story roles, and guidance express authored progression", () 
   assert.doesNotMatch(constellation, /completedRituals\} rituals/);
   assert.match(scene, /name="keystone-memory-halo"/);
   assert.match(scene, /name="echo-memory-whisper"/);
-  assert.match(scene, /availableNavigationNodes/);
+  assert.match(guidance, /availableNavigationNodes/);
+  assert.match(guidance, /nodes\.filter\(node => !lockedEntryIdSet\.has\(node\.entry\.id\)\)/);
   assert.match(scene, /lockedEntryIdSet\.has\(node\.entry\.id\)/);
   assert.match(app, /nextRequiredEntry/);
   assert.match(app, /authoredJourneyTarget \?\? nextUnreadEntry/);
@@ -355,19 +357,20 @@ test("disabled audio stays unmounted and render loops avoid known allocations", 
   const ground = read("src/components/three/world/PerfectWorldGround.tsx");
   const lantern = read("src/components/three/MasterPlayerLantern.tsx");
   const repair = read("scripts/enforce-single-master-lantern.mjs");
+  const guidance = read("src/world/guidance/GuidanceController.tsx");
 
   assert.match(
     scene,
     /audioEnabled && !narrativeAudioSuppressed && mode === "explore"[\s\S]*<NarrativeAudioDirector\b/,
   );
-  assert.match(scene, /const PROXIMITY_UI_UPDATE_INTERVAL = 0\.2;/);
-  assert.match(scene, /const PLAYER_SPATIAL_CELL_SIZE = 6;/);
+  assert.match(guidance, /const PROXIMITY_UI_UPDATE_INTERVAL = 0\.2;/);
+  assert.match(guidance, /const PLAYER_SPATIAL_CELL_SIZE = 6;/);
   assert.match(
-    scene,
+    guidance,
     /now - lastUpdateTimeRef\.current >= PROXIMITY_UI_UPDATE_INTERVAL/,
   );
   assert.match(
-    scene,
+    guidance,
     /spatialSignature !== lastSpatialSignatureRef\.current/,
   );
   assert.doesNotMatch(scene, /group\.scale\.lerp\(new THREE\.Vector3/);
@@ -404,10 +407,11 @@ test("live HUD updates do not continuously remount or reconcile the 4D canvas", 
   assert.match(canvas, /export default memo\(WorldCanvas\);/);
   assert.match(canvas, /className="slipper-world-canvas"/);
   assert.match(scene, /const STORY_PREVIEW_CHARACTER_LIMIT = 220;/);
-  assert.match(scene, /function SafePointerLockLookControls/);
-  assert.match(scene, /<SafePointerLockLookControls \/>/);
+  const camera = read("src/player/CameraController.tsx");
+  assert.match(camera, /function usePointerLockLookInput/);
+  assert.match(scene, /<CameraController\b/);
   assert.match(
-    scene,
+    camera,
     /"pointerLockElement" in document[\s\S]*navigator\.webdriver !== true[\s\S]*typeof document\.documentElement\.requestPointerLock === "function"/,
   );
 });

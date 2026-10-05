@@ -2,6 +2,8 @@ name: Visual presentation review
 on:
   pull_request:
     paths:
+      - 'src/player/**'
+      - 'src/components/three/artDirection/**'
       - 'src/components/three/environment/**'
       - 'src/components/three/chapters/BrokenFloorChapter.tsx'
       - 'src/components/three/chapters/BlueMoonSanctuaryChapter.tsx'
@@ -18,6 +20,8 @@ on:
   push:
     branches: [main]
     paths:
+      - 'src/player/**'
+      - 'src/components/three/artDirection/**'
       - 'src/components/three/environment/**'
       - 'src/components/three/chapters/BrokenFloorChapter.tsx'
       - 'src/components/three/chapters/BlueMoonSanctuaryChapter.tsx'

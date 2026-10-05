@@ -4,6 +4,9 @@ on:
   push:
     branches: [main]
     paths:
+      - 'src/player/**'
+      - 'src/narrative/**'
+      - 'src/world/guidance/**'
       - 'src/components/three/storyEvents/**'
       - 'src/components/ui/AccessibleStoryObjects.tsx'
       - 'src/components/three/chapters/BlueMoonSanctuaryChapter.tsx'
@@ -28,6 +31,9 @@ on:
       - '.github/workflows/story-polish-smoke.yml'
   pull_request:
     paths:
+      - 'src/player/**'
+      - 'src/narrative/**'
+      - 'src/world/guidance/**'
       - 'src/components/three/storyEvents/**'
       - 'src/components/ui/AccessibleStoryObjects.tsx'
       - 'src/components/three/chapters/BlueMoonSanctuaryChapter.tsx'

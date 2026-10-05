@@ -80,12 +80,13 @@ for(const [label,override]of Object.entries({hidden:{visible:false},unfocused:{f
   test(`camera yields to ${label}`,()=>{assert.equal(cameraPresentationActive(base),true);assert.equal(cameraPresentationActive({...base,...override}),false);});
 }
 test('camera consumer retains a single owner, explicit scene, multi-pointer input and cleanup',()=>{
-  const s=source('src/components/three/cinematics/CinematicCameraDirector.tsx');
+  const s=source('src/player/useCameraAssistance.ts');
   assert.match(s,/new Set<number>/);assert.match(s,/heldPointers\.current\.delete\(event\.pointerId\)/);
   assert.match(s,/usePlayerInputStore\.subscribe/);assert.match(s,/unsubscribe\(\)/);
   assert.match(s,/openingOwned/);assert.match(s,/previousTarget/);
   assert.doesNotMatch(s,/camera\.position\.(set|copy|add|lerp)|dispatchStoryEvent|localStorage|gl\.render|useFrame\([^]*,\s*[1-9]\)/);
   assert.match(source('src/components/three/cinematics/EmotionalCinematographyDirector.tsx'),/CinematicCameraDirector sceneId=\{sceneId\}/);
+  assert.match(source('src/components/three/cinematics/CinematicCameraDirector.tsx'), /if \(cameraHasAuthority\(camera\)\) return/);
 });
 test('bark, stone and wood detail remains on lit, derivative-filtered materials',()=>{
   const s=(source('src/components/three/storyEvents/TactileMaterial.tsx') + source('src/components/three/storyEvents/tactileShader.ts'));
@@ -128,7 +129,7 @@ test('invalid or reversed timing cannot start an automatic lens move', () => {
     assert.equal(shotLensHeld(false, now, last), true);
 });
 test('the camera consumes recent-input holding and yields on interrupted frames', () => {
-  const s = source('src/components/three/cinematics/CinematicCameraDirector.tsx');
+  const s = source('src/player/useCameraAssistance.ts');
   assert.match(s, /shotLensHeld\(inputActive, now, lastInput\.current\)/);
   assert.match(s, /delta > \.25/);
   assert.match(s, /addEventListener\("pageshow", noteInput\)/);

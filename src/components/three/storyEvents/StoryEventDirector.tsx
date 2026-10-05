@@ -3,6 +3,7 @@ import { Html } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
+import { observeInteractionTarget } from "../../../player/interactionFacts";
 import type { JourneySceneId } from "../../../lib/storyJourneyState";
 import { objectsForScene, eventsForScene, getAvailableStoryEvents, getCarriedStoryObjects } from "../../../storyEvents/storyEventRegistry";
 import {
@@ -267,11 +268,9 @@ export function StoryEventDirector({ sceneId, reducedMotion, enabled = true }: {
       if (renderedObject?.userData.storyPresentationSettled === false) continue;
       if (renderedObject) { renderedObject.getWorldPosition(target.current); root.worldToLocal(target.current); }
       else target.current.set(location.position[0], location.position[1], location.position[2]);
-      target.current.sub(localCamera.current);
-      const distance = Math.hypot(target.current.x, target.current.z);
-      const inside = distance <= location.radius;
-      const alignment = target.current.lengthSq() > .001 ? target.current.normalize().dot(localForward.current) : 1;
-      const looking = alignment > .7 || distance < .85;
+      const { distance, inside, alignment, looking } = observeInteractionTarget(
+        localCamera.current, localForward.current, target.current, location.radius,
+      );
       const atFloor = sceneId === "broken-floor.confession" && objectStates["broken-floor.reflection"] !== "inverted";
       const lookingAtFloor = atFloor && localForward.current.y < -.08;
       const at = inside || (lookingAtFloor && ["wipe", "touch"].includes(event.trigger));

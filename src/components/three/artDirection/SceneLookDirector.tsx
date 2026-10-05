@@ -4,7 +4,6 @@ import { activateCinematicProfile, advanceCinematicProfile } from "../../../cine
 import { useJourneyStore } from "../../../stores/useJourneyStore";
 import { useSettingsStore } from "../../../stores/useSettingsStore";
 import { useWorldStore } from "../../../stores/useWorldStore";
-import { CinematicCameraDirector } from "../cinematics/CinematicCameraDirector";
 import type { JourneySceneId } from "../../../lib/storyJourneyState";
 import { resolveSceneLook, type LookPoint, type LookQuality } from "./SceneLookRegistry";
 import { SceneLookContext, type ScenePresentation } from "./SceneLookContext";
@@ -17,7 +16,7 @@ import { useStillnessState } from "../../../hooks/useStillnessState";
 import { ASSISTED_STILLNESS_EVENT } from "../rituals/RitualInteraction";
 import { advanceSceneMotion } from "./sceneMotion";
 
-/** The sole presentation owner in a canonical world. It never writes story facts. */
+/** The sole global look owner. CameraController owns the camera; this layer never writes story facts. */
 export function SceneLookDirector({ sceneId, quality, reducedEffects, reducedMotion, cameraAssistance, origin = [0, 0, 0], heading = 0, focusPosition, bloomIntensity = .6, vignetteIntensity = .1, children }: {
   sceneId: JourneySceneId; quality: LookQuality; reducedEffects: boolean; reducedMotion: boolean; cameraAssistance: boolean;
   origin?: LookPoint; heading?: number; focusPosition?: LookPoint | null; bloomIntensity?: number; vignetteIntensity?: number; children: ReactNode;
@@ -59,7 +58,6 @@ export function SceneLookDirector({ sceneId, quality, reducedEffects, reducedMot
     <group name="scene-look-authority" userData={{ sceneId, hero: target.composition.heroLandmark, quality }}>
       <SceneAtmosphere heading={heading} />
       <group position={origin} rotation={[0, heading, 0]}><SceneLighting quality={quality} /><AuthoredLightShafts /><GroundMist /></group>
-      <CinematicCameraDirector sceneId={sceneId} reducedMotion={reducedMotion} cameraAssistance={cameraAssistance} focusPosition={focusPosition} />
       {target.budget.edgeSmoothing ? <ScenePostProcessing bloomIntensity={bloomIntensity} vignetteIntensity={vignetteIntensity} /> : null}
     </group>
     {children}
