@@ -1,0 +1,13 @@
+
+export const FOREST_CELL_SIZE = 7;
+
+export const FOREST_CELL_RADIUS = 4;
+
+export const FOREST_TREES_PER_CELL = 3;
+
+export const FOREST_INSTANCE_COUNT = (FOREST_CELL_RADIUS * 2 + 1) * (FOREST_CELL_RADIUS * 2 + 1) * FOREST_TREES_PER_CELL;
+
+export const TREE_COLLIDER_LIMIT = 36;
+
+export const ROOTED_TRUNK_COLLIDER_SCALE = 1.72;
+

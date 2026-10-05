@@ -136,13 +136,15 @@ The exact 19-capture review now has zero failures: the side view adds 3 calls,
 7,284 triangles and no lights, within the unchanged limit. Typecheck and 28
 focused geometry/chapter/environment tests passed. The first failed CI log and
 completed desktop/mobile evidence are retained outside source under
-`artifacts/rebuild-20261005/baseline-budget-repair`.
+`artifacts/rebuild-20261005/baseline-budget-repair`. Repair commit `2280cf4`
+passed both remote full regression (`37351828593`, all five browser projects)
+and Visual presentation review (`37351828560`).
 
 | Phase | Implementation | Validation / status |
 | --- | --- | --- |
 | 1. Foundation | This document first; shared narrative selectors/actions/runtime; used compatibility boundaries. | Complete (`1ae2b98`): full check and 16 desktop/mobile text/cloud browser tests passed. |
-| 2. Player | Input, movement, camera, factual interaction detection; one ordered camera writer. | Complete: full check, seven applicable mobile tests and three desktop opening/keyboard tests passed. |
-| 3. World | Exact terrain/forest/guidance/atmosphere extraction; preserve ecology and seeded paths. | Pending. |
+| 2. Player | Input, movement, camera, factual interaction detection; one ordered camera writer. | Complete (`770a9ab`): full check, seven applicable mobile tests and three desktop opening/keyboard tests passed. |
+| 3. World | Exact terrain/forest/guidance/atmosphere extraction; preserve ecology and seeded paths. | Complete: full check, 14 fixed-camera captures and five touch browser tests passed. |
 | 4. Presentation | Preserve canonical SceneLook owner; consolidate/remove proven redundant rigs. | Pending. |
 | 5. Manifest | Derive presentation, spawn, profiles and interaction references from canonical scenes. | Pending. |
 | 6. Opening slice | Arrival, floor/reflection, reveal, lantern, first walk, Fragment, Constellation. | Pending structural phases; desktop/mobile real-input proof required. |
@@ -231,3 +233,41 @@ pointer handoff, modified/composing key rejection, touch movement/look,
 interruption cancellation and route-preserving mode changes. Actual desktop and
 mobile stage captures were inspected. Logs and verified captures are retained
 outside source under the phase-2 artifact directory.
+
+### Phase 3: terrain, forest, air and route owners
+
+The terrain sampler, exact seeded route builder/packing/caches, ground worker,
+forest instancing/worker/colliders, texture lifecycles, moon/horizon/panorama,
+fallback weather/atmosphere, and route ribbons/landmarks now have actual owners
+under `world`. StoryScene retains orchestration and canonical/fallback gates,
+and is about 2,880 lines. Of 117 moved declarations, 116 remain identical to the
+Phase 2 implementation; HillyForestGround delegates its unchanged construction,
+index copy and worker upload to the executable `terrainGeometry` adapter.
+The newer OutdoorLandscape, biome ecology, grass/flowers, river, material and
+worker implementations remain intact. Hidden opening visuals still keep terrain
+and forest physics/workers mounted; recoloring does not rebuild a collider.
+
+An independently executed committed-source fixture protects all 65 packed paths,
+66 clearing positions and six terrain samples across morph states. Executable
+tests compare visible triangle raycasts to collider sampling, worker vertex
+uploads and recoloring, quality-independent topology, and outdoor/ecology quality
+prefixes. AST dependency checks prevent world-to-scene runtime cycles, narrative
+imports in physical detectors, stateful terrain calculations and broken worker
+URLs. Source guards now inspect each actual owner and its composition mount,
+rather than a concatenation of world sources. Visual CI filters cover `src/world`.
+
+Validation: `npm run check` passed with 973 unit tests, seven security tests,
+content QA, source/type checks, production assets/world, build and Pages Functions.
+The 163 focused tests passed. `review-forest-production` rendered 14 baseline and
+candidate captures across high, medium, low and cinematic tiers, portrait and
+landscape mobile, and reduced effects. Every comparison has exactly zero change
+in draws, triangles, textures and lights; instance counts and camera placement
+also match. Both worker upload and deformed terrain readiness were required.
+Desktop high and portrait low captures were inspected. Reports/captures and
+the immutable Phase 2 source are outside source in
+`artifacts/rebuild-20261005/phase-3`; declaration/golden-generation evidence is in
+the adjacent `phase3-world` directory. Routine compiler output was excluded only
+after confirming every canonical entry remains identical.
+The built application's five mobile exploration cases also passed in 59 seconds:
+persisted handedness, portrait/landscape map tabs, route-preserving guidance and
+recovery, input interruption/cancellation, and real touch movement/look telemetry.

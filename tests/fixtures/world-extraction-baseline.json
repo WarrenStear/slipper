@@ -1,0 +1,2729 @@
+{
+  "baseline": "770a9ab",
+  "method": "Current production StoryScene pure helper declarations executed independently before extraction; canonical 66-entry authored archive.",
+  "paths": [
+    {
+      "source": [
+        0,
+        -378
+      ],
+      "controlA": [
+        -3.633634597567024,
+        -370.6273490911283
+      ],
+      "controlB": [
+        -3.804985265093279,
+        -361.4257751513884
+      ],
+      "target": [
+        -8,
+        -354
+      ],
+      "curveSeed": 1.0816638651684225,
+      "curveLength": 25.368930541020354,
+      "sourceChapter": "The First Wood",
+      "targetChapter": "The First Wood",
+      "sourceY": -4,
+      "targetY": 0,
+      "crownRamp": false,
+      "minX": -32,
+      "maxX": 24,
+      "minZ": -402,
+      "maxZ": -330
+    },
+    {
+      "source": [
+        0,
+        -378
+      ],
+      "controlA": [
+        -1.5360197347757298,
+        -377.93742861578903
+      ],
+      "controlB": [
+        -3.013532209940983,
+        -379.64506652144905
+      ],
+      "target": [
+        -4.553,
+        -379.519
+      ],
+      "curveSeed": 1.1285399911592435,
+      "curveLength": 4.863136370179535,
+      "sourceChapter": "The First Wood",
+      "targetChapter": "The First Wood",
+      "sourceY": -4,
+      "targetY": -4,
+      "crownRamp": false,
+      "minX": -28.553,
+      "maxX": 24,
+      "minZ": -403.52460768422867,
+      "maxZ": -354
+    },
+    {
+      "source": [
+        -8,
+        -354
+      ],
+      "controlA": [
+        -2.325069806171814,
+        -347.7259989857906
+      ],
+      "controlB": [
+        4.263276482415618,
+        -337.1766080996994
+      ],
+      "target": [
+        10,
+        -330
+      ],
+      "curveSeed": 1.2425325220648817,
+      "curveLength": 30.012130159603817,
+      "sourceChapter": "The First Wood",
+      "targetChapter": "The First Wood",
+      "sourceY": 0,
+      "targetY": 1,
+      "crownRamp": true,
+      "minX": -32,
+      "maxX": 34,
+      "minZ": -378,
+      "maxZ": -306
+    },
+    {
+      "source": [
+        -8,
+        -354
+      ],
+      "controlA": [
+        -11.887910705508054,
+        -350.4630355619703
+      ],
+      "controlB": [
+        -17.45885810417237,
+        -346.50328121210697
+      ],
+      "target": [
+        -21.656,
+        -343.75
+      ],
+      "curveSeed": 0.9555684276649581,
+      "curveLength": 17.09026612701343,
+      "sourceChapter": "The First Wood",
+      "targetChapter": "The First Wood",
+      "sourceY": 0,
+      "targetY": 0,
+      "crownRamp": false,
+      "minX": -45.656,
+      "maxX": 16,
+      "minZ": -378,
+      "maxZ": -319.75
+    },
+    {
+      "source": [
+        10,
+        -330
+      ],
+      "controlA": [
+        5.828106887881929,
+        -322.39393520564613
+      ],
+      "controlB": [
+        -0.9670536164345003,
+        -313.16146472396986
+      ],
+      "target": [
+        -6,
+        -306
+      ],
+      "curveSeed": 0.5588539180154232,
+      "curveLength": 28.859245992781343,
+      "sourceChapter": "The First Wood",
+      "targetChapter": "The First Wood",
+      "sourceY": 1,
+      "targetY": 0,
+      "crownRamp": true,
+      "minX": -30,
+      "maxX": 34,
+      "minZ": -354,
+      "maxZ": -282
+    },
+    {
+      "source": [
+        10,
+        -330
+      ],
+      "controlA": [
+        15.842618999917981,
+        -325.52159059572097
+      ],
+      "controlB": [
+        21.62852635893654,
+        -321.4811494759494
+      ],
+      "target": [
+        27.177,
+        -318.551
+      ],
+      "curveSeed": 0.6458369119306266,
+      "curveLength": 20.666507986736608,
+      "sourceChapter": "The First Wood",
+      "targetChapter": "The Mirror Clearing",
+      "sourceY": 1,
+      "targetY": 1,
+      "crownRamp": false,
+      "minX": -14,
+      "maxX": 51.177,
+      "minZ": -354,
+      "maxZ": -294.551
+    },
+    {
+      "source": [
+        -6,
+        -306
+      ],
+      "controlA": [
+        -10.683724394737597,
+        -298.258657028944
+      ],
+      "controlB": [
+        -12.261596664449312,
+        -286.04466211998977
+      ],
+      "target": [
+        -14,
+        -278
+      ],
+      "curveSeed": 1.6997118064666688,
+      "curveLength": 29.26029203838712,
+      "sourceChapter": "The First Wood",
+      "targetChapter": "The Crowned Return",
+      "sourceY": 0,
+      "targetY": -0.5,
+      "crownRamp": false,
+      "minX": -38,
+      "maxX": 18,
+      "minZ": -330,
+      "maxZ": -254
+    },
+    {
+      "source": [
+        -6,
+        -306
+      ],
+      "controlA": [
+        -11.22689552439633,
+        -305.22513761200264
+      ],
+      "controlB": [
+        -16.329132801517883,
+        -309.61400137874256
+      ],
+      "target": [
+        -21.742,
+        -310.495
+      ],
+      "curveSeed": 1.535508372604618,
+      "curveLength": 16.539744441866386,
+      "sourceChapter": "The First Wood",
+      "targetChapter": "The First Wood",
+      "sourceY": 0,
+      "targetY": 0,
+      "crownRamp": false,
+      "minX": -45.742000000000004,
+      "maxX": 18,
+      "minZ": -334.495,
+      "maxZ": -281.91378147694275
+    },
+    {
+      "source": [
+        -14,
+        -278
+      ],
+      "controlA": [
+        -9.925201911682295,
+        -270.0104741504588
+      ],
+      "controlB": [
+        -2.0875127351376865,
+        -260.71842208067494
+      ],
+      "target": [
+        4,
+        -252
+      ],
+      "curveSeed": 1.211425025580183,
+      "curveLength": 31.652562775172477,
+      "sourceChapter": "The Crowned Return",
+      "targetChapter": "The Crowned Return",
+      "sourceY": -0.5,
+      "targetY": -0.25,
+      "crownRamp": false,
+      "minX": -38,
+      "maxX": 28,
+      "minZ": -302,
+      "maxZ": -228
+    },
+    {
+      "source": [
+        -14,
+        -278
+      ],
+      "controlA": [
+        -9.063603240358066,
+        -283.5594031377252
+      ],
+      "controlB": [
+        -0.1942298935438077,
+        -286.0037694161603
+      ],
+      "target": [
+        4.792,
+        -291.024
+      ],
+      "curveSeed": 0.20174370249814527,
+      "curveLength": 22.959598648572403,
+      "sourceChapter": "The Crowned Return",
+      "targetChapter": "The Crowned Return",
+      "sourceY": -0.5,
+      "targetY": -0.5,
+      "crownRamp": false,
+      "minX": -38,
+      "maxX": 28.792,
+      "minZ": -315.024,
+      "maxZ": -254
+    },
+    {
+      "source": [
+        4.792,
+        -291.024
+      ],
+      "controlA": [
+        6.562601718090055,
+        -292.13867974785944
+      ],
+      "controlB": [
+        8.836403082970696,
+        -293.66328567719046
+      ],
+      "target": [
+        10.565,
+        -295.027
+      ],
+      "curveSeed": 0.48805158188941494,
+      "curveLength": 7.028000549391912,
+      "sourceChapter": "The Crowned Return",
+      "targetChapter": "The Fire and River",
+      "sourceY": -0.5,
+      "targetY": -0.5,
+      "crownRamp": false,
+      "minX": -19.208,
+      "maxX": 34.565,
+      "minZ": -319.027,
+      "maxZ": -267.024
+    },
+    {
+      "source": [
+        4,
+        -252
+      ],
+      "controlA": [
+        6.963597435259849,
+        -243.61058345384936
+      ],
+      "controlB": [
+        13.582411364529765,
+        -234.4100757659948
+      ],
+      "target": [
+        16,
+        -226
+      ],
+      "curveSeed": 0.8511800593003538,
+      "curveLength": 28.67638732106877,
+      "sourceChapter": "The Crowned Return",
+      "targetChapter": "The Crowned Return",
+      "sourceY": -0.25,
+      "targetY": 0,
+      "crownRamp": false,
+      "minX": -20,
+      "maxX": 40,
+      "minZ": -276,
+      "maxZ": -202
+    },
+    {
+      "source": [
+        4,
+        -252
+      ],
+      "controlA": [
+        -0.996114560501151,
+        -250.4025601674578
+      ],
+      "controlB": [
+        -6.090138942971332,
+        -247.1216133957081
+      ],
+      "target": [
+        -11.716,
+        -244.756
+      ],
+      "curveSeed": 0.8813499696000247,
+      "curveLength": 17.319137058940225,
+      "sourceChapter": "The Crowned Return",
+      "targetChapter": "The Crowned Return",
+      "sourceY": -0.25,
+      "targetY": -0.25,
+      "crownRamp": false,
+      "minX": -35.716,
+      "maxX": 28,
+      "minZ": -276,
+      "maxZ": -220.756
+    },
+    {
+      "source": [
+        -11.716,
+        -244.756
+      ],
+      "controlA": [
+        -13.749000581027913,
+        -244.87204885875275
+      ],
+      "controlB": [
+        -15.326425457078326,
+        -243.35269631167964
+      ],
+      "target": [
+        -16.97,
+        -242.335
+      ],
+      "curveSeed": 1.1552051343746508,
+      "curveLength": 5.897170911441427,
+      "sourceChapter": "The Crowned Return",
+      "targetChapter": "The Thorned House",
+      "sourceY": -0.25,
+      "targetY": -0.25,
+      "crownRamp": false,
+      "minX": -40.97,
+      "maxX": 12.284,
+      "minZ": -268.76140895047433,
+      "maxZ": -218.335
+    },
+    {
+      "source": [
+        16,
+        -226
+      ],
+      "controlA": [
+        15.081886387453503,
+        -217.88158957247614
+      ],
+      "controlB": [
+        10.243516090732324,
+        -208.11124306893552
+      ],
+      "target": [
+        8,
+        -200
+      ],
+      "curveSeed": 0.09712295657821138,
+      "curveLength": 27.252440536694003,
+      "sourceChapter": "The Crowned Return",
+      "targetChapter": "The Mirror Clearing",
+      "sourceY": 0,
+      "targetY": 1,
+      "crownRamp": true,
+      "minX": -16,
+      "maxX": 40,
+      "minZ": -250,
+      "maxZ": -176
+    },
+    {
+      "source": [
+        16,
+        -226
+      ],
+      "controlA": [
+        20.003282431886166,
+        -223.33250346542513
+      ],
+      "controlB": [
+        27.39289568987183,
+        -224.52255259289066
+      ],
+      "target": [
+        31.665,
+        -221.19
+      ],
+      "curveSeed": 1.9544743867379029,
+      "curveLength": 16.545904495706765,
+      "sourceChapter": "The Crowned Return",
+      "targetChapter": "The Fire and River",
+      "sourceY": 0,
+      "targetY": 0,
+      "crownRamp": false,
+      "minX": -8,
+      "maxX": 55.665,
+      "minZ": -250,
+      "maxZ": -197.19
+    },
+    {
+      "source": [
+        8,
+        -200
+      ],
+      "controlA": [
+        1.7975865739124761,
+        -191.79882113104844
+      ],
+      "controlB": [
+        -2.3668850143486364,
+        -184.24984781943883
+      ],
+      "target": [
+        -8,
+        -176
+      ],
+      "curveSeed": 1.253674716806819,
+      "curveLength": 28.85154307120313,
+      "sourceChapter": "The Mirror Clearing",
+      "targetChapter": "The Thorned House",
+      "sourceY": 1,
+      "targetY": 1,
+      "crownRamp": true,
+      "minX": -32,
+      "maxX": 32,
+      "minZ": -224,
+      "maxZ": -152
+    },
+    {
+      "source": [
+        8,
+        -200
+      ],
+      "controlA": [
+        3.799060748401815,
+        -204.87161158508934
+      ],
+      "controlB": [
+        -3.4541373437715923,
+        -205.21817221689219
+      ],
+      "target": [
+        -8.003,
+        -210.671
+      ],
+      "curveSeed": 1.2083279328459537,
+      "curveLength": 19.395939676546543,
+      "sourceChapter": "The Mirror Clearing",
+      "targetChapter": "The Mirror Clearing",
+      "sourceY": 1,
+      "targetY": 1,
+      "crownRamp": false,
+      "minX": -32.003,
+      "maxX": 32,
+      "minZ": -234.671,
+      "maxZ": -176
+    },
+    {
+      "source": [
+        -8,
+        -176
+      ],
+      "controlA": [
+        -3.4069527991926836,
+        -169.17388808884155
+      ],
+      "controlB": [
+        -0.718434095995803,
+        -159.87816116975495
+      ],
+      "target": [
+        4,
+        -152
+      ],
+      "curveSeed": 1.705141134888465,
+      "curveLength": 26.86091976684428,
+      "sourceChapter": "The Thorned House",
+      "targetChapter": "The Fire and River",
+      "sourceY": 1,
+      "targetY": 1,
+      "crownRamp": true,
+      "minX": -32,
+      "maxX": 28,
+      "minZ": -200,
+      "maxZ": -128
+    },
+    {
+      "source": [
+        -8,
+        -176
+      ],
+      "controlA": [
+        -3.3378057179442675,
+        -177.57104261768106
+      ],
+      "controlB": [
+        2.0093301450143395,
+        -182.4122511529873
+      ],
+      "target": [
+        7.282,
+        -183.65
+      ],
+      "curveSeed": 1.6738903842279178,
+      "curveLength": 17.147144197821675,
+      "sourceChapter": "The Thorned House",
+      "targetChapter": "The Fire and River",
+      "sourceY": 1,
+      "targetY": 1,
+      "crownRamp": false,
+      "minX": -32,
+      "maxX": 31.282,
+      "minZ": -207.65,
+      "maxZ": -152
+    },
+    {
+      "source": [
+        4,
+        -152
+      ],
+      "controlA": [
+        7.345847980076032,
+        -144.4106522552005
+      ],
+      "controlB": [
+        13.630888123393447,
+        -134.20454511286812
+      ],
+      "target": [
+        18,
+        -126
+      ],
+      "curveSeed": 1.4294560097295121,
+      "curveLength": 29.538647205269356,
+      "sourceChapter": "The Fire and River",
+      "targetChapter": "The First Wood",
+      "sourceY": 1,
+      "targetY": 0,
+      "crownRamp": true,
+      "minX": -20,
+      "maxX": 42,
+      "minZ": -176,
+      "maxZ": -102
+    },
+    {
+      "source": [
+        18,
+        -126
+      ],
+      "controlA": [
+        11.420811981295264,
+        -118.65657486219135
+      ],
+      "controlB": [
+        5.8421276556061095,
+        -109.2890900809125
+      ],
+      "target": [
+        0,
+        -102
+      ],
+      "curveSeed": 0.2734317659742347,
+      "curveLength": 30.013896268422076,
+      "sourceChapter": "The First Wood",
+      "targetChapter": "The Thorned House",
+      "sourceY": 0,
+      "targetY": -0.5,
+      "crownRamp": false,
+      "minX": -24,
+      "maxX": 42,
+      "minZ": -150,
+      "maxZ": -78
+    },
+    {
+      "source": [
+        18,
+        -126
+      ],
+      "controlA": [
+        13.710850359419837,
+        -130.1814846949544
+      ],
+      "controlB": [
+        6.685860143647602,
+        -132.11002545397605
+      ],
+      "target": [
+        3.195,
+        -137.118
+      ],
+      "curveSeed": 0.33586477084824107,
+      "curveLength": 18.629021577942943,
+      "sourceChapter": "The First Wood",
+      "targetChapter": "The Blue Moon Archive",
+      "sourceY": 0,
+      "targetY": 0,
+      "crownRamp": false,
+      "minX": -20.805,
+      "maxX": 42,
+      "minZ": -161.118,
+      "maxZ": -102
+    },
+    {
+      "source": [
+        0,
+        -102
+      ],
+      "controlA": [
+        -4.642727090829038,
+        -93.17209819262229
+      ],
+      "controlB": [
+        -10.007503897832446,
+        -86.40608019391757
+      ],
+      "target": [
+        -14,
+        -78
+      ],
+      "curveSeed": 1.9942103894400458,
+      "curveLength": 27.798633718367114,
+      "sourceChapter": "The Thorned House",
+      "targetChapter": "The Blue Moon Archive",
+      "sourceY": -0.5,
+      "targetY": -0.5,
+      "crownRamp": false,
+      "minX": -38,
+      "maxX": 24,
+      "minZ": -126,
+      "maxZ": -54
+    },
+    {
+      "source": [
+        0,
+        -102
+      ],
+      "controlA": [
+        5.089824138980814,
+        -100.01464319565902
+      ],
+      "controlB": [
+        10.793701228190567,
+        -93.2491270834181
+      ],
+      "target": [
+        16.55,
+        -92.349
+      ],
+      "curveSeed": 1.9712313464708773,
+      "curveLength": 19.29891013001257,
+      "sourceChapter": "The Thorned House",
+      "targetChapter": "The Thorned House",
+      "sourceY": -0.5,
+      "targetY": -0.5,
+      "crownRamp": false,
+      "minX": -24,
+      "maxX": 40.55,
+      "minZ": -126,
+      "maxZ": -68.349
+    },
+    {
+      "source": [
+        16.55,
+        -92.349
+      ],
+      "controlA": [
+        18.019851007342982,
+        -91.33027295619354
+      ],
+      "controlB": [
+        20.114928844513265,
+        -90.3063736376396
+      ],
+      "target": [
+        21.905,
+        -89.228
+      ],
+      "curveSeed": 0.6120429107044092,
+      "curveLength": 6.200012265023279,
+      "sourceChapter": "The Thorned House",
+      "targetChapter": "The Mirror Clearing",
+      "sourceY": -0.5,
+      "targetY": -0.5,
+      "crownRamp": false,
+      "minX": -7.449999999999999,
+      "maxX": 45.905,
+      "minZ": -116.349,
+      "maxZ": -65.228
+    },
+    {
+      "source": [
+        -14,
+        -78
+      ],
+      "controlA": [
+        -13.70624395102281,
+        -68.72222911930979
+      ],
+      "controlB": [
+        -8.06832520686879,
+        -59.15170025534836
+      ],
+      "target": [
+        -6,
+        -50
+      ],
+      "curveSeed": 0.9082800182086789,
+      "curveLength": 29.22161839553458,
+      "sourceChapter": "The Blue Moon Archive",
+      "targetChapter": "The First Wood",
+      "sourceY": -0.5,
+      "targetY": 0,
+      "crownRamp": false,
+      "minX": -38,
+      "maxX": 18,
+      "minZ": -102,
+      "maxZ": -26
+    },
+    {
+      "source": [
+        -14,
+        -78
+      ],
+      "controlA": [
+        -15.233113506890422,
+        -76.82396941314337
+      ],
+      "controlB": [
+        -17.069252855554705,
+        -77.39224386358919
+      ],
+      "target": [
+        -18.616,
+        -76.683
+      ],
+      "curveSeed": 0.1588223377050936,
+      "curveLength": 4.874165635520305,
+      "sourceChapter": "The Blue Moon Archive",
+      "targetChapter": "The Mirror Clearing",
+      "sourceY": -0.5,
+      "targetY": -0.5,
+      "crownRamp": false,
+      "minX": -42.616,
+      "maxX": 10,
+      "minZ": -102,
+      "maxZ": -52.68300000000001
+    },
+    {
+      "source": [
+        -6,
+        -50
+      ],
+      "controlA": [
+        -1.7239002850840022,
+        -42.53996527753995
+      ],
+      "controlB": [
+        3.1447571298931,
+        -32.06417411747916
+      ],
+      "target": [
+        8,
+        -24
+      ],
+      "curveSeed": 0.9078894946295254,
+      "curveLength": 29.53383490307247,
+      "sourceChapter": "The First Wood",
+      "targetChapter": "The Thorned House",
+      "sourceY": 0,
+      "targetY": 1,
+      "crownRamp": true,
+      "minX": -30,
+      "maxX": 32,
+      "minZ": -74,
+      "maxZ": 0
+    },
+    {
+      "source": [
+        -6,
+        -50
+      ],
+      "controlA": [
+        -11.107426614843758,
+        -46.31323972876938
+      ],
+      "controlB": [
+        -19.153476175715753,
+        -44.14718364605247
+      ],
+      "target": [
+        -24.204,
+        -40.199
+      ],
+      "curveSeed": 1.9314200752095412,
+      "curveLength": 20.716348211272535,
+      "sourceChapter": "The First Wood",
+      "targetChapter": "The First Wood",
+      "sourceY": 0,
+      "targetY": 0,
+      "crownRamp": false,
+      "minX": -48.204,
+      "maxX": 18,
+      "minZ": -74,
+      "maxZ": -16.198999999999998
+    },
+    {
+      "source": [
+        8,
+        -24
+      ],
+      "controlA": [
+        10.759428114131623,
+        -16.377475631522227
+      ],
+      "controlB": [
+        14.634666495788082,
+        -5.180792882834278
+      ],
+      "target": [
+        18,
+        2
+      ],
+      "curveSeed": 1.602799195145629,
+      "curveLength": 27.86566143098027,
+      "sourceChapter": "The Thorned House",
+      "targetChapter": "The Fire and River",
+      "sourceY": 1,
+      "targetY": 0,
+      "crownRamp": true,
+      "minX": -16,
+      "maxX": 42,
+      "minZ": -48,
+      "maxZ": 26
+    },
+    {
+      "source": [
+        8,
+        -24
+      ],
+      "controlA": [
+        12.495694145529843,
+        -26.867586896385752
+      ],
+      "controlB": [
+        17.703339552851972,
+        -27.044227638378945
+      ],
+      "target": [
+        22.037,
+        -29.397
+      ],
+      "curveSeed": 1.5871053233682668,
+      "curveLength": 15.08571408806559,
+      "sourceChapter": "The Thorned House",
+      "targetChapter": "The Fire and River",
+      "sourceY": 1,
+      "targetY": 1,
+      "crownRamp": false,
+      "minX": -16,
+      "maxX": 46.037,
+      "minZ": -53.397,
+      "maxZ": 0
+    },
+    {
+      "source": [
+        22.037,
+        -29.397
+      ],
+      "controlA": [
+        23.624638185227834,
+        -29.704431260914905
+      ],
+      "controlB": [
+        25.218917849927138,
+        -30.23506320099234
+      ],
+      "target": [
+        26.665,
+        -31.177
+      ],
+      "curveSeed": 1.4248581707593324,
+      "curveLength": 4.989859946253039,
+      "sourceChapter": "The Fire and River",
+      "targetChapter": "The Thorned House",
+      "sourceY": 1,
+      "targetY": 1,
+      "crownRamp": false,
+      "minX": -1.963000000000001,
+      "maxX": 50.665,
+      "minZ": -55.177,
+      "maxZ": -5.3969999999999985
+    },
+    {
+      "source": [
+        18,
+        2
+      ],
+      "controlA": [
+        15.497772154480923,
+        11.450536428671088
+      ],
+      "controlB": [
+        7.895184643034889,
+        18.483559750721586
+      ],
+      "target": [
+        6,
+        28
+      ],
+      "curveSeed": 0.8243080451266412,
+      "curveLength": 28.762024674019454,
+      "sourceChapter": "The Fire and River",
+      "targetChapter": "The Thorned House",
+      "sourceY": 0,
+      "targetY": 0,
+      "crownRamp": false,
+      "minX": -18,
+      "maxX": 42,
+      "minZ": -22,
+      "maxZ": 52
+    },
+    {
+      "source": [
+        6,
+        28
+      ],
+      "controlA": [
+        3.4185816153067132,
+        37.71817253294583
+      ],
+      "controlB": [
+        -3.578451648425794,
+        44.857168899128894
+      ],
+      "target": [
+        -8,
+        54
+      ],
+      "curveSeed": 0.9025034182250982,
+      "curveLength": 29.633503257878356,
+      "sourceChapter": "The Thorned House",
+      "targetChapter": "The Thorned House",
+      "sourceY": 0,
+      "targetY": 0,
+      "crownRamp": false,
+      "minX": -32,
+      "maxX": 30,
+      "minZ": 4,
+      "maxZ": 78
+    },
+    {
+      "source": [
+        6,
+        28
+      ],
+      "controlA": [
+        1.7676130411818316,
+        23.89857581596565
+      ],
+      "controlB": [
+        -5.44803446547218,
+        21.576764614462093
+      ],
+      "target": [
+        -10.504,
+        19.111
+      ],
+      "curveSeed": 1.6998891405295065,
+      "curveLength": 18.837768330872212,
+      "sourceChapter": "The Thorned House",
+      "targetChapter": "The Mirror Clearing",
+      "sourceY": 0,
+      "targetY": 0,
+      "crownRamp": false,
+      "minX": -34.504,
+      "maxX": 30,
+      "minZ": -4.888999999999999,
+      "maxZ": 52
+    },
+    {
+      "source": [
+        -10.504,
+        19.111
+      ],
+      "controlA": [
+        -12.733327608061561,
+        18.940638291749117
+      ],
+      "controlB": [
+        -13.63935523855984,
+        16.980085266479538
+      ],
+      "target": [
+        -15.597,
+        16.367
+      ],
+      "curveSeed": 1.7077018281946432,
+      "curveLength": 5.864686236488079,
+      "sourceChapter": "The Mirror Clearing",
+      "targetChapter": "The Thorned House",
+      "sourceY": 0,
+      "targetY": 0,
+      "crownRamp": false,
+      "minX": -39.597,
+      "maxX": 13.496,
+      "minZ": -7.632999999999999,
+      "maxZ": 43.111000000000004
+    },
+    {
+      "source": [
+        -8,
+        54
+      ],
+      "controlA": [
+        -9.670774854460777,
+        64.50401839451801
+      ],
+      "controlB": [
+        -15.522448203055287,
+        73.89283554440736
+      ],
+      "target": [
+        -18,
+        82
+      ],
+      "curveSeed": 0.10128665487341892,
+      "curveLength": 29.80205263959127,
+      "sourceChapter": "The Thorned House",
+      "targetChapter": "The Fire and River",
+      "sourceY": 0,
+      "targetY": 0,
+      "crownRamp": false,
+      "minX": -42,
+      "maxX": 16,
+      "minZ": 30,
+      "maxZ": 106
+    },
+    {
+      "source": [
+        -8,
+        54
+      ],
+      "controlA": [
+        -9.766246392184806,
+        54.28318186847946
+      ],
+      "controlB": [
+        -11.074804261801559,
+        52.75085563163913
+      ],
+      "target": [
+        -12.52,
+        52.386
+      ],
+      "curveSeed": 0.03090396944009884,
+      "curveLength": 4.884430328399227,
+      "sourceChapter": "The Thorned House",
+      "targetChapter": "The Crowned Return",
+      "sourceY": 0,
+      "targetY": 0,
+      "crownRamp": false,
+      "minX": -36.519999999999996,
+      "maxX": 16,
+      "minZ": 28.386000000000003,
+      "maxZ": 78.03347229609477
+    },
+    {
+      "source": [
+        -18,
+        82
+      ],
+      "controlA": [
+        -7.616631105819745,
+        89.1253994134697
+      ],
+      "controlB": [
+        2.2581922517099953,
+        101.97201117393607
+      ],
+      "target": [
+        14,
+        110
+      ],
+      "curveSeed": 0.2564663264232065,
+      "curveLength": 42.57447282045884,
+      "sourceChapter": "The Fire and River",
+      "targetChapter": "The Blue Moon Archive",
+      "sourceY": 0,
+      "targetY": -1,
+      "crownRamp": false,
+      "minX": -42,
+      "maxX": 38,
+      "minZ": 58,
+      "maxZ": 134
+    },
+    {
+      "source": [
+        -18,
+        82
+      ],
+      "controlA": [
+        -13.449519494435414,
+        78.22651706081824
+      ],
+      "controlB": [
+        -10.50494315050117,
+        73.3892084057666
+      ],
+      "target": [
+        -6.771,
+        69.165
+      ],
+      "curveSeed": 0.41724250531626983,
+      "curveLength": 17.083800067312758,
+      "sourceChapter": "The Fire and River",
+      "targetChapter": "The First Wood",
+      "sourceY": 0,
+      "targetY": 0,
+      "crownRamp": false,
+      "minX": -42,
+      "maxX": 17.229,
+      "minZ": 45.165000000000006,
+      "maxZ": 106
+    },
+    {
+      "source": [
+        -6.771,
+        69.165
+      ],
+      "controlA": [
+        -6.069744108073063,
+        68.11178241315848
+      ],
+      "controlB": [
+        -4.84790823915983,
+        67.33874496182167
+      ],
+      "target": [
+        -4.076,
+        66.083
+      ],
+      "curveSeed": 1.432960398231149,
+      "curveLength": 4.103780624960285,
+      "sourceChapter": "The First Wood",
+      "targetChapter": "The Blue Moon Archive",
+      "sourceY": 0,
+      "targetY": 0,
+      "crownRamp": false,
+      "minX": -30.771,
+      "maxX": 19.924,
+      "minZ": 42.083,
+      "maxZ": 93.165
+    },
+    {
+      "source": [
+        -4.076,
+        66.083
+      ],
+      "controlA": [
+        -2.8308564575574513,
+        65.31648143036884
+      ],
+      "controlB": [
+        -2.510769424369076,
+        63.83514483282726
+      ],
+      "target": [
+        -1.381,
+        63.002
+      ],
+      "curveSeed": 1.4185580613178006,
+      "curveLength": 4.123972971687576,
+      "sourceChapter": "The Blue Moon Archive",
+      "targetChapter": "The Blue Moon Archive",
+      "sourceY": 0,
+      "targetY": 0,
+      "crownRamp": false,
+      "minX": -28.076,
+      "maxX": 22.619,
+      "minZ": 39.002,
+      "maxZ": 90.083
+    },
+    {
+      "source": [
+        14,
+        110
+      ],
+      "controlA": [
+        11.139060539561079,
+        120.10775747391244
+      ],
+      "controlB": [
+        4.648577842483931,
+        129.17603311235732
+      ],
+      "target": [
+        0,
+        138
+      ],
+      "curveSeed": 0.2252155757626591,
+      "curveLength": 31.383263202041505,
+      "sourceChapter": "The Blue Moon Archive",
+      "targetChapter": "The Crowned Return",
+      "sourceY": -1,
+      "targetY": 0,
+      "crownRamp": false,
+      "minX": -24,
+      "maxX": 38,
+      "minZ": 86,
+      "maxZ": 162
+    },
+    {
+      "source": [
+        14,
+        110
+      ],
+      "controlA": [
+        6.966093730971554,
+        107.64176886653445
+      ],
+      "controlB": [
+        -0.872050690203892,
+        103.1967396721264
+      ],
+      "target": [
+        -6.406,
+        99.786
+      ],
+      "curveSeed": 0.26427901408834337,
+      "curveLength": 22.865439839346326,
+      "sourceChapter": "The Blue Moon Archive",
+      "targetChapter": "The Fire and River",
+      "sourceY": -1,
+      "targetY": -1,
+      "crownRamp": false,
+      "minX": -30.406,
+      "maxX": 38,
+      "minZ": 75.786,
+      "maxZ": 134
+    },
+    {
+      "source": [
+        0,
+        138
+      ],
+      "controlA": [
+        -2.5397764728716288,
+        145.64369487613163
+      ],
+      "controlB": [
+        -0.45719645829203737,
+        156.5735125803021
+      ],
+      "target": [
+        -4,
+        166
+      ],
+      "curveSeed": 1.8648309488151367,
+      "curveLength": 28.393595638055416,
+      "sourceChapter": "The Crowned Return",
+      "targetChapter": "The Crowned Return",
+      "sourceY": 0,
+      "targetY": 0,
+      "crownRamp": false,
+      "minX": -28,
+      "maxX": 24,
+      "minZ": 114,
+      "maxZ": 190
+    },
+    {
+      "source": [
+        -4,
+        166
+      ],
+      "controlA": [
+        -1.1077696323618607,
+        174.72520923655048
+      ],
+      "controlB": [
+        6.481086486017037,
+        182.70706027554525
+      ],
+      "target": [
+        10,
+        190
+      ],
+      "curveSeed": 0.48451396752359066,
+      "curveLength": 27.857974182628794,
+      "sourceChapter": "The Crowned Return",
+      "targetChapter": "The Mirror Clearing",
+      "sourceY": 0,
+      "targetY": 0,
+      "crownRamp": false,
+      "minX": -28,
+      "maxX": 34,
+      "minZ": 142,
+      "maxZ": 214
+    },
+    {
+      "source": [
+        -4,
+        166
+      ],
+      "controlA": [
+        1.5304109354811701,
+        159.5969298891612
+      ],
+      "controlB": [
+        9.71416844556189,
+        158.81922244221516
+      ],
+      "target": [
+        16.319,
+        154.147
+      ],
+      "curveSeed": 0.6377469346103012,
+      "curveLength": 23.699826751749626,
+      "sourceChapter": "The Crowned Return",
+      "targetChapter": "The Blue Moon Archive",
+      "sourceY": 0,
+      "targetY": 0,
+      "crownRamp": false,
+      "minX": -28,
+      "maxX": 40.319,
+      "minZ": 130.147,
+      "maxZ": 190
+    },
+    {
+      "source": [
+        10,
+        190
+      ],
+      "controlA": [
+        4.09021811144023,
+        197.93003728675558
+      ],
+      "controlB": [
+        -4.841833581308631,
+        204.95127375954826
+      ],
+      "target": [
+        -10,
+        214
+      ],
+      "curveSeed": 0.4454505291979064,
+      "curveLength": 31.3011507804332,
+      "sourceChapter": "The Mirror Clearing",
+      "targetChapter": "The Crowned Return",
+      "sourceY": 0,
+      "targetY": 0,
+      "crownRamp": false,
+      "minX": -34,
+      "maxX": 34,
+      "minZ": 166,
+      "maxZ": 238
+    },
+    {
+      "source": [
+        10,
+        190
+      ],
+      "controlA": [
+        8.997341224687862,
+        188.94574201886914
+      ],
+      "controlB": [
+        7.068575402882286,
+        188.32282764959544
+      ],
+      "target": [
+        6.313,
+        186.926
+      ],
+      "curveSeed": 0.45978637200770267,
+      "curveLength": 4.841356430512196,
+      "sourceChapter": "The Mirror Clearing",
+      "targetChapter": "The Mirror Clearing",
+      "sourceY": 0,
+      "targetY": 0,
+      "crownRamp": false,
+      "minX": -17.687,
+      "maxX": 34,
+      "minZ": 162.926,
+      "maxZ": 214
+    },
+    {
+      "source": [
+        -10,
+        214
+      ],
+      "controlA": [
+        -5.716549118221117,
+        221.71554670296047
+      ],
+      "controlB": [
+        -2.795983336024254,
+        233.54277207352337
+      ],
+      "target": [
+        0,
+        242
+      ],
+      "curveSeed": 1.1652863566602052,
+      "curveLength": 29.780003801812548,
+      "sourceChapter": "The Crowned Return",
+      "targetChapter": "The Blue Moon Archive",
+      "sourceY": 0,
+      "targetY": 1,
+      "crownRamp": true,
+      "minX": -34,
+      "maxX": 24,
+      "minZ": 190,
+      "maxZ": 266
+    },
+    {
+      "source": [
+        0,
+        242
+      ],
+      "controlA": [
+        -3.9047599021535664,
+        249.65618408586454
+      ],
+      "controlB": [
+        -9.490737912362254,
+        258.37424600984434
+      ],
+      "target": [
+        -14,
+        268
+      ],
+      "curveSeed": 1.3288340015936801,
+      "curveLength": 29.536113954336212,
+      "sourceChapter": "The Blue Moon Archive",
+      "targetChapter": "The Mirror Clearing",
+      "sourceY": 1,
+      "targetY": 6,
+      "crownRamp": true,
+      "minX": -38,
+      "maxX": 24,
+      "minZ": 218,
+      "maxZ": 292
+    },
+    {
+      "source": [
+        0,
+        242
+      ],
+      "controlA": [
+        -1.6290080977275698,
+        241.83851209223852
+      ],
+      "controlB": [
+        -2.6111819552708893,
+        240.3638583597294
+      ],
+      "target": [
+        -4.226,
+        239.724
+      ],
+      "curveSeed": 0.12092259625015901,
+      "curveLength": 4.847170440332236,
+      "sourceChapter": "The Blue Moon Archive",
+      "targetChapter": "The Mirror Clearing",
+      "sourceY": 1,
+      "targetY": 1,
+      "crownRamp": false,
+      "minX": -28.226,
+      "maxX": 24,
+      "minZ": 215.724,
+      "maxZ": 266
+    },
+    {
+      "source": [
+        -14,
+        268
+      ],
+      "controlA": [
+        -5.654849512684536,
+        277.3904836004375
+      ],
+      "controlB": [
+        1.6646626994194778,
+        284.3895880310329
+      ],
+      "target": [
+        10,
+        294
+      ],
+      "curveSeed": 1.3370372128379704,
+      "curveLength": 35.386333317904544,
+      "sourceChapter": "The Mirror Clearing",
+      "targetChapter": "The Thorned House",
+      "sourceY": 6,
+      "targetY": 12,
+      "crownRamp": true,
+      "minX": -38,
+      "maxX": 34,
+      "minZ": 244,
+      "maxZ": 318
+    },
+    {
+      "source": [
+        10,
+        294
+      ],
+      "controlA": [
+        7.888284704426414,
+        301.88070114098525
+      ],
+      "controlB": [
+        0.6875086701312441,
+        312.2898345500556
+      ],
+      "target": [
+        -2,
+        320
+      ],
+      "curveSeed": 0.8750562159694062,
+      "curveLength": 28.679571702010477,
+      "sourceChapter": "The Thorned House",
+      "targetChapter": "The Crowned Return",
+      "sourceY": 12,
+      "targetY": 18,
+      "crownRamp": true,
+      "minX": -26,
+      "maxX": 34,
+      "minZ": 270,
+      "maxZ": 344
+    },
+    {
+      "source": [
+        -2,
+        320
+      ],
+      "controlA": [
+        1.451711442489295,
+        328.26099144117535
+      ],
+      "controlB": [
+        3.203574465592807,
+        338.8565309561236
+      ],
+      "target": [
+        6,
+        346
+      ],
+      "curveSeed": 1.4155832521689977,
+      "curveLength": 27.221449854092008,
+      "sourceChapter": "The Crowned Return",
+      "targetChapter": "The Blue Moon Archive",
+      "sourceY": 18,
+      "targetY": 22,
+      "crownRamp": true,
+      "minX": -26,
+      "maxX": 30,
+      "minZ": 296,
+      "maxZ": 370
+    },
+    {
+      "source": [
+        -2,
+        320
+      ],
+      "controlA": [
+        -3.361755714711916,
+        321.3111357679544
+      ],
+      "controlB": [
+        -5.473356195701191,
+        320.21801646634657
+      ],
+      "target": [
+        -6.588,
+        321.409
+      ],
+      "curveSeed": 0.4784378723606644,
+      "curveLength": 4.92657479574657,
+      "sourceChapter": "The Crowned Return",
+      "targetChapter": "The Blue Moon Archive",
+      "sourceY": 18,
+      "targetY": 18,
+      "crownRamp": false,
+      "minX": -30.588,
+      "maxX": 22,
+      "minZ": 296,
+      "maxZ": 345.409
+    },
+    {
+      "source": [
+        6,
+        346
+      ],
+      "controlA": [
+        2.601915923249179,
+        353.135169138712
+      ],
+      "controlB": [
+        -4.570361800476654,
+        362.6241067212628
+      ],
+      "target": [
+        -8,
+        370
+      ],
+      "curveSeed": 0.3220605097348152,
+      "curveLength": 27.801858795888933,
+      "sourceChapter": "The Blue Moon Archive",
+      "targetChapter": "The Blue Moon Archive",
+      "sourceY": 22,
+      "targetY": 24,
+      "crownRamp": true,
+      "minX": -32,
+      "maxX": 30,
+      "minZ": 322,
+      "maxZ": 394
+    },
+    {
+      "source": [
+        6,
+        346
+      ],
+      "controlA": [
+        4.517177536874837,
+        345.1587825176786
+      ],
+      "controlB": [
+        3.154846272159885,
+        344.6149652580152
+      ],
+      "target": [
+        1.854,
+        343.582
+      ],
+      "curveSeed": 1.3921451891735872,
+      "curveLength": 4.806870633405776,
+      "sourceChapter": "The Blue Moon Archive",
+      "targetChapter": "The Crowned Return",
+      "sourceY": 22,
+      "targetY": 22,
+      "crownRamp": false,
+      "minX": -22.146,
+      "maxX": 30,
+      "minZ": 319.582,
+      "maxZ": 370
+    },
+    {
+      "source": [
+        -8,
+        370
+      ],
+      "controlA": [
+        -1.4673065249114,
+        376.566326285543
+      ],
+      "controlB": [
+        3.2963276397624353,
+        385.72736696795465
+      ],
+      "target": [
+        10,
+        394
+      ],
+      "curveSeed": 1.234467625261502,
+      "curveLength": 30.032270195607943,
+      "sourceChapter": "The Blue Moon Archive",
+      "targetChapter": "The Blue Moon Archive",
+      "sourceY": 24,
+      "targetY": 26,
+      "crownRamp": true,
+      "minX": -32,
+      "maxX": 34,
+      "minZ": 346,
+      "maxZ": 418
+    },
+    {
+      "source": [
+        -8,
+        370
+      ],
+      "controlA": [
+        -14.43452343562382,
+        375.7824538191612
+      ],
+      "controlB": [
+        -20.81336279580352,
+        379.8432323897335
+      ],
+      "target": [
+        -27.426,
+        384.582
+      ],
+      "curveSeed": 1.8359660868700436,
+      "curveLength": 24.30638945737213,
+      "sourceChapter": "The Blue Moon Archive",
+      "targetChapter": "The Mirror Clearing",
+      "sourceY": 24,
+      "targetY": 24,
+      "crownRamp": false,
+      "minX": -51.426,
+      "maxX": 16,
+      "minZ": 346,
+      "maxZ": 408.582
+    },
+    {
+      "source": [
+        10,
+        394
+      ],
+      "controlA": [
+        5.3604597949016,
+        401.2438812819913
+      ],
+      "controlB": [
+        3.578068454811443,
+        409.98814062464567
+      ],
+      "target": [
+        0,
+        416
+      ],
+      "curveSeed": 0.10116848121451609,
+      "curveLength": 24.205690055224725,
+      "sourceChapter": "The Blue Moon Archive",
+      "targetChapter": "The Fire and River",
+      "sourceY": 26,
+      "targetY": 30,
+      "crownRamp": true,
+      "minX": -24,
+      "maxX": 34,
+      "minZ": 370,
+      "maxZ": 440
+    },
+    {
+      "source": [
+        0,
+        416
+      ],
+      "controlA": [
+        -1.7555400208625613,
+        415.9755551905076
+      ],
+      "controlB": [
+        -3.2272765044630587,
+        414.7732104038493
+      ],
+      "target": [
+        -4.369,
+        414.012
+      ],
+      "curveSeed": 1.4040845564585573,
+      "curveLength": 4.876483999141919,
+      "sourceChapter": "The Fire and River",
+      "targetChapter": "The Fire and River",
+      "sourceY": 30,
+      "targetY": 30,
+      "crownRamp": false,
+      "minX": -28.369,
+      "maxX": 24,
+      "minZ": 390.012,
+      "maxZ": 440
+    },
+    {
+      "source": [
+        -4.369,
+        414.012
+      ],
+      "controlA": [
+        -2.162563292938221,
+        416.3772833499055
+      ],
+      "controlB": [
+        1.624060912336871,
+        417.25370557377016
+      ],
+      "target": [
+        4.369,
+        417.988
+      ],
+      "curveSeed": 0.7178206689273103,
+      "curveLength": 9.729323522720447,
+      "sourceChapter": "The Fire and River",
+      "targetChapter": "The Thorned House",
+      "sourceY": 30,
+      "targetY": 30,
+      "crownRamp": false,
+      "minX": -28.369,
+      "maxX": 28.369,
+      "minZ": 390.012,
+      "maxZ": 441.988
+    },
+    {
+      "source": [
+        4.369,
+        417.988
+      ],
+      "controlA": [
+        0.28480522469704894,
+        418.86914682411464
+      ],
+      "controlB": [
+        -3.4119096426330158,
+        415.938926915198
+      ],
+      "target": [
+        -6.981,
+        414.24
+      ],
+      "curveSeed": 0.7334460442575841,
+      "curveLength": 12.217938033415816,
+      "sourceChapter": "The Thorned House",
+      "targetChapter": "The Fire and River",
+      "sourceY": 30,
+      "targetY": 30,
+      "crownRamp": false,
+      "minX": -30.981,
+      "maxX": 28.369,
+      "minZ": 390.24,
+      "maxZ": 442.1442677929497
+    }
+  ],
+  "clearings": [
+    {
+      "id": "fragment-001",
+      "chapter": "The First Wood",
+      "position": [
+        0,
+        -4,
+        -378
+      ],
+      "radius": 13.36,
+      "biome": "firstWood",
+      "elevated": false
+    },
+    {
+      "id": "fragment-002",
+      "chapter": "The First Wood",
+      "position": [
+        -4.553,
+        -4,
+        -379.519
+      ],
+      "radius": 3.6,
+      "biome": "firstWood",
+      "elevated": false
+    },
+    {
+      "id": "fragment-003",
+      "chapter": "The First Wood",
+      "position": [
+        -21.656,
+        0,
+        -343.75
+      ],
+      "radius": 3.6,
+      "biome": "firstWood",
+      "elevated": false
+    },
+    {
+      "id": "fragment-004",
+      "chapter": "The First Wood",
+      "position": [
+        -6.771,
+        0,
+        69.165
+      ],
+      "radius": 3.6,
+      "biome": "fireRiver",
+      "elevated": false
+    },
+    {
+      "id": "fragment-005",
+      "chapter": "The First Wood",
+      "position": [
+        -6,
+        0,
+        -50
+      ],
+      "radius": 16.12,
+      "biome": "thorned",
+      "elevated": false
+    },
+    {
+      "id": "fragment-006",
+      "chapter": "The First Wood",
+      "position": [
+        -6,
+        0,
+        -306
+      ],
+      "radius": 11.52,
+      "biome": "firstWood",
+      "elevated": false
+    },
+    {
+      "id": "fragment-007",
+      "chapter": "The First Wood",
+      "position": [
+        -24.204,
+        0,
+        -40.199
+      ],
+      "radius": 3.6,
+      "biome": "thorned",
+      "elevated": false
+    },
+    {
+      "id": "fragment-008",
+      "chapter": "The First Wood",
+      "position": [
+        -8,
+        0,
+        -354
+      ],
+      "radius": 11.52,
+      "biome": "firstWood",
+      "elevated": false
+    },
+    {
+      "id": "fragment-009",
+      "chapter": "The First Wood",
+      "position": [
+        -21.742,
+        0,
+        -310.495
+      ],
+      "radius": 3.6,
+      "biome": "firstWood",
+      "elevated": false
+    },
+    {
+      "id": "fragment-010",
+      "chapter": "The First Wood",
+      "position": [
+        10,
+        1,
+        -330
+      ],
+      "radius": 14.28,
+      "biome": "firstWood",
+      "elevated": true
+    },
+    {
+      "id": "fragment-011",
+      "chapter": "The First Wood",
+      "position": [
+        18,
+        0,
+        -126
+      ],
+      "radius": 13.36,
+      "biome": "mirror",
+      "elevated": false
+    },
+    {
+      "id": "fragment-012",
+      "chapter": "The Mirror Clearing",
+      "position": [
+        27.177,
+        1,
+        -318.551
+      ],
+      "radius": 3.6,
+      "biome": "firstWood",
+      "elevated": true
+    },
+    {
+      "id": "fragment-013",
+      "chapter": "The Mirror Clearing",
+      "position": [
+        -18.616,
+        -0.5,
+        -76.683
+      ],
+      "radius": 3.6,
+      "biome": "mirror",
+      "elevated": false
+    },
+    {
+      "id": "fragment-014",
+      "chapter": "The Mirror Clearing",
+      "position": [
+        -8.003,
+        1,
+        -210.671
+      ],
+      "radius": 3.6,
+      "biome": "firstWood",
+      "elevated": true
+    },
+    {
+      "id": "fragment-015",
+      "chapter": "The Mirror Clearing",
+      "position": [
+        -4.226,
+        1,
+        239.724
+      ],
+      "radius": 3.6,
+      "biome": "crowned",
+      "elevated": true
+    },
+    {
+      "id": "fragment-016",
+      "chapter": "The Mirror Clearing",
+      "position": [
+        6.313,
+        0,
+        186.926
+      ],
+      "radius": 3.6,
+      "biome": "firstWood",
+      "elevated": false
+    },
+    {
+      "id": "fragment-017",
+      "chapter": "The Mirror Clearing",
+      "position": [
+        8,
+        1,
+        -200
+      ],
+      "radius": 14.28,
+      "biome": "firstWood",
+      "elevated": true
+    },
+    {
+      "id": "fragment-018",
+      "chapter": "The Mirror Clearing",
+      "position": [
+        10,
+        0,
+        190
+      ],
+      "radius": 16.12,
+      "biome": "firstWood",
+      "elevated": false
+    },
+    {
+      "id": "fragment-019",
+      "chapter": "The Mirror Clearing",
+      "position": [
+        -27.426,
+        24,
+        384.582
+      ],
+      "radius": 3.6,
+      "biome": "crowned",
+      "elevated": true
+    },
+    {
+      "id": "fragment-020",
+      "chapter": "The Mirror Clearing",
+      "position": [
+        21.905,
+        -0.5,
+        -89.228
+      ],
+      "radius": 3.6,
+      "biome": "mirror",
+      "elevated": false
+    },
+    {
+      "id": "fragment-021",
+      "chapter": "The Mirror Clearing",
+      "position": [
+        -10.504,
+        0,
+        19.111
+      ],
+      "radius": 3.6,
+      "biome": "mirror",
+      "elevated": false
+    },
+    {
+      "id": "fragment-022",
+      "chapter": "The Mirror Clearing",
+      "position": [
+        -14,
+        6,
+        268
+      ],
+      "radius": 14.28,
+      "biome": "crowned",
+      "elevated": true
+    },
+    {
+      "id": "fragment-023",
+      "chapter": "The Thorned House",
+      "position": [
+        -16.97,
+        -0.25,
+        -242.335
+      ],
+      "radius": 3.6,
+      "biome": "archive",
+      "elevated": false
+    },
+    {
+      "id": "fragment-024",
+      "chapter": "The Thorned House",
+      "position": [
+        -15.597,
+        0,
+        16.367
+      ],
+      "radius": 3.6,
+      "biome": "mirror",
+      "elevated": false
+    },
+    {
+      "id": "fragment-025",
+      "chapter": "The Thorned House",
+      "position": [
+        0,
+        -0.5,
+        -102
+      ],
+      "radius": 17.96,
+      "biome": "mirror",
+      "elevated": false
+    },
+    {
+      "id": "fragment-026",
+      "chapter": "The Thorned House",
+      "position": [
+        -8,
+        1,
+        -176
+      ],
+      "radius": 12.44,
+      "biome": "firstWood",
+      "elevated": true
+    },
+    {
+      "id": "fragment-027",
+      "chapter": "The Thorned House",
+      "position": [
+        6,
+        0,
+        28
+      ],
+      "radius": 17.96,
+      "biome": "mirror",
+      "elevated": false
+    },
+    {
+      "id": "fragment-028",
+      "chapter": "The Thorned House",
+      "position": [
+        -8,
+        0,
+        54
+      ],
+      "radius": 19.8,
+      "biome": "mirror",
+      "elevated": false
+    },
+    {
+      "id": "fragment-029",
+      "chapter": "The Thorned House",
+      "position": [
+        16.55,
+        -0.5,
+        -92.349
+      ],
+      "radius": 3.6,
+      "biome": "mirror",
+      "elevated": false
+    },
+    {
+      "id": "fragment-030",
+      "chapter": "The Thorned House",
+      "position": [
+        10,
+        12,
+        294
+      ],
+      "radius": 16.12,
+      "biome": "crowned",
+      "elevated": true
+    },
+    {
+      "id": "fragment-031",
+      "chapter": "The Thorned House",
+      "position": [
+        26.665,
+        1,
+        -31.177
+      ],
+      "radius": 3.6,
+      "biome": "thorned",
+      "elevated": true
+    },
+    {
+      "id": "fragment-032",
+      "chapter": "The Thorned House",
+      "position": [
+        8,
+        1,
+        -24
+      ],
+      "radius": 14.28,
+      "biome": "thorned",
+      "elevated": true
+    },
+    {
+      "id": "fragment-033",
+      "chapter": "The Thorned House",
+      "position": [
+        4.369,
+        30,
+        417.988
+      ],
+      "radius": 3.6,
+      "biome": "crowned",
+      "elevated": true
+    },
+    {
+      "id": "fragment-034",
+      "chapter": "The Blue Moon Archive",
+      "position": [
+        14,
+        -1,
+        110
+      ],
+      "radius": 17.96,
+      "biome": "fireRiver",
+      "elevated": false
+    },
+    {
+      "id": "fragment-035",
+      "chapter": "The Blue Moon Archive",
+      "position": [
+        6,
+        22,
+        346
+      ],
+      "radius": 17.96,
+      "biome": "crowned",
+      "elevated": true
+    },
+    {
+      "id": "fragment-036",
+      "chapter": "The Blue Moon Archive",
+      "position": [
+        -1.381,
+        0,
+        63.002
+      ],
+      "radius": 3.6,
+      "biome": "fireRiver",
+      "elevated": false
+    },
+    {
+      "id": "fragment-037",
+      "chapter": "The Blue Moon Archive",
+      "position": [
+        16.319,
+        0,
+        154.147
+      ],
+      "radius": 3.6,
+      "biome": "firstWood",
+      "elevated": false
+    },
+    {
+      "id": "fragment-038",
+      "chapter": "The Blue Moon Archive",
+      "position": [
+        -8,
+        24,
+        370
+      ],
+      "radius": 21.64,
+      "biome": "crowned",
+      "elevated": true
+    },
+    {
+      "id": "fragment-039",
+      "chapter": "The Blue Moon Archive",
+      "position": [
+        3.195,
+        0,
+        -137.118
+      ],
+      "radius": 3.6,
+      "biome": "mirror",
+      "elevated": false
+    },
+    {
+      "id": "fragment-040",
+      "chapter": "The Blue Moon Archive",
+      "position": [
+        -14,
+        -0.5,
+        -78
+      ],
+      "radius": 15.2,
+      "biome": "mirror",
+      "elevated": false
+    },
+    {
+      "id": "fragment-041",
+      "chapter": "The Blue Moon Archive",
+      "position": [
+        -4.076,
+        0,
+        66.083
+      ],
+      "radius": 3.6,
+      "biome": "fireRiver",
+      "elevated": false
+    },
+    {
+      "id": "fragment-042",
+      "chapter": "The Blue Moon Archive",
+      "position": [
+        -6.588,
+        18,
+        321.409
+      ],
+      "radius": 3.6,
+      "biome": "crowned",
+      "elevated": true
+    },
+    {
+      "id": "fragment-043",
+      "chapter": "The Blue Moon Archive",
+      "position": [
+        0,
+        1,
+        242
+      ],
+      "radius": 17.96,
+      "biome": "crowned",
+      "elevated": true
+    },
+    {
+      "id": "fragment-044",
+      "chapter": "The Blue Moon Archive",
+      "position": [
+        10,
+        26,
+        394
+      ],
+      "radius": 17.96,
+      "biome": "crowned",
+      "elevated": true
+    },
+    {
+      "id": "fragment-045",
+      "chapter": "The Fire and River",
+      "position": [
+        -4.369,
+        30,
+        414.012
+      ],
+      "radius": 3.6,
+      "biome": "crowned",
+      "elevated": true
+    },
+    {
+      "id": "fragment-046",
+      "chapter": "The Fire and River",
+      "position": [
+        0,
+        30,
+        416
+      ],
+      "radius": 23.48,
+      "biome": "crowned",
+      "elevated": true
+    },
+    {
+      "id": "fragment-047",
+      "chapter": "The Fire and River",
+      "position": [
+        -6.981,
+        30,
+        414.24
+      ],
+      "radius": 3.6,
+      "biome": "crowned",
+      "elevated": true
+    },
+    {
+      "id": "fragment-048",
+      "chapter": "The Fire and River",
+      "position": [
+        22.037,
+        1,
+        -29.397
+      ],
+      "radius": 3.6,
+      "biome": "thorned",
+      "elevated": true
+    },
+    {
+      "id": "fragment-049",
+      "chapter": "The Fire and River",
+      "position": [
+        10.565,
+        -0.5,
+        -295.027
+      ],
+      "radius": 3.6,
+      "biome": "archive",
+      "elevated": false
+    },
+    {
+      "id": "fragment-050",
+      "chapter": "The Fire and River",
+      "position": [
+        31.665,
+        0,
+        -221.19
+      ],
+      "radius": 3.6,
+      "biome": "archive",
+      "elevated": false
+    },
+    {
+      "id": "fragment-051",
+      "chapter": "The Fire and River",
+      "position": [
+        4,
+        1,
+        -152
+      ],
+      "radius": 14.28,
+      "biome": "firstWood",
+      "elevated": true
+    },
+    {
+      "id": "fragment-052",
+      "chapter": "The Fire and River",
+      "position": [
+        -6.406,
+        -1,
+        99.786
+      ],
+      "radius": 3.6,
+      "biome": "fireRiver",
+      "elevated": false
+    },
+    {
+      "id": "fragment-053",
+      "chapter": "The Fire and River",
+      "position": [
+        -18,
+        0,
+        82
+      ],
+      "radius": 17.96,
+      "biome": "fireRiver",
+      "elevated": false
+    },
+    {
+      "id": "fragment-054",
+      "chapter": "The Fire and River",
+      "position": [
+        18,
+        0,
+        2
+      ],
+      "radius": 12.44,
+      "biome": "thorned",
+      "elevated": false
+    },
+    {
+      "id": "fragment-055",
+      "chapter": "The Fire and River",
+      "position": [
+        7.282,
+        1,
+        -183.65
+      ],
+      "radius": 3.6,
+      "biome": "firstWood",
+      "elevated": true
+    },
+    {
+      "id": "fragment-056",
+      "chapter": "The Crowned Return",
+      "position": [
+        -10,
+        0,
+        214
+      ],
+      "radius": 14.28,
+      "biome": "firstWood",
+      "elevated": false
+    },
+    {
+      "id": "fragment-057",
+      "chapter": "The Crowned Return",
+      "position": [
+        0,
+        0,
+        138
+      ],
+      "radius": 19.8,
+      "biome": "fireRiver",
+      "elevated": false
+    },
+    {
+      "id": "fragment-058",
+      "chapter": "The Crowned Return",
+      "position": [
+        4.792,
+        -0.5,
+        -291.024
+      ],
+      "radius": 3.6,
+      "biome": "archive",
+      "elevated": false
+    },
+    {
+      "id": "fragment-059",
+      "chapter": "The Crowned Return",
+      "position": [
+        -4,
+        0,
+        166
+      ],
+      "radius": 17.96,
+      "biome": "firstWood",
+      "elevated": false
+    },
+    {
+      "id": "fragment-060",
+      "chapter": "The Crowned Return",
+      "position": [
+        -14,
+        -0.5,
+        -278
+      ],
+      "radius": 21.64,
+      "biome": "archive",
+      "elevated": false
+    },
+    {
+      "id": "fragment-061",
+      "chapter": "The Crowned Return",
+      "position": [
+        -11.716,
+        -0.25,
+        -244.756
+      ],
+      "radius": 3.6,
+      "biome": "archive",
+      "elevated": false
+    },
+    {
+      "id": "fragment-062",
+      "chapter": "The Crowned Return",
+      "position": [
+        16,
+        0,
+        -226
+      ],
+      "radius": 12.44,
+      "biome": "archive",
+      "elevated": false
+    },
+    {
+      "id": "fragment-063",
+      "chapter": "The Crowned Return",
+      "position": [
+        4,
+        -0.25,
+        -252
+      ],
+      "radius": 16.12,
+      "biome": "archive",
+      "elevated": false
+    },
+    {
+      "id": "fragment-064",
+      "chapter": "The Crowned Return",
+      "position": [
+        -12.52,
+        0,
+        52.386
+      ],
+      "radius": 3.6,
+      "biome": "mirror",
+      "elevated": false
+    },
+    {
+      "id": "fragment-065",
+      "chapter": "The Crowned Return",
+      "position": [
+        1.854,
+        22,
+        343.582
+      ],
+      "radius": 3.6,
+      "biome": "crowned",
+      "elevated": true
+    },
+    {
+      "id": "fragment-066",
+      "chapter": "The Crowned Return",
+      "position": [
+        -2,
+        18,
+        320
+      ],
+      "radius": 16.12,
+      "biome": "crowned",
+      "elevated": true
+    }
+  ],
+  "samples": [
+    {
+      "x": 0,
+      "z": 0,
+      "depth": 0,
+      "pressure": 0,
+      "elevation": 0.3109520971775055
+    },
+    {
+      "x": 17,
+      "z": 4,
+      "depth": 0.35,
+      "pressure": 0.2,
+      "elevation": -0.02469373099332632
+    },
+    {
+      "x": -12,
+      "z": 25,
+      "depth": 0.7,
+      "pressure": 0.8,
+      "elevation": -0.019911228449538652
+    },
+    {
+      "x": 98,
+      "z": -27,
+      "depth": 1,
+      "pressure": 1,
+      "elevation": 0.12159493056147606
+    },
+    {
+      "x": -84,
+      "z": 71,
+      "depth": 0.4,
+      "pressure": 0.6,
+      "elevation": -0.007254867312000187
+    },
+    {
+      "x": 210,
+      "z": 145,
+      "depth": 0.75,
+      "pressure": 0.1,
+      "elevation": 0.05353680772836815
+    }
+  ]
+}

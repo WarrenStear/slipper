@@ -55,31 +55,38 @@ test("the master lantern and canvas own their render responsibilities", () => {
   assert.match(canvas, /<CanvasRendererController\b/);
   assert.doesNotMatch(atmosphere, /gl\.toneMapping|gl\.outputColorSpace/);
   assert.doesNotMatch(engine, /<WorldAtmosphere|<WorldLightingRig/);
-  assert.match(scene, /function CelestialMoon[\s\S]*<CelestialMoon/);
-  assert.match(scene, /FOREST_GROUND_ALBEDO_PATH/);
-  assert.match(scene, /FIRST_WOOD_PANORAMA_PATH/);
-  assert.match(scene, /FIRST_WOOD_DEPTH_PLATE_PATH/);
+  assert.match(read("src/world/atmosphere/CelestialMoon.tsx"), /function CelestialMoon/);
+  assert.match(read("src/world/atmosphere/SceneAtmosphere.tsx"), /<CelestialMoon/);
+  assert.match(scene, /from "\.\.\/\.\.\/world\/atmosphere\/SceneAtmosphere\.tsx"/);
+  assert.match(scene, /<SceneAtmosphere/);
+  assert.match(read("src/world/forest/useForestTextures.ts"), /FOREST_GROUND_ALBEDO_PATH/);
+  assert.match(read("src/world/forest/ContinuousForestBed.tsx"), /useSafeForestTextures/);
+  assert.match(read("src/world/atmosphere/AtmosphericForestPanorama.tsx"), /FIRST_WOOD_PANORAMA_PATH/);
+  assert.match(read("src/world/atmosphere/CinematicForestDepthPlate.tsx"), /FIRST_WOOD_DEPTH_PLATE_PATH/);
+  assert.match(read("src/world/atmosphere/AtmosphericForestPanorama.tsx"), /<CinematicForestDepthPlate/);
   assert.match(scene, /<AtmosphericForestPanorama/);
-  assert.match(scene, /first-wood-panorama-v3\.webp/);
-  assert.match(scene, /forest-sky-horizon-v1\.webp/);
+  assert.match(read("src/world/atmosphere/AtmosphericForestPanorama.tsx"), /first-wood-panorama-v3\.webp/);
+  assert.match(read("src/world/atmosphere/CinematicForestDepthPlate.tsx"), /forest-sky-horizon-v1\.webp/);
   assert.match(scene, /from "\.\/environment\/ProceduralDome"/);
   assert.match(read("src/components/three/environment/ProceduralDome.tsx"), /function ProceduralDome[\s\S]*skyFbm/);
-  assert.match(scene, /activeVisualState\.showStars && qualityProfile\.starMultiplier > 0/);
-  assert.match(scene, /function DistantForestSilhouetteRing[\s\S]*<DistantForestSilhouetteRing/);
+  assert.match(read("src/world/atmosphere/SceneAtmosphere.tsx"), /activeVisualState\.showStars && qualityProfile\.starMultiplier > 0/);
+  assert.match(read("src/world/atmosphere/DistantForestSilhouetteRing.tsx"), /function DistantForestSilhouetteRing/);
+  assert.match(scene, /<DistantForestSilhouetteRing/);
   assert.match(scene, /showDepthPlate=\{visualState\.biome === "firstWood" && qualityProfile\.quality !== "low"\}/);
   assert.match(read("src/components/three/environment/ProceduralDome.tsx"), /qualityProfile\.quality === "medium"[\s\S]*cloudDetail/);
   assert.doesNotMatch(visualState, /fireBias > 0\.54/);
   assert.match(lanternNarrative, /"distant"[\s\S]*"borrowed"[\s\S]*"released"/);
   assert.match(visualState, /const baseMoonColor = biome === "fireRiver"[\s\S]*mixColor/);
-  assert.match(scene, /MOON_ALBEDO_PATH/);
-  assert.match(scene, /MEMORY_BLOOM_TEXTURE_PATH/);
+  assert.match(read("src/world/atmosphere/CelestialMoon.tsx"), /MOON_ALBEDO_PATH/);
+  assert.match(read("src/world/guidance/MemoryBloomLandmark.tsx"), /MEMORY_BLOOM_TEXTURE_PATH/);
   assert.match(scene, /<MemoryBloomLandmark/);
   assert.match(scene, /<LivingPathMist/);
   assert.match(scene, /<LivingPathRibbon/);
-  assert.match(scene, /from "\.\/environment\/forestGeometry"/);
+  assert.match(read("src/world/forest/ContinuousForestBed.tsx"), /from "\.\.\/\.\.\/components\/three\/environment\/forestGeometry\.ts"/);
+  assert.match(scene, /<ContinuousForestBed/);
   assert.match(read("src/components/three/environment/forestGeometry.ts"), /function createOrganicCrownGeometry/);
-  assert.match(scene, /mergeGeometries/);
-  assert.doesNotMatch(scene, /crownAccentRef|lowerCrownRef|upperCrownRef|sideCrownRef/);
+  assert.match(read("src/components/three/environment/forestGeometry.ts"), /mergeGeometries/);
+  assert.doesNotMatch(read("src/world/forest/ContinuousForestBed.tsx"), /crownAccentRef|lowerCrownRef|upperCrownRef|sideCrownRef/);
   assert.doesNotMatch(scene, /applyNarrativeTextureBlend/);
   assert.ok(
     fs.statSync(path.join(ROOT, "public/textures/forest/ground-albedo-v3.webp")).size < 400_000,
@@ -341,12 +348,13 @@ test("forest trees use grounded rooted geometry and opaque instanced crowns", ()
   const worker = read("src/workers/forestWorker.ts");
 
   const geometry = read("src/components/three/environment/forestGeometry.ts");
-  assert.match(scene, /from "\.\/environment\/forestGeometry"/);
+  assert.match(read("src/world/forest/ContinuousForestBed.tsx"), /from "\.\.\/\.\.\/components\/three\/environment\/forestGeometry\.ts"/);
+  assert.match(scene, /<ContinuousForestBed/);
   assert.match(geometry, /function createForestTrunkGeometry/);
   assert.match(geometry, /const rootAngles = \[/);
-  assert.match(scene, /groundYAt/);
+  assert.match(read("src/world/forest/ClearingForestFrame.tsx"), /groundYAt/);
   assert.match(geometry, /ORGANIC_CROWN_LOBES/);
-  assert.doesNotMatch(scene, /transparent\s+opacity=.*crown/i);
+  for (const owner of ["src/world/forest/ContinuousForestBed.tsx", "src/world/forest/ClearingForestFrame.tsx"]) assert.doesNotMatch(read(owner), /transparent\s+opacity=.*crown/i);
   assert.match(worker, /edgeWall/);
   assert.match(worker, /trunkWidth/);
 });
@@ -422,10 +430,13 @@ test("terrain rendering, grounding, and collision share one explicit surface", (
   const layout = read("src/lib/worldLayout.ts");
   const ground = read("src/components/three/world/PerfectWorldGround.tsx");
 
-  assert.match(scene, /createTerrainSurfaceSampler/);
-  assert.match(scene, /<TrimeshCollider[\s\S]*terrainColliderSurface\.positions/);
-  assert.match(scene, /<RigidBody type="fixed" colliders=\{false\}>/);
+  assert.match(read("src/world/terrain/terrainSampler.ts"), /createTerrainSurfaceSampler/);
+  assert.match(scene, /from "\.\.\/\.\.\/world\/terrain\/terrainSampler\.ts"/);
+  assert.match(read("src/world/terrain/HillyForestGround.tsx"), /<TrimeshCollider[\s\S]*terrainColliderSurface\.positions/);
+  assert.match(read("src/world/forest/ContinuousForestBed.tsx"), /<HillyForestGround/);
+  assert.match(read("src/world/terrain/HillyForestGround.tsx"), /<RigidBody type="fixed" colliders=\{false\}>/);
   assert.doesNotMatch(scene, /colliders="trimesh"/);
+  assert.doesNotMatch(read("src/world/terrain/HillyForestGround.tsx"), /colliders="trimesh"/);
   assert.doesNotMatch(scene, /crownRampSegments|buildCrownRampSegments/);
   assert.match(worker, /createTerrainSurfaceSampler/);
   assert.match(worker, /createTerrainPointSampler,[\s\S]*from "\.\.\/lib\/terrainModel\.ts"/);
@@ -526,10 +537,10 @@ test("the epilogue composes the travelled world from the current journey history
   for (const buffer of ["historyGeometry", "keystoneGeometry", "threadGeometry"]) {
     assert.ok(tableau.includes(`${buffer}.dispose()`), `${buffer} must be released when route data changes`);
   }
-  assert.match(scene, /function isIntegratedFinaleEntry/);
-  assert.match(scene, /function usesAuthoredCausalComposition/);
-  assert.match(scene, /function hasAuthoredChapterMoon/);
-  assert.match(scene, /suppressAmbientMoon \? null : \(/);
+  assert.match(read("src/world/worldPresentationPolicy.ts"), /function isIntegratedFinaleEntry/);
+  assert.match(read("src/world/worldPresentationPolicy.ts"), /function usesAuthoredCausalComposition/);
+  assert.match(read("src/world/worldPresentationPolicy.ts"), /function hasAuthoredChapterMoon/);
+  assert.match(read("src/world/atmosphere/SceneAtmosphere.tsx"), /suppressAmbientMoon \? null : \(/);
   assert.match(scene, /mode === "explore" && !suppressLegacyActiveLandmark \? <StoryText/);
 });
 

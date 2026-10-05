@@ -2,6 +2,7 @@ name: Cinematography and material review
 on:
   pull_request:
     paths:
+      - 'src/world/**'
       - 'src/player/**'
       - 'src/components/three/artDirection/**'
       - 'src/cinematics/shotComposition.ts'

@@ -3,7 +3,8 @@ import { InteractionController } from "../../player/InteractionController";
 import { NODE_ACTIVATION_RADIUS, type InteractionProximity } from "../../player/interactionProximity";
 import type { ExperienceMode, PlayerControls } from "../../player/playerTypes";
 import { nearestPathStatus, resolveNavigationTarget } from "../../lib/navigationResolver";
-import type { MazePathSegment, SpatialStoryNode } from "../../lib/worldLayout";
+import type { MazePathSegment } from "../terrain/worldPaths";
+import type { SpatialStoryNode } from "../terrain/worldPlacement";
 import type { PlayerSpatialWindow, SceneProximityState } from "./guidanceTypes";
 
 const PROXIMITY_UI_UPDATE_INTERVAL = 0.2;

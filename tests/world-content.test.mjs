@@ -51,7 +51,7 @@ test("the reconstructed journey drives the 3D layout before legacy archive coord
   );
 
   for (const sourcePath of [
-    "src/components/three/StoryScene.tsx",
+    "src/world/terrain/worldPlacement.ts",
     "src/lib/worldLayout.ts",
     "src/workers/pathWorker.ts",
   ]) {

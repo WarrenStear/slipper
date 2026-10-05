@@ -2,6 +2,7 @@ name: Visual presentation review
 on:
   pull_request:
     paths:
+      - 'src/world/**'
       - 'src/player/**'
       - 'src/components/three/artDirection/**'
       - 'src/components/three/environment/**'
@@ -20,6 +21,7 @@ on:
   push:
     branches: [main]
     paths:
+      - 'src/world/**'
       - 'src/player/**'
       - 'src/components/three/artDirection/**'
       - 'src/components/three/environment/**'
