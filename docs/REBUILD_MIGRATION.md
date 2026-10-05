@@ -130,12 +130,17 @@ line counts are evidence, not a new line-count acceptance test.
 
 The separate Story interaction smoke workflow passed. The baseline Visual
 presentation review (`37348602370`) failed its House aftermath low-quality
-added draw-call budget (4 calls). This pre-existing failure is retained as
-evidence and is being repaired without raising its budget before player work.
+added draw-call budget (4 calls). The repair batches each linen rail into
+existing window timber, retaining geometry/transforms/colors and fabric draws.
+The exact 19-capture review now has zero failures: the side view adds 3 calls,
+7,284 triangles and no lights, within the unchanged limit. Typecheck and 28
+focused geometry/chapter/environment tests passed. The first failed CI log and
+completed desktop/mobile evidence are retained outside source under
+`artifacts/rebuild-20261005/baseline-budget-repair`.
 
 | Phase | Implementation | Validation / status |
 | --- | --- | --- |
-| 1. Foundation | This document first; shared narrative selectors/actions/runtime; used compatibility boundaries. | Complete: full check and 16 desktop/mobile text/cloud browser tests passed. |
+| 1. Foundation | This document first; shared narrative selectors/actions/runtime; used compatibility boundaries. | Complete (`1ae2b98`): full check and 16 desktop/mobile text/cloud browser tests passed. |
 | 2. Player | Input, movement, camera, factual interaction detection; one ordered camera writer. | Pending Phase 1 validation. |
 | 3. World | Exact terrain/forest/guidance/atmosphere extraction; preserve ecology and seeded paths. | Pending. |
 | 4. Presentation | Preserve canonical SceneLook owner; consolidate/remove proven redundant rigs. | Pending. |

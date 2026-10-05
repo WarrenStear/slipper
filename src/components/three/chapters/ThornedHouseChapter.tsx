@@ -371,8 +371,8 @@ function DarkeningWindows({ stage }: { stage: HouseStage }) {
       {[-1, 1].map((side) => (
         <group key={side} position={[side * 5.65, 2.55, 1.1]} rotation={[0, side * -Math.PI / 2, 0]}>
           <mesh><planeGeometry args={[1.35, 2.1]} /><meshStandardMaterial color={color} emissive={color} emissiveIntensity={emissiveIntensity} roughness={.72} side={THREE.DoubleSide} /></mesh>
-          <group rotation={[0, Math.PI, 0]}><WindowJoinery width={1.35} height={2.1} color="#584535" /></group>
-          <group rotation={[0, Math.PI, 0]}><WindowLinen width={1.35} height={2.1} color={stage === "leaving" ? "#b4ab93" : "#938675"} /></group>
+          <group rotation={[0, Math.PI, 0]}><WindowJoinery width={1.35} height={2.1} color="#584535" linenRail /></group>
+          <group rotation={[0, Math.PI, 0]}><WindowLinen width={1.35} height={2.1} color={stage === "leaving" ? "#b4ab93" : "#938675"} railInJoinery /></group>
         </group>
       ))}
     </group>

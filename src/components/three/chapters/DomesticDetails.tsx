@@ -4,11 +4,12 @@ import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js
 import { TactileMaterial } from "../storyEvents/TactileMaterial";
 import { TimberAssembly } from "./ChapterArt";
 import type { ConstructionPiece } from "./chapterArtGeometry";
+import { windowLinenRailPieces } from "./windowConstruction";
 
 /** Curtains hang from a visible rail. Opaque linen folds retain depth and stay
  * still; the central opening admits the chapter's existing exterior light. */
-export const WindowLinen = memo(function WindowLinen({ width, height, color = "#c1b69d" }: {
-  width: number; height: number; color?: string;
+export const WindowLinen = memo(function WindowLinen({ width, height, color = "#c1b69d", railInJoinery = false }: {
+  width: number; height: number; color?: string; railInJoinery?: boolean;
 }) {
   const fabric = useMemo(() => {
     const panels = [-1, 1].map(side => {
@@ -26,13 +27,10 @@ export const WindowLinen = memo(function WindowLinen({ width, height, color = "#
     panels.forEach(panel => panel.dispose()); merged.computeBoundingBox(); merged.computeBoundingSphere();
     return merged;
   }, [width, height]);
-  const rail = useMemo<ConstructionPiece[]>(() => [
-    { position: [0, height / 2 + .18, -.21], size: [width * 1.3, .045, .055] },
-    ...[-1, 1].map(side => ({ position: [side * width * .58, height / 2 + .12, -.11] as [number, number, number], size: [.065, .15, .27] as [number, number, number] })),
-  ], [width, height]);
+  const rail = useMemo<ConstructionPiece[]>(() => windowLinenRailPieces(width, height), [width, height]);
   useEffect(() => () => fabric.dispose(), [fabric]);
   return <group name="rail-hung-window-linen">
-    <TimberAssembly pieces={rail} color="#66543e" />
+    {railInJoinery ? null : <TimberAssembly pieces={rail} color="#66543e" />}
     <mesh geometry={fabric} castShadow receiveShadow><TactileMaterial surface="linen" color={color} roughness={.98} side={THREE.DoubleSide} /></mesh>
   </group>;
 });

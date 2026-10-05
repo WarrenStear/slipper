@@ -4,6 +4,7 @@ import * as THREE from "three";
 import { TactileMaterial, type StorySurface } from "../storyEvents/TactileMaterial";
 import { createWornTimberGeometry } from "../environmentArt/authoredGeometry";
 import { createBasinGeometry, createConstructionGeometry, createUpholsteryGeometry, type ArtVector, type ConstructionPiece } from "./chapterArtGeometry";
+import { windowJoineryPieces } from "./windowConstruction";
 
 export const TimberAssembly = memo(function TimberAssembly({ pieces, color, plaster = false, surface, name }: {
   pieces: readonly ConstructionPiece[]; color: string; plaster?: boolean; surface?: StorySurface; name?: string;
@@ -61,17 +62,11 @@ export const StoneBasin = memo(function StoneBasin({ position, radius = 1.68, he
   </mesh>;
 });
 
-export const WindowJoinery = memo(function WindowJoinery({ width, height, color = "#695544" }: {
-  width: number; height: number; color?: string;
+export const WindowJoinery = memo(function WindowJoinery({ width, height, color = "#695544", linenRail = false }: {
+  width: number; height: number; color?: string; linenRail?: boolean;
 }) {
-  const pieces = useMemo<ConstructionPiece[]>(() => [
-    ...[-1, 1].map(side => ({ position: [side * (width / 2 + .055), 0, -.03] as ArtVector, size: [.11, height + .22, .18] as ArtVector })),
-    ...[-1, 1].map(side => ({ position: [0, side * (height / 2 + .055), -.03] as ArtVector, size: [width + .11, .11, .18] as ArtVector })),
-    { position: [0, 0, -.12], size: [.065, height, .08] },
-    { position: [0, .12, -.12], size: [width, .055, .08] },
-    { position: [0, -height / 2 - .08, -.08], size: [width + .34, .12, .35] },
-  ], [width, height]);
-  return <TimberAssembly pieces={pieces} color={color} />;
+  const pieces = useMemo(() => windowJoineryPieces(width, height, color, linenRail), [width, height, color, linenRail]);
+  return <TimberAssembly pieces={pieces} color={linenRail ? "#ffffff" : color} />;
 });
 
 /** Four legs and an apron below the unchanged table top/interaction height. */
