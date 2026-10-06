@@ -7,12 +7,13 @@ import { observeInteractionTarget } from "../../../player/interactionFacts";
 import type { JourneySceneId } from "../../../lib/storyJourneyState";
 import { objectsForScene, eventsForScene, getAvailableStoryEvents, getCarriedStoryObjects } from "../../../storyEvents/storyEventRegistry";
 import {
-  advanceStoryAttentionClock, beginStoryPointerGesture, cancelStoryPointerGesture,
-  clearStorySequencePlayback, createStoryAttentionClock, createStoryPointerGesture,
-  finishStoryPointerGesture, ownsStoryPointerGesture, pauseStoryAttentionClock,
-  publishStorySequencePlayback, type StoryAttentionClock,
+  beginStoryPointerGesture, cancelStoryPointerGesture, createStoryPointerGesture,
+  finishStoryPointerGesture, ownsStoryPointerGesture,
 } from "../../../storyEvents/storyEventRuntime";
 import type { StoryEventDefinition, StoryObjectDefinition } from "../../../storyEvents/storyEventTypes";
+import { useStoryRuntime, useStoryRuntimeHost } from "../../../experience/StoryRuntimeContext";
+import type { StoryLease } from "../../../narrative/StoryIntents";
+import { subscribeAcceptedStoryEvents } from "../../../storyEvents/acceptedStoryEvents";
 import { useJourneyStore } from "../../../stores/useJourneyStore";
 import { useSettingsStore } from "../../../stores/useSettingsStore";
 import { useWorldStore } from "../../../stores/useWorldStore";
@@ -23,7 +24,7 @@ import { StoneBasin, TimberAssembly } from "../chapters/ChapterArt";
 import type { ConstructionPiece } from "../chapters/chapterArtGeometry";
 import "./StoryObjects.css";
 
-const AUTOMATIC = new Set(["scene-enter", "volume-enter", "volume-exit", "gaze", "stillness", "scene-complete", "sequence-complete"]);
+const AUTOMATIC = new Set([ "volume-enter", "volume-exit", "gaze", "stillness", "scene-complete", "sequence-complete"]);
 const VERBS: Record<string, string> = { pickup: "Take", touch: "Touch", wipe: "Wipe", place: "Place", light: "Light", open: "Open", close: "Close", burn: "Place in fire", wash: "Wash", release: "Release", plant: "Plant", inspect: "Look closely", extinguish: "Extinguish" };
 // Stable construction data avoids rebuilding this merged mesh as focus changes.
 // The semantic mirror stays at its authored height; joined feet reach Y=0.
@@ -45,6 +46,9 @@ function eventLocation(event: StoryEventDefinition, objects: readonly StoryObjec
 /** Physical inputs and semantic controls share one authored reducer. No frame enters durable state. */
 export function StoryEventDirector({ sceneId, reducedMotion, enabled = true }: { sceneId: JourneySceneId; reducedMotion: boolean; enabled?: boolean }) {
   const { camera, gl, scene: renderedScene } = useThree();
+  const runtime = useStoryRuntime();
+  const host = useStoryRuntimeHost();
+  const intentionalToken = useRef<StoryLease | null>(null);
   const group = useRef<THREE.Group>(null);
   const carriedGroup = useRef<THREE.Group>(null);
   const hudAnchor = useRef<THREE.Group>(null);
@@ -72,13 +76,8 @@ export function StoryEventDirector({ sceneId, reducedMotion, enabled = true }: {
   const localCamera = useRef(new THREE.Vector3());
   const localForward = useRef(new THREE.Vector3());
   const target = useRef(new THREE.Vector3());
-  const cameraLast = useRef(new THREE.Vector3());
-  const quaternionLast = useRef(new THREE.Quaternion());
   const orientation = useRef(new THREE.Quaternion());
-  const timers = useRef(new Map<string, StoryAttentionClock>());
   const entered = useRef(new Set<string>());
-  const sample = useRef(0);
-  const inputActivity = useRef({ keys: new Set<string>(), pointers: new Set<number>(), lastAt: 0 });
   const raycaster = useRef(new THREE.Raycaster());
   const pointer = useRef(new THREE.Vector2());
   const surfaces = useMemo(() => {
@@ -96,41 +95,38 @@ export function StoryEventDirector({ sceneId, reducedMotion, enabled = true }: {
     if (guideLabel.current) guideLabel.current.style.visibility = "hidden";
     cancelStoryPointerGesture(gesture.current);
     cancelFloorStroke();
-    for (const clock of timers.current.values()) pauseStoryAttentionClock(clock);
-    sample.current = 0;
-    inputActivity.current.keys.clear();
-    inputActivity.current.pointers.clear();
-    inputActivity.current.lastAt = performance.now();
+    runtime?.suspendPhysicalAttention();
     if (focusRef.current) { focusRef.current = null; setFocused(null); }
   }
 
-  function dispatch(event: StoryEventDefinition, duration = event.durationMs ?? 0) {
+  function dispatch(event: StoryEventDefinition) {
     if (!enabled || document.hidden || !document.hasFocus() || useSettingsStore.getState().drawerOpen || useWorldStore.getState().mode !== "explore") return false;
     if (event.objectId && renderedScene.getObjectByName(`story-object:${event.objectId}`)?.userData.storyPresentationSettled === false) return false;
-    const accepted = useJourneyStore.getState().dispatchStoryEvent({ sceneId, eventId: event.id, trigger: event.trigger, objectId: event.objectId, targetId: event.targetId, duration });
-    if (accepted.length) {
-      setLastAction(`${VERBS[event.trigger] ?? "Witnessed"} · ${eventLocation(event, objects).label}`);
-      timers.current.delete(event.id);
-    }
-    return accepted.length > 0;
+    const lease = runtime?.currentLease();
+    const facts = host?.readPhysical();
+    if (!runtime || !lease || !facts?.available || !facts.fresh || !facts.settled || !facts.inputEnabled) return false;
+    const accepted = runtime.dispatch({ type: "event", eventId: event.id, lease });
+    if (accepted.accepted) setLastAction(`${VERBS[event.trigger] ?? "Witnessed"} · ${eventLocation(event, objects).label}`);
+    return accepted.accepted;
   }
   useEffect(() => {
-    timers.current.clear(); entered.current.clear(); sample.current = 0;
-    cancelStoryPointerGesture(gesture.current);
-    cancelFloorStroke();
-    clearStorySequencePlayback(sceneId);
-    setIntentionalStillnessId(null);
-    setFocused(null); focusRef.current = null;
-    if (enabled) useJourneyStore.getState().dispatchStoryEvent({ sceneId, trigger: "scene-enter" });
-    return () => clearStorySequencePlayback(sceneId);
-  }, [sceneId, enabled]);
+    entered.current.clear(); cancelStoryPointerGesture(gesture.current); cancelFloorStroke();
+    setIntentionalStillnessId(null); setFocused(null); focusRef.current = null;
+    return () => { if (intentionalToken.current) runtime?.cancelAttention(intentionalToken.current); intentionalToken.current = null; };
+  }, [sceneId, enabled, runtime]);
 
   useEffect(() => {
-    if (!assistedStillness && intentionalStillnessId) {
-      timers.current.delete(intentionalStillnessId);
-      setIntentionalStillnessId(null);
+    if (intentionalStillnessId && (!assistedStillness || !pending.some(event => event.id === intentionalStillnessId))) {
+      if (intentionalToken.current) runtime?.cancelAttention(intentionalToken.current);
+      intentionalToken.current = null; setIntentionalStillnessId(null);
     }
-  }, [assistedStillness, intentionalStillnessId]);
+  }, [assistedStillness, intentionalStillnessId, pending, runtime]);
+
+  useEffect(() => subscribeAcceptedStoryEvents(receipt => {
+    if (receipt.sceneId !== sceneId) return;
+    const event = eventsForScene(sceneId).find(candidate => receipt.eventIds.includes(candidate.id) && candidate.trigger !== "scene-enter");
+    if (event) setLastAction(`${VERBS[event.trigger] ?? "Witnessed"} · ${eventLocation(event, objects).label}`);
+  }), [sceneId, objects]);
 
   useEffect(() => {
     if (!enabled) return;
@@ -191,23 +187,15 @@ export function StoryEventDirector({ sceneId, reducedMotion, enabled = true }: {
       }
       if (event.code === "KeyG") {
         const item = getCarriedStoryObjects(useJourneyStore.getState()).find(item => !item.keepsake);
-        if (item) useJourneyStore.getState().dispatchStoryEvent({ sceneId, trigger: "drop", objectId: item.id });
+        const lease = runtime?.currentLease();
+        if (item && lease) runtime?.dispatch({ type: "drop", objectId: item.id, lease });
       }
     };
-    const activityDown = (event: PointerEvent) => { inputActivity.current.pointers.add(event.pointerId); inputActivity.current.lastAt = performance.now(); };
-    const activityUp = (event: PointerEvent) => { inputActivity.current.pointers.delete(event.pointerId); inputActivity.current.lastAt = performance.now(); };
-    const keyDown = (event: KeyboardEvent) => { inputActivity.current.keys.add(event.code); inputActivity.current.lastAt = performance.now(); };
-    const keyUp = (event: KeyboardEvent) => { inputActivity.current.keys.delete(event.code); inputActivity.current.lastAt = performance.now(); };
     const cancel = () => suspendInput();
     const cancelPointer = (event: PointerEvent) => {
       if (ownsStoryPointerGesture(gesture.current, event.pointerId)) { cancelStoryPointerGesture(gesture.current); cancelFloorStroke(); }
     };
     const visibility = () => { if (document.hidden) cancel(); };
-    window.addEventListener("pointerdown", activityDown);
-    window.addEventListener("pointerup", activityUp);
-    window.addEventListener("pointercancel", activityUp);
-    window.addEventListener("keydown", keyDown);
-    window.addEventListener("keyup", keyUp);
     window.addEventListener("blur", cancel);
     window.addEventListener("pointercancel", cancelPointer);
     canvas.addEventListener("lostpointercapture", cancelPointer);
@@ -224,11 +212,10 @@ export function StoryEventDirector({ sceneId, reducedMotion, enabled = true }: {
       document.removeEventListener("visibilitychange", visibility);
       document.removeEventListener("pointerlockchange", cancel);
       window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", up); window.removeEventListener("keydown", key);
-      window.removeEventListener("pointerdown", activityDown); window.removeEventListener("pointerup", activityUp); window.removeEventListener("pointercancel", activityUp);
-      window.removeEventListener("keydown", keyDown); window.removeEventListener("keyup", keyUp); window.removeEventListener("blur", cancel);
+      window.removeEventListener("blur", cancel);
       cancel();
     };
-  }, [enabled, gl, camera, renderedScene, sceneId, objects]);
+  }, [enabled, gl, camera, renderedScene, sceneId, objects, runtime, host]);
 
   useFrame((_, delta) => {
     const root = group.current;
@@ -238,7 +225,6 @@ export function StoryEventDirector({ sceneId, reducedMotion, enabled = true }: {
       return;
     }
     const dt = Math.min(delta, .1);
-    sample.current += dt;
     if (hudAnchor.current) {
       target.current.set(0, 0, -1).applyQuaternion(camera.quaternion).add(camera.position);
       root.worldToLocal(target.current);
@@ -251,13 +237,12 @@ export function StoryEventDirector({ sceneId, reducedMotion, enabled = true }: {
       root.getWorldQuaternion(orientation.current).invert();
       carriedGroup.current.quaternion.copy(orientation.current).multiply(camera.quaternion);
     }
-    if (sample.current < .075) return;
-    const now = performance.now(); sample.current = 0;
-    const still = inputActivity.current.keys.size === 0 && inputActivity.current.pointers.size === 0
-      && performance.now() - inputActivity.current.lastAt > 350
-      && camera.position.distanceToSquared(cameraLast.current) < .0009
-      && 1 - Math.abs(camera.quaternion.dot(quaternionLast.current)) < .00008;
-    cameraLast.current.copy(camera.position); quaternionLast.current.copy(camera.quaternion);
+    const lease = runtime?.currentLease();
+    const facts = host?.readPhysical();
+    if (!runtime || !lease || !facts?.available || !facts.fresh || !facts.settled || !facts.inputEnabled) {
+      runtime?.suspendPhysicalAttention(); return;
+    }
+    const still = facts.stillEligible;
     localCamera.current.copy(camera.position); root.worldToLocal(localCamera.current);
     camera.getWorldDirection(localForward.current);
     root.getWorldQuaternion(orientation.current).invert(); localForward.current.applyQuaternion(orientation.current);
@@ -265,7 +250,12 @@ export function StoryEventDirector({ sceneId, reducedMotion, enabled = true }: {
     for (const event of pendingRef.current) {
       const location = eventLocation(event, objects);
       const renderedObject = event.objectId && !event.targetId ? renderedScene.getObjectByName(`story-object:${event.objectId}`) : undefined;
-      if (renderedObject?.userData.storyPresentationSettled === false) continue;
+      if (renderedObject?.userData.storyPresentationSettled === false) {
+        if (AUTOMATIC.has(event.trigger)) runtime.publishPhysicalAttention(lease, event.id, facts, false);
+        if (event.id === intentionalStillnessId && intentionalToken.current) runtime.setAttentionEligible(intentionalToken.current, false);
+        continue;
+      }
+      if (event.id === intentionalStillnessId && intentionalToken.current) runtime.setAttentionEligible(intentionalToken.current, true);
       if (renderedObject) { renderedObject.getWorldPosition(target.current); root.worldToLocal(target.current); }
       else target.current.set(location.position[0], location.position[1], location.position[2]);
       const { distance, inside, alignment, looking } = observeInteractionTarget(
@@ -281,21 +271,16 @@ export function StoryEventDirector({ sceneId, reducedMotion, enabled = true }: {
       const volumeEntry = leavingHouse ? inside && localCamera.current.z > -2.6 : inside;
       const volumeExit = leavingHouse ? localCamera.current.z < -4.85 && Math.abs(localCamera.current.x) < 2
         : !inside && (event.objectId !== "fork.door" || !looking);
-      const auto = event.trigger === "scene-enter" || event.trigger === "scene-complete" || event.trigger === "sequence-complete"
+      const auto = event.trigger === "scene-complete" || event.trigger === "sequence-complete"
         || (event.trigger === "volume-enter" && volumeEntry)
         || (event.trigger === "volume-exit" && volumeExit && entered.current.has(event.id))
         || (event.trigger === "gaze" && inside && looking)
         || (event.trigger === "stillness" && (
           ((inside || !event.objectId) && still)
-          || (assistedStillness && intentionalStillnessId === event.id)
         ));
       if (AUTOMATIC.has(event.trigger)) {
-        let clock = timers.current.get(event.id);
-        if (!clock) { clock = createStoryAttentionClock(event.trigger !== "sequence-complete"); timers.current.set(event.id, clock); }
-        const elapsed = advanceStoryAttentionClock(clock, now, auto);
-        const required = event.durationMs ?? (event.trigger === "gaze" ? 1100 : event.trigger === "stillness" ? 4500 : 0);
-        if (event.trigger === "sequence-complete") publishStorySequencePlayback(sceneId, event.id, elapsed, required);
-        if (auto && elapsed >= required) dispatch(event, elapsed);
+        runtime.publishPhysicalAttention(lease, event.id, facts,
+          auto && !(assistedStillness && intentionalStillnessId === event.id));
       } else if (at && (looking || lookingAtFloor)) {
         const score = distance + (1 - alignment) * 2;
         if (score < bestScore) { best = event; bestScore = score; }
@@ -367,16 +352,19 @@ export function StoryEventDirector({ sceneId, reducedMotion, enabled = true }: {
         {sceneId === "broken-floor.confession" && (!touched || !events.includes("broken-floor.first-wipe")) ? <p className="story-object-onboarding">Look down. Drag across the wet floor.</p> : null}
         {!surrenderQuiet && carried.some(item => !item.keepsake) ? <button type="button" className="story-object-focus story-object-drop" style={{ bottom: "31%", right: "1rem", left: "auto", transform: "none" }} onClick={() => {
           const item = getCarriedStoryObjects(useJourneyStore.getState()).find(item => !item.keepsake);
-          if (item) useJourneyStore.getState().dispatchStoryEvent({ sceneId, trigger: "drop", objectId: item.id });
+          const lease = runtime?.currentLease();
+        if (item && lease) runtime?.dispatch({ type: "drop", objectId: item.id, lease });
         }}>Set down</button> : null}
         {guidance && carried.length > 0 ? <p className="story-object-carry-label">{carried.map(item => item.label).join(" · ")} <span>G · set down</span></p> : null}
         {assistedStillness && surrenderQuiet ? <button className="story-object-focus" onClick={() => {
           const event = pending.find(item => item.trigger === "stillness");
           if (!event) return;
-          // Assistance replaces the need to hold the camera still, not the
-          // authored quiet interval. The same frame clock performs completion.
-          timers.current.delete(event.id);
-          setIntentionalStillnessId(current => current === event.id ? null : event.id);
+          const lease = runtime?.currentLease();
+          if (!runtime || !lease) return;
+          if (intentionalToken.current) runtime.cancelAttention(intentionalToken.current);
+          if (intentionalStillnessId === event.id) { intentionalToken.current = null; setIntentionalStillnessId(null); return; }
+          intentionalToken.current = runtime.beginAttention(lease, event.id);
+          setIntentionalStillnessId(intentionalToken.current ? event.id : null);
         }}>{intentionalStillnessId ? "Cancel intentional stillness" : "Enter intentional stillness"}</button> : null}
         <span className="sr-only" role="status">{lastAction}</span>
       </div>

@@ -1,16 +1,8 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
-  getJourneyAct,
-  getJourneyActForEntry,
-  getJourneyBeat,
-  getJourneyBeatForEntry,
-  getJourneyChapter,
-  getJourneyChapterForEntry,
   getJourneyRitualBeat,
   getJourneyScene,
   getJourneySceneForEntry,
-  journeyActs,
-  journeyBeatAvailable,
 } from "../../../data/journeyBlueprint";
 import {
   getJourneyEntryWorldPosition,
@@ -18,18 +10,11 @@ import {
   getJourneySceneLayout,
 } from "../../../data/journeyWorldLayout";
 import {
-  journeyBeatTransitionDelay,
-  resolveJourneyBeatTransition,
-} from "../../../lib/journeyBeatTransition";
-import {
-  canResolveRitual,
   nextResolvableRitualForEntry,
 } from "../../../lib/journeyProgression";
 import {
   availableJourneyPlayerActionsForScene,
   JOURNEY_PLAYER_ACTIONS,
-  journeyPlayerActionChoiceAtTarget,
-  journeyPlayerActionAvailable,
   nearestJourneyPlayerActionChoice,
   nextJourneyPlayerAction,
   resolveJourneyPlayerActionTargetLocalPosition,
@@ -37,12 +22,10 @@ import {
   type JourneyPlayerActionOutcome,
 } from "../../../lib/journeyPlayerActions";
 import type {
-  JourneyActId,
   JourneySceneId,
 } from "../../../lib/storyJourneyState";
-import { applyJourneyOutcome, applyPlayerActionOutcome } from "../../../narrative/StoryActions";
-import { selectReadyActTransformation } from "../../../narrative/StorySelectors";
-import { selectStoryProgression } from "../../../narrative/StoryRuntime";
+import type { StoryLease } from "../../../narrative/StoryIntents";
+import { useStoryRuntime, useStoryRuntimeHost } from "../../../experience/StoryRuntimeContext";
 import { useJourneyStore } from "../../../stores/useJourneyStore";
 import { useSettingsStore } from "../../../stores/useSettingsStore";
 import type {
@@ -100,31 +83,6 @@ function distanceToJourneyActionTarget(
   );
 }
 
-function journeyCueLabel(cue: string | undefined) {
-  if (!cue) return "";
-  const phrase = cue.replace(/-/g, " ");
-  return `${phrase.charAt(0).toUpperCase()}${phrase.slice(1)}.`;
-}
-
-function journeyTransitionMessage(beatId: string) {
-  const beat = getJourneyBeat(beatId);
-  if (!beat) return "";
-  const cue = journeyCueLabel(beat.environmentCue);
-  if (beat.role === "threshold") return cue || "A threshold opens.";
-  if (beat.role === "departure") return cue || "The wood releases the path behind you.";
-  if (beat.role === "arrival") return cue || "A new part of the wood receives you.";
-  return "";
-}
-
-function completeReadyAct(actId: JourneyActId) {
-  const state = useJourneyStore.getState();
-  const transformation = selectReadyActTransformation(actId, state);
-  if (!transformation) return false;
-  state.enterBeat(actId, transformation.id);
-  for (const outcome of transformation.outcomes ?? []) applyJourneyOutcome(outcome, useJourneyStore.getState());
-  return useJourneyStore.getState().completedActs.includes(actId);
-}
-
 export function JourneyDirector({
   activeEntryId,
   mode,
@@ -141,15 +99,10 @@ export function JourneyDirector({
   const completedActs = useJourneyStore((state) => state.completedActs);
   const completedChapterIds = useJourneyStore((state) => state.completedChapterIds);
   const completedSceneIds = useJourneyStore((state) => state.completedSceneIds);
-  const completedStoryEventIds = useJourneyStore((state) => state.completedStoryEventIds);
-  const storyObjectStates = useJourneyStore((state) => state.storyObjectStates);
-  const storyPlacementStates = useJourneyStore((state) => state.storyPlacementStates);
   const eventDriven = Boolean(getJourneySceneForEntry(activeEntryId));
-  const storyActId = useJourneyStore((state) => state.actId);
-  const storyBeatId = useJourneyStore((state) => state.beatId);
-  const storyCompleted = useJourneyStore((state) => state.storyCompleted);
-  const witnessEntry = useJourneyStore((state) => state.witnessEntry);
-  const enterBeat = useJourneyStore((state) => state.enterBeat);
+  const runtime = useStoryRuntime();
+  const host = useStoryRuntimeHost();
+  const legacyOwner = useRef<{ sceneId: JourneySceneId; token: StoryLease } | null>(null);
   const assistedStillness = useSettingsStore((state) => state.assistedStillness);
   const [openingRitualReady, setOpeningRitualReady] = useState(
     () => activeEntryId !== "fragment-001",
@@ -161,7 +114,6 @@ export function JourneyDirector({
     proximity?.insideClearing && proximity.nearestEntryId === activeEntryId,
   );
   const hasWitnessedActiveEntry = witnessedEntryIds.includes(activeEntryId);
-  const canWitnessActiveEntry = mode === "read" || isPhysicallyPresent;
 
   useEffect(() => {
     const openingAlreadyResolved = completedRitualIds.includes("ritual.accept-lantern");
@@ -177,140 +129,6 @@ export function JourneyDirector({
     );
     return () => window.clearTimeout(timeout);
   }, [activeEntryId, completedRitualIds, reducedMotion]);
-
-  useEffect(() => {
-    if (!activeEntryId || !canWitnessActiveEntry) return;
-    const entryBeat = getJourneyBeatForEntry(activeEntryId);
-    const activeAct = getJourneyActForEntry(activeEntryId);
-    const currentState = useJourneyStore.getState();
-    const currentBeat = getJourneyBeat(currentState.beatId);
-    const firstAct = journeyActs[0];
-    const openingArrival = firstAct ? getJourneyBeat(firstAct.mainBeatIds[0]) : undefined;
-    const isUnwitnessedOpening = Boolean(
-      openingArrival &&
-        activeAct?.id === firstAct?.id &&
-        activeEntryId === firstAct?.entryIds[0] &&
-        currentState.witnessedEntryIds.length === 0 &&
-        currentState.completedActs.length === 0,
-    );
-
-    witnessEntry(activeEntryId);
-
-    if (isUnwitnessedOpening && openingArrival) {
-      enterBeat(openingArrival.actId, openingArrival.id);
-      return;
-    }
-
-    const transitionOwnsEntry = Boolean(
-      currentBeat &&
-        ["transformation", "threshold", "departure", "arrival"].includes(currentBeat.role) &&
-        (currentBeat.actId === activeAct?.id ||
-          getJourneyAct(currentBeat.actId)?.nextActId === activeAct?.id),
-    );
-    if (
-      !transitionOwnsEntry &&
-      entryBeat &&
-      !useJourneyStore.getState().completedActs.includes(entryBeat.actId)
-    ) {
-      enterBeat(entryBeat.actId, entryBeat.id);
-    }
-  }, [activeEntryId, canWitnessActiveEntry, enterBeat, storyBeatId, witnessEntry]);
-
-  // Reconcile one narrative outcome per state change. Keeping this bounded
-  // avoids update cascades while still advancing migrated progress naturally.
-  useEffect(() => {
-    const state = useJourneyStore.getState();
-    const outcome = selectStoryProgression(state).nextOutcome;
-    if (!outcome) return;
-
-    if (outcome.type === "complete-scene") {
-      state.completeScene(outcome.sceneId);
-      if (useJourneyStore.getState().completedSceneIds.includes(outcome.sceneId)) {
-        const scene = getJourneyScene(outcome.sceneId);
-        onJourneyMessage?.(`${scene?.title ?? "The scene"} settles into memory.`);
-      }
-      return;
-    }
-
-    if (outcome.type === "complete-chapter") {
-      state.completeChapter(outcome.chapterId);
-      if (useJourneyStore.getState().completedChapterIds.includes(outcome.chapterId)) {
-        const chapter = getJourneyChapter(outcome.chapterId);
-        onJourneyMessage?.(`${chapter?.title ?? "This part of the path"} settles into memory.`);
-      }
-      return;
-    }
-
-    state.completeStory();
-    if (useJourneyStore.getState().storyCompleted) {
-      onJourneyMessage?.("The lantern constellation is whole.");
-    }
-  }, [
-    completedChapterIds,
-    completedRitualIds,
-    completedSceneIds,
-    completedStoryEventIds,
-    storyObjectStates,
-    storyPlacementStates,
-    inventory,
-    onJourneyMessage,
-    storyCompleted,
-    witnessedEntryIds,
-    worldFlags,
-  ]);
-
-  // A ritual may happen before the final keystone in its act. Reconcile the
-  // transformation whenever witnessing or ritual state changes, not only at
-  // the instant an interaction finishes.
-  useEffect(() => {
-    for (const act of journeyActs) {
-      if (completeReadyAct(act.id)) {
-        onJourneyMessage?.(`${act.title} has changed. The path opens.`);
-        break;
-      }
-    }
-  }, [completedActs, completedRitualIds, onJourneyMessage, witnessedEntryIds]);
-
-  useEffect(() => {
-    const currentState = useJourneyStore.getState();
-    const currentBeat = getJourneyBeat(currentState.beatId);
-    const currentAct = getJourneyAct(currentState.actId);
-    const activeAct = getJourneyActForEntry(activeEntryId);
-    const activeEntryBeat = getJourneyBeatForEntry(activeEntryId);
-    const transition = resolveJourneyBeatTransition({
-      currentBeat,
-      currentAct,
-      activeActId: activeAct?.id,
-      activeEntryBeatId: activeEntryBeat?.id,
-      activeEntryWitnessed: currentState.witnessedEntryIds.includes(activeEntryId),
-      canWitnessActiveEntry,
-      completedActs: currentState.completedActs,
-      storyCompleted: currentState.storyCompleted,
-    });
-    if (!transition) return;
-
-    const timeout = window.setTimeout(() => {
-      const latest = useJourneyStore.getState();
-      if (latest.actId !== currentBeat?.actId || latest.beatId !== currentBeat.id) return;
-      const targetBeat = getJourneyBeat(transition.beatId);
-      if (!targetBeat || !journeyBeatAvailable(targetBeat, latest)) return;
-      latest.enterBeat(transition.actId, transition.beatId);
-      const message = journeyTransitionMessage(transition.beatId);
-      if (message) onJourneyMessage?.(message);
-    }, journeyBeatTransitionDelay(transition.kind, reducedMotion));
-
-    return () => window.clearTimeout(timeout);
-  }, [
-    activeEntryId,
-    canWitnessActiveEntry,
-    completedActs,
-    hasWitnessedActiveEntry,
-    onJourneyMessage,
-    reducedMotion,
-    storyActId,
-    storyBeatId,
-    storyCompleted,
-  ]);
 
   const ritualProgression = useMemo(
     () => {
@@ -471,72 +289,41 @@ export function JourneyDirector({
     };
   }, [proximity?.playerPosition, storyAction, storyActionChoice, storyActionScene]);
 
-  const handleComplete = useCallback(
-    (ritualId: string) => {
-      const beat = getJourneyRitualBeat(ritualId);
-      const interaction = beat?.interactions?.find((candidate) => candidate.ritualId === ritualId);
-      if (!beat || !interaction || completedRitualIds.includes(ritualId)) return;
-      const currentState = useJourneyStore.getState();
-      const activeRitual = nextResolvableRitualForEntry(activeEntryId, currentState);
-      if (activeRitual?.ritualId !== ritualId || !canResolveRitual(ritualId, currentState)) return;
+  useLayoutEffect(() => {
+    if (mode !== "explore" || controls !== "walk" || !storyActionScene || !storyAction) {
+      if (legacyOwner.current) runtime?.cancelLegacyAction(legacyOwner.current.token);
+      legacyOwner.current = null;
+      return;
+    }
+    if (legacyOwner.current?.sceneId === storyActionScene.id) return;
+    const lease = runtime?.currentLease();
+    if (!runtime || !lease) return;
+    const started = runtime.dispatch({ type: "legacy-start", actionId: storyAction.id, lease });
+    if (started.actionToken) legacyOwner.current = { sceneId: storyActionScene.id, token: started.actionToken };
+  }, [controls, mode, runtime, storyAction, storyActionScene]);
 
-      // Some narrative rituals moved to a more faithful canonical fragment.
-      // Only claim the legacy beat when its old entry anchor still matches.
-      if (beat.entryId === activeEntryId) currentState.enterBeat(beat.actId, beat.id);
-      for (const outcome of beat.outcomes ?? []) applyJourneyOutcome(outcome, useJourneyStore.getState());
-      completeReadyAct(beat.actId);
-      onJourneyMessage?.(`The world remembers: ${interaction.label}.`);
-    },
-    [activeEntryId, completedRitualIds, onJourneyMessage],
-  );
+  const handleComplete = useCallback((ritualId: string) => {
+    const lease = runtime?.currentLease();
+    if (!runtime || !lease) return;
+    const result = runtime.dispatch({ type: "ritual", ritualId, lease });
+    if (result.accepted) for (const message of result.messages) onJourneyMessage?.(message);
+  }, [onJourneyMessage, runtime]);
 
-  const handleStoryActionComplete = useCallback(
-    (
-      actionId: string,
-      outcomes: readonly JourneyPlayerActionOutcome[],
-      rememberedAs: string,
-      choiceId?: string,
-    ) => {
-      const currentState = useJourneyStore.getState();
-      const completedAction = JOURNEY_PLAYER_ACTIONS.find(
-        (candidate) => candidate.id === actionId,
-      );
-      if (!completedAction) return;
-      const actionScene = getJourneyScene(completedAction.sceneId);
-      // An intentionally started interaction remains owned by its authored
-      // scene when physics crosses a nearby portal. Validate it against that
-      // scene's current durable evidence rather than the latest active entry.
-      if (
-        !actionScene ||
-        currentState.completedSceneIds.includes(actionScene.id) ||
-        !currentState.witnessedEntryIds.includes(actionScene.keystoneEntryId)
-      ) return;
-      if (!journeyPlayerActionAvailable(completedAction, currentState.worldFlags)) return;
-
-      let resolvedOutcomes = outcomes;
-      if (completedAction.mode === "choice") {
-        const selectedChoice = completedAction.choices?.find(
-          (choice) => choice.id === choiceId,
-        );
-        const origin = getJourneyEntryWorldPosition(actionScene.keystoneEntryId);
-        const player = proximity?.playerPosition;
-        if (!selectedChoice || !origin || !player) return;
-        const physicallyReachedChoice = journeyPlayerActionChoiceAtTarget(
-          completedAction,
-          playerPositionInSceneLocalSpace(completedAction.sceneId, origin, player),
-          getJourneySceneArrivalHeading(completedAction.sceneId),
-        );
-        if (physicallyReachedChoice?.id !== selectedChoice.id) return;
-        resolvedOutcomes = selectedChoice.outcomes;
-      }
-
-      for (const outcome of resolvedOutcomes) {
-        applyPlayerActionOutcome(outcome, useJourneyStore.getState());
-      }
-      onJourneyMessage?.(rememberedAs);
-    },
-    [onJourneyMessage, proximity?.playerPosition],
-  );
+  const handleStoryActionComplete = useCallback((actionId: string,
+    _outcomes: readonly JourneyPlayerActionOutcome[], _rememberedAs: string, choiceId?: string) => {
+    const lease = runtime?.currentLease();
+    if (!runtime || !lease) return;
+    const action = JOURNEY_PLAYER_ACTIONS.find(candidate => candidate.id === actionId);
+    const actionScene = action && getJourneyScene(action.sceneId);
+    const origin = actionScene && getJourneyEntryWorldPosition(actionScene.keystoneEntryId);
+    const facts = host?.readPhysical();
+    const player = facts?.available && facts.fresh && facts.settled ? facts.position : undefined;
+    const result = runtime.dispatch({ type: "legacy-action", actionId, choiceId, lease,
+      actionToken: legacyOwner.current?.token, source: "physical",
+      playerLocalPosition: actionScene && origin && player
+        ? playerPositionInSceneLocalSpace(actionScene.id, origin, player) : undefined });
+    if (result.accepted) for (const message of result.messages) onJourneyMessage?.(message);
+  }, [host, onJourneyMessage, runtime]);
 
   return (
     <>

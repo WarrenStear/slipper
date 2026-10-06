@@ -51,5 +51,10 @@ test("physical observation has no persistence, story eligibility, or consequence
   assert.doesNotMatch(source, /(?:import|useJourneyStore|dispatchStoryEvent|completeRitual|witnessEntry|setWorldFlag)/);
   const director = readFileSync(new URL("../src/components/three/storyEvents/StoryEventDirector.tsx", import.meta.url), "utf8");
   assert.match(director, /observeInteractionTarget\(/);
-  assert.match(director, /advanceStoryAttentionClock\(clock, now, auto\)/);
+  assert.match(director, /host\?\.readPhysical\(/);
+  assert.match(director, /runtime\.publishPhysicalAttention\(lease, event\.id, facts,/);
+  const frame = director.slice(director.indexOf("useFrame("), director.indexOf("const surrenderQuiet"));
+  assert.doesNotMatch(frame, /dispatchStoryEvent|completeRitual|witnessEntry|setWorldFlag|runtime\.dispatch\(/);
+  const port = readFileSync(new URL("../src/player/physicalObservation.ts", import.meta.url), "utf8");
+  assert.doesNotMatch(port, /(?:^|\n)import\s|useJourneyStore|dispatchStoryEvent|completeRitual|witnessEntry|setWorldFlag/);
 });

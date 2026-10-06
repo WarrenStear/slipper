@@ -10,8 +10,7 @@ import {
 export function InteractionController({ enabled, targets, clearingRadius, onSample, onTargetEntered }: {
   enabled: boolean; targets: readonly PhysicalInteractionTarget[]; clearingRadius: number;
   onSample: (facts: InteractionProximity, elapsedTime: number) => void;
-  /** False leaves a queued/rejected observation eligible on the next existing sample. */
-  onTargetEntered?: (id: string) => boolean | void;
+  onTargetEntered?: (id: string) => void;
 }) {
   const { camera } = useThree();
   const lastSpatialCalcTimeRef = useRef(Number.NEGATIVE_INFINITY);
@@ -26,9 +25,8 @@ export function InteractionController({ enabled, targets, clearingRadius, onSamp
       Math.atan2(cameraDirectionRef.current.x, cameraDirectionRef.current.z), clearingRadius);
     onSample(facts, clock.elapsedTime);
     const entry = observedThresholdEntry(facts.nearestInactive, lastEnteredNodeRef.current);
-    if (entry.enteredId) {
-      if (onTargetEntered?.(entry.enteredId) !== false) lastEnteredNodeRef.current = entry.lastEnteredId;
-    } else lastEnteredNodeRef.current = entry.lastEnteredId;
+    lastEnteredNodeRef.current = entry.lastEnteredId;
+    if (entry.enteredId) onTargetEntered?.(entry.enteredId);
   });
   return null;
 }

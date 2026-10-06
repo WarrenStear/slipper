@@ -14,11 +14,12 @@ const CLEARING_SAFE_RADIUS = 8.8;
 
 /** Interprets physical facts as a route; it cannot apply a story consequence. */
 export function GuidanceController({ nodes, pathSegments, visitedEntryIds, lockedEntryIds, explicitNavigationTargetId,
-  controls, mode, onNodeEnter, onApproachChange, onPlayerProximityChange, onPlayerSpatialChange }: {
+  controls, mode, onNodeEnter, onApproachChange, onPlayerProximityChange, onPlayerSpatialChange, onPhysicalPresence }: {
   nodes: SpatialStoryNode[]; pathSegments: MazePathSegment[]; visitedEntryIds: string[]; lockedEntryIds: readonly string[];
   explicitNavigationTargetId?: string | null; controls: PlayerControls; mode: ExperienceMode;
-  onNodeEnter?: (id: string) => void; onApproachChange?: (id: string | null) => void;
+  onNodeEnter?: (id: string) => boolean | void; onApproachChange?: (id: string | null) => void;
   onPlayerProximityChange?: (state: SceneProximityState) => void; onPlayerSpatialChange?: (state: PlayerSpatialWindow) => void;
+  onPhysicalPresence?: (facts: InteractionProximity) => void;
 }) {
   const lastApproachRef = useRef<string | null>(null);
   const lastUiSignatureRef = useRef("");
@@ -34,6 +35,7 @@ export function GuidanceController({ nodes, pathSegments, visitedEntryIds, locke
   useEffect(() => { lastApproachRef.current = null; lastSpatialSignatureRef.current = ""; onApproachChange?.(null); }, [nodes, onApproachChange]);
 
   const interpretPhysicalSample = useCallback((facts: InteractionProximity, now: number) => {
+    onPhysicalPresence?.(facts);
     const { playerPosition, cameraYaw, insideClearing } = facts;
     const activeNode = facts.active ? nodesById.get(facts.active.id) : undefined;
     const closestNode = facts.nearest ? nodesById.get(facts.nearest.id) : undefined;
@@ -82,7 +84,7 @@ export function GuidanceController({ nodes, pathSegments, visitedEntryIds, locke
       ? navigationTargetId : closestInactiveNode && (facts.nearestInactive?.distanceSq ?? Infinity) < NODE_APPROACH_RADIUS * NODE_APPROACH_RADIUS
         ? closestInactiveNode.entry.id : null;
     if (approachingId !== lastApproachRef.current) { lastApproachRef.current = approachingId; onApproachChange?.(approachingId); }
-  }, [availableNavigationNodes, explicitNavigationTargetNode, nodesById, onApproachChange, onPlayerProximityChange, onPlayerSpatialChange, pathSegments, visitedEntryIds]);
+  }, [availableNavigationNodes, explicitNavigationTargetNode, nodesById, onApproachChange, onPlayerProximityChange, onPlayerSpatialChange, onPhysicalPresence, pathSegments, visitedEntryIds]);
 
   return <InteractionController enabled={mode === "explore" && controls === "walk"} targets={targets}
     clearingRadius={CLEARING_SAFE_RADIUS} onSample={interpretPhysicalSample} onTargetEntered={onNodeEnter} />;

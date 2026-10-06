@@ -12,7 +12,7 @@ its commit. Canonical content and persisted identifiers remain authoritative;
 presentation consumes them instead of creating a second story model. The first
 experience milestone is the opening through the first Fragment and Constellation.
 
-## Current architecture: evidence from the mounted application
+## Baseline architecture: evidence from the application before migration
 
 | Concern | Current authority | Overlap or constraint |
 | --- | --- | --- |
@@ -145,8 +145,8 @@ and Visual presentation review (`37351828560`).
 | 1. Foundation | This document first; shared narrative selectors/actions/runtime; used compatibility boundaries. | Complete (`1ae2b98`): full check and 16 desktop/mobile text/cloud browser tests passed. |
 | 2. Player | Input, movement, camera, factual interaction detection; one ordered camera writer. | Complete (`770a9ab`): full check, seven applicable mobile tests and three desktop opening/keyboard tests passed. |
 | 3. World | Exact terrain/forest/guidance/atmosphere extraction; preserve ecology and seeded paths. | Complete (`c00777d`): full check, 14 fixed-camera captures and five touch browser tests passed; Linux numeric fixture portability repair follows. |
-| 4. Presentation | Canonical light, fog, sky and particles; early compatibility gates and shared presentation activity. | Implementation ready; full check passed, rendered lifecycle and production comparison underway. |
-| 5. Manifest | Derive presentation, spawn, profiles and interaction references from canonical scenes. | Pending. |
+| 4. Presentation | Canonical light, fog, sky and particles; early compatibility gates and shared presentation activity. | Complete (`9b0b62a`), followed by retained-loading recovery repair (`ae8fd04`); measured appearance/lifecycle proof below. |
+| 5. Manifest / runtime | Derived presentation/spawn/profiles/interaction references; one transient runtime and explicit physical/text commands. | Complete: 1,133 unit / seven security tests and awake built desktop/mobile acceptance passed; commit prepared. |
 | 6. Opening slice | Arrival, floor/reflection, reveal, lantern, first walk, Fragment, Constellation. | Pending structural phases; desktop/mobile real-input proof required. |
 | 7. Quiet Forest | Environment/lantern guidance and contextual prompts; accessible assistance retained. | Pending guidance usability proof. |
 | 8. Chapters | One defining image per chapter, migrate incrementally, preserve outcomes/fallbacks. | Pending opening proof. |
@@ -595,3 +595,123 @@ foliage, some pole-like mid/far trees and sparse broad ground. It does not certi
 finished production environment art or complete the later material, physical
 composition and opening requirements. No hero GLB or recording is relabelled
 as production.
+
+The pushed forest commit `ba17491` subsequently passed all three GitHub workflows:
+story interaction smoke (`37445479386`), full mobile/browser validation
+(`37445479447`) and visual presentation review (`37445479448`). Every job in the
+five-browser matrix succeeded. Raw logs and final metadata are retained in
+`phase-b/ci-ba17491`.
+
+### Phase 5: live scene manifest and single narrative command runtime
+
+`StoryManifest` derives all 32 scenes and twelve chapters from the existing
+canonical registries. It references their environment cues, keystone/echo IDs,
+layout, existing lighting/atmosphere/look/camera/audio profile keys and actual
+event/object/target IDs. It carries no prose or progression outcomes. Twenty-two
+scenes use the existing authored arrival; ten retain the active-fragment camera
+offset fallback. Actual `StoryScene` arrival/grounding/saved-pose initializers
+are compared to an immutable pre-migration fixture across all 66 entries,
+walk/orbit/read modes, terrain cases and accepted/rejected saved positions.
+`JourneySceneDirector` and `SceneLookDirector` consume the manifest's real
+layout/chapter/profile references without a second presentation authority.
+
+`StoryRuntime` is now a live instance-local command authority around the sole
+persisted `useJourneyStore`. The DOM `StoryRuntimeProvider` owns its lifetime
+and one advancement scheduler. Begin/Continue explicitly authorize scene entry;
+navigation, read/witness, ritual, legacy action, story event and drop intents
+use current canonical state and opaque entry/scene/relocation leases. Accepted
+commands settle only authored consequences whose requirements are already
+earned. Constructing, binding, rendering, deriving, observing, reconnecting and
+disposing the host do not infer a story action. No runtime token or timer is
+serialized, and save key/version/schema remain unchanged.
+
+`JourneyDirector`, `StoryEventDirector`, `AccessibleStoryJourney` and
+`AccessibleStoryObjects` now submit IDs to that command authority. The runtime
+owns authored event attention and beat timing; adapters publish range/gaze/UV
+gesture eligibility and read progress projections. Continuous attention resets
+on interruption; sequence playback retains only foreground time already seen.
+Settings, archive, focus, visibility, page lifecycle, mode, physics and input
+interruptions invalidate the appropriate physical continuity immediately,
+including between camera samples. Retained Suspense reconnect may renew prior
+explicit authorization; a changed entry, scene or restoration revision requires
+a new explicit command.
+
+The existing camera's final-pose callback publishes one numeric sample to a
+renderer-free observation port. The port owns no store, DOM listener, scene ID
+or clock. It rejects missing, first, invalid, backwards or stale samples and
+reports normalized linear/angular speeds plus held keyboard/pointer activity.
+Stillness intentionally removes the old frame-rate bias: its intended 75 ms
+limits become 0.4 m/s and approximately 0.3373 radians/s at every frame rate,
+with the existing 350 ms input idle requirement. This changes the former
+30/60/120 Hz admission ceilings of 0.30/0.36/0.40 m/s and
+14.49/17.39/19.33 degrees/s; it does not alter camera/player motion. Actual camera
+fixtures compare 840 supplied-time frames, and physical attention tests cover
+all seventeen authored durations at 30/60/120 Hz.
+
+Clearing presence reports at the existing 80 ms physical cadence independently
+of the unchanged HUD signature/cadence. The rendered source closes over entry,
+scene and relocation revision. The DOM host combines that report with fresh,
+settled camera samples before admitting a witness once per scene lease. A
+threshold report only queues an observation; the same DOM scheduler rechecks
+its lease, scope, current target distance, settlement and age before navigation.
+This keeps canonical mutations out of renderer callbacks and rejects old
+reports after settings, navigation, restoration and cleanup.
+Thresholds additionally require a fresh settled outside receipt before entry.
+The former initial-inside behavior could silently navigate from the canonical
+031/048 arrival, which is 2.7 m from 032's 3.15 m threshold. Actual controller,
+host and source-callback tests now reject default/saved stationary arrivals,
+clear the earned edge on suspension, and accept a new outside-to-inside walk.
+Queued/rejected observations retry only on the existing physical sample; legacy
+synchronous consumers retain their exact earlier hysteresis and cadence.
+
+`useStoryNavigation` now owns both click and keyboard command paths with fresh
+canonical reads and unchanged capability/interactive-element/modifier guards.
+Archive buttons have a synchronous exception only for explicit navigation,
+back and Begin/Continue: physical/timed actions remain suspended, while
+Settings, readiness and foreground still block the command. Fragment opening
+requires witnessed content, and reader paragraphs are guarded before rendering.
+The map's F shortcut uses an explicit current-entry reading handoff without
+enabling map attention.
+If a later successful cloud retry invalidates the current lease, the active
+shell returns to the existing explicit Continue gate. That handoff changes UI
+participation only; it cannot mount a scene event, witness or outcome. Actual
+same-entry hydration tests cover the loss before the first scheduler sample and
+after settled poses. Accepted navigation and retained reconnect install their
+replacement authorization before sampling and do not trigger this handoff.
+
+Validation is in progress. Actual-store core tests cover the fresh complete
+32-scene route, all 34 authored scene-entry events, every legacy action/choice
+and ritual, private prose and exact serialized compatibility. Actual React
+host/navigation tests cover StrictMode, retained reconnect, old publishers,
+single scheduling, archive handoffs, between-frame interruption and queued
+crossings. Full production checks and built desktop/mobile journeys must pass
+before committing this phase. Source guards are migrated to the actual owners
+and strengthened with executable behavior; the former failed reports are
+retained in `runtime-host-preparation`.
+
+The final full check passed 1,133 unit and seven security tests, canonical content
+QA, source/world/asset validation, TypeScript, production build and Pages
+Functions compilation. Eleven actual React host tests and twelve controller/
+navigation tests cover the interruption and arrival repairs. Initial built
+text/cloud validation passed all nine mobile cases and five desktop cases;
+three affected desktop cases subsequently passed unchanged on recheck. Failed
+reports remain in `browser`, `browser-recheck` and `browser-awake`. The Mac power
+log confirms repeated Clamshell Sleep during these runs; trace predicates with
+15/35-second limits include gaps of 408/426 seconds, and one before-page hook
+includes a 1,046-second gap. The idle-sleep hold cannot override a closed lid.
+The latest interrupted desktop route reached the Epilogue's reverse-light
+sequence. Awake final-build browser acceptance remains required.
+
+Awake final-build acceptance completed the full 32-scene text journey on both
+desktop and mobile, including the Heart/Womb choices and ending. The new
+same-entry late-cloud retry passed on both projects; its exact save assertion
+includes the pre-existing safe-entry normalization performed by hydration.
+The final native ANGLE/Metal physical/restore/keyboard run passed nine cases
+with one intentional mobile keyboard skip. It preserves the real two pointer
+wipes and touch before inversion, earned reveal restoration, pointer handoff,
+rendered stage receipts and modified/composing keyboard rejection. Actual
+desktop and portrait stage-two images were inspected. The retained initial
+cloud assertion failure was an expected-navigation-metadata mismatch, and the
+corrected test continues to compare every serialized field/schema and forbids
+mounting new progression. Final reports are `browser-final` and
+`browser-physical`; earlier sleep-interrupted reports remain intact.

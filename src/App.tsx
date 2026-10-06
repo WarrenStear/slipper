@@ -17,7 +17,9 @@ import { RenderRecoveryBoundary } from "./components/ui/RenderRecovery";
 import { TEXT_JOURNEY_REQUEST_EVENT, textJourneyUrl } from "./lib/textJourney";
 import { resetPlayerInput } from "./stores/usePlayerInputStore";
 import { journeyChapters } from "./data/journeyNarrative";
-import { selectStoryLocation } from "./narrative/StorySelectors";
+import { canReadStoryEntry, selectStoryLocation } from "./narrative/StorySelectors";
+import { StoryRuntimeProvider, useStoryRuntimeShell } from "./experience/StoryRuntimeContext";
+import { useStoryNavigation } from "./experience/useStoryNavigation";
 import { contentDiagnostics, entries, visuals } from "./data/slipperContent";
 import type { Slipper3DEntry, Vector3Tuple } from "./data/slipper3dTypes";
 import { loadStoredJourney } from "./lib/journeyStorage";
@@ -26,11 +28,7 @@ import { MagicLinkSignIn } from "./components/auth/MagicLinkSignIn";
 import GiftDedication from "./components/ui/GiftDedication";
 import { useCloudJourneySync } from "./hooks/useCloudJourneySync";
 import { useMobileViewport } from "./hooks/useMobileViewport";
-import {
-  isExperienceSettingsOpen,
-  requestExperienceSettingsOpen,
-  setOnboardingComplete,
-} from "./lib/experiencePreferences";
+import { requestExperienceSettingsOpen } from "./lib/experiencePreferences";
 import {
   rotateXZByYaw,
   trailStateLabel,
@@ -43,7 +41,6 @@ import DiegeticProseDirector from "./components/three/storyText/DiegeticProseDir
 import StoryTransitionDirector, { type StoryTransitionPhase } from "./components/three/journey/StoryTransitionDirector";
 import JourneyDirector, {
   canEnterJourneyEntry,
-  journeyEntryLockMessage,
 } from "./components/three/journey/JourneyDirector";
 import {
   getEntryAdjacency,
@@ -62,7 +59,6 @@ import {
   subscribeGiftDedicationAcknowledgement,
 } from "./lib/dedicationPresentation";
 import { resolveStoryGuidance } from "./lib/storyGuidance";
-import { activateNarrativeAudioFromGesture } from "./lib/narrativeAudioActivation";
 import {
   storyTransitionAllowsAction,
   storyTransitionAllowsProse,
@@ -248,7 +244,7 @@ function ContextualNavigationPrompt({ sceneProximity }: { sceneProximity: SceneP
   );
 }
 
-export default function App() {
+function ExperienceApplication() {
   const legacyJourney = useMemo(() => loadStoredJourney(VALID_ENTRY_IDS, FIRST_ENTRY_ID), []);
   const mobileViewport = useMobileViewport();
   const [accessibleJourney, setAccessibleJourney] = useState(requiresAccessibleJourney);
@@ -313,11 +309,8 @@ export default function App() {
   const storyStarted = useJourneyStore((state) => state.storyStarted);
   const storyCompleted = useJourneyStore((state) => state.storyCompleted);
   const journeyInitialized = useJourneyStore((state) => state.isInitialized);
-  const navigateJourneyToEntry = useJourneyStore((state) => state.navigateToEntry);
-  const goBackInJourney = useJourneyStore((state) => state.goBack);
   const toggleBookmark = useJourneyStore((state) => state.toggleBookmark);
   const setSafePosition = useJourneyStore((state) => state.setSafePosition);
-  const startStory = useJourneyStore((state) => state.startStory);
 
   const cloudJourney = useCloudJourneySync();
 
@@ -385,12 +378,6 @@ export default function App() {
     return subscribeGiftDedicationAcknowledgement(setDedicationAcknowledged);
   }, []);
 
-  useEffect(() => {
-    if (!experienceStarted || archiveOpen || !journeyInitialized || !cloudJourney.bootstrapReady) return;
-    if (!storyStarted) startStory();
-    setMode("explore");
-    setControls("walk");
-  }, [archiveOpen, cloudJourney.bootstrapReady, experienceStarted, journeyInitialized, setControls, setMode, startStory, storyStarted]);
 
   useEffect(() => {
     if (storySceneId !== "epilogue.constellation" || !experienceStarted) {
@@ -484,6 +471,19 @@ export default function App() {
   const transitionAllowsAction = storyTransitionAllowsAction(
     storyTransitionPhase,
   );
+  const returnToContinuation = useCallback(() => {
+    if (document.pointerLockElement) document.exitPointerLock?.();
+    resetPlayerInput();
+    setArchiveOpen(false); setExperienceStarted(false);
+  }, []);
+  const runtimeHost = useStoryRuntimeShell({
+    ready: journeyInitialized && cloudJourney.bootstrapReady,
+    participating: experienceStarted,
+    overlayOpen: archiveOpen,
+    allowActions: accessibleJourney || transitionAllowsAction,
+    onMessage: setGuidanceStatus,
+    onAuthorizationLost: returnToContinuation,
+  });
   const transitionSuppressesAudio = storyTransitionSuppressesAudio(
     storyTransitionPhase,
   );
@@ -685,332 +685,22 @@ export default function App() {
     [history],
   );
 
-  const navStateRef = useRef<{
-    activeEntryId: string;
-    history: string[];
-    mode: AppMode;
-    controls: StorySceneControls;
-    nextEntry?: Slipper3DEntry;
-    adjacency?: ReturnType<typeof getEntryAdjacency>;
-  }>({
-    activeEntryId: resolvedActiveEntryId,
-    history,
-    mode,
-    controls,
-    nextEntry,
-    adjacency,
+  const {
+    navigateToEntry, openArchive, enterForest, leaveForest, requestGuidance,
+    openRememberedEntry, handlePortalSelect, handleMapSelectEntry,
+    returnToLastClearing, returnToChapterPath, continueToNext,
+    continueAuthoredStory, moveToPrevious, readActiveEntry,
+  } = useStoryNavigation({
+    host: runtimeHost, accessibleJourney, audioEnabled, capabilities: experienceCapabilities,
+    experienceStarted, archiveOpen, prologueResolved, guidanceEntryId,
+    setGuidanceEntryId, setGuidanceStatus, setArchiveOpen, setExperienceStarted,
+    setSessionJourneyMode, setSceneResetNonce,
   });
-
-  useEffect(() => {
-    navStateRef.current = {
-      activeEntryId: resolvedActiveEntryId,
-      history,
-      mode,
-      controls,
-      nextEntry,
-      adjacency,
-    };
-  }, [resolvedActiveEntryId, history, mode, controls, nextEntry, adjacency]);
-
-  const navigateToEntry = useCallback(
-    (targetEntryId: string, nextMode: AppMode = mode) => {
-      if (!targetEntryId || !getEntryById(entries, targetEntryId)) return;
-      if (!canEnterJourneyEntry(targetEntryId, resolvedActiveEntryId, useJourneyStore.getState())) {
-        setGuidanceStatus(journeyEntryLockMessage(targetEntryId));
-        return;
-      }
-      setGuidanceEntryId(null);
-      setGuidanceStatus("");
-      if (targetEntryId !== resolvedActiveEntryId) {
-        navigateJourneyToEntry(targetEntryId);
-        // Explicit archive/reader navigation relocates the scene. Physical
-        // clearing crossings use handlePortalSelect and keep the player in place.
-        setSceneResetNonce((value) => value + 1);
-      }
-      setMode(nextMode);
-    },
-    [mode, navigateJourneyToEntry, resolvedActiveEntryId, setMode],
-  );
-
-  const goBack = useCallback(() => {
-    setGuidanceEntryId(null);
-    setGuidanceStatus("");
-    goBackInJourney();
-  }, [goBackInJourney]);
-
-  const openArchive = useCallback(() => {
-    if (!experienceCapabilities.allowFullArchive) return;
-    setArchiveOpen(true);
-    if (!window.location.pathname.startsWith("/archive")) {
-      window.history.pushState({}, "", accessibleJourney ? "/archive?accessible=1" : "/archive");
-    }
-  }, [accessibleJourney, experienceCapabilities.allowFullArchive]);
-
-  const enterForest = useCallback(() => {
-    if (!accessibleJourney) activateNarrativeAudioFromGesture(audioEnabled);
-    startStory();
-    setSessionJourneyMode(startState.id === "fresh" ? "first-journey" : "returning-journey");
-    setOnboardingComplete(true);
-    setArchiveOpen(false);
-    setExperienceStarted(true);
-    setControls("walk");
-    setMode("explore");
-    if (window.location.pathname !== "/") {
-      window.history.pushState({}, "", accessibleJourney ? "/?accessible=1" : "/");
-    }
-  }, [accessibleJourney, audioEnabled, setControls, setMode, startState.id, startStory]);
-
-  const leaveForest = useCallback(() => {
-    if (document.pointerLockElement) document.exitPointerLock();
-    setGuidanceEntryId(null);
-    setGuidanceStatus("");
-    setSceneProximity(null);
-    setControls("walk");
-    setMode("explore");
-    setExperienceStarted(false);
-  }, [setControls, setMode, setSceneProximity]);
-
-  const requestGuidance = useCallback(
-    (targetEntryId: string | undefined) => {
-      const target = targetEntryId ? getEntryById(entries, targetEntryId) : undefined;
-      if (!target || target.id === resolvedActiveEntryId) {
-        setGuidanceEntryId(null);
-        setGuidanceStatus(
-          target?.id === resolvedActiveEntryId
-            ? "You are already at that clearing."
-            : "No unread clearing is available for guidance.",
-        );
-        return;
-      }
-
-      if (!canEnterJourneyEntry(target.id, resolvedActiveEntryId, useJourneyStore.getState())) {
-        setGuidanceEntryId(null);
-        setGuidanceStatus(journeyEntryLockMessage(target.id));
-        return;
-      }
-
-      setGuidanceEntryId(target.id);
-      setGuidanceStatus(
-        accessibleJourney
-          ? `${target.title} is ready to witness in the text journey.`
-          : `Lantern guidance active: ${target.title}`,
-      );
-      setArchiveOpen(false);
-      setExperienceStarted(true);
-      if (accessibleJourney) navigateJourneyToEntry(target.id);
-      setMode(accessibleJourney ? "read" : "explore");
-      setControls("walk");
-      if (window.location.pathname !== "/") {
-        window.history.pushState({}, "", accessibleJourney ? "/?accessible=1" : "/");
-      }
-    },
-    [accessibleJourney, navigateJourneyToEntry, resolvedActiveEntryId, setControls, setMode],
-  );
-
-  const openRememberedEntry = useCallback(
-    (targetEntryId: string, nextMode: AppMode = "read") => {
-      if (!visitedSet.has(targetEntryId) || !getEntryById(entries, targetEntryId)) return;
-      setArchiveOpen(false);
-      setExperienceStarted(true);
-      navigateToEntry(targetEntryId, nextMode);
-      if (window.location.pathname !== "/") {
-        window.history.pushState({}, "", accessibleJourney ? "/?accessible=1" : "/");
-      }
-    },
-    [accessibleJourney, navigateToEntry, visitedSet],
-  );
-
-  const handlePortalSelect = useCallback(
-    (entryId: string) => {
-      const completedGuidance = entryId === guidanceEntryId;
-      if (!entryId || !getEntryById(entries, entryId)) return;
-      if (!canEnterJourneyEntry(entryId, resolvedActiveEntryId, useJourneyStore.getState())) {
-        setGuidanceStatus(journeyEntryLockMessage(entryId));
-        return;
-      }
-      const crossingPosition = sceneProximity?.playerPosition;
-      setGuidanceEntryId(null);
-      if (entryId !== resolvedActiveEntryId) {
-        navigateJourneyToEntry(entryId);
-        if (crossingPosition) {
-          setSafePosition({ entryId, position: crossingPosition });
-        }
-      }
-      setMode("explore");
-      if (completedGuidance) {
-        setGuidanceStatus(
-          `Arrived at ${getEntryById(entries, entryId)?.title ?? "the guided clearing"}.`,
-        );
-      }
-    },
-    [guidanceEntryId, navigateJourneyToEntry, resolvedActiveEntryId, sceneProximity?.playerPosition, setMode, setSafePosition],
-  );
-
-  const handleMapSelectEntry = useCallback(
-    (entryId: string) => {
-      if (visitedSet.has(entryId)) {
-        openRememberedEntry(entryId, "map");
-        return;
-      }
-      requestGuidance(entryId);
-    },
-    [openRememberedEntry, requestGuidance, visitedSet],
-  );
-
-  const returnToLastClearing = useCallback(() => {
-    const targetEntryId = getEntryById(entries, lastSafeEntryId)?.id ?? resolvedActiveEntryId;
-    if (targetEntryId && targetEntryId !== resolvedActiveEntryId) {
-      navigateJourneyToEntry(targetEntryId);
-    }
-    setGuidanceEntryId(null);
-    setGuidanceStatus(`Returned safely to ${getEntryById(entries, targetEntryId)?.title ?? "the current clearing"}.`);
-    setMode("explore");
-    setControls("walk");
-    setSceneResetNonce((value) => value + 1);
-  }, [lastSafeEntryId, navigateJourneyToEntry, resolvedActiveEntryId, setControls, setMode]);
-
-  const returnToChapterPath = useCallback(() => {
-    const target =
-      authoredJourneyTarget ??
-      currentChapterEntries.find((candidate) => !visitedSet.has(candidate.id)) ??
-      adjacency?.next ??
-      nextUnreadEntry;
-    requestGuidance(target?.id);
-  }, [adjacency?.next, authoredJourneyTarget, currentChapterEntries, nextUnreadEntry, requestGuidance, visitedSet]);
-
-  const continueToNext = useCallback(() => {
-    if (nextEntry) navigateToEntry(nextEntry.id, mode);
-  }, [mode, navigateToEntry, nextEntry]);
-
-  const continueAuthoredStory = useCallback(() => {
-    if (!authoredJourneyTarget) {
-      setGuidanceStatus(storyCompleted
-        ? "The remembered path now lies open."
-        : "Stay with this clearing until it answers.");
-      return;
-    }
-    if (authoredJourneyTarget.id === resolvedActiveEntryId) {
-      setGuidanceStatus("This clearing still asks something of you.");
-      setMode("explore");
-      return;
-    }
-    if (!canContinueAuthoredStory) {
-      setGuidanceStatus(journeyEntryLockMessage(authoredJourneyTarget.id));
-      return;
-    }
-    navigateToEntry(authoredJourneyTarget.id, "read");
-  }, [authoredJourneyTarget, canContinueAuthoredStory, navigateToEntry, resolvedActiveEntryId, setMode, storyCompleted]);
-
-  const moveToPrevious = useCallback(() => {
-    if (history.length > 0) {
-      goBack();
-      return;
-    }
-
-    if (adjacency?.previous) navigateToEntry(adjacency.previous.id, mode);
-  }, [adjacency, goBack, history.length, mode, navigateToEntry]);
-
-  useEffect(() => {
-    const navigateFromKeyboard = (targetEntryId: string, nextMode: AppMode) => {
-      const { activeEntryId: currentEntryId, navigateToEntry: navigateJourney } = useJourneyStore.getState();
-      if (!targetEntryId || !getEntryById(entries, targetEntryId)) return;
-      if (!canEnterJourneyEntry(targetEntryId, currentEntryId, useJourneyStore.getState())) {
-        setGuidanceStatus(journeyEntryLockMessage(targetEntryId));
-        return;
-      }
-      if (targetEntryId !== currentEntryId) {
-        navigateJourney(targetEntryId);
-        setSceneResetNonce((value) => value + 1);
-      }
-      setMode(nextMode);
-    };
-
-    const goBackFromKeyboard = () => {
-      useJourneyStore.getState().goBack();
-    };
-
-    const moveToPreviousFromKeyboard = () => {
-      const { history, mode, adjacency } = navStateRef.current;
-
-      if (history.length > 0) {
-        goBackFromKeyboard();
-        return;
-      }
-
-      if (adjacency?.previous) navigateFromKeyboard(adjacency.previous.id, mode);
-    };
-
-    const continueToNextFromKeyboard = () => {
-      const { nextEntry, mode } = navStateRef.current;
-      if (nextEntry) navigateFromKeyboard(nextEntry.id, mode);
-    };
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (!experienceStarted || archiveOpen || isExperienceSettingsOpen()) return;
-      if (event.ctrlKey || event.metaKey || event.altKey || event.isComposing) return;
-      if (event.defaultPrevented) return;
-      const target = event.target as HTMLElement | null;
-      const isInteractive = Boolean(
-        target?.isContentEditable ||
-          target?.closest(
-            "input, textarea, select, button, a, summary, [role='button'], [role='tab'], [role='radio'], [role='slider'], [role='checkbox'], [role='switch'], [role='menuitem'], [role='option'], [role='dialog']",
-          ),
-      );
-      if (isInteractive) return;
-      if (!prologueResolved) return;
-
-      const { mode, controls } = navStateRef.current;
-      const normalizedKey = event.key.toLowerCase();
-      const isWalkExploring = mode === "explore" && controls === "walk";
-
-      if (event.key === "Escape") {
-        event.preventDefault();
-        setMode("explore");
-      }
-
-      if (
-        experienceCapabilities.showGenericNavigation &&
-        (normalizedKey === "b" || (event.key === "ArrowLeft" && !isWalkExploring))
-      ) {
-        event.preventDefault();
-        moveToPreviousFromKeyboard();
-      }
-
-      if (
-        experienceCapabilities.allowConstellationNavigation &&
-        (normalizedKey === "m" || normalizedKey === "i")
-      ) {
-        event.preventDefault();
-        setMode((current) => (current === "map" ? "explore" : "map"));
-      }
-
-      if (normalizedKey === "e") {
-        event.preventDefault();
-        setMode("explore");
-      }
-
-      if (normalizedKey === "f") {
-        event.preventDefault();
-        setMode("read");
-      }
-
-      if (
-        experienceCapabilities.showGenericNavigation &&
-        event.key === "ArrowRight" &&
-        !isWalkExploring
-      ) {
-        event.preventDefault();
-        continueToNextFromKeyboard();
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [archiveOpen, experienceCapabilities.allowConstellationNavigation, experienceCapabilities.showGenericNavigation, experienceStarted, prologueResolved, setMode]);
 
   const visitedCount = visitedEntryIds.length;
   const totalCount = entries.length;
-  const paragraphs = entryParagraphs(activeEntry);
+  const canReadActiveEntry = canReadStoryEntry(resolvedActiveEntryId, { witnessedEntryIds });
+  const paragraphs = canReadActiveEntry ? entryParagraphs(activeEntry) : [];
   const isBookmarked = bookmarkedEntryIds.includes(resolvedActiveEntryId);
   useEffect(() => {
     setReaderProgress(0);
@@ -1214,7 +904,7 @@ export default function App() {
           active={mode === "explore" && storyTransitionPhase === "idle"}
           canRead={witnessedEntryIds.includes(resolvedActiveEntryId)}
           canFollow={canContinueAuthoredStory}
-          onRead={() => setMode("read")}
+          onRead={readActiveEntry}
           onFollow={() => requestGuidance(authoredJourneyTarget?.id)}
         />
       ) : null}
@@ -1231,7 +921,7 @@ export default function App() {
           Boolean(sceneProximity?.insideClearing)
         }
         suppressed={storySceneId === "river.release-surrender"}
-        onOpenReader={() => setMode("read")}
+        onOpenReader={readActiveEntry}
       />
 
       {prologueResolved && mode === "explore" ? (
@@ -1258,7 +948,7 @@ export default function App() {
           canReturnToChapterPath={Boolean(currentChapterEntries.length || adjacency?.next)}
           journeyHistory={mobileJourneyHistory}
           onModeChange={(nextMode) => setSetting("mobileControlMode", nextMode)}
-          onRead={() => setMode("read")}
+          onRead={readActiveEntry}
           onMap={() => {
             setMobileMapPane("constellation");
             setMode("map");
@@ -1436,7 +1126,7 @@ export default function App() {
         </section>
       ) : null}
 
-      {mode === "read" ? (
+      {mode === "read" && canReadActiveEntry ? (
         <section className="reader-panel" id="story-content" aria-label="Focused reading mode">
           <div
             className="reader-panel-inner"
@@ -1613,4 +1303,8 @@ export default function App() {
     </main>
     </RenderRecoveryBoundary>
   );
+}
+
+export default function App() {
+  return <StoryRuntimeProvider><ExperienceApplication /></StoryRuntimeProvider>;
 }

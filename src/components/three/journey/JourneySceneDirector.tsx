@@ -3,9 +3,9 @@ import { EnvironmentalChoreography } from "../storyEvents/EnvironmentalChoreogra
 import { StoryEventDirector } from "../storyEvents/StoryEventDirector";
 import { StoryActorDirector } from "../storyEvents/StoryActorDirector";
 import { useJourneyStore } from "../../../stores/useJourneyStore";
+import { getSceneManifest } from "../../../narrative/StoryManifest.ts";
 import { memo, useMemo, type ElementType } from "react";
 import {
-  getJourneySceneLayout,
   resolveJourneyRenderWindow,
   type JourneySceneId,
   type JourneySceneLayout,
@@ -123,7 +123,8 @@ function JourneySceneDirectorComponent({
   interactionsEnabled = true,
   onFinalConstellationFormationComplete,
 }: JourneySceneDirectorProps) {
-  const activeScene = getJourneySceneLayout(activeSceneId);
+  const activeManifest = getSceneManifest(activeSceneId);
+  const activeScene = activeManifest.layout;
   const renderWindow = useMemo(() => resolveJourneyRenderWindow(activeSceneId), [activeSceneId]);
   const worldOffset: Vec3 = activeOrigin
     ? [
@@ -132,25 +133,27 @@ function JourneySceneDirectorComponent({
         activeOrigin[2] - activeScene.anchor.position[2],
       ]
     : [0, 0, 0];
-  const ActiveChapter = CHAPTER_COMPONENTS[activeScene.chapterId];
+  const ActiveChapter = CHAPTER_COMPONENTS[activeManifest.chapterId];
 
   return (
     <group name="authored-journey-scene-window" position={worldOffset}>
       {renderWindow.entries.map((entry) => {
-        const scene = getJourneySceneLayout(entry.sceneId);
+        const manifest = getSceneManifest(entry.sceneId);
+        const scene = manifest.layout;
         const position = mutablePoint(scene.anchor.position);
         if (entry.mode === "active") {
           return (
             <group
               key={entry.sceneId}
               name={`journey-scene:${entry.sceneId}`}
+              userData={{ environmentId: manifest.environmentId }}
               position={position}
               rotation={[0, scene.anchor.headingRadians, 0]}
             >
               {interactionsEnabled ? <StoryEventDirector sceneId={entry.sceneId} reducedMotion={reducedMotion} /> : null}
               {interactionsEnabled ? <ActiveStoryActors sceneId={entry.sceneId} qualityProfile={qualityProfile} reducedEffects={reducedEffects} reducedMotion={reducedMotion} /> : null}
               <EnvironmentalChoreography sceneId={entry.sceneId} qualityProfile={qualityProfile} reducedEffects={reducedEffects} reducedMotion={reducedMotion} />
-              <OutdoorLandscape sceneId={entry.sceneId} quality={qualityProfile.quality} reducedEffects={reducedEffects} reducedMotion={reducedMotion} collidable={interactionsEnabled} />
+              <OutdoorLandscape sceneId={manifest.sceneId} quality={qualityProfile.quality} reducedEffects={reducedEffects} reducedMotion={reducedMotion} collidable={interactionsEnabled} />
               <ActiveChapter
                 scene={scene}
                 qualityProfile={qualityProfile}

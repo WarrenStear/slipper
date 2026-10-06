@@ -1,7 +1,6 @@
 import GuidedStoryMoment from "./GuidedStoryMoment";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
-import JourneyDirector from "../three/journey/JourneyDirector";
 import {
   getJourneyChapter,
   getJourneyEntryContext,
@@ -17,7 +16,6 @@ import {
 } from "../../lib/journeyPlayerActions";
 import {
   canEnterNarrativeEntry,
-  canResolveRitual,
   nextResolvableRitualForEntry,
 } from "../../lib/journeyProgression";
 import {
@@ -28,7 +26,7 @@ import {
 import { resolveStoryTransitionDurations } from "../../lib/storyTransitionPacing";
 import { useJourneyStore } from "../../stores/useJourneyStore";
 import { useSettingsStore } from "../../stores/useSettingsStore";
-import { applyJourneyOutcome, applyPlayerActionOutcome } from "../../narrative/StoryActions";
+import { useStoryRuntime } from "../../experience/StoryRuntimeContext";
 import { canReadStoryEntry } from "../../narrative/StorySelectors";
 import { selectStoryProgression } from "../../narrative/StoryRuntime";
 import AccessibleStoryObjects from "./AccessibleStoryObjects";
@@ -91,11 +89,9 @@ export function AccessibleStoryJourney({
     storyCompleted: state.storyCompleted,
     history: state.history,
     bookmarkedEntryIds: state.bookmarkedEntryIds,
-    witnessEntry: state.witnessEntry,
-    navigateToEntry: state.navigateToEntry,
-    goBack: state.goBack,
     toggleBookmark: state.toggleBookmark,
   })));
+  const runtime = useStoryRuntime();
   const [announcement, setAnnouncement] = useState("");
   const [accessibleConstellationFormation, setAccessibleConstellationFormation] =
     useState<"forming" | "complete">("forming");
@@ -223,66 +219,33 @@ export function AccessibleStoryJourney({
     : 1;
 
   const resolveRitual = useCallback(() => {
-    if (!activeEntry || !ritualInteraction || !ritualBeat) return;
-    const latest = useJourneyStore.getState();
-    const expected = nextResolvableRitualForEntry(activeEntry.id, latest);
-    if (
-      expected?.ritualId !== ritualInteraction.ritualId ||
-      !canResolveRitual(ritualInteraction.ritualId, latest)
-    ) {
-      setAnnouncement("That moment is not ready yet.");
-      return;
-    }
+    const lease = runtime?.currentLease();
+    if (!runtime || !lease || !ritualInteraction) return;
+    const result = runtime.dispatch({ type: "ritual", ritualId: ritualInteraction.ritualId, lease });
+    setAnnouncement(result.accepted ? result.messages.join(" ") : "That moment is not ready yet.");
+  }, [runtime, ritualInteraction]);
 
-    if (ritualBeat.entryId === activeEntry.id) {
-      latest.enterBeat(ritualBeat.actId, ritualBeat.id);
-    }
-    for (const outcome of ritualBeat.outcomes ?? []) applyJourneyOutcome(outcome, useJourneyStore.getState());
-    setAnnouncement(`The world remembers: ${ritualInteraction.label}.`);
-  }, [activeEntry, ritualBeat, ritualInteraction]);
-
-  const resolveStoryAction = useCallback(
-    (action: JourneyPlayerAction, choice?: JourneyPlayerActionChoice) => {
-      if (!activeScene) return;
-      const latest = useJourneyStore.getState();
-      const expected = nextJourneyPlayerAction(activeScene.id, latest.worldFlags);
-      if (expected?.id !== action.id) {
-        setAnnouncement("That moment is not ready yet.");
-        return;
-      }
-      if (action.mode === "choice" && !choice) return;
-
-      const outcomes = choice?.outcomes ?? action.outcomes ?? [];
-      if (outcomes.length === 0) return;
-      for (const outcome of outcomes) applyPlayerActionOutcome(outcome, useJourneyStore.getState());
-      setAnnouncement(
-        choice
-          ? `${action.rememberedAs} ${choice.label}.`
-          : action.rememberedAs,
-      );
-    },
-    [activeScene],
-  );
+  const resolveStoryAction = useCallback((action: JourneyPlayerAction, choice?: JourneyPlayerActionChoice) => {
+    const lease = runtime?.currentLease();
+    if (!runtime || !lease) return;
+    const result = runtime.dispatch({ type: "legacy-action", actionId: action.id, choiceId: choice?.id, lease });
+    setAnnouncement(result.accepted ? result.messages.join(" ") : "That moment is not ready yet.");
+  }, [runtime]);
 
   const witnessActiveEntry = useCallback(() => {
-    if (!activeEntry || useJourneyStore.getState().witnessedEntryIds.includes(activeEntry.id)) return;
-    journey.witnessEntry(activeEntry.id);
-    setAnnouncement(`${activeEntry.title} is now remembered.`);
-  }, [activeEntry, journey]);
+    const lease = runtime?.currentLease();
+    if (!runtime || !lease || !activeEntry) return;
+    const result = runtime.dispatch({ type: "witness", entryId: activeEntry.id, lease });
+    if (result.accepted) setAnnouncement(`${activeEntry.title} is now remembered.`);
+  }, [activeEntry, runtime]);
 
-  const navigate = useCallback(
-    (entryId: string) => {
-      const latest = useJourneyStore.getState();
-      if (!canEnterNarrativeEntry(entryId, latest)) {
-        setAnnouncement("That memory has not opened yet.");
-        return;
-      }
-      journey.navigateToEntry(entryId);
-      setAnnouncement(`${entryById.get(entryId)?.title ?? "The next memory"} is ready to witness.`);
-      window.scrollTo({ top: 0, behavior: "auto" });
-    },
-    [entryById, journey],
-  );
+  const navigate = useCallback((entryId: string) => {
+    if (!runtime) return;
+    const result = runtime.dispatch({ type: "navigate", entryId, expectedEntryId: activeEntry?.id });
+    if (!result.accepted) { setAnnouncement("That memory has not opened yet."); return; }
+    setAnnouncement(`${entryById.get(entryId)?.title ?? "The next memory"} is ready to witness.`);
+    window.scrollTo({ top: 0, behavior: "auto" });
+  }, [activeEntry?.id, entryById, runtime]);
 
   const chapterHeadingRef = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
@@ -309,14 +272,7 @@ export function AccessibleStoryJourney({
         Skip to the current memory
       </a>
 
-      <JourneyDirector
-        activeEntryId={activeEntry.id}
-        mode="map"
-        controls="walk"
-        proximity={null}
-        reducedMotion
-        onJourneyMessage={setAnnouncement}
-      />
+
 
       <header className="accessible-story-journey__header">
         <div>
@@ -529,7 +485,7 @@ export function AccessibleStoryJourney({
           <button
             type="button"
             disabled={journey.history.length === 0}
-            onClick={() => journey.goBack()}
+            onClick={() => runtime?.dispatch({ type: "back", expectedEntryId: activeEntry.id })}
           >
             Back
           </button>

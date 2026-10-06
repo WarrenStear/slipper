@@ -4,7 +4,8 @@ import { cloneNpcPresentation, isPlaceholderNpcAsset } from "../../lib/assets/np
 import { AuthoredNpcSilhouette } from "./environmentArt/AuthoredNpc";
 import { useJourneyStore } from "../../stores/useJourneyStore";
 import { getCurrentCinematicProfile } from "../../cinematics/emotionalCinematography";
-import { getAuthoredSceneArrival } from "../../cinematics/sceneArrival";
+import { getSceneManifestForEntry, resolveSceneManifestArrival } from "../../narrative/StoryManifest";
+import { useStoryRuntimeHost } from "../../experience/StoryRuntimeContext";
 import { openingEnclosed } from "../../cinematics/openingPresentation";
 import { SceneLookDirector } from "./artDirection/SceneLookDirector";
 import { SpatialProseDirector } from "./storyText/SpatialProseDirector";
@@ -36,6 +37,7 @@ import { CameraController } from "../../player/CameraController";
 import { PLAYER_FOOT_OFFSET, PLAYER_GROUND_CLEARANCE, PLAYER_SPEED } from "../../player/playerMovement";
 import { PLAYER_CAMERA_OFFSET_Y, PLAYER_EYE_HEIGHT } from "../../player/cameraModel";
 import { cameraPresentationActive } from "../../cinematics/shotComposition";
+import { NODE_ACTIVATION_RADIUS_SQ } from "../../player/interactionProximity";
 import { useWorldStore } from "../../stores/useWorldStore";
 import { GuidanceController } from "../../world/guidance/GuidanceController";
 import type { PlayerSpatialWindow, SceneProximityState } from "../../world/guidance/guidanceTypes";
@@ -2563,6 +2565,29 @@ export function StoryScene({
     () => (entry ? getJourneySceneForEntry(entry.id) : undefined),
     [entry],
   );
+  const runtimeHost = useStoryRuntimeHost();
+  const sceneRelocationRevision = useJourneyStore(state => state.sceneRelocationRevision);
+  const observation = useCallback(() => narrativeScene ? runtimeHost?.physicalBinding({
+    entryId: entry.id, sceneId: narrativeScene.id, revision: sceneRelocationRevision,
+  }) ?? null : null, [runtimeHost, entry.id, narrativeScene, sceneRelocationRevision]);
+  const handleObservedClearing = useCallback((facts: {
+    active: { id: string } | null; nearest: { id: string } | null; insideClearing: boolean;
+    nearestInactive: { id: string; position: Vector3Tuple } | null;
+  }) => {
+    if (!narrativeScene || !runtimeHost) return;
+    const scope = { entryId: entry.id, sceneId: narrativeScene.id, revision: sceneRelocationRevision };
+    runtimeHost.observeClearingPresence(scope, facts.active?.id === entry.id && facts.nearest?.id === entry.id && facts.insideClearing);
+    if (facts.nearestInactive) runtimeHost.observeThresholdDistance(scope, facts.nearestInactive.id,
+      facts.nearestInactive.position, NODE_ACTIVATION_RADIUS_SQ);
+  }, [runtimeHost, entry.id, narrativeScene, sceneRelocationRevision]);
+  const handleObservedThreshold = useCallback((targetEntryId: string) => {
+    if (runtimeHost && narrativeScene && !observation()) return false;
+    onPortalSelect?.(targetEntryId);
+    // The DOM scheduler admits this report asynchronously; keep reporting until
+    // the canonical target becomes active, including after a suspended receipt.
+    if (runtimeHost && narrativeScene) return false;
+  }, [runtimeHost, narrativeScene, observation, onPortalSelect]);
+  const sceneManifest = useMemo(() => getSceneManifestForEntry(entry.id), [entry.id]);
   const cameraPresentationEnabled = useCallback(() => {
     const state = useWorldStore.getState();
     return cameraPresentationActive({ visible: !document.hidden, focused: document.hasFocus(), overlayOpen: useSettingsStore.getState().drawerOpen,
@@ -2592,9 +2617,9 @@ export function StoryScene({
   const exteriorVisible = !openingEnclosed(narrativeScene?.id, openingResolved);
 
   const start = entry?.engine3d.cameraStart ?? DEFAULT_CAMERA_POSITION;
-  const authoredArrival = useMemo(() => narrativeScene && mode === "explore" && controls === "walk"
-    ? getAuthoredSceneArrival(narrativeScene.id, authoredSceneOrigin, getJourneySceneLayout(narrativeScene.id).anchor.headingRadians)
-    : null, [narrativeScene, mode, controls, authoredSceneOrigin]);
+  const authoredArrival = useMemo(() => sceneManifest && mode === "explore" && controls === "walk"
+    ? resolveSceneManifestArrival(sceneManifest, authoredSceneOrigin, sceneManifest.layout.anchor.headingRadians)
+    : null, [sceneManifest, mode, controls, authoredSceneOrigin]);
   const playerSpawnX = authoredArrival?.position[0] ?? activePosition[0] + start[0];
   const playerSpawnZ = authoredArrival?.position[2] ?? activePosition[2] + start[2];
   const playerSpawnGroundY = sampleGroundY(playerSpawnX, playerSpawnZ);
@@ -2739,6 +2764,7 @@ export function StoryScene({
         reducedMotion={reducedMotion} reducedEffects={reducedEffects} sceneId={narrativeScene?.id ?? null} cameraAssistance={cameraAssistance}
         openingShotOwned={narrativeScene?.id === "broken-floor.confession" && !openingReflectionInverted}
         presentationActive={cameraPresentationEnabled} inputActive={physicalInputActive}
+        observation={observation}
       />
       {/* Authored chapters already frame their footprint. The legacy eight-metre
           ring put trunks and colliders through water, furniture and sightlines. */}
@@ -2782,9 +2808,10 @@ export function StoryScene({
         explicitNavigationTargetId={explicitNavigationTargetNode?.entry.id}
         controls={controls}
         mode={mode}
-        onNodeEnter={onPortalSelect}
+        onNodeEnter={handleObservedThreshold}
         onApproachChange={setApproachingEntryId}
         onPlayerProximityChange={onPlayerProximityChange}
+        onPhysicalPresence={handleObservedClearing}
         onPlayerSpatialChange={setPlayerSpatial}
       />
       {/* FALLBACK PRESENTATION ONLY: canonical atmosphere, fill, sky and finishing

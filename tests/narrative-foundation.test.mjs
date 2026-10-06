@@ -229,13 +229,15 @@ test("narrative boundaries have no renderer, storage, timers, or alternate store
     assert.doesNotMatch(source, /from ["'][^"']*(?:react|three|zustand|stores|components)[^"']*["']/);
     assert.doesNotMatch(source, /\b(?:localStorage|sessionStorage|useFrame|setTimeout|setInterval|requestAnimationFrame)\b/);
   }
-  for (const name of ["components/three/journey/JourneyDirector", "components/ui/AccessibleStoryJourney"]) {
+  const runtime = readFileSync(new URL("../src/narrative/StoryRuntime.ts", import.meta.url), "utf8");
+  assert.match(runtime, /applyJourneyOutcome\(outcome, getState\(\)\)/);
+  assert.match(runtime, /applyPlayerActionOutcome\(outcome, getState\(\)\)/);
+  for (const name of ["components/three/journey/JourneyDirector", "components/ui/AccessibleStoryJourney",
+    "components/three/storyEvents/StoryEventDirector", "components/ui/AccessibleStoryObjects"]) {
     const source = readFileSync(new URL(`../src/${name}.tsx`, import.meta.url), "utf8");
-    assert.match(source, /from ["'][^"']*narrative\/StoryActions["']/);
-    assert.match(source, /from ["'][^"']*narrative\/StoryRuntime["']/);
-    assert.match(source, /applyJourneyOutcome\(outcome, useJourneyStore\.getState\(\)\)/);
-    assert.match(source, /applyPlayerActionOutcome\(outcome, useJourneyStore\.getState\(\)\)/);
+    assert.match(source, /useStoryRuntime/);
     assert.doesNotMatch(source, /function apply(?:Journey|Ritual|PlayerAction)Outcome/);
+    assert.doesNotMatch(source, /\.(?:dispatchStoryEvent|witnessEntry|enterBeat|completeScene|completeChapter|completeStory)\(/);
   }
   assert.equal(journeyEntryLockMessage("unknown"), "That part of the wood is not open yet.");
   assert.match(journeyEntryLockMessage("fragment-008"), /will awaken when the current memory has settled/);

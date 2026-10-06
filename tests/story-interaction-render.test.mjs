@@ -73,6 +73,7 @@ test("Heart and Womb visual choices are one-at-a-time world targets, not a butto
   const director = source("../src/components/three/journey/JourneyDirector.tsx");
   const interaction = source("../src/components/three/moments/StoryMomentInteraction.tsx");
   const accessibleJourney = source("../src/components/ui/AccessibleStoryJourney.tsx");
+  const runtime = source("../src/narrative/StoryRuntime.ts");
 
   assert.match(actions, /HEART_MEMORY_WORLD_TARGETS/);
   assert.match(actions, /WOMB_FUTURE_WORLD_TARGETS/);
@@ -83,7 +84,11 @@ test("Heart and Womb visual choices are one-at-a-time world targets, not a butto
   assert.match(chapter, /worldChoiceId: "future\.home"/);
   assert.match(chapter, /interaction: "approach-and-press"/);
   assert.match(director, /const storyActionChoiceProximity = useMemo/);
-  assert.match(director, /physicallyReachedChoice\?\.id !== selectedChoice\.id/);
+  assert.match(director, /source: "physical"/);
+  assert.match(director, /playerLocalPosition: actionScene && origin && player/);
+  assert.match(runtime, /intent\.source === "physical"/);
+  assert.match(runtime, /journeyPlayerActionChoiceAtTarget\(action, intent\.playerLocalPosition, getJourneySceneArrivalHeading\(action\.sceneId\)\)\?\.id !== choice\.id/);
+  assert.match(runtime, /rejected\("choice-unreached"\)/);
   assert.match(interaction, /data-story-choice-presentation=\{action\.mode === "choice" \? "world-target"/);
   assert.match(interaction, /action\.mode === "choice" && worldChoice && !event\.repeat/);
   assert.match(interaction, /data-story-action-mode="world-choice"/);

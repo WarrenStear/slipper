@@ -2,11 +2,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import type { JourneySceneId } from "../../lib/storyJourneyState";
 import {
+  eventsForScene,
   getAvailableStoryEvents,
   getCarriedStoryObjects,
   getStoryObject,
 } from "../../storyEvents/storyEventRegistry";
-import { createStoryAttentionSession } from "../../storyEvents/storyAttentionSession";
+import { useStoryRuntime } from "../../experience/StoryRuntimeContext";
+import { subscribeAcceptedStoryEvents } from "../../storyEvents/acceptedStoryEvents";
 import type { StoryEventDefinition, StoryEventTrigger } from "../../storyEvents/storyEventTypes";
 import { useJourneyStore } from "../../stores/useJourneyStore";
 import { useSettingsStore } from "../../stores/useSettingsStore";
@@ -70,8 +72,11 @@ export default function AccessibleStoryObjects({
   sceneId: JourneySceneId;
   onAnnouncement: (message: string) => void;
 }) {
+  const runtime = useStoryRuntime();
   const state = useJourneyStore(useShallow((journey) => ({
     sceneId: journey.sceneId,
+    activeEntryId: journey.activeEntryId,
+    relocationRevision: journey.sceneRelocationRevision,
     completedSceneIds: journey.completedSceneIds,
     worldFlags: journey.worldFlags,
     inventory: journey.inventory,
@@ -84,112 +89,68 @@ export default function AccessibleStoryObjects({
   const [description, setDescription] = useState("");
   const [reversePlace, setReversePlace] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [attentionEpoch, setAttentionEpoch] = useState(0);
   const announcement = useRef(onAnnouncement);
   announcement.current = onAnnouncement;
   const events = useMemo(() => getAvailableStoryEvents(state, sceneId), [state, sceneId]);
   const carried = useMemo(() => getCarriedStoryObjects(state), [state]);
   const sequence = events.find((event) => event.trigger === "sequence-complete");
   const visibleEvents = events.filter((event) => !["scene-enter", "sequence-complete", "scene-complete"].includes(event.trigger));
-  const controlsDisabled = Boolean(pending || sequence || drawerOpen);
+  const controlsDisabled = Boolean(!runtime || pending || sequence || drawerOpen);
 
   useEffect(() => {
     setPending(null);
     setDescription("");
     setReversePlace(0);
-    useJourneyStore.getState().dispatchStoryEvent({ sceneId, trigger: "scene-enter" });
-  }, [sceneId]);
+  }, [sceneId, state.activeEntryId, state.relocationRevision]);
+
+  useEffect(() => subscribeAcceptedStoryEvents(receipt => {
+    if (receipt.sceneId !== sceneId) return;
+    for (const id of receipt.eventIds) {
+      const event = eventsForScene(sceneId).find(candidate => candidate.id === id);
+      if (!event || event.trigger === "scene-enter") continue;
+      const message = ENVIRONMENT_DESCRIPTIONS[id] ?? (event.trigger === "sequence-complete"
+        ? "The light returns through the places you walked."
+        : `${eventLabel(event)}. The change remains in this place.`);
+      setDescription(message); announcement.current(message);
+      setPending(current => current?.id === id ? null : current);
+    }
+  }), [sceneId]);
 
   useEffect(() => {
     const event = sequence ?? pending;
-    if (!event || event.sceneId !== sceneId) return;
+    const lease = runtime?.currentLease();
+    if (!runtime || !lease || !event || event.sceneId !== sceneId) return;
+    const token = runtime.beginAttention(lease, event.id);
+    if (!token) return;
     const isSequence = event.trigger === "sequence-complete";
-    const duration = event.durationMs ?? (isSequence ? 24_000 : 0);
-    const session = createStoryAttentionSession(duration, !isSequence);
-    let frame = 0;
-    let disposed = false;
-    let pageActive = true;
-    let pageFocused = document.hasFocus();
-    let lastPlace = -1;
-    let wasPaused = false;
-    const isActive = () => pageActive && pageFocused && acceptsInput(sceneId);
-    const updatePaused = (next: boolean) => {
-      if (next !== wasPaused) { wasPaused = next; setPaused(next); }
-    };
-    const refreshActivity = () => {
-      const active = isActive();
-      session.setActive(active);
-      updatePaused(!active);
-    };
-    setPaused(!isActive());
-    wasPaused = !isActive();
-    if (isSequence) setReversePlace(0);
-    const blur = () => { pageFocused = false; refreshActivity(); };
-    const focus = () => { pageFocused = document.hasFocus(); refreshActivity(); };
-    const visibility = () => { pageFocused = document.hasFocus(); refreshActivity(); };
-    const pagehide = () => { pageActive = false; refreshActivity(); };
-    const pageshow = () => { pageActive = true; pageFocused = document.hasFocus(); refreshActivity(); };
-    // Subscribe immediately instead of restarting this effect: sequences retain
-    // witnessed time, while continuous stillness resets even between two frames.
-    const unsubscribeSettings = useSettingsStore.subscribe((next, previous) => {
-      if (next.drawerOpen !== previous.drawerOpen) refreshActivity();
-    });
-    const tick = (now: number) => {
+    let frame = 0, disposed = false, lastPlace = -1, wasPaused = false;
+    const read = () => {
       if (disposed) return;
-      refreshActivity();
-      const { elapsedMs: elapsed, completedNow } = session.sample(now);
-      if (isSequence) {
-        const place = Math.min(REVERSE_PLACES.length - 1, Math.floor(elapsed / Math.max(1, duration) * REVERSE_PLACES.length));
-        if (place !== lastPlace) { lastPlace = place; setReversePlace(place); }
-      }
-      if (completedNow) {
-        const accepted = useJourneyStore.getState().dispatchStoryEvent({
-          sceneId, eventId: event.id, trigger: event.trigger,
-          objectId: event.objectId, targetId: event.targetId, duration: elapsed,
-        });
-        if (accepted.length > 0) {
-          const message = ENVIRONMENT_DESCRIPTIONS[event.id] ?? (isSequence
-            ? "The light returns through the places you walked."
-            : `${eventLabel(event)}. The change remains in this place.`);
-          setDescription(message);
-          announcement.current(message);
-        }
+      const projection = runtime.readAttention(token);
+      if (!projection) {
         setPending(current => current?.id === event.id ? null : current);
+        if (runtime.currentLease() && runtime.currentLease() !== lease) setAttentionEpoch(current => current + 1);
         return;
       }
-      frame = window.requestAnimationFrame(tick);
+      if (projection.paused !== wasPaused) { wasPaused = projection.paused; setPaused(projection.paused); }
+      if (isSequence) {
+        const place = Math.min(REVERSE_PLACES.length - 1, Math.floor(projection.elapsedMs / Math.max(1, projection.durationMs) * REVERSE_PLACES.length));
+        if (place !== lastPlace) { lastPlace = place; setReversePlace(place); }
+      }
+      if (!projection.completed) frame = window.requestAnimationFrame(read);
     };
-    document.addEventListener("visibilitychange", visibility);
-    window.addEventListener("blur", blur);
-    window.addEventListener("focus", focus);
-    window.addEventListener("pagehide", pagehide);
-    window.addEventListener("pageshow", pageshow);
-    refreshActivity();
-    frame = window.requestAnimationFrame(tick);
-    return () => {
-      disposed = true;
-      session.cancel();
-      unsubscribeSettings();
-      window.cancelAnimationFrame(frame);
-      document.removeEventListener("visibilitychange", visibility);
-      window.removeEventListener("blur", blur);
-      window.removeEventListener("focus", focus);
-      window.removeEventListener("pagehide", pagehide);
-      window.removeEventListener("pageshow", pageshow);
-    };
-  }, [sequence, pending, sceneId]);
+    setPaused(false);
+    if (isSequence) setReversePlace(0);
+    frame = window.requestAnimationFrame(read);
+    return () => { disposed = true; window.cancelAnimationFrame(frame); runtime.cancelAttention(token); };
+  }, [runtime, sequence, pending, sceneId, attentionEpoch]);
 
   function act(event: StoryEventDefinition) {
-    if (pending || sequence || !acceptsInput(sceneId)) return;
-    if (event.durationMs) {
-      setPending(event);
-      return;
-    }
-    const accepted = useJourneyStore.getState().dispatchStoryEvent({ sceneId, eventId: event.id, trigger: event.trigger, objectId: event.objectId, targetId: event.targetId });
-    if (accepted.length > 0) {
-      const message = ENVIRONMENT_DESCRIPTIONS[event.id] ?? `${eventLabel(event)}. The change remains in this place.`;
-      setDescription(message);
-      onAnnouncement(message);
-    }
+    const lease = runtime?.currentLease();
+    if (!runtime || !lease || pending || sequence || !acceptsInput(sceneId)) return;
+    if (event.durationMs) { setPending(event); return; }
+    runtime.dispatch({ type: "event", eventId: event.id, lease });
   }
 
   return (
@@ -203,8 +164,9 @@ export default function AccessibleStoryObjects({
               {!object.keepsake && object.sceneIds.includes(sceneId) ? (
                 <button type="button" disabled={controlsDisabled} onClick={() => {
                   if (controlsDisabled || !acceptsInput(sceneId)) return;
-                  const accepted = useJourneyStore.getState().dispatchStoryEvent({ sceneId, trigger: "drop", objectId: object.id });
-                  if (accepted.length > 0) onAnnouncement(`${object.label} is set down safely.`);
+                  const lease = runtime?.currentLease();
+                  const accepted = lease && runtime?.dispatch({ type: "drop", objectId: object.id, lease });
+                  if (accepted?.accepted) onAnnouncement(`${object.label} is set down safely.`);
                 }}>Set down {object.label}</button>
               ) : null}
             </li>

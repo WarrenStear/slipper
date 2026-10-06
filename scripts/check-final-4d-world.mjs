@@ -45,6 +45,9 @@ const requiredFiles = [
   "src/narrative/StoryActions.ts",
   "src/narrative/StoryRuntime.ts",
   "tests/narrative-foundation.test.mjs",
+  "tests/story-runtime-core.test.mjs",
+  "tests/canonical-node-loader.mjs",
+  "src/narrative/StoryIntents.ts",
   "src/components/three/journey/JourneyWorldComposition.tsx",
   "src/components/three/journey/EnvironmentalThreshold.tsx",
   "src/components/three/rituals/RitualInteraction.tsx",
@@ -127,7 +130,7 @@ if (
 // Exercise the shared narrative boundary and every authored act/outcome instead
 // of requiring its implementation to remain inside a presentation component.
 const narrativeContract = spawnSync(process.execPath, [
-  "--experimental-strip-types", "--test", "tests/narrative-foundation.test.mjs",
+  "--experimental-strip-types", "--test", "tests/narrative-foundation.test.mjs", "tests/story-runtime-core.test.mjs",
 ], { cwd: ROOT, encoding: "utf8" });
 if (narrativeContract.error || narrativeContract.status !== 0) {
   hardFailures.push(`shared narrative progression contract failed: ${narrativeContract.error?.message ?? narrativeContract.stderr ?? ""}\n${narrativeContract.stdout ?? ""}`);

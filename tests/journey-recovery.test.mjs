@@ -780,8 +780,12 @@ test("global shortcuts and focusable reading surfaces keep their accessibility g
     "utf8",
   );
 
-  assert.match(appSource, /if \(event\.defaultPrevented\) return;/);
-  assert.match(appSource, /\[role='button'\].*\[role='tab'\].*\[role='radio'\]/);
+  const navigation = readFileSync(new URL("../src/experience/useStoryNavigation.ts", import.meta.url), "utf8");
+  assert.match(appSource, /useStoryNavigation\(\{/);
+  assert.match(navigation, /event\.ctrlKey \|\| event\.metaKey \|\| event\.altKey \|\| event\.isComposing \|\| event\.defaultPrevented/);
+  assert.match(navigation, /\[role='button'\].*\[role='tab'\].*\[role='radio'\]/);
+  assert.match(navigation, /target\?\.isContentEditable/);
+  assert.match(navigation, /isExperienceSettingsOpen\(\)/);
   assert.match(appSource, /"--reader-text-min"/);
   assert.match(appSource, /role="document"\s+aria-labelledby="focused-reader-title"/);
   assert.match(appSource, /id="story-navigation"[\s\S]*?tabIndex=\{-1\}/);

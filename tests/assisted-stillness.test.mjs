@@ -37,6 +37,8 @@ test("stillness rituals retain immersion by default and expose a deliberate assi
     new URL("../src/components/three/reflections/ReflectionDirector.tsx", import.meta.url),
     "utf8",
   );
+  const runtimeSource = readFileSync(new URL("../src/narrative/StoryRuntime.ts", import.meta.url), "utf8");
+  const eventDirectorSource = readFileSync(new URL("../src/components/three/storyEvents/StoryEventDirector.tsx", import.meta.url), "utf8");
 
   assert.match(ritualSource, /if \(assistedStillness\)/);
   assert.match(ritualSource, /distanceSq\(position, stillAnchorRef\.current\)/);
@@ -69,10 +71,17 @@ test("stillness rituals retain immersion by default and expose a deliberate assi
     /availableJourneyPlayerActionsForScene\(storyActionScene\.id, worldFlags\)/,
   );
   assert.match(
-    journeyDirectorSource,
-    /journeyPlayerActionAvailable\(completedAction, currentState\.worldFlags\)/,
+    runtimeSource,
+    /journeyPlayerActionAvailable\(action, state\.worldFlags\)/,
     "a completed authored action must be validated directly when a scene offers multiple available actions",
   );
+  assert.match(runtimeSource, /intent\.type === "legacy-start" \|\| intent\.source === "physical"/);
+  assert.match(journeyDirectorSource, /type: "legacy-action", actionId, choiceId, lease/);
+  assert.doesNotMatch(journeyDirectorSource, /applyPlayerActionOutcome|journeyPlayerActionAvailable/);
+  assert.match(eventDirectorSource, /const still = facts\.stillEligible/);
+  assert.match(eventDirectorSource, /auto && !\(assistedStillness && intentionalStillnessId === event\.id\)/);
+  assert.match(eventDirectorSource, /intentionalToken\.current = runtime\.beginAttention\(lease, event\.id\)/);
+  assert.match(runtimeSource, /event\?\.trigger !== "stillness" \|\| facts\.stillEligible/);
   assert.match(journeyDirectorSource, /presentedStorySceneId/);
   assert.match(journeyDirectorSource, /presentedStoryScene \?\? activeNarrativeScene/);
   assert.match(journeyDirectorSource, /mode !== "explore" \|\| controls !== "walk"/);

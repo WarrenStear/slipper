@@ -123,8 +123,16 @@ test('quality budgets are bounded, monotonic, and reduced effects chooses the lo
 test('landscape mounts only in the active chapter transform and preserves story and adjacent wiring',()=>{
   const code=source('journey/JourneySceneDirector.tsx');
   assert.equal((code.match(/<OutdoorLandscape /g)||[]).length,1);
+  assert.match(code,/const activeManifest = getSceneManifest\(activeSceneId\)/);
+  assert.match(code,/const activeScene = activeManifest\.layout/);
+  assert.match(code,/const ActiveChapter = CHAPTER_COMPONENTS\[activeManifest\.chapterId\]/);
+  assert.match(code,/const manifest = getSceneManifest\(entry\.sceneId\)/);
+  assert.match(code,/const scene = manifest\.layout/);
+  assert.match(code,/const position = mutablePoint\(scene\.anchor\.position\)/);
   const active=code.slice(code.indexOf('if (entry.mode === "active")'),code.indexOf('if (!renderAdjacent)'));
-  assert.match(active,/<OutdoorLandscape sceneId=\{entry.sceneId\}/);assert.match(active,/collidable=\{interactionsEnabled\}/);
+  assert.match(active,/<OutdoorLandscape sceneId=\{manifest\.sceneId\}/);assert.match(active,/collidable=\{interactionsEnabled\}/);
+  assert.match(active,/position=\{position\}/);assert.match(active,/rotation=\{\[0, scene\.anchor\.headingRadians, 0\]\}/);
+  assert.match(active,/userData=\{\{ environmentId: manifest\.environmentId \}\}/);
   for(const component of ['StoryEventDirector','ActiveStoryActors','EnvironmentalChoreography','ActiveChapter'])assert.match(active,new RegExp(`<${component}`));
 });
 test('terrain collision uses the exact visible arrays and stays independent of quality',()=>{

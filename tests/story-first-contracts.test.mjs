@@ -198,7 +198,12 @@ test("cloud hydration reaches readiness before the start action can mutate story
   assert.match(cloudSync, /cloudReadyRef\.current = false;[\s\S]{0,250}setBootstrapReady\(true\)/);
   assert.match(cloudSync, /return \{ bootstrapReady \} as const/);
 
-  assert.match(app, /if \(!experienceStarted \|\| archiveOpen \|\| !journeyInitialized \|\| !cloudJourney\.bootstrapReady\) return;[\s\S]{0,180}if \(!storyStarted\) startStory\(\)/);
+  const host = source("src/experience/StoryRuntimeContext.tsx");
+  const runtime = source("src/narrative/StoryRuntime.ts");
+  assert.match(app, /ready: journeyInitialized && cloudJourney\.bootstrapReady/);
+  assert.match(host, /ready: shell\.ready && useJourneyStore\.getState\(\)\.isInitialized/);
+  assert.match(runtime, /activity\.ready && activity\.foreground && !activity\.overlayOpen/);
+  assert.doesNotMatch(app, /startStory\(/);
   assert.match(app, /restoring=\{!journeyInitialized \|\| !cloudJourney\.bootstrapReady\}/);
   assert.match(onboarding, /disabled=\{restoring\}/);
   assert.match(onboarding, /\{restoring \? "Restoring the path…" : startState\.actionLabel\}/);
@@ -209,7 +214,10 @@ test("Begin primes the shared narrative audio context inside the trusted gesture
   const activation = source("src/lib/narrativeAudioActivation.ts");
   const director = source("src/components/three/audio/NarrativeAudioDirector.tsx");
 
-  assert.match(app, /const enterForest = useCallback\(\(\) => \{\s*if \(!accessibleJourney\) activateNarrativeAudioFromGesture\(audioEnabled\);\s*startStory\(\)/);
+  const navigation = source("src/experience/useStoryNavigation.ts");
+  assert.match(app, /onBegin=\{enterForest\}/);
+  assert.match(navigation, /function enterForest\(\)[\s\S]{0,600}dispatchNavigation\(\{ type: start\.id === "fresh" \? "begin" : "continue" \}\)/);
+  assert.match(navigation, /if \(!result\?\.accepted\) return;\s*if \(!config\.accessibleJourney\) activateNarrativeAudioFromGesture\(config\.audioEnabled\)/);
   assert.match(activation, /gestureActivatedContext \?\?= new AudioContextConstructor\(\)/);
   assert.match(activation, /gestureActivatedContext\.resume\(\)/);
   assert.match(director, /THREE\.AudioContext\.setContext\(gestureContext\)/);
@@ -248,13 +256,14 @@ test("diegetic prose is selected by authored treatment and rendered from its can
 
 test("directed journey capabilities gate every software-like App entry point", () => {
   const app = source("src/App.tsx");
+  const navigation = source("src/experience/useStoryNavigation.ts");
   const settings = source("src/components/ui/ExperienceSettingsDrawer.tsx");
 
   assert.match(app, /const experienceCapabilities = getSlipperExperienceCapabilities\(experienceMode\)/);
   assert.match(app, /if \(archiveOpen && experienceCapabilities\.allowFullArchive\)/);
-  assert.match(app, /const openArchive = useCallback\(\(\) => \{\s*if \(!experienceCapabilities\.allowFullArchive\) return/);
-  assert.match(app, /experienceCapabilities\.showGenericNavigation &&[\s\S]{0,160}normalizedKey === "b"/);
-  assert.match(app, /experienceCapabilities\.allowConstellationNavigation &&[\s\S]{0,160}normalizedKey === "m"/);
+  assert.match(navigation, /function openArchive\(\)[\s\S]{0,140}if \(!config\.capabilities\.allowFullArchive\) return/);
+  assert.match(navigation, /config\.capabilities\.showGenericNavigation &&[\s\S]{0,160}key === "b"/);
+  assert.match(navigation, /key === "m"[\s\S]{0,80}config\.capabilities\.allowConstellationNavigation/);
   assert.match(app, /experienceMode === "free-woods" \? <MagicLinkSignIn \/> : null/);
   assert.match(app, /experienceMode === "free-woods" && showMiniMap \? <MiniMapHUD/);
   assert.match(app, /prologueResolved && mode === "explore"[\s\S]{0,360}showContextualGuidance \? <ContextualNavigationPrompt/);

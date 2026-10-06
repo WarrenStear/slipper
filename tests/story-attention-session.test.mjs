@@ -145,16 +145,27 @@ test("a zero-duration event still requires active valid input and completes once
   assert.equal(session.sample(1).completedNow, false);
 });
 
-test("semantic controls wire overlay, focus and page lifecycle with matching cleanup", () => {
-  const source = readFileSync(new URL("../src/components/ui/AccessibleStoryObjects.tsx", import.meta.url), "utf8");
-  assert.match(source, /createStoryAttentionSession\(duration, !isSequence\)/);
-  assert.match(source, /useSettingsStore\.subscribe/);
-  assert.match(source, /next\.drawerOpen !== previous\.drawerOpen/);
-  assert.match(source, /session\.cancel\(\)/);
-  assert.match(source, /unsubscribeSettings\(\)/);
-  assert.match(source, /!useSettingsStore\.getState\(\)\.drawerOpen/);
-  for (const name of ["blur", "focus", "pagehide", "pageshow"]) {
-    assert.ok(source.includes(`addEventListener("${name}"`));
-    assert.ok(source.includes(`removeEventListener("${name}"`));
+test("semantic controls use the single host clock and overlay/focus/page lifecycle has matching cleanup", () => {
+  const read = path => readFileSync(new URL(`../src/${path}`, import.meta.url), "utf8");
+  const controls = read("components/ui/AccessibleStoryObjects.tsx");
+  const host = read("experience/StoryRuntimeContext.tsx");
+  const bridge = read("player/physicalObservationInput.ts");
+  assert.match(controls, /runtime\.beginAttention\(lease, event\.id\)/);
+  assert.match(controls, /runtime\.readAttention\(token\)/);
+  assert.match(controls, /runtime\.cancelAttention\(token\)/);
+  assert.doesNotMatch(controls, /createStoryAttentionSession|\.sampleAttention\(|dispatchStoryEvent\(/);
+  assert.match(host, /const results = host\.sample\(now\)/);
+  assert.match(host, /return \[\.\.\.results, \.\.\.runtime\.sample\(nowMs\)\]/);
+  assert.equal((host.match(/frame = window\.requestAnimationFrame\(sample\)/g) ?? []).length, 2,
+    "one host callback reschedules itself and is started once per connected DOM lifetime");
+  assert.match(host, /runtime\.publishPhysicalPresence\(lease, clearing\.scope\.entryId, facts, clearing\.present\)/);
+  assert.match(host, /useSettingsStore\.subscribe/);
+  assert.match(host, /stopSettings\(\)/);
+  assert.match(host, /input\.dispose\(\)/);
+  assert.match(host, /runtime\.suspendPhysicalAttention\(\)/);
+  for (const name of ["blur", "focus", "visibilitychange"]) assert.ok(bridge.includes(`"${name}"`));
+  for (const name of ["pagehide", "pageshow"]) {
+    assert.ok(host.includes(`addEventListener("${name}"`));
+    assert.ok(host.includes(`removeEventListener("${name}"`));
   }
 });

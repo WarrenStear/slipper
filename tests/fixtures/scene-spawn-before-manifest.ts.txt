@@ -1,0 +1,60 @@
+// Actual StoryScene spawn/saved-pose initializers at ba17491495cd8db0a3bcd3897d452e6482b8b3aa.
+const start = entry?.engine3d.cameraStart ?? DEFAULT_CAMERA_POSITION;
+const authoredArrival = useMemo(() => narrativeScene && mode === "explore" && controls === "walk"
+    ? getAuthoredSceneArrival(narrativeScene.id, authoredSceneOrigin, getJourneySceneLayout(narrativeScene.id).anchor.headingRadians)
+    : null, [narrativeScene, mode, controls, authoredSceneOrigin]);
+const playerSpawnX = authoredArrival?.position[0] ?? activePosition[0] + start[0];
+const playerSpawnZ = authoredArrival?.position[2] ?? activePosition[2] + start[2];
+const playerSpawnGroundY = sampleGroundY(playerSpawnX, playerSpawnZ);
+const defaultPlayerInitialPosition = [
+    playerSpawnX,
+    playerSpawnGroundY + PLAYER_FOOT_OFFSET + PLAYER_GROUND_CLEARANCE,
+    playerSpawnZ,
+  ];
+const playerInitialPosition = useMemo<Vector3Tuple>(() => {
+    if (
+      !initialPlayerPosition ||
+      initialPlayerPosition.length !== 3 ||
+      !initialPlayerPosition.every(
+        (coordinate) =>
+          Number.isFinite(coordinate) && Math.abs(coordinate) <= 10_000,
+      )
+    ) {
+      return defaultPlayerInitialPosition;
+    }
+
+    const dx = initialPlayerPosition[0] - activePosition[0];
+    const dz = initialPlayerPosition[2] - activePosition[2];
+    const maximumSavedDistance = Math.max(
+      18,
+      (entry?.engine3d.environmentRadius ?? DEFAULT_ENVIRONMENT_RADIUS) * 0.6,
+    );
+    if (dx * dx + dz * dz > maximumSavedDistance * maximumSavedDistance) {
+      return defaultPlayerInitialPosition;
+    }
+
+    const savedGroundY = sampleGroundY(
+      initialPlayerPosition[0],
+      initialPlayerPosition[2],
+    );
+    const expectedCameraY =
+      savedGroundY +
+      PLAYER_FOOT_OFFSET +
+      PLAYER_GROUND_CLEARANCE +
+      PLAYER_CAMERA_OFFSET_Y;
+    if (Math.abs(initialPlayerPosition[1] - expectedCameraY) > 12) {
+      return defaultPlayerInitialPosition;
+    }
+
+    return [
+      initialPlayerPosition[0],
+      savedGroundY + PLAYER_FOOT_OFFSET + PLAYER_GROUND_CLEARANCE,
+      initialPlayerPosition[2],
+    ];
+  }, [
+    activePosition,
+    defaultPlayerInitialPosition,
+    entry?.engine3d.environmentRadius,
+    initialPlayerPosition,
+    sampleGroundY,
+  ]);

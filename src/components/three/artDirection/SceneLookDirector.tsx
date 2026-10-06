@@ -5,6 +5,7 @@ import { useJourneyStore } from "../../../stores/useJourneyStore";
 import { useSettingsStore } from "../../../stores/useSettingsStore";
 import { useWorldStore } from "../../../stores/useWorldStore";
 import type { JourneySceneId } from "../../../lib/storyJourneyState";
+import { getSceneManifest } from "../../../narrative/StoryManifest.ts";
 import { resolveSceneLook, type LookPoint, type LookQuality } from "./SceneLookRegistry";
 import { SceneLookContext, useSceneLook, type ScenePresentation } from "./SceneLookContext";
 import { AuthoredLightShafts } from "../../../world/atmosphere/VolumetricLightShaft";
@@ -34,6 +35,7 @@ export function SceneLookDirector(props: SceneLookDirectorProps) {
 }
 
 function SceneLookOwner({ sceneId, quality, reducedEffects, reducedMotion, origin = [0, 0, 0], heading = 0, bloomIntensity = .6, vignetteIntensity = .1, particlesEnabled = true, particleScale = RENDER_QUALITY_PROFILES[quality].particleMultiplier, children }: SceneLookDirectorProps) {
+  const manifest = useMemo(() => getSceneManifest(sceneId), [sceneId]);
   const objects = useJourneyStore(s => s.storyObjectStates);
   const flags = useJourneyStore(s => s.worldFlags);
   const measuredStillness = useStillnessState({ requiredSeconds: 2.4, enabled: sceneId === "sunset.stillness", observeCamera: true });
@@ -48,7 +50,7 @@ function SceneLookOwner({ sceneId, quality, reducedEffects, reducedMotion, origi
     window.addEventListener(ASSISTED_STILLNESS_EVENT, onStillness);
     return () => window.removeEventListener(ASSISTED_STILLNESS_EVENT, onStillness);
   }, [sceneId]);
-  const target = useMemo(() => resolveSceneLook(sceneId, quality, reducedEffects, {
+  const target = useMemo(() => resolveSceneLook(manifest.profiles.look, quality, reducedEffects, {
     lanternOwned: flags["lantern.owned"], surrenderComplete: objects["river.white-fabric"] === "raised",
     compression: ["refilled-twice", "waiting-again"].includes(objects["thorn-house.table"]) ? 1 : objects["thorn-house.table"] === "refilled" ? .5 : 0,
     mindReleased: objects["mind.questions"] === "behind", creationComplete: Boolean(objects["womb.creation"]),
@@ -57,7 +59,7 @@ function SceneLookOwner({ sceneId, quality, reducedEffects, reducedMotion, origi
     mirrorStill: measuredStillness || assisted,
     openingReveal: objects["broken-floor.reflection"] === "inverted" || objects["broken-floor.reflection"] === "revealed" ? 1 : objects["broken-floor.reflection"] === "clearing" ? .5 : 0,
     openingInverted: objects["broken-floor.reflection"] === "inverted",
-  }), [sceneId, quality, reducedEffects, flags, objects, measuredStillness, assisted]);
+  }), [manifest, quality, reducedEffects, flags, objects, measuredStillness, assisted]);
   const presentation = useRef<ScenePresentation>({ look: target, reducedMotion, reducedEffects, stillness: Number(target.stillness), motion: { ...target.motion }, time: { vegetation: 0, cloth: 0, water: 0, particles: 0, flame: 0 } });
   const context = useMemo<ScenePresentation>(() => ({ look: target, reducedMotion, reducedEffects, origin, heading, stillness: presentation.current.stillness, motion: presentation.current.motion, time: presentation.current.time }), [target, reducedMotion, reducedEffects, origin, heading]);
   presentation.current = context;

@@ -311,10 +311,16 @@ function validateIntegration() {
   requirePatterns("src/App.tsx", [
     ["React mobile controls", /<MobileExploreControls\b/],
     ["mobile viewport state", /useMobileViewport\(/],
-    ["settings shortcut guard", /isExperienceSettingsOpen\(\)/],
+    ["shared navigation owner", /useStoryNavigation\(\{/],
     ["guided navigation state", /guidanceEntryId/],
     ["reader progress", /readerProgress/],
     ["non-3D archive route", /<AccessibleArchive\b/],
+  ]);
+  requirePatterns("src/experience/useStoryNavigation.ts", [
+    ["settings shortcut guard", /isExperienceSettingsOpen\(\)/],
+    ["fresh canonical command state", /useJourneyStore\.getState\(\)/],
+    ["interactive target shortcut guard", /target\?\.isContentEditable \|\| target\?\.closest\(/],
+    ["modified/composing/default-prevented shortcut guard", /event\.ctrlKey \|\| event\.metaKey \|\| event\.altKey \|\| event\.isComposing \|\| event\.defaultPrevented/],
   ]);
   requirePatterns("src/components/three/StoryScene.tsx", [
     ["canonical player controller", /<PlayerController\b/],

@@ -27,17 +27,19 @@ test("the text journey uses canonical gates, outcomes, and explicit choices", ()
   const journey = read("src/components/ui/AccessibleStoryJourney.tsx");
 
   assert.match(journey, /nextResolvableRitualForEntry\(activeEntry\.id, progressionState\)/);
-  assert.match(journey, /canResolveRitual\(ritualInteraction\.ritualId, latest\)/);
-  assert.match(journey, /nextJourneyPlayerAction\(activeScene\.id, latest\.worldFlags\)/);
-  assert.match(journey, /canEnterNarrativeEntry\(entryId, latest\)/);
-  assert.match(journey, /from "\.\.\/\.\.\/narrative\/StoryActions"/);
-  assert.match(journey, /for \(const outcome of ritualBeat\.outcomes \?\? \[\]\) applyJourneyOutcome\(outcome, useJourneyStore\.getState\(\)\)/);
-  assert.match(journey, /applyPlayerActionOutcome\(outcome, useJourneyStore\.getState\(\)\)/);
-  assert.doesNotMatch(journey, /function apply(?:Ritual|Journey|PlayerAction)Outcome/);
-  assert.match(journey, /const outcomes = choice\?\.outcomes \?\? action\.outcomes \?\? \[\]/);
+  const runtime = read("src/narrative/StoryRuntime.ts");
+  assert.match(runtime, /canResolveRitual\(intent\.ritualId, state\)/);
+  assert.match(runtime, /nextJourneyPlayerAction\(action\.sceneId, state\.worldFlags\)/);
+  assert.match(runtime, /canEnterNarrativeEntry\(target, state\)/);
+  assert.match(runtime, /from "\.\/StoryActions\.ts"/);
+  assert.match(runtime, /for \(const outcome of ritualBeat\.outcomes \?\? \[\]\) applyJourneyOutcome\(outcome, getState\(\)\)/);
+  assert.match(runtime, /applyPlayerActionOutcome\(outcome, getState\(\)\)/);
+  assert.match(runtime, /const outcomes = choice\?\.outcomes \?\? action\.outcomes \?\? \[\]/);
+  for (const type of ["ritual", "legacy-action", "navigate", "witness"]) assert.ok(journey.includes(`type: "${type}"`));
   assert.match(journey, /storyAction\.choices\?\.map\(\(choice\) =>/);
   assert.match(journey, /data-accessible-choice-id=\{choice\.id\}/);
-  assert.match(journey, /mode="map"[\s\S]*proximity=\{null\}/);
+  assert.doesNotMatch(journey, /<JourneyDirector|applyJourneyOutcome|applyPlayerActionOutcome|\.witnessEntry\(|\.navigateToEntry\(/);
+
 });
 
 test("the text journey follows first-journey, returning, and free-woods disclosure", () => {
