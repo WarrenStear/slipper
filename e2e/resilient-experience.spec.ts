@@ -122,3 +122,35 @@ test("worker failure surfaces recovery instead of an empty forest", async ({ pag
   await page.getByRole("button", { name: "Continue with text journey" }).click();
   await expect(page.locator("[data-accessible-journey='true']")).toHaveAttribute("data-active-entry", "fragment-008");
 });
+
+test("a worker startup exception preserves recovery and the current journey", async ({ page }, testInfo) => {
+  test.skip(!testInfo.project.name.includes("chromium"), "Worker failure injection uses the Chromium WebGL projects.");
+  // Measure recovery after the failure is actually injected. Scene/GPU startup
+  // has its own bounded precondition; the original abort case above still keeps
+  // its end-to-end deadline, including startup.
+  test.setTimeout(120_000);
+  await page.goto("/?quality=low");
+  const snapshot = { ...completedStoryJourney(), activeEntryId: "fragment-008" };
+  await seedStoryJourney(page, snapshot, { dedicationAcknowledged: true });
+  await page.route(/\/assets\/forestWorker-[^/]+\.js$/, route => route.fulfill({
+    contentType: "application/javascript",
+    body: 'throw new Error("Injected forest worker startup failure");',
+  }));
+  await page.reload();
+  const workerRequested = page.waitForRequest(/\/assets\/forestWorker-[^/]+\.js$/, { timeout: 60_000 });
+  const beginAt = Date.now();
+  await page.locator(".onboarding-actions button.primary").click();
+  const request = await workerRequested;
+  const injectedAt = Date.now();
+  await expect.poll(async () => (await request.response())?.status()).toBe(200);
+  await expect(page.getByRole("heading", { name: "The story is still here." })).toBeVisible({ timeout: 30_000 });
+  const recoveredAt = Date.now();
+  await page.getByRole("button", { name: "Continue with text journey" }).click();
+  await expect(page.locator("[data-accessible-journey='true']")).toHaveAttribute("data-active-entry", "fragment-008");
+  await expect(page.locator("[data-accessible-journey='true']")).toHaveAttribute("data-story-complete", "true");
+  await expect(page.locator("canvas")).toHaveCount(0);
+  await testInfo.attach("worker-startup-and-recovery-timing", { body: JSON.stringify({
+    beginToInjectedRequestMs: injectedAt - beginAt,
+    injectedRequestToRecoveryMs: recoveredAt - injectedAt,
+  }, null, 2), contentType: "application/json" });
+});

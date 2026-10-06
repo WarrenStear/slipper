@@ -19,6 +19,7 @@ import { FOREST_CELL_RADIUS, FOREST_CELL_SIZE, FOREST_INSTANCE_COUNT, FOREST_TRE
 import { HillyForestGround } from "../terrain/HillyForestGround.tsx";
 import { ClearingForestFrame } from "./ClearingForestFrame.tsx";
 import { hashString } from "../worldMath.ts";
+import { reportCurrentWorldWorkerFailure, useReportWorldWorkerFailure } from "../workerFailure.ts";
 
 export function ContinuousForestBed({
   entries,
@@ -37,6 +38,7 @@ export function ContinuousForestBed({
   showClearingFrame?: boolean;
   renderVisible?: boolean;
 }) {
+  const reportWorkerFailure = useReportWorldWorkerFailure();
   const { camera } = useThree();
 
   const trunkRef = useRef<THREE.InstancedMesh>(null);
@@ -136,7 +138,11 @@ export function ContinuousForestBed({
     const worker = new Worker(new URL("../../workers/forestWorker.ts", import.meta.url), { type: "module" });
     workerRef.current = worker;
     const handleWorkerFailure = () => {
-      setWorkerError(new Error("The forest could not be prepared. Please reload or continue with the text journey."));
+      reportCurrentWorldWorkerFailure(
+        worker, workerRef.current,
+        new Error("The forest could not be prepared. Please reload or continue with the text journey."),
+        setWorkerError, reportWorkerFailure,
+      );
     };
     worker.addEventListener("error", handleWorkerFailure);
     worker.addEventListener("messageerror", handleWorkerFailure);
@@ -178,7 +184,7 @@ export function ContinuousForestBed({
       worker.terminate();
       workerRef.current = null;
     };
-  }, []);
+  }, [reportWorkerFailure]);
 
   const requestForestBuild = (cellX: number, cellZ: number) => {
     const worker = workerRef.current;
@@ -282,4 +288,3 @@ export function ContinuousForestBed({
     </group>
   );
 }
-

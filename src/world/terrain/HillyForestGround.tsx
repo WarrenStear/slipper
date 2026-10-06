@@ -12,6 +12,7 @@ import { type NarrativeWorldState } from "../worldTypes.ts";
 import { type ForestTexturePack } from "../forest/useForestTextures.ts";
 import { CORRIDOR_BASE_WIDTH, CROWNED_RETURN_RAMP_WIDTH, FOREST_CLEARING_RADIUS, TERRAIN_BASE_Y, TERRAIN_SEGMENTS, TERRAIN_SIZE } from "./worldConstants.ts";
 import { packForestClearingSeeds, packForestPathSeeds } from "./terrainSampler.ts";
+import { reportCurrentWorldWorkerFailure, useReportWorldWorkerFailure } from "../workerFailure.ts";
 
 export function HillyForestGround({
   entries,
@@ -30,6 +31,7 @@ export function HillyForestGround({
   qualityProfile: RenderQualityProfile;
   renderVisible?: boolean;
 }) {
+  const reportWorkerFailure = useReportWorldWorkerFailure();
   const geometry = useMemo(createTerrainGeometry, []);
 
   const workerRef = useRef<Worker | null>(null);
@@ -80,7 +82,11 @@ export function HillyForestGround({
     const worker = new Worker(new URL("../../workers/forestWorker.ts", import.meta.url), { type: "module" });
     workerRef.current = worker;
     const handleWorkerFailure = () => {
-      setWorkerError(new Error("The terrain could not be prepared. Please reload or continue with the text journey."));
+      reportCurrentWorldWorkerFailure(
+        worker, workerRef.current,
+        new Error("The terrain could not be prepared. Please reload or continue with the text journey."),
+        setWorkerError, reportWorkerFailure,
+      );
     };
     worker.addEventListener("error", handleWorkerFailure);
     worker.addEventListener("messageerror", handleWorkerFailure);
@@ -107,7 +113,7 @@ export function HillyForestGround({
       worker.terminate();
       workerRef.current = null;
     };
-  }, []);
+  }, [reportWorkerFailure]);
 
   useLayoutEffect(() => {
     applyTerrainSurface(geometry, terrainSurface);
@@ -169,4 +175,3 @@ export function HillyForestGround({
     </RigidBody>
   );
 }
-

@@ -2,9 +2,11 @@ import { isCinematicProfileActive } from "../../cinematics/emotionalCinematograp
 import {
   memo,
   Suspense,
+  useCallback,
   useEffect,
   useMemo,
   useRef,
+  useState,
 } from "react";
 import { Html, OrbitControls, Stars } from "@react-three/drei";
 import { CuboidCollider, Physics, RigidBody } from "@react-three/rapier";
@@ -20,6 +22,7 @@ import { resolveWorldVisualState } from "./worldVisualState";
 import type { WorldMemoryState } from "./worldMemory/WorldMemoryDirector";
 import { RenderRecoveryBoundary } from "../ui/RenderRecovery";
 import { requestTextJourney } from "../../lib/textJourney";
+import { WorldWorkerFailureContext, WorldWorkerFailureGuard } from "../../world/workerFailure";
 
 type WorldCanvasProps = {
   entryId: string;
@@ -177,6 +180,10 @@ export function WorldCanvas({
   mode = "explore",
   onContinueTextJourney = requestTextJourney,
 }: WorldCanvasProps) {
+  const [workerFailure, setWorkerFailure] = useState<Error | null>(null);
+  const reportWorkerFailure = useCallback((error: Error) => {
+    setWorkerFailure(current => current ?? error);
+  }, []);
   const requestedQualityProfile = useRenderQualityProfile();
   const reducedEffects = useSettingsStore((state) => state.reducedEffects);
   const qualityProfile = useMemo(
@@ -214,6 +221,8 @@ export function WorldCanvas({
 
   return (
     <RenderRecoveryBoundary onContinueTextJourney={onContinueTextJourney}>
+      <WorldWorkerFailureGuard error={workerFailure}>
+      <WorldWorkerFailureContext.Provider value={reportWorkerFailure}>
       <Canvas
         className="slipper-world-canvas"
         camera={{ fov: 65, position: [0, 0, 0.1], near: 0.12, far: 520 }}
@@ -278,6 +287,8 @@ export function WorldCanvas({
           )}
         </Suspense>
       </Canvas>
+      </WorldWorkerFailureContext.Provider>
+      </WorldWorkerFailureGuard>
     </RenderRecoveryBoundary>
   );
 }

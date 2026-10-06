@@ -404,6 +404,32 @@ local desktop failure contained no recorded worker request and therefore is not
 evidence of failed worker error propagation. Original abort coverage, deadlines,
 failed logs and traces remain intact.
 
+### Worker recovery after presentation consolidation
+
+Both actual worker owners now report current-worker failures through a stable
+React context callback to local `WorldCanvas` error state above scene Suspense.
+A guard inside the existing DOM recovery boundary throws there immediately.
+Local render-time errors remain for direct source fixtures. No global event bus,
+story state, renderer timeout or worker payload changed. Terminated/replaced
+workers cannot publish late failures. Three executable React/domain tests cover
+the retained pending parent, current callback identity and stale worker rejection.
+
+`npm run check` passed with 1,004 unit tests, seven security tests and all source,
+content, asset, build and Pages Functions checks. The built original network-abort
+case passed on desktop and mobile Chromium. The first added startup-exception
+case passed on mobile but failed on desktop; the retained trace records the first
+worker requests 33.85 seconds after Begin, after the full 30-second recovery
+assertion had already expired. It does not demonstrate failure of the reporter.
+The new exception case now explicitly requires a fulfilled injected worker
+request within 60 seconds before measuring its unchanged 30-second recovery
+deadline. Its overall budget allows that startup, recovery and text-continuation
+sequence. The original abort test and end-to-end deadline remain unchanged.
+Both cases subsequently passed on both Chromium projects, four tests in
+1.5 minutes. The failed and accepted records are respectively
+`phase-3/worker-recovery-accepted` and `phase-3/worker-recovery-bounded`.
+Slow startup is not claimed fixed, and a green complete hosted browser matrix
+is not inferred from these targeted checks.
+
 ### Updated visual-world brief and execution order
 
 The October 6 brief adds a forest-first art pass after presentation consolidation.
