@@ -144,7 +144,7 @@ and Visual presentation review (`37351828560`).
 | --- | --- | --- |
 | 1. Foundation | This document first; shared narrative selectors/actions/runtime; used compatibility boundaries. | Complete (`1ae2b98`): full check and 16 desktop/mobile text/cloud browser tests passed. |
 | 2. Player | Input, movement, camera, factual interaction detection; one ordered camera writer. | Complete (`770a9ab`): full check, seven applicable mobile tests and three desktop opening/keyboard tests passed. |
-| 3. World | Exact terrain/forest/guidance/atmosphere extraction; preserve ecology and seeded paths. | Complete: full check, 14 fixed-camera captures and five touch browser tests passed. |
+| 3. World | Exact terrain/forest/guidance/atmosphere extraction; preserve ecology and seeded paths. | Complete (`c00777d`): full check, 14 fixed-camera captures and five touch browser tests passed; Linux numeric fixture portability repair follows. |
 | 4. Presentation | Preserve canonical SceneLook owner; consolidate/remove proven redundant rigs. | Pending. |
 | 5. Manifest | Derive presentation, spawn, profiles and interaction references from canonical scenes. | Pending. |
 | 6. Opening slice | Arrival, floor/reflection, reveal, lantern, first walk, Fragment, Constellation. | Pending structural phases; desktop/mobile real-input proof required. |
@@ -271,3 +271,13 @@ after confirming every canonical entry remains identical.
 The built application's five mobile exploration cases also passed in 59 seconds:
 persisted handedness, portrait/landscape map tabs, route-preserving guidance and
 recovery, input interruption/cancellation, and real touch movement/look telemetry.
+
+Remote follow-up: the full regression and visual runs could not acquire hosted
+runners and executed no source checks. The smoke workflow did run its unit suite
+on Linux/Node 22: 972 of 973 passed. The new path golden comparison rejected native
+trigonometric differences of roughly 1e-12 to 3e-12 world units. Its portability
+repair retains exact path seeds, endpoints, bounds, keys and topology flags, and
+allows at most 1e-10 world units only for derived control points and integrated
+arc length. Physics tolerances and draw/asset budgets remain unchanged. The
+original failed log is retained in `phase-3/smoke-ci-failure.log`; hosted runner
+annotations and retries are recorded separately from application failures.

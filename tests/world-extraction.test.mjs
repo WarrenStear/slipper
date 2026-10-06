@@ -20,11 +20,29 @@ const entries = normalizeGeneratedWorldState(archive).entries;
 const paths = buildMazePathSegments(entries);
 const read = p => readFileSync(new URL(`../${p}`, import.meta.url), 'utf8');
 
+function assertPackedPathSnapshot(actual, expected) {
+  // Native trigonometric results differ by a few trillionths between the Mac
+  // and Linux/Node 22. Keep every seed, endpoint, bound and topology flag exact;
+  // allow only 1e-10 world units for derived controls and integrated arc length.
+  const {controlA,controlB,curveLength,...metadata}=actual;
+  const {controlA:expectedA,controlB:expectedB,curveLength:expectedLength,...expectedMetadata}=expected;
+  assert.deepEqual(metadata,expectedMetadata);
+  for(const [point,reference] of [[controlA,expectedA],[controlB,expectedB]]) {
+    assert.equal(point.length,reference.length);
+    for(let i=0;i<point.length;i++) assert.ok(Number.isFinite(point[i])&&Math.abs(point[i]-reference[i])<=1e-10,
+      `Seeded path control changed: ${point[i]} versus ${reference[i]}`);
+  }
+  assert.ok(Number.isFinite(curveLength)&&Math.abs(curveLength-expectedLength)<=1e-10,
+    `Integrated path length changed: ${curveLength} versus ${expectedLength}`);
+}
+
 test('extracted production path packing preserves every authored placement, seeded control point and crown ramp', () => {
   assert.equal(entries.length, 66);
   assert.equal(paths.length, 65);
   assert.deepEqual(packForestClearingSeeds(entries), baseline.clearings);
-  assert.deepEqual(packForestPathSeeds(paths, entries), baseline.paths);
+  const packed=packForestPathSeeds(paths, entries);
+  assert.equal(packed.length,baseline.paths.length);
+  packed.forEach((path,index)=>assertPackedPathSnapshot(path,baseline.paths[index]));
   for (const path of paths) {
     const seed = terrainCurveSeedFor(path);
     assert.equal(terrainCurveSeedFor(path), seed, 'Curve packing must reuse the same immutable segment cache');
