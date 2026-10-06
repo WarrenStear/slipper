@@ -3,7 +3,7 @@ import test from 'node:test';
 import { readFileSync } from 'node:fs';
 import { woodlandHabitatLayout, habitatTier } from '../src/components/three/environment/woodlandHabitatLayout.ts';
 import { createFernGeometry, createRushGeometry, createLeafLitterGeometry, createDeadwoodGeometry, createRootThresholdGeometry } from '../src/components/three/environmentArt/woodlandHabitatGeometry.ts';
-import { createOrganicCrownGeometry } from '../src/components/three/environment/forestGeometry.ts';
+import { createOrganicCrownGeometry } from '../src/world/forest/forestGeometry.ts';
 import { STORY_SURFACES, applyTactileShader, tactileProgramKey } from '../src/components/three/storyEvents/tactileShader.ts';
 import { applyFoliageFinish } from '../src/components/three/environment/foliageFinish.ts';
 const read = p => readFileSync(new URL(`../${p}`, import.meta.url), 'utf8');

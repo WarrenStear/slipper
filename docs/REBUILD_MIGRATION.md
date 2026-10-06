@@ -430,6 +430,20 @@ Both cases subsequently passed on both Chromium projects, four tests in
 Slow startup is not claimed fixed, and a green complete hosted browser matrix
 is not inferred from these targeted checks.
 
+The full hosted run for `ae8fd04` (`37437608130`) subsequently succeeded:
+Linux source/build/Pages Functions, decoder delivery and all five browser jobs.
+The visual run (`37437608440`) also succeeded, and Cloudflare Pages deployed.
+This was not a clean first-attempt browser result. Desktop Chromium reported
+45 passed, five skipped and two flaky cases; mobile Chromium reported 48 passed,
+three skipped and one flaky. Both worker-startup fixture cases retried before
+succeeding, and desktop's completed 3D constellation remained in its forming
+phase beyond the 40-second assertion on its first attempt. Mobile WebKit passed
+38 with 14 skips; Firefox and WebKit each passed 37 with 15 skips. Full hosted
+logs and failed retry excerpts are retained in `phase-b/ci-ae8fd04`. The existing
+workflow uploads browser diagnostics only on terminal failure/cancellation, so
+these retry-green jobs did not retain their generated failure traces. The logs
+support the above observations, not a diagnosis of their exact causes.
+
 ### Updated visual-world brief and execution order
 
 The October 6 brief adds a forest-first art pass after presentation consolidation.
@@ -452,3 +466,132 @@ authored silhouettes can preserve the two tree draws; their weights must be
 allocated against full instance capacity before the worker sets active count to
 zero. Actual captured low/high forest views confirmed visible faceting, repeated
 crowns and sparse ground; they remain the visual baseline for this next stage.
+
+### Phase B: authored forest silhouettes, contextual ground and depth
+
+The actual geometry owner is now `world/forest/forestGeometry.ts`; the historical
+environment path reexports its public constructors. Eight authored spines,
+forks and separated canopy islands form old-broad, narrow-reaching, broken,
+twisted, leaning, young, partially-dead and open-canopy silhouettes. They share
+topology for instanced position/normal morph targets. Ordinary geometry remains
+morph-free for chapter and far-wood consumers. Opaque folded foliage replaces
+the sphere lobes, with open sightlines and no additional tree draw.
+
+Continuous and clearing forests allocate one-hot weights against the full
+constructor capacity before the asynchronous worker sets active counts to zero.
+Archetypes follow quantized world coordinates rather than packed instance
+indices. Crown presentation follows the existing trunk matrix through its
+reference local transform, so branches support the canopy despite independent
+historic crown yaw and anisotropic scales. Worker generation, trunk matrices,
+colors, tree counts, colliders, terrain sampling and canonical paths remain
+unchanged. Quality changes replace and dispose shared geometry; mesh-owned
+weight textures have independent cleanup. Far woodland keeps two ordinary
+draws and uses the low crown geometry at every tier.
+
+The original moonlit-path understory draw now contains a bounded selection of
+fern, grass, flower, litter, deadwood, wet-bank and charred forms. Canonical
+source/target scene habitats blend along the existing route, including Fire's
+dry retreat and River's wet bank despite their shared technical biome. Existing
+8/16/24/28 populations and path-side exclusions remain; matrices sample actual
+terrain slope. Reusable instance buffers vary forms and palettes without new
+textures, lights, colliders, frame subscribers or story state.
+
+The sole SceneLook atmosphere can reduce its existing fog density for authored
+long sightlines. Existing ground-mist banks translate outside the focal corridor
+while preserving their count, depth, scale and shader. No uniform density
+increase or second atmosphere owner was introduced.
+
+The first valid neutral geometry gallery exposed foliage that was too small
+and horizontal to support the tree silhouettes. That art candidate was rejected;
+its captures remain in `phase-b/archetype-gallery-accepted` (the directory name
+predates the visual rejection). Revised folded sprays have visibly larger,
+varied pitch and roll while retaining the original triangle limit. Independent
+review then found two compatibility issues: ordinary consumers needed opaque
+two-sided foliage, and bark closing faces needed duplicated UV seam vertices.
+Both are corrected. Trunks remain 292 triangles; the UV repair changes their
+vertices from 172 to 208 and adds 9,216 bytes to the packed eight-target trunk
+texture, without adding a texture object or draw.
+
+Validation is in progress against the frozen corrected source. The first full
+check passed 1,039 unit and seven security tests; it precedes the seam correction
+and new lifecycle checks and is not final acceptance. Initial paired canonical
+captures and raw forest review passed their budgets. A subsequent single-frame
+capture failed the Blue Moon draw budget; its report remains in
+`phase-b/canonical-final-comparison`. The review now records eight consecutive
+completed GL draw samples and compares their peaks, including the existing
+alternating reflection cadence, with identical fixed cameras and lenses.
+Zero additional draws/lights and the 13,000-triangle ceiling remain unchanged.
+Final native comparisons, resource lifecycle, full checks and built interaction
+checks are required before this phase is accepted.
+
+The corrected pre-initialization-repair source passed all 13 canonical pairs:
+exact camera/lens and equal draws, lights, shadows and geometry counts; four
+additional morph textures; low triangles +1,186 and all high/cinematic cases
+lower. The final raw-forest review passed seven pairs, with equal draws/lights,
+exact worker counts and at most +3,596 triangles. Its fallback clearing owns
+seven added morph textures rather than canonical's four. Native final neutral
+galleries also passed. The full check passed 1,046 unit and seven security tests,
+and native built opening/keyboard checks passed five with one correct mobile
+skip. These reports precede the separately diagnosed ground-detail repair below.
+
+The first retained-Canvas lifecycle failed when a fully warmed world was compared
+to a fresh remount (geometry 50→49, programs 93→44), although all four forest morph
+textures and observed owner geometries were released on unmount. Instrumented
+diagnostics identify two distinct causes. Three releases a live material's cached
+shader variants on disposal, so equal shader counts require equally warmed
+material lifetimes. The missing 272 triangles are an existing initialization
+race in `NarrativeGroundDetailField`: a passive mount effect can reset the root
+and leaf counts after its first frame populates them and caches the cell. The
+counts return only after a cell or quality change. Draw inventory identifies
+11 root-cylinder instances (264 triangles) and two double-sided leaf planes
+(eight triangles); compared journey state and camera projection are identical.
+Reports are retained in `phase-b/forest-lifecycle-metal` and
+`phase-b/forest-lifecycle-diagnostic`. The initializer now runs in the existing
+owner's layout phase and invalidates the complete cached cell signature before
+resetting counts. This preserves authored populations, geometry, seeds, sampling
+and the original frame subscriber.
+Final canonical review retains cold costs and compares identical explicit quality
+warmups before measuring the forest-library budget. It must not hide the restored
+ground-detail draws in a cold-start claim.
+
+The repaired source passed 1,051 unit and seven security tests, plus the complete
+content, asset, world, lint, type, production-build and Cloudflare checks. Built
+desktop/mobile opening and keyboard tests passed five with one correct mobile
+skip. The actual-owner CPU tests reproduce both the former passive-reset race
+and a layout-only fix's retained-Suspense failure. They verify cold parity,
+StrictMode replay, exact quality/matrix parity, real retained reconnect and
+geometry disposal; independent review reran all five successfully.
+
+All 13 final canonical pairs in `phase-b/canonical-warmed-comparison` passed with
+exact camera pose/lens, equal draws, lights, shadows and geometry counts, and
+four additional morph textures. Low quality adds 1,186 triangles; high/cinematic
+cases use 32,984–78,620 fewer. Each side records cold costs, then exercises the
+same alternate/requested-quality sequence before collecting eight completed GL
+draw samples. Cold costs include restoration of zero to eight existing ground
+draws (Blue Moon's reflection repeats four ground draws). These costs remain
+separate from the forest-library comparison. Source hashes confirm the captured
+production source is unchanged. This is measured on native Apple M1 / ANGLE
+Metal; it makes no hardware FPS or unseeded full-journey claim.
+
+The final native retained-Canvas lifecycle in `phase-b/forest-lifecycle-final`
+passed 121 captures and 59 exact comparisons. Three actual world mount lifetimes
+follow the same route/Fire/River warmup and two quality waves before comparisons
+at matching phases. The first lifetime then repeats three measured waves; later
+lifetimes repeat one each. Geometry, texture, native texture and shader counts
+match exactly at each phase, as do camera/lens, seeded journey presentation,
+worker uploads and world-coordinate families. Every unmount releases both
+target textures, both weight textures, all observed owned geometries and both
+workers. Empty worlds consistently retain zero geometries, two shared loader
+textures and one cached renderer program. No GL/browser/resource request errors
+occurred. All six lifecycle contract tests passed after the runner was frozen.
+
+Phase B's bounded shared-forest implementation is accepted with the stated art
+limitations below. The runtime/manifest migration follows before the opening
+pass so that physical and accessible interactions share the same explicit
+authorization, foreground time and canonical command interpretation.
+
+This is a bounded improvement to the shared forest. Captures still show angular
+foliage, some pole-like mid/far trees and sparse broad ground. It does not certify
+finished production environment art or complete the later material, physical
+composition and opening requirements. No hero GLB or recording is relabelled
+as production.

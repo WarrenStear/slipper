@@ -1,9 +1,10 @@
 import { claimForestBuild } from "../../lib/forestBuildSchedule.ts";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { CuboidCollider, RigidBody } from "@react-three/rapier";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import { createForestTrunkGeometry, createOrganicCrownGeometry } from "../../components/three/environment/forestGeometry.ts";
+import { createForestTrunkLibrary, createForestCrownLibrary } from "./forestGeometry.ts";
+import { applyRootedForestPresentation, disposeForestMorphWeights, initializeForestMorphWeights } from "./forestInstancePresentation.ts";
 import { ForestSurfaceMaterial } from "../../components/three/environment/ForestSurfaceMaterial";
 import type { Slipper3DEntry } from "../../data/slipper3dTypes.ts";
 import type { ForestPathSeed, ForestWorkerConfig, ForestWorkerResponse, PackedForestCollider } from "../../workers/forestWorker.types";
@@ -45,9 +46,11 @@ export function ContinuousForestBed({
   const crownRef = useRef<THREE.InstancedMesh>(null);
   const marshRef = useRef<THREE.InstancedMesh>(null);
   const ruinRef = useRef<THREE.InstancedMesh>(null);
-  const trunkGeometry = useMemo(() => createForestTrunkGeometry(), []);
-  const crownGeometry = useMemo(() => createOrganicCrownGeometry(qualityProfile.quality === "high" || qualityProfile.quality === "cinematic" ? 2 : 0), [qualityProfile.quality]);
-  const clearingCrownGeometry = useMemo(() => createOrganicCrownGeometry(qualityProfile.quality === "low" ? 0 : 1), [qualityProfile.quality]);
+  const crownDetail = qualityProfile.quality === "high" || qualityProfile.quality === "cinematic" ? 2 : 0;
+  const clearingCrownDetail = qualityProfile.quality === "low" ? 0 : 1;
+  const trunkGeometry = useMemo(createForestTrunkLibrary, []);
+  const crownGeometry = useMemo(() => createForestCrownLibrary(crownDetail), [crownDetail]);
+  const clearingCrownGeometry = useMemo(() => showClearingFrame ? createForestCrownLibrary(clearingCrownDetail) : null, [clearingCrownDetail, showClearingFrame]);
 
   const workerRef = useRef<Worker | null>(null);
   const [workerError, setWorkerError] = useState<Error | null>(null);
@@ -126,7 +129,22 @@ export function ContinuousForestBed({
 
   useEffect(() => () => trunkGeometry.dispose(), [trunkGeometry]);
   useEffect(() => () => crownGeometry.dispose(), [crownGeometry]);
-  useEffect(() => () => clearingCrownGeometry.dispose(), [clearingCrownGeometry]);
+  useEffect(() => () => clearingCrownGeometry?.dispose(), [clearingCrownGeometry]);
+
+  useLayoutEffect(() => {
+    const mesh = trunkRef.current;
+    if (!mesh) return;
+    initializeForestMorphWeights(mesh);
+    if (mesh.instanceMatrix.version === 0) mesh.count = 0;
+    return () => disposeForestMorphWeights(mesh);
+  }, [trunkGeometry]);
+  useLayoutEffect(() => {
+    const mesh = crownRef.current;
+    if (!mesh) return;
+    initializeForestMorphWeights(mesh);
+    if (mesh.instanceMatrix.version === 0) mesh.count = 0;
+    return () => disposeForestMorphWeights(mesh);
+  }, [crownGeometry]);
 
   useEffect(() => {
     for (const mesh of [trunkRef.current, crownRef.current, marshRef.current, ruinRef.current]) {
@@ -172,6 +190,10 @@ export function ContinuousForestBed({
         item.mesh.instanceColor.needsUpdate = true;
         item.mesh.computeBoundingBox();
         item.mesh.computeBoundingSphere();
+      }
+
+      if (trunkRef.current && crownRef.current) {
+        applyRootedForestPresentation(trunkRef.current, crownRef.current);
       }
 
       setTreeColliders(result.colliders);
@@ -254,7 +276,7 @@ export function ContinuousForestBed({
       {/* Keep terrain/forest workers and collisions mounted while the opening
           room occludes the exterior; only its visual submissions are deferred. */}
       <group name="continuous-forest-visuals" visible={renderVisible}>
-      {showClearingFrame ? (
+      {showClearingFrame && clearingCrownGeometry ? (
         <ClearingForestFrame
           center={activePosition}
           openingAngles={clearingOpeningAngles}

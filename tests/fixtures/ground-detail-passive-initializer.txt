@@ -1,0 +1,7 @@
+useEffect(() => {
+    for (const mesh of [rootRef.current, leafRef.current, stoneRef.current, puddleRef.current, ashRef.current, goldRef.current]) {
+      if (!mesh) continue;
+      mesh.count = 0;
+      mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    }
+  }, []);

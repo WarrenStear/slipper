@@ -437,7 +437,7 @@ export const TreeGrove = memo(function TreeGrove({
         <TactileMaterial surface="bark" color={trunk} roughness={1} />
       </instancedMesh>
       <instancedMesh ref={crownRef} geometry={crownGeometry} args={[undefined, undefined, count]} receiveShadow>
-        <meshStandardMaterial color={tint} roughness={0.98} />
+        <meshStandardMaterial color={tint} roughness={0.98} side={THREE.DoubleSide} />
       </instancedMesh>
     </group>
   );

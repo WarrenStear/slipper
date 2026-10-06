@@ -1,4 +1,3 @@
-import { forestCrownHabit } from "../../lib/forestArt.ts";
 import { useLayoutEffect, useMemo, useRef } from "react";
 import { CuboidCollider, RigidBody } from "@react-three/rapier";
 import { useThree } from "@react-three/fiber";
@@ -10,6 +9,7 @@ import { type RenderQualityProfile } from "../../components/three/renderQuality.
 import { type ForestTexturePack } from "./useForestTextures.ts";
 import { seededUnit } from "../worldMath.ts";
 import { ROOTED_TRUNK_COLLIDER_SCALE } from "./forestConstants.ts";
+import { applyRootedForestPresentation, disposeForestMorphWeights, initializeForestMorphWeights } from "./forestInstancePresentation.ts";
 
 export type ClearingFrameTree = {
   x: number;
@@ -17,8 +17,6 @@ export type ClearingFrameTree = {
   groundY: number;
   height: number;
   width: number;
-  crownRadius: number;
-  crownHeight: number;
   lean: number;
   yaw: number;
 };
@@ -88,8 +86,6 @@ export function ClearingForestFrame({
         groundY: groundYAt(x, z),
         height: 9.6 + seededUnit(seed, index + 127) * 6.8,
         width: 0.3 + seededUnit(seed, index + 169) * 0.22,
-        crownRadius: 1.32 + seededUnit(seed, index + 211) * 0.82,
-        crownHeight: 2.28 + seededUnit(seed, index + 257) * 1.2,
         lean: (seededUnit(seed, index + 293) - 0.5) * 0.09,
         yaw: seededUnit(seed, index + 331) * Math.PI * 2,
       });
@@ -97,6 +93,12 @@ export function ClearingForestFrame({
 
     return next;
   }, [center, groundYAt, openingAngles, routeOpeningHalfAngle, seed, treeCount]);
+
+  useLayoutEffect(() => {
+    const meshes = [trunkRef.current, crownRef.current];
+    for (const mesh of meshes) if (mesh) initializeForestMorphWeights(mesh);
+    return () => { for (const mesh of meshes) if (mesh) disposeForestMorphWeights(mesh); };
+  }, [trunkGeometry, crownGeometry, requestedCount]);
 
   useLayoutEffect(() => {
     const trunk = trunkRef.current;
@@ -115,20 +117,6 @@ export function ClearingForestFrame({
       dummy.updateMatrix();
       trunk.setMatrixAt(index, dummy.matrix);
 
-      dummy.position.set(
-        tree.x - Math.sin(tree.yaw) * tree.crownRadius * 0.08,
-        groundY + tree.height * 0.8 + tree.crownHeight * 0.32,
-        tree.z + Math.cos(tree.yaw) * tree.crownRadius * 0.08,
-      );
-      dummy.rotation.set(tree.lean * 0.36, tree.yaw, -tree.lean * 0.26);
-      const habit = forestCrownHabit(seededUnit(seed, index + 467));
-      dummy.scale.set(
-        tree.crownRadius * 1.12 * habit[0],
-        Math.max(tree.crownRadius * 0.76, tree.crownHeight * 0.82) * habit[1],
-        tree.crownRadius * 1.08 * habit[2],
-      );
-      dummy.updateMatrix();
-      crown.setMatrixAt(index, dummy.matrix);
       crownColor.setHSL(
         0.35 + (seededUnit(seed, index + 389) - 0.5) * 0.025,
         0.12 + seededUnit(seed, index + 401) * 0.08,
@@ -140,11 +128,10 @@ export function ClearingForestFrame({
     for (const mesh of [trunk, crown]) {
       mesh.count = trees.length;
       mesh.instanceMatrix.needsUpdate = true;
-      mesh.computeBoundingBox();
-      mesh.computeBoundingSphere();
     }
+    applyRootedForestPresentation(trunk, crown);
     if (crown.instanceColor) crown.instanceColor.needsUpdate = true;
-  }, [seed, trees]);
+  }, [seed, trees, trunkGeometry, crownGeometry]);
 
   const castShadow = qualityProfile.enableMoonShadows;
 
@@ -165,7 +152,7 @@ export function ClearingForestFrame({
         ))}
       </RigidBody>
       <instancedMesh ref={trunkRef} args={[trunkGeometry, undefined, requestedCount]} castShadow={castShadow} receiveShadow>
-        <ForestSurfaceMaterial finish="bark" qualityProfile={qualityProfile} map={textures.barkMap} color="#81756d" emissive={visualState.palette.trunk} emissiveIntensity={0.025} />
+        <ForestSurfaceMaterial finish="bark" qualityProfile={qualityProfile} map={textures.barkMap} vertexColors color="#81756d" emissive={visualState.palette.trunk} emissiveIntensity={0.025} />
       </instancedMesh>
       <instancedMesh ref={crownRef} args={[crownGeometry, undefined, requestedCount]} castShadow={castShadow} receiveShadow>
         <ForestSurfaceMaterial finish="canopy" qualityProfile={qualityProfile} map={textures.crownMap} vertexColors color="#d4ded1" emissive={visualState.palette.leaf} emissiveIntensity={0.025} />
@@ -173,4 +160,3 @@ export function ClearingForestFrame({
     </group>
   );
 }
-

@@ -82,10 +82,11 @@ test("the master lantern and canvas own their render responsibilities", () => {
   assert.match(scene, /<MemoryBloomLandmark/);
   assert.match(scene, /<LivingPathMist/);
   assert.match(scene, /<LivingPathRibbon/);
-  assert.match(read("src/world/forest/ContinuousForestBed.tsx"), /from "\.\.\/\.\.\/components\/three\/environment\/forestGeometry\.ts"/);
+  assert.match(read("src/world/forest/ContinuousForestBed.tsx"), /from "\.\/forestGeometry(?:\.ts)?"/);
   assert.match(scene, /<ContinuousForestBed/);
-  assert.match(read("src/components/three/environment/forestGeometry.ts"), /function createOrganicCrownGeometry/);
-  assert.match(read("src/components/three/environment/forestGeometry.ts"), /mergeGeometries/);
+  assert.match(read("src/world/forest/forestGeometry.ts"), /function createOrganicCrownGeometry/);
+  assert.match(read("src/world/forest/forestGeometry.ts"), /geometry\.setIndex\(data\.indices\)/);
+  assert.match(read("src/world/forest/forestGeometry.ts"), /geometry\.morphAttributes\.normal/);
   assert.doesNotMatch(read("src/world/forest/ContinuousForestBed.tsx"), /crownAccentRef|lowerCrownRef|upperCrownRef|sideCrownRef/);
   assert.doesNotMatch(scene, /applyNarrativeTextureBlend/);
   assert.ok(
@@ -343,17 +344,21 @@ test("the prologue, story roles, and guidance express authored progression", () 
   assert.match(surrenderClearing, /name="surrender-clearing"/);
 });
 
-test("forest trees use grounded rooted geometry and opaque instanced crowns", () => {
+test("forest trees use grounded rooted geometry and open instanced crowns", () => {
   const scene = read("src/components/three/StoryScene.tsx");
   const worker = read("src/workers/forestWorker.ts");
 
-  const geometry = read("src/components/three/environment/forestGeometry.ts");
-  assert.match(read("src/world/forest/ContinuousForestBed.tsx"), /from "\.\.\/\.\.\/components\/three\/environment\/forestGeometry\.ts"/);
+  const geometry = read("src/world/forest/forestGeometry.ts");
+  assert.match(read("src/components/three/environment/forestGeometry.ts"), /from "\.\.\/\.\.\/\.\.\/world\/forest\/forestGeometry\.ts"/);
+  assert.match(read("src/world/forest/ContinuousForestBed.tsx"), /from "\.\/forestGeometry(?:\.ts)?"/);
   assert.match(scene, /<ContinuousForestBed/);
   assert.match(geometry, /function createForestTrunkGeometry/);
   assert.match(geometry, /const rootAngles = \[/);
   assert.match(read("src/world/forest/ClearingForestFrame.tsx"), /groundYAt/);
-  assert.match(geometry, /ORGANIC_CROWN_LOBES/);
+  assert.match(geometry, /createForestCrownLibrary/);
+  assert.doesNotMatch(geometry, /new THREE\.(?:SphereGeometry|IcosahedronGeometry|PlaneGeometry|CircleGeometry)/);
+  assert.match(read("src/components/three/environment/DistantWoodland.tsx"), /<meshStandardMaterial color="#63715e"[^>]*side=\{THREE\.DoubleSide\}/);
+  assert.match(read("src/components/three/chapters/ChapterPrimitives.tsx"), /<meshStandardMaterial color=\{tint\} roughness=\{0\.98\} side=\{THREE\.DoubleSide\}/);
   for (const owner of ["src/world/forest/ContinuousForestBed.tsx", "src/world/forest/ClearingForestFrame.tsx"]) assert.doesNotMatch(read(owner), /transparent\s+opacity=.*crown/i);
   assert.match(worker, /edgeWall/);
   assert.match(worker, /trunkWidth/);

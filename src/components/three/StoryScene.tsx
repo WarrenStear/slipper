@@ -797,7 +797,13 @@ function NarrativeGroundDetailField({
     [narrativeWorldState.memoryPressure, narrativeWorldState.explorationDepth],
   );
 
-  useEffect(() => {
+  useLayoutEffect(() => {
+    // An animation frame can precede passive effects. Reconnecting a retained
+    // layout also needs a fresh build after resetting its populated batches.
+    lastCellRef.current = {
+      cellX: Number.NaN, cellZ: Number.NaN, biome: "", quality: "",
+      memory: Number.NaN, depth: Number.NaN,
+    };
     for (const mesh of [rootRef.current, leafRef.current, stoneRef.current, puddleRef.current, ashRef.current, goldRef.current]) {
       if (!mesh) continue;
       mesh.count = 0;

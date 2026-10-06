@@ -5,12 +5,13 @@ import { getCurrentCinematicProfile } from "../../cinematics/emotionalCinematogr
 import { useSceneLook } from "../../components/three/artDirection/SceneLookContext";
 import { worldTransitionAlpha } from "../../components/three/artDirection/worldVisualContinuity";
 import { bindSceneAtmosphere } from "./atmosphereOwnership";
+import { forestFogDensity } from "./forestDepth.ts";
 
 export function SceneAtmosphere({ heading = 0 }: { heading?: number }) {
   const presentation = useSceneLook()!;
   const { scene } = useThree();
   const sky = useRef<Mesh>(null);
-  const owned = useMemo(() => ({ background: new Color(presentation.look.atmosphere.sky), fog: new FogExp2(presentation.look.atmosphere.fog, presentation.look.atmosphere.density), target: new Color(), horizon: new Color(presentation.look.atmosphere.horizon), zenith: new Color(presentation.look.atmosphere.sky) }), []);
+  const owned = useMemo(() => ({ background: new Color(presentation.look.atmosphere.sky), fog: new FogExp2(presentation.look.atmosphere.fog, forestFogDensity(presentation.look.atmosphere.density, presentation.look.composition)), target: new Color(), horizon: new Color(presentation.look.atmosphere.horizon), zenith: new Color(presentation.look.atmosphere.sky) }), []);
   const uniforms = useMemo(() => ({ horizon: { value: owned.horizon }, zenith: { value: owned.zenith }, sun: { value: new Vector3() }, time: { value: 0 }, structure: { value: 0 } }), [owned]);
   useLayoutEffect(() => bindSceneAtmosphere(scene, owned.background, owned.fog), [scene, owned]);
   useFrame(({ camera }, delta) => {
@@ -20,7 +21,7 @@ export function SceneAtmosphere({ heading = 0 }: { heading?: number }) {
     owned.zenith.copy(owned.background);
     owned.horizon.lerp(owned.target.set(look.atmosphere.horizon), alpha);
     owned.fog.color.lerp(owned.target.set(look.atmosphere.fog), alpha);
-    const density = Math.min(.025, profile.fogDensity * Math.min(1.3, 90 / profile.visibility));
+    const density = forestFogDensity(Math.min(.025, profile.fogDensity * Math.min(1.3, 90 / profile.visibility)), look.composition);
     owned.fog.density += (density - owned.fog.density) * alpha;
     uniforms.time.value = presentation.time.vegetation;
     uniforms.structure.value = presentation.reducedEffects || !look.budget.shafts ? 0 : .055;

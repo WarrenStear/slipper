@@ -5,6 +5,7 @@ import { useSceneLook } from "../../components/three/artDirection/SceneLookConte
 import { readAtmosphereFogDensity } from "./atmosphereFog";
 import { blendWorldValue, worldTransitionAlpha } from "../../components/three/artDirection/worldVisualContinuity";
 import { groundMistPatches, GROUND_MIST_FRAGMENT, GROUND_MIST_VERTEX, type MistPatch } from "./groundMistField";
+import { composeGroundMist } from "./forestDepth.ts";
 
 const IGNORE_RAYCAST = () => undefined;
 function MistBatch({ patches }: { patches: readonly MistPatch[] }) {
@@ -38,6 +39,6 @@ function MistBatch({ patches }: { patches: readonly MistPatch[] }) {
 /** One shared draw, geometry and shader. Disabled mist retains no frame subscriber. */
 export function GroundMist() {
   const presentation = useSceneLook()!;
-  const patches = groundMistPatches(presentation.look.sceneId);
+  const patches = useMemo(() => composeGroundMist(groundMistPatches(presentation.look.sceneId), presentation.look.composition), [presentation.look.sceneId, presentation.look.composition]);
   return presentation.look.budget.shafts && patches.length ? <MistBatch patches={patches} /> : null;
 }

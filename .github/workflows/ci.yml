@@ -155,8 +155,8 @@ jobs:
         if: matrix.project != 'firefox'
         run: npm run test:e2e -- --project=${{ matrix.project }}
 
-      - name: Preserve browser diagnostics on failure
-        if: failure() || cancelled()
+      - name: Preserve browser diagnostics including retried failures
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: browser-diagnostics-${{ matrix.project }}

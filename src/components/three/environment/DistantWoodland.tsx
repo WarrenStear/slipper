@@ -10,8 +10,9 @@ export const DistantWoodland = memo(function DistantWoodland({ origin, quality, 
   const trunks = useRef<THREE.InstancedMesh>(null), crowns = useRef<THREE.InstancedMesh>(null);
   const count = quiet ? 16 : quality === "low" ? 40 : quality === "medium" ? 64 : 96;
   const layout = useMemo(() => distantWoodlandLayout(count), [count]);
-  const detail = quality === "low" ? 0 : 1;
-  const crown = useMemo(() => createOrganicCrownGeometry(detail), [detail]);
+  // Far woodland keeps open grouped silhouettes; fine individual leaf detail
+  // belongs to the clearing and continuous tree libraries nearer the player.
+  const crown = useMemo(() => createOrganicCrownGeometry(0), []);
   useEffect(() => () => crown.dispose(), [crown]);
   useLayoutEffect(() => {
     if (!trunks.current || !crowns.current) return;
@@ -39,7 +40,7 @@ export const DistantWoodland = memo(function DistantWoodland({ origin, quality, 
       <meshStandardMaterial color="#505950" roughness={1} />
     </instancedMesh>
     <instancedMesh ref={crowns} args={[crown, undefined, count]}>
-      <meshStandardMaterial color="#63715e" vertexColors roughness={1} />
+      <meshStandardMaterial color="#63715e" vertexColors roughness={1} side={THREE.DoubleSide} />
     </instancedMesh>
   </group>;
 });

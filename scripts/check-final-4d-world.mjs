@@ -13,6 +13,8 @@ const requiredFiles = [
   "src/world/forest/ContinuousForestBed.tsx",
   "src/world/forest/ClearingForestFrame.tsx",
   "src/world/forest/useForestTextures.ts",
+  "src/world/forest/forestGeometry.ts",
+  "tests/forest-archetypes.test.mjs",
   "src/world/atmosphere/LegacySceneAtmosphere.tsx",
   "src/world/atmosphere/CelestialMoon.tsx",
   "src/world/atmosphere/CinematicForestDepthPlate.tsx",
@@ -83,7 +85,8 @@ const depthPlate = read("src/world/atmosphere/CinematicForestDepthPlate.tsx");
 const silhouette = read("src/world/atmosphere/DistantForestSilhouetteRing.tsx");
 const memoryBloom = read("src/world/guidance/MemoryBloomLandmark.tsx");
 const productionPaths = read("src/world/terrain/worldPaths.ts");
-const forestGeometry = read("src/components/three/environment/forestGeometry.ts");
+const forestGeometry = read("src/world/forest/forestGeometry.ts");
+const forestGeometryCompatibility = read("src/components/three/environment/forestGeometry.ts");
 const proceduralDome = read("src/components/three/environment/ProceduralDome.tsx");
 const worldCanvas = read("src/components/three/WorldCanvas.tsx");
 const worldEngine = read("src/components/three/world/WorldEngineLayer.tsx");
@@ -113,7 +116,7 @@ if (perfectGround.includes("WorldGroundShader") || perfectGround.includes("<shad
 if (!/<Canvas\s+[\s\S]*?shadows=/.test(worldCanvas)) hardFailures.push("canvas shadow policy is missing");
 if (!worldLayout.includes("buildPhysicalStoryLinks") || !productionPaths.includes("buildPhysicalStoryLinks") || !storyScene.includes("buildMazePathSegments")) hardFailures.push("authored physical maze topology is not mounted");
 if (!storyScene.includes("<EnvironmentalThreshold") || /<WorldGateway\b|<Portals\b|<PortalPathBeams\b/.test(storyScene)) hardFailures.push("generic journey portals were not replaced by environmental thresholds");
-if (!productionForest.includes("createForestTrunkGeometry") || !forestGeometry.includes("const rootAngles = [") || !productionForest.includes('from "../../components/three/environment/forestGeometry.ts"')) hardFailures.push("rooted forest trunk geometry is missing");
+if (!productionForest.includes("createForestTrunkLibrary") || !forestGeometry.includes("const rootAngles = [") || !productionForest.includes('from "./forestGeometry.ts"') || !forestGeometryCompatibility.includes('from "../../../world/forest/forestGeometry.ts"')) hardFailures.push("rooted forest trunk geometry is missing");
 if (terrainWorker.includes("tooCloseToPlayer") || terrainWorker.includes("playerPosition")) hardFailures.push("forest worker still cuts a player-relative tree hole");
 
 if (
@@ -154,7 +157,15 @@ if (worldVisualState.includes("fireBias > 0.54") || !worldVisualState.includes("
 if (!memoryBloom.includes("MEMORY_BLOOM_TEXTURE_PATH") || !storyScene.includes("<MemoryBloomLandmark")) hardFailures.push("memory-bloom path landmark is missing");
 if (!storyScene.includes("<LivingPathMist")) hardFailures.push("living path mist is missing");
 if (!storyScene.includes("<LivingPathRibbon")) hardFailures.push("terrain-conforming guidance path is missing");
-if (!productionForest.includes("createOrganicCrownGeometry") || !forestGeometry.includes("function createOrganicCrownGeometry") || !forestGeometry.includes("mergeGeometries")) hardFailures.push("single-pass organic crown geometry is missing");
+if (!productionForest.includes("createForestCrownLibrary") || !forestGeometry.includes("function createOrganicCrownGeometry") || !forestGeometry.includes("geometry.setIndex(data.indices)") || !forestGeometry.includes("geometry.morphAttributes.normal")) hardFailures.push("single-pass organic crown geometry is missing");
+// Verify actual surfaces, ordinary compatibility constructors, eight target
+// topologies, support alignment and geometric air gaps at the owning boundary.
+const forestGeometryContract = spawnSync(process.execPath, [
+  "--experimental-strip-types", "--test", "tests/forest-archetypes.test.mjs",
+], { cwd: ROOT, encoding: "utf8" });
+if (forestGeometryContract.error || forestGeometryContract.status !== 0) {
+  hardFailures.push(`forest geometry contract failed: ${forestGeometryContract.error?.message ?? forestGeometryContract.stderr ?? ""}\n${forestGeometryContract.stdout ?? ""}`);
+}
 if (/crownAccentRef|lowerCrownRef|upperCrownRef|sideCrownRef/.test(storyScene) || /crownAccentRef|lowerCrownRef|upperCrownRef|sideCrownRef/.test(productionForest)) hardFailures.push("stacked duplicate canopy draw calls are mounted");
 if (!/decorationsPerCell: [1-9]/.test(mediumProfile) || !/groundDetailMultiplier: 0\.[1-9]/.test(mediumProfile)) hardFailures.push("medium quality does not restore budgeted world detail");
 if (!/enableMoonShadows: true/.test(cinematicProfile) || !/shadowMapSize: 1024/.test(cinematicProfile)) hardFailures.push("cinematic shadow budget is incomplete");

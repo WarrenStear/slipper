@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { claimForestBuild } from '../src/lib/forestBuildSchedule.ts';
-import { createForestTrunkGeometry, createOrganicCrownGeometry } from '../src/components/three/environment/forestGeometry.ts';
+import { createForestTrunkGeometry, createOrganicCrownGeometry } from '../src/world/forest/forestGeometry.ts';
 import { createPhysicalPathGeometry } from '../src/components/three/environment/livingPathGeometry.ts';
 import { generateTerrain } from '../src/workers/forestWorker.ts';
 import { createTerrainSurfaceSampler, sampleTerrainElevation } from '../src/lib/terrainModel.ts';
