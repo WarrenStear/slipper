@@ -679,7 +679,7 @@ same-entry hydration tests cover the loss before the first scheduler sample and
 after settled poses. Accepted navigation and retained reconnect install their
 replacement authorization before sampling and do not trigger this handoff.
 
-Validation is in progress. Actual-store core tests cover the fresh complete
+Actual-store core tests cover the fresh complete
 32-scene route, all 34 authored scene-entry events, every legacy action/choice
 and ritual, private prose and exact serialized compatibility. Actual React
 host/navigation tests cover StrictMode, retained reconnect, old publishers,
@@ -691,7 +691,7 @@ retained in `runtime-host-preparation`.
 
 The final full check passed 1,133 unit and seven security tests, canonical content
 QA, source/world/asset validation, TypeScript, production build and Pages
-Functions compilation. Eleven actual React host tests and twelve controller/
+Functions compilation. Phase 5 was committed and pushed as `21ce695`. Eleven actual React host tests and twelve controller/
 navigation tests cover the interruption and arrival repairs. Initial built
 text/cloud validation passed all nine mobile cases and five desktop cases;
 three affected desktop cases subsequently passed unchanged on recheck. Failed
@@ -715,3 +715,26 @@ cloud assertion failure was an expected-navigation-metadata mismatch, and the
 corrected test continues to compare every serialized field/schema and forbids
 mounting new progression. Final reports are `browser-final` and
 `browser-physical`; earlier sleep-interrupted reports remain intact.
+
+The first remote Phase 5 smoke run exposed a genuine DOM-input regression:
+capturing window `focus`/`blur` also observed descendant buttons. Moving focus
+onto the physical floor action cleared its valid camera observation immediately
+before its click. The bridge now handles only focus events targeted at the
+window itself. Actual window blur, page lifecycle, visibility, pointer-lock and
+overlay interruption retain their fresh-continuity requirements. A new CPU
+case covers descendant focus and real window suspension. The unchanged native
+desktop/mobile `scene-polish` tests now pass both cases, including jitter
+rejection, both reveal stages and Continue after reload. The original failure
+reports are preserved in `browser-scene-polish-repro`; accepted reports are in
+`browser-focus-repair`.
+
+The visual review now waits for the actual onboarding-action opacity within
+the same 2,500 ms deadline instead of an unconditional sleep. All original
+visibility, centering, overflow, identity and Begin checks remain. Its native
+Metal run passed all thirteen captures, including desktop, portrait and
+landscape production entry. Evidence is retained in `visual-focus-repair`.
+The prepared Phase C working tree also passed 1,169 unit tests, seven security
+tests, source/lint checks, type checking, content/asset/world validation, the
+production build and Pages Functions compilation. Remote browser regression
+jobs for `21ce695` still require their failure audit and a repaired-commit run;
+these local receipts do not certify those remote jobs.

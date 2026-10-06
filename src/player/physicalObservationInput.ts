@@ -53,8 +53,17 @@ export function connectPhysicalObservationInput({ windowTarget, documentTarget,
     const pointerId = (event as PointerEvent).pointerId, observedAtMs = now();
     if (binding.port.pointer(binding.lease, pointerId, held, observedAtMs)) signal(binding, observedAtMs, "input");
   };
-  const blur = () => { pageFocused = false; refreshActivity(true); };
-  const focus = () => { pageFocused = true; refreshActivity(true); };
+  // Capture also observes focus moving between DOM controls. Only the window's
+  // own focus edges suspend the page; focusing a physical action must retain
+  // the camera observation that validated that action before its click.
+  const blur = (event: Event) => {
+    if (event.target !== windowTarget) return;
+    pageFocused = false; refreshActivity(true);
+  };
+  const focus = (event: Event) => {
+    if (event.target !== windowTarget) return;
+    pageFocused = true; refreshActivity(true);
+  };
   const pagehide = () => { pageActive = false; refreshActivity(true); };
   const pageshow = () => { pageActive = true; refreshActivity(true); };
   const resetContinuity = () => { refreshActivity(true); };

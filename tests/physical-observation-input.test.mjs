@@ -87,6 +87,26 @@ test('blur/pagehide/hidden and their resume edges clear inputs and require fresh
   }
 });
 
+test('captured descendant focus preserves the current physical observation for a DOM action', () => {
+  const h = host(); h.prime(); h.time(600);
+  const before = h.facts(), signalCount = h.signals.length;
+  const button = new EventTarget(), previousButton = new EventTarget();
+  // A window capture listener receives descendant focus/blur with the original
+  // target. EventTarget has no DOM tree, so retain that native event property.
+  for (const [type, target] of [['blur', previousButton], ['focus', button]]) {
+    h.send(type, { target });
+    assert.deepEqual(h.facts(), before);
+    assert.equal(h.signals.length, signalCount);
+  }
+  assert.equal(h.bridge.refreshActivity(), true);
+  h.send('pointerdown', { pointerId: 4 }); h.send('pointerup', { pointerId: 4 });
+  assert.equal(h.facts().available, true, 'Click keeps the current camera pose available');
+  assert.equal(h.facts().inputEnabled, true);
+  h.send('blur'); assert.equal(h.facts().available, false, 'Real window blur still suspends');
+  h.send('focus'); assert.equal(h.facts().available, false, 'Real resume still requires fresh poses');
+  h.bridge.dispose();
+});
+
 test('injected settings/mode/physics and active-to-active restoration reset between pose samples', () => {
   const h = host(); h.prime(); h.time(600); h.activity(false); h.time(650); h.activity(true);
   h.time(700); h.port.publish(h.lease, pose(700)); assert.equal(h.facts().available, false);
