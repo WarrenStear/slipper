@@ -1,3 +1,4 @@
+import { useSceneLook } from "../artDirection/SceneLookContext";
 import { useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Color, FogExp2 } from "three";
@@ -7,6 +8,11 @@ import { useSettingsStore } from "../../../stores/useSettingsStore";
 import { CHAPTER_ENVIRONMENTS, environmentFamily, environmentFogDensity } from "../environment/chapterEnvironment";
 
 export function CinematicAtmosphereDirector() {
+  const presentation = useSceneLook();
+  return presentation ? null : <LegacyCinematicAtmosphereDirector />;
+}
+
+function LegacyCinematicAtmosphereDirector() {
   const sceneId = useJourneyStore(state => state.sceneId);
   const reducedEffects = useSettingsStore(state => state.reducedEffects);
   const reducedMotion = useSettingsStore(state => state.reducedMotion);

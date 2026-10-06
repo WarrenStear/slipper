@@ -55,7 +55,7 @@ if(view==='interaction') {
  if(which==='broken'){objects['broken-floor.reflection']='revealed';}
  useJourneyStore.setState({worldFlags:flags,storyObjectStates:objects,storyPlacementStates:placements,completedStoryEventIds:completed});
 }
-useWorldStore.setState({mode:'explore' ,controls:'orbit',sceneProximity:{insideClearing:true}});useSettingsStore.setState({reducedMotion:!motion,reducedEffects:reduced,cameraAssistance:false});
+useWorldStore.setState({mode:'explore' ,controls:'orbit',physicsPaused:false,sceneProximity:{insideClearing:true}});useSettingsStore.setState({reducedMotion:!motion,reducedEffects:reduced,cameraAssistance:false});
 for(let i=0;i<300;i++)advanceCinematicProfile(profile,.1);
 const cameras={reveal:[[0,1.65,-4],[0,.2,2]],finale:[[0,1.65,6.5],[0,4.8,-15]],broken:[[0,1.65,-4],[0,.2,2]],blue:[[0,1.65,-10],[0,1.5,7]],house:[[.65,1.65,-1.65],[0,1.5,5]],crowned:[[0,1.65,-11],[0,2,4]],epilogue:[[0,1.65,6.5],[0,4.8,-15]]};
 function Evidence(){const {camera,scene,gl}=useThree(),frames=useRef(0),times=useRef([]),last=useRef(0),draws=useRef({calls:0,triangles:0}),drawSamples=useRef([]);

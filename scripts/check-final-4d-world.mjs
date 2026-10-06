@@ -13,7 +13,7 @@ const requiredFiles = [
   "src/world/forest/ContinuousForestBed.tsx",
   "src/world/forest/ClearingForestFrame.tsx",
   "src/world/forest/useForestTextures.ts",
-  "src/world/atmosphere/SceneAtmosphere.tsx",
+  "src/world/atmosphere/LegacySceneAtmosphere.tsx",
   "src/world/atmosphere/CelestialMoon.tsx",
   "src/world/atmosphere/CinematicForestDepthPlate.tsx",
   "src/world/atmosphere/AtmosphericForestPanorama.tsx",
@@ -77,7 +77,7 @@ const terrainGround = read("src/world/terrain/HillyForestGround.tsx");
 const productionForest = read("src/world/forest/ContinuousForestBed.tsx");
 const forestTextures = read("src/world/forest/useForestTextures.ts");
 const moon = read("src/world/atmosphere/CelestialMoon.tsx");
-const fallbackAtmosphere = read("src/world/atmosphere/SceneAtmosphere.tsx");
+const fallbackAtmosphere = read("src/world/atmosphere/LegacySceneAtmosphere.tsx");
 const panorama = read("src/world/atmosphere/AtmosphericForestPanorama.tsx");
 const depthPlate = read("src/world/atmosphere/CinematicForestDepthPlate.tsx");
 const silhouette = read("src/world/atmosphere/DistantForestSilhouetteRing.tsx");
@@ -140,7 +140,7 @@ if (
 if (!storyScene.includes("<JourneyWorldComposition")) hardFailures.push("authored chapter compositions are not mounted");
 
 if (worldEngine.includes("<WorldAtmosphere") || worldEngine.includes("<WorldLightingRig")) hardFailures.push("duplicate atmosphere or lighting rigs are mounted");
-if (!moon.includes("function CelestialMoon") || !fallbackAtmosphere.includes("<CelestialMoon") || !storyScene.includes("<SceneAtmosphere")) hardFailures.push("visible moon layer is missing");
+if (!moon.includes("function CelestialMoon") || !fallbackAtmosphere.includes("<CelestialMoon") || !storyScene.includes("<LegacySceneAtmosphere")) hardFailures.push("visible moon layer is missing");
 if (!moon.includes("MOON_ALBEDO_PATH")) hardFailures.push("realistic moon albedo is missing");
 if (!forestTextures.includes("FOREST_GROUND_ALBEDO_PATH") || !productionForest.includes("useSafeForestTextures") || storyScene.includes("applyNarrativeTextureBlend")) hardFailures.push("production ground material is missing or vertex tint is double-applied");
 if (!panorama.includes("FIRST_WOOD_PANORAMA_PATH") || !storyScene.includes("<AtmosphericForestPanorama")) hardFailures.push("atmospheric forest panorama is missing");

@@ -3,6 +3,7 @@ import { useFrame } from "@react-three/fiber";
 import { Color, PerspectiveCamera, PlaneGeometry, ShaderMaterial, UnsignedByteType, type WebGLRenderer } from "three";
 import { Reflector } from "three/examples/jsm/objects/Reflector.js";
 import { useSceneLook } from "../artDirection/SceneLookContext";
+import { heroReflectionDisturbance } from "./reflectionMotion";
 
 const capturing = new WeakSet<WebGLRenderer>();
 /** Exactly one eligible hero surface per scene; lower tiers keep their skin. */
@@ -46,10 +47,6 @@ function CapturedSurface({ kind, size, position, rotation }: Required<Parameters
       // Only perspective world cameras participate; never recurse from a shadow view.
       if (!(sourceCamera instanceof PerspectiveCamera)) return;
       camera.copy(sourceCamera); camera.far = Math.min(sourceCamera.far, presentation.look.budget.reflectionFar); camera.updateProjectionMatrix();
-      material.uniforms.uTime.value = presentation.time.water;
-      // The same eased quietness settles the live view, its aged skin and air.
-      material.uniforms.uDisturbance.value = presentation.motion.water === 0 ? 0
-        : (kind === "mirror" ? .004 : .0015) * (1 - presentation.stillness);
       if (!renderer.extensions.has("EXT_color_buffer_float")) mirror.getRenderTarget().texture.type = UnsignedByteType;
       const previousTarget = renderer.getRenderTarget(), xr = renderer.xr.enabled, shadows = renderer.shadowMap.autoUpdate;
       capturing.add(renderer);
@@ -61,6 +58,15 @@ function CapturedSurface({ kind, size, position, rotation }: Required<Parameters
     return { mirror, geometry, dispose: mirror.dispose.bind(mirror) };
   }, [kind, size[0], size[1], presentation.look.budget.reflectionSize]);
   useEffect(() => () => { resources.dispose(); resources.geometry.dispose(); }, [resources]);
-  useFrame(() => { frame.current++; }, -2);
+  useFrame(() => {
+    frame.current++;
+    // Surface animation consumes the shared frame independently of capture
+    // cadence or visibility. Returning to a settled mirror cannot show a stale
+    // disturbance, and skipped captures never own a second motion clock.
+    const presentation = current.current;
+    const material = resources.mirror.material as ShaderMaterial;
+    material.uniforms.uTime.value = presentation.time.water;
+    material.uniforms.uDisturbance.value = heroReflectionDisturbance(kind, presentation.motion.water, presentation.stillness);
+  }, -2);
   return <primitive object={resources.mirror} position={position} rotation={rotation} dispose={null} userData={{ secondaryView: true, resolution: presentation.look.budget.reflectionSize, maxCaptures: 1 }} />;
 }

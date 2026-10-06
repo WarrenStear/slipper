@@ -9,7 +9,6 @@ import type { RenderQualityProfile } from "../renderQuality";
 import type { WorldDirectorState } from "../worldDirector/worldDirector";
 import type { WorldVisualState } from "../worldVisualState";
 import PerfectWorldGround from "./PerfectWorldGround";
-import WorldEnvironmentParticles from "./WorldEnvironmentParticles";
 
 type WorldEngineLayerProps = {
   worldDirector: WorldDirectorState;
@@ -188,25 +187,16 @@ function StillnessBreathField({ worldDirector, visualState, narrativeWorldState,
   );
 }
 
+/** Compatibility geometry only; canonical global air and lights belong to SceneLook. */
 export function WorldEngineLayer(props: WorldEngineLayerProps) {
   const presentation = useSceneLook();
-  const { worldDirector, visualState, qualityProfile, enabled: requested = true } = props;
-  const enabled = requested && presentation?.look.sceneId !== "epilogue.constellation";
-  const ambientEffectsEnabled = enabled && !presentation?.reducedEffects && qualityProfile.particleMultiplier > 0;
-
-  return (
-    <>
-      <PerfectWorldGround {...props} enabled={enabled && !presentation} />
-      {ambientEffectsEnabled ? (
-        <>
-          <WorldEnvironmentParticles worldDirector={worldDirector} visualState={visualState} />
-          <BoundaryVeil {...props} enabled={!presentation} />
-          <StillnessBreathField {...props} enabled={!presentation} />
-        </>
-      ) : null}
-      <PathGuidancePool {...props} enabled={enabled && !presentation} />
-    </>
-  );
+  if (presentation || props.enabled === false) return null;
+  const ambientEffectsEnabled = props.qualityProfile.particleMultiplier > 0;
+  return <>
+    <PerfectWorldGround {...props} enabled />
+    {ambientEffectsEnabled ? <><BoundaryVeil {...props} enabled /><StillnessBreathField {...props} enabled /></> : null}
+    <PathGuidancePool {...props} enabled />
+  </>;
 }
 
 export default WorldEngineLayer;

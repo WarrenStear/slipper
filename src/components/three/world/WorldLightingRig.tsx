@@ -1,3 +1,4 @@
+import { useSceneLook } from "../artDirection/SceneLookContext";
 import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
@@ -20,7 +21,13 @@ function resolveShadowRadius(quality: WorldDirectorState["performance"]["quality
   return 12;
 }
 
-export function WorldLightingRig({ worldDirector, visualState, enabled = true }: WorldLightingRigProps) {
+/** Standalone compatibility; suppress before subscribing when SceneLook owns the scene. */
+export function WorldLightingRig(props: WorldLightingRigProps) {
+  const presentation = useSceneLook();
+  return presentation || props.enabled === false ? null : <LegacyWorldLightingRig {...props} />;
+}
+
+function LegacyWorldLightingRig({ worldDirector, visualState, enabled = true }: WorldLightingRigProps) {
   const ambientRef = useRef<THREE.AmbientLight>(null);
   const hemiRef = useRef<THREE.HemisphereLight>(null);
   const moonRef = useRef<THREE.DirectionalLight>(null);

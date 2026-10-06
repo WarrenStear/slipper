@@ -2,7 +2,7 @@ import { memo, useEffect, useLayoutEffect, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
 import { AdditiveBlending, BufferGeometry, Color, Float32BufferAttribute } from "three";
 import { useSceneLook } from "../artDirection/SceneLookContext";
-import { readAtmosphereFogDensity } from "../artDirection/atmosphereFog";
+import { readAtmosphereFogDensity } from "../../../world/atmosphere/atmosphereFog";
 import { boundedDrawCount, effectPixelRatio, FIREFLY_CAPACITY } from "./woodlandRuntimeBudget";
 import { createFireflyField, fireflyCount, FIREFLY_FRAGMENT, FIREFLY_VERTEX } from "./woodlandFireflyField";
 

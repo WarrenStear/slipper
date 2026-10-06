@@ -1,3 +1,4 @@
+import { useSceneLook } from "../artDirection/SceneLookContext";
 import { useEffect, useMemo, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
@@ -14,7 +15,13 @@ function clamp01(value: number) {
   return Math.max(0, Math.min(1, Number.isFinite(value) ? value : 0));
 }
 
-export function WorldAtmosphere({ worldDirector, visualState, enabled = true }: WorldAtmosphereProps) {
+/** Standalone compatibility; suppress before subscribing when SceneLook owns the scene. */
+export function WorldAtmosphere(props: WorldAtmosphereProps) {
+  const presentation = useSceneLook();
+  return presentation || props.enabled === false ? null : <LegacyWorldAtmosphere {...props} />;
+}
+
+function LegacyWorldAtmosphere({ worldDirector, visualState, enabled = true }: WorldAtmosphereProps) {
   const { scene } = useThree();
   const backgroundRef = useRef(new THREE.Color(worldDirector.environment.backgroundColor));
   const fogRef = useRef(new THREE.FogExp2(worldDirector.environment.fogColor, worldDirector.environment.fogDensity));

@@ -6,7 +6,7 @@ import { AUTHORED_SHAFTS, sceneSkyReturn } from '../src/components/three/artDire
 
 const qualities = ['low', 'medium', 'high', 'cinematic'];
 const variants = ['enchanted-wood', 'blue-moon'];
-const read = path => readFileSync(new URL(`../src/components/three/${path}`, import.meta.url), 'utf8');
+const read = path => readFileSync(new URL(path.startsWith("world/") ? `../src/${path}` : `../src/components/three/${path}`, import.meta.url), 'utf8');
 const radius = (kind, item) => ({ saplings: 1.65, stones: 1.15, twigs: .85, fungi: .7 }[kind] * item.scale[0]);
 
 test('woodland accents have deterministic positive finite transforms at every tier', () => {
@@ -93,14 +93,14 @@ test('accent wiring retains the original habitat and stays decorative', () => {
   assert.doesNotMatch(layer, /useFrame|Math\.random|Date\.now|RigidBody|dispatchStoryEvent|useJourneyStore|scene\.fog/);
 });
 test('light and fog effects stay quality-gated, near-camera faded and scene-clock driven', () => {
-  for (const path of ['artDirection/VolumetricLightShaft.tsx', 'artDirection/GroundMist.tsx']) {
+  for (const path of ['world/atmosphere/VolumetricLightShaft.tsx', 'world/atmosphere/GroundMist.tsx']) {
     const code = read(path);
     assert.match(code, /look\.budget\.shafts/); assert.match(code, /presentation\.time\.vegetation/);
-    assert.match(path.endsWith('GroundMist.tsx') ? read('artDirection/groundMistField.ts') : code, /float nearby=smoothstep/); assert.match(code, /depthWrite=\{false\}/);
+    assert.match(path.endsWith('GroundMist.tsx') ? read('world/atmosphere/groundMistField.ts') : code, /float nearby=smoothstep/); assert.match(code, /depthWrite=\{false\}/);
     assert.doesNotMatch(code, /getElapsedTime|Date\.now|requestAnimationFrame/);
   }
-  const lighting = read('artDirection/SceneLighting.tsx');
+  const lighting = read('world/lighting/SceneLighting.tsx');
   assert.match(lighting, /returnStrength > 0 && accent/);
   assert.match(lighting, /intensity=\{accent\.intensity \* returnStrength\} castShadow=\{false\}/);
-  assert.match(read('artDirection/VolumetricLightShaft.tsx'), /forceSinglePass/);
+  assert.match(read('world/atmosphere/VolumetricLightShaft.tsx'), /forceSinglePass/);
 });

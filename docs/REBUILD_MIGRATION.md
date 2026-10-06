@@ -145,7 +145,7 @@ and Visual presentation review (`37351828560`).
 | 1. Foundation | This document first; shared narrative selectors/actions/runtime; used compatibility boundaries. | Complete (`1ae2b98`): full check and 16 desktop/mobile text/cloud browser tests passed. |
 | 2. Player | Input, movement, camera, factual interaction detection; one ordered camera writer. | Complete (`770a9ab`): full check, seven applicable mobile tests and three desktop opening/keyboard tests passed. |
 | 3. World | Exact terrain/forest/guidance/atmosphere extraction; preserve ecology and seeded paths. | Complete (`c00777d`): full check, 14 fixed-camera captures and five touch browser tests passed; Linux numeric fixture portability repair follows. |
-| 4. Presentation | Preserve canonical SceneLook owner; consolidate/remove proven redundant rigs. | Pending. |
+| 4. Presentation | Canonical light, fog, sky and particles; early compatibility gates and shared presentation activity. | Implementation ready; full check passed, rendered lifecycle and production comparison underway. |
 | 5. Manifest | Derive presentation, spawn, profiles and interaction references from canonical scenes. | Pending. |
 | 6. Opening slice | Arrival, floor/reflection, reveal, lantern, first walk, Fragment, Constellation. | Pending structural phases; desktop/mobile real-input proof required. |
 | 7. Quiet Forest | Environment/lantern guidance and contextual prompts; accessible assistance retained. | Pending guidance usability proof. |
@@ -281,3 +281,148 @@ allows at most 1e-10 world units only for derived control points and integrated
 arc length. Physics tolerances and draw/asset budgets remain unchanged. The
 original failed log is retained in `phase-3/smoke-ci-failure.log`; hosted runner
 annotations and retries are recorded separately from application failures.
+
+The portability repair is committed as `f876e13`. Its current remote full
+regression run (`37430617082`) passed the Linux/Node 22 source, unit, security,
+production build and Pages Functions job, as well as decoder-delivery validation.
+Four browser jobs subsequently passed. Mobile Chromium passed 47 cases, skipped
+three, and failed only the injected forest-worker network-error recovery case;
+its failed trace and network evidence are retained in
+`phase-3/ci-mobile-worker-failure`. Recovery diagnosis is in progress without
+changing its existing deadline or discarding network-abort coverage. Fresh smoke and visual
+workflows were dispatched against the repaired main revision (`37431107513` and
+`37431112137`). The latter Visual presentation review passed; historical failed
+runs remain available. The repaired Story interaction smoke run also passed its
+source/build job and all six physical, opening and semantic desktop/mobile lanes.
+
+### Phase 4: canonical presentation and bounded compatibility
+
+`SceneLookDirector` remains the sole canonical global presentation authority.
+The actual light implementation is now in `world/lighting`; canonical fog/sky,
+mist, shafts and airborne particles are in `world/atmosphere`. Historic
+artDirection imports reexport these implementations. The procedural fallback
+atmosphere is explicitly named `LegacySceneAtmosphere` and fallback narrative
+lighting has its own world lighting owner.
+
+The carried lantern and motivated local chapter lights remain specialised
+presentation. Nested SceneLook, cinematic adapters, old world rigs and chapter
+keys suppress their subscribing implementations before mounting when the
+canonical context is present. Canonical `WorldEngineLayer` mounts no fallback
+ground, veil, breath or path subscribers. Its only useful ambient particle draw
+has moved to SceneLook; the unused former particle component was removed.
+The wrapper retains exactly its map/opening lantern-inventory-or-ritual gate,
+quality scale, reduced-effects suppression and epilogue suppression. The full
+WorldDirector aggregate and duplicate visual projection now execute only for
+fallback presentation or explicitly enabled debugging.
+
+One shared activity policy suspends presentation clocks for hidden/unfocused
+pages, settings, reading, maps and paused physics. The shared clock still runs
+at -3, before player -2 and camera -1; sky following now runs at 0 after the
+camera. Atmosphere ownership restores the preceding live values, including
+StrictMode replay and out-of-order cleanup, without displacing external changes.
+No persisted field or progression action was introduced.
+
+The independently executed pre-consolidation fixture protects particle counts
+for all 32 scenes, four qualities and both effects states, as well as exact
+Float32 seeds and quality prefixes. Activity and atmosphere cleanup have
+executable tests. AST composition guards check the one carried lantern and
+canonical lighting, atmosphere and particle owners, including historic import
+paths. Independent review confirmed identical light/mist/shaft/fallback bodies,
+byte-identical shader strings, fog formulas, light constructors and shadow bounds.
+
+Validation so far: 173 focused tests, typecheck, lint, final-world checks and
+fixture compilation passed. Root's `npm run check` passed with 987 unit tests,
+seven security tests, content/assets/world validation, build and Pages Functions.
+The first lifecycle render obtained the underfloor high-quality evidence, then
+hit the existing screenshot deadline while the production build was running.
+Its report and `initial-lifecycle-failure.log` remain in the phase-4 artifacts.
+An unchanged, isolated rerun is underway; rendered lifecycle and production
+comparisons must pass before this phase is committed.
+
+That isolated run reached natural mirror stillness and exposed a stale live
+reflection uniform: when turning away, the offscreen mirror retained its prior
+disturbance because updates occurred only after capture admission. Actual images
+confirmed the camera was facing away from the mirror. Surface time/disturbance
+now consume shared presentation in the existing -2 frame subscriber. Formulas,
+capture cadence, recursion/distance/visibility guards and render targets are
+unchanged; no subscriber or pass was added. Two executable contracts and the
+existing scene-look/presentation tests pass, as does typecheck. The zero
+disturbance assertion remains intact; `mirror-lifecycle-failure.log` and its
+captures are retained, and the lifecycle run is repeating against the repair.
+
+The repaired mirror checks passed in later full-sequence runs on SwiftShader and
+native ANGLE Metal (Apple M1). A separate unchanged run timed out at natural
+stillness; its `lifecycle-fixed.log` remains available and its cause is not
+established. Full-sequence quality cycles then exposed texture growth of 7/8/9,
+with unchanged geometry counts. Fresh Blue Moon isolation remained 4/4/4.
+Allocation tracing identified shadow-pass uploads rather than leaked finishing
+targets, and an independent CPU reproduction against installed Three confirmed
+that its shared depth material can retain a disposed source map in a uniform
+after the next caster has no map. The strict lifecycle assertion remains in
+place. All failed reports and captures remain in
+`phase-4/lifecycle-resource-trace` and `phase-4/lifecycle-native-trace`.
+
+The repair now uses the supported R3F material attachment lifecycle to give each
+tactile caster a private directional/spot depth material. It borrows the live
+surface maps, applies the existing UV guard before shadow shader selection,
+invalidates only changed sampler/alpha features, and restores preceding bindings
+on cleanup. Existing explicit depth owners remain external; borrowed textures
+are never disposed. No new texture, pass, frame subscriber or global Three patch
+was introduced. Eleven executable tests include the installed Three CPU
+reproduction, UV admission, feature changes and both ownership cleanup orders.
+
+The final `npm run check` passed with 1,001 unit tests and seven security tests,
+source/type checks, exact 66-entry content QA, asset/world validation, production
+build and Pages Functions compilation. The complete native ANGLE Metal/Apple M1
+lifecycle passed with no errors: underfloor parallax and all quality tiers,
+natural and assisted mirror stillness, restored motion, three cinematic-to-low
+cycles, settings/physics clock suspension, Surrender, actual reverse journey
+geography and single ending completion, atmosphere unmount/remount restoration,
+and canonical wrapper/Seer ownership. Quality cycles remain exactly 31 geometries
+and five textures each. Its report and actual captures are in
+`phase-4/lifecycle-accepted`. This establishes desktop GPU behavior; it does not
+certify sustained physical-mobile frame pacing. Fixed-camera production review
+captured 12 baseline and 12 candidate images for First Wood, Blue Moon, Thorned
+House and River, including high desktop arrival/detail and reduced-effects low
+portrait arrival. Every matched capture retains exactly the same draw calls,
+triangles, geometries, textures, lights and shadows. Desktop and portrait images
+were inspected against the baseline; existing compositional limitations remain
+for the requested art phases. Reports and PNGs are in
+`phase-4/production-comparison`. The built desktop/mobile Chromium opening and
+keyboard suites passed five tests in 1.3 minutes, with the desktop-only keyboard
+case correctly skipped on mobile. These exercise actual mouse/touch wipes,
+persisted stage restoration, inversion and click handoff, modified/composing key
+rejection, and the ordinary-key positive control. Actual earned-stage captures
+are retained in `phase-4/browser-accepted`. Phase 4/A is accepted for commit.
+
+Worker recovery remains separate from this presentation acceptance. An isolated
+CPU reproduction with installed React 18 confirms that a retained worker's local
+error can stay behind a newly suspended parent until its promise resolves; an
+outer DOM-owned failure signal recovers immediately. This supports a bounded
+robustness repair, but does not establish the exact intermittent CI cause. The
+local desktop failure contained no recorded worker request and therefore is not
+evidence of failed worker error propagation. Original abort coverage, deadlines,
+failed logs and traces remain intact.
+
+### Updated visual-world brief and execution order
+
+The October 6 brief adds a forest-first art pass after presentation consolidation.
+It preserves the current HEAD, extracted physical/world owners, canonical story
+and save schemas, shared SceneLook, asset review gates and all comfort modes.
+After Phase 4/A acceptance, work proceeds through B forest silhouettes/floor/depth,
+C opening and first physical route, D quiet UX and guidance, E material expansion,
+F chapter-by-chapter composition, G Constellation, and H photo/audio capability.
+The earlier manifest/runtime and final cleanup requirements remain part of the
+rebuild and will be integrated where they support these stages. No finished
+production hero or recording is inferred from the existing fallback slots.
+
+The current forest audit confirms a single shared trunk and seven sphere-lobe
+crown geometry, with only three scale habits, rather than distinct archetypes.
+Continuous terrain already has route/moisture/moss/ash masks, but the richer
+terrain-aware habitat is limited to authored landscapes. Existing forest review
+limits remain zero additional draws/lights and at most 13,000 additional
+triangles, with exact worker populations and camera placement. Morph-based
+authored silhouettes can preserve the two tree draws; their weights must be
+allocated against full instance capacity before the worker sets active count to
+zero. Actual captured low/high forest views confirmed visible faceting, repeated
+crowns and sparse ground; they remain the visual baseline for this next stage.

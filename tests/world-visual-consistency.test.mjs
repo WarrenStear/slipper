@@ -3,7 +3,7 @@ import test from 'node:test';
 import { readFileSync } from 'node:fs';
 import { blendWorldValue, worldTransitionAlpha, WORLD_VISUAL_RESPONSE, WORLD_GRADE_FRAGMENT } from '../src/components/three/artDirection/worldVisualContinuity.ts';
 import { MATERIAL_LIBRARY, SURFACE_DEFAULTS, resolveSurfaceDefaults, resolveMaterialMemory } from '../src/components/three/materials/materialLibrary.ts';
-const source = path => readFileSync(new URL(`../src/components/three/${path}`, import.meta.url), 'utf8');
+const source = path => readFileSync(new URL(path.startsWith("world/") ? `../src/${path}` : `../src/components/three/${path}`, import.meta.url), 'utf8');
 const surfaces = ['wood','linen','paper','bark','stone','earth','wax','metal','wet-wood','charred-wood','painted-wood','plaster','velvet','ash','moss'];
 const close = (a,b) => assert.ok(Math.abs(a-b)<1e-11, `${a} != ${b}`);
 
@@ -85,14 +85,14 @@ test('memory/weathering remains an independent layer with persistent damage', ()
 });
 test('one transition response is wired to lighting, sky, grade, mist and shafts', () => {
   for(const name of ['SceneLighting','SceneAtmosphere','ScenePostProcessing','GroundMist','VolumetricLightShaft']){
-    const code=source(`artDirection/${name}.tsx`);
+    const code=source(name === "SceneLighting" ? `world/lighting/${name}.tsx` : name === "ScenePostProcessing" ? `artDirection/${name}.tsx` : `world/atmosphere/${name}.tsx`);
     assert.match(code,/worldTransitionAlpha\(delta, presentation\.reducedMotion\)/);
     assert.doesNotMatch(code,/Math\.exp\(-Math\.min\(delta/);
     assert.doesNotMatch(code,/setState|requestAnimationFrame|Date\.now/);
   }
 });
 test('lighting freezes constructor values but follows live positions and colours', () => {
-  const code=source('artDirection/SceneLighting.tsx');
+  const code=source('world/lighting/SceneLighting.tsx');
   assert.match(code,/position: initialKey\.position, color: initialKey\.color, intensity: initialKey\.intensity/);
   assert.match(code,/args=\{initialFill\}/);
   assert.match(code,/key\.current\.position\.lerp/);assert.match(code,/target\.position\.lerp/);
@@ -102,7 +102,7 @@ test('lighting freezes constructor values but follows live positions and colours
   assert.match(code,/desiredReturn\.intensity \* desiredReturnStrength/);
 });
 test('lighting retains quality gates and adds no shadow maps or light classes', () => {
-  const code=source('artDirection/SceneLighting.tsx');
+  const code=source('world/lighting/SceneLighting.tsx');
   assert.match(code,/skyReturnStrength\(quality, presentation\.reducedEffects\)/);
   assert.match(code,/returnStrength > 0 && accent/);
   assert.match(code,/intensity=\{accent\.intensity \* returnStrength\} castShadow=\{false\}/);
@@ -141,13 +141,13 @@ test('materials keep texture, colour, memory and quality override behaviour', ()
 });
 test('local atmospheric effects retain the existing scene fog, clock and draw budgets', () => {
   for(const name of ['GroundMist','VolumetricLightShaft']){
-    const code=source(`artDirection/${name}.tsx`);
+    const code=source(name === "SceneLighting" ? `world/lighting/${name}.tsx` : name === "ScenePostProcessing" ? `artDirection/${name}.tsx` : `world/atmosphere/${name}.tsx`);
     assert.match(code,/uniforms\.tint\.value\.lerp\(tintTarget\.set/);
     assert.match(code,/uniforms\.opacity\.value = blendWorldValue/);
     assert.match(code,/presentation\.time\.vegetation/);
     assert.match(code,/readAtmosphereFogDensity\(scene\.fog\)/);
     assert.match(code,/look\.budget\.shafts/);assert.match(code,/depthWrite=\{false\}/);
   }
-  assert.equal((source('artDirection/GroundMist.tsx').match(/<instancedMesh /g)||[]).length,1);
-  assert.match(source('artDirection/VolumetricLightShaft.tsx'),/forceSinglePass/);
+  assert.equal((source('world/atmosphere/GroundMist.tsx').match(/<instancedMesh /g)||[]).length,1);
+  assert.match(source('world/atmosphere/VolumetricLightShaft.tsx'),/forceSinglePass/);
 });

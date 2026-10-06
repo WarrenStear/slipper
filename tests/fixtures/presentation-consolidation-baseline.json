@@ -1,0 +1,2582 @@
+{
+  "sourceCommit": "c00777d",
+  "method": "Executed the pre-consolidation WorldEnvironmentParticles geometry construction and quality count expression with its authored look registry.",
+  "counts": [
+    {
+      "id": "broken-floor.confession",
+      "quality": "low",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "broken-floor.confession",
+      "quality": "low",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "broken-floor.confession",
+      "quality": "medium",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "broken-floor.confession",
+      "quality": "medium",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "broken-floor.confession",
+      "quality": "high",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "broken-floor.confession",
+      "quality": "high",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "broken-floor.confession",
+      "quality": "cinematic",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "broken-floor.confession",
+      "quality": "cinematic",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "enchanted.rabbit-hole",
+      "quality": "low",
+      "reduced": false,
+      "count": 13
+    },
+    {
+      "id": "enchanted.rabbit-hole",
+      "quality": "low",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "enchanted.rabbit-hole",
+      "quality": "medium",
+      "reduced": false,
+      "count": 22
+    },
+    {
+      "id": "enchanted.rabbit-hole",
+      "quality": "medium",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "enchanted.rabbit-hole",
+      "quality": "high",
+      "reduced": false,
+      "count": 30
+    },
+    {
+      "id": "enchanted.rabbit-hole",
+      "quality": "high",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "enchanted.rabbit-hole",
+      "quality": "cinematic",
+      "reduced": false,
+      "count": 38
+    },
+    {
+      "id": "enchanted.rabbit-hole",
+      "quality": "cinematic",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "enchanted.friendship-meadow",
+      "quality": "low",
+      "reduced": false,
+      "count": 13
+    },
+    {
+      "id": "enchanted.friendship-meadow",
+      "quality": "low",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "enchanted.friendship-meadow",
+      "quality": "medium",
+      "reduced": false,
+      "count": 22
+    },
+    {
+      "id": "enchanted.friendship-meadow",
+      "quality": "medium",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "enchanted.friendship-meadow",
+      "quality": "high",
+      "reduced": false,
+      "count": 30
+    },
+    {
+      "id": "enchanted.friendship-meadow",
+      "quality": "high",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "enchanted.friendship-meadow",
+      "quality": "cinematic",
+      "reduced": false,
+      "count": 38
+    },
+    {
+      "id": "enchanted.friendship-meadow",
+      "quality": "cinematic",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "enchanted.masked-hearth",
+      "quality": "low",
+      "reduced": false,
+      "count": 13
+    },
+    {
+      "id": "enchanted.masked-hearth",
+      "quality": "low",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "enchanted.masked-hearth",
+      "quality": "medium",
+      "reduced": false,
+      "count": 22
+    },
+    {
+      "id": "enchanted.masked-hearth",
+      "quality": "medium",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "enchanted.masked-hearth",
+      "quality": "high",
+      "reduced": false,
+      "count": 30
+    },
+    {
+      "id": "enchanted.masked-hearth",
+      "quality": "high",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "enchanted.masked-hearth",
+      "quality": "cinematic",
+      "reduced": false,
+      "count": 38
+    },
+    {
+      "id": "enchanted.masked-hearth",
+      "quality": "cinematic",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "blue-moon.sanctuary",
+      "quality": "low",
+      "reduced": false,
+      "count": 5
+    },
+    {
+      "id": "blue-moon.sanctuary",
+      "quality": "low",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "blue-moon.sanctuary",
+      "quality": "medium",
+      "reduced": false,
+      "count": 9
+    },
+    {
+      "id": "blue-moon.sanctuary",
+      "quality": "medium",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "blue-moon.sanctuary",
+      "quality": "high",
+      "reduced": false,
+      "count": 13
+    },
+    {
+      "id": "blue-moon.sanctuary",
+      "quality": "high",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "blue-moon.sanctuary",
+      "quality": "cinematic",
+      "reduced": false,
+      "count": 16
+    },
+    {
+      "id": "blue-moon.sanctuary",
+      "quality": "cinematic",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "blue-moon.intimacy",
+      "quality": "low",
+      "reduced": false,
+      "count": 5
+    },
+    {
+      "id": "blue-moon.intimacy",
+      "quality": "low",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "blue-moon.intimacy",
+      "quality": "medium",
+      "reduced": false,
+      "count": 9
+    },
+    {
+      "id": "blue-moon.intimacy",
+      "quality": "medium",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "blue-moon.intimacy",
+      "quality": "high",
+      "reduced": false,
+      "count": 13
+    },
+    {
+      "id": "blue-moon.intimacy",
+      "quality": "high",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "blue-moon.intimacy",
+      "quality": "cinematic",
+      "reduced": false,
+      "count": 16
+    },
+    {
+      "id": "blue-moon.intimacy",
+      "quality": "cinematic",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "blue-moon.caged-bird",
+      "quality": "low",
+      "reduced": false,
+      "count": 5
+    },
+    {
+      "id": "blue-moon.caged-bird",
+      "quality": "low",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "blue-moon.caged-bird",
+      "quality": "medium",
+      "reduced": false,
+      "count": 9
+    },
+    {
+      "id": "blue-moon.caged-bird",
+      "quality": "medium",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "blue-moon.caged-bird",
+      "quality": "high",
+      "reduced": false,
+      "count": 13
+    },
+    {
+      "id": "blue-moon.caged-bird",
+      "quality": "high",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "blue-moon.caged-bird",
+      "quality": "cinematic",
+      "reduced": false,
+      "count": 16
+    },
+    {
+      "id": "blue-moon.caged-bird",
+      "quality": "cinematic",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "nest.two-hands",
+      "quality": "low",
+      "reduced": false,
+      "count": 9
+    },
+    {
+      "id": "nest.two-hands",
+      "quality": "low",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "nest.two-hands",
+      "quality": "medium",
+      "reduced": false,
+      "count": 16
+    },
+    {
+      "id": "nest.two-hands",
+      "quality": "medium",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "nest.two-hands",
+      "quality": "high",
+      "reduced": false,
+      "count": 22
+    },
+    {
+      "id": "nest.two-hands",
+      "quality": "high",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "nest.two-hands",
+      "quality": "cinematic",
+      "reduced": false,
+      "count": 27
+    },
+    {
+      "id": "nest.two-hands",
+      "quality": "cinematic",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "nest.unsupported-cycle",
+      "quality": "low",
+      "reduced": false,
+      "count": 9
+    },
+    {
+      "id": "nest.unsupported-cycle",
+      "quality": "low",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "nest.unsupported-cycle",
+      "quality": "medium",
+      "reduced": false,
+      "count": 16
+    },
+    {
+      "id": "nest.unsupported-cycle",
+      "quality": "medium",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "nest.unsupported-cycle",
+      "quality": "high",
+      "reduced": false,
+      "count": 22
+    },
+    {
+      "id": "nest.unsupported-cycle",
+      "quality": "high",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "nest.unsupported-cycle",
+      "quality": "cinematic",
+      "reduced": false,
+      "count": 27
+    },
+    {
+      "id": "nest.unsupported-cycle",
+      "quality": "cinematic",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "nest.protection",
+      "quality": "low",
+      "reduced": false,
+      "count": 9
+    },
+    {
+      "id": "nest.protection",
+      "quality": "low",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "nest.protection",
+      "quality": "medium",
+      "reduced": false,
+      "count": 16
+    },
+    {
+      "id": "nest.protection",
+      "quality": "medium",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "nest.protection",
+      "quality": "high",
+      "reduced": false,
+      "count": 22
+    },
+    {
+      "id": "nest.protection",
+      "quality": "high",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "nest.protection",
+      "quality": "cinematic",
+      "reduced": false,
+      "count": 27
+    },
+    {
+      "id": "nest.protection",
+      "quality": "cinematic",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "sunset.warning-grove",
+      "quality": "low",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "sunset.warning-grove",
+      "quality": "low",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "sunset.warning-grove",
+      "quality": "medium",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "sunset.warning-grove",
+      "quality": "medium",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "sunset.warning-grove",
+      "quality": "high",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "sunset.warning-grove",
+      "quality": "high",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "sunset.warning-grove",
+      "quality": "cinematic",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "sunset.warning-grove",
+      "quality": "cinematic",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "sunset.true-mirror",
+      "quality": "low",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "sunset.true-mirror",
+      "quality": "low",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "sunset.true-mirror",
+      "quality": "medium",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "sunset.true-mirror",
+      "quality": "medium",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "sunset.true-mirror",
+      "quality": "high",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "sunset.true-mirror",
+      "quality": "high",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "sunset.true-mirror",
+      "quality": "cinematic",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "sunset.true-mirror",
+      "quality": "cinematic",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "sunset.stillness",
+      "quality": "low",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "sunset.stillness",
+      "quality": "low",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "sunset.stillness",
+      "quality": "medium",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "sunset.stillness",
+      "quality": "medium",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "sunset.stillness",
+      "quality": "high",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "sunset.stillness",
+      "quality": "high",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "sunset.stillness",
+      "quality": "cinematic",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "sunset.stillness",
+      "quality": "cinematic",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "thorned.locked-garden",
+      "quality": "low",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "thorned.locked-garden",
+      "quality": "low",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "thorned.locked-garden",
+      "quality": "medium",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "thorned.locked-garden",
+      "quality": "medium",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "thorned.locked-garden",
+      "quality": "high",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "thorned.locked-garden",
+      "quality": "high",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "thorned.locked-garden",
+      "quality": "cinematic",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "thorned.locked-garden",
+      "quality": "cinematic",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "thorned.old-memory-bedroom",
+      "quality": "low",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "thorned.old-memory-bedroom",
+      "quality": "low",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "thorned.old-memory-bedroom",
+      "quality": "medium",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "thorned.old-memory-bedroom",
+      "quality": "medium",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "thorned.old-memory-bedroom",
+      "quality": "high",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "thorned.old-memory-bedroom",
+      "quality": "high",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "thorned.old-memory-bedroom",
+      "quality": "cinematic",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "thorned.old-memory-bedroom",
+      "quality": "cinematic",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "thorned.self-owned-world",
+      "quality": "low",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "thorned.self-owned-world",
+      "quality": "low",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "thorned.self-owned-world",
+      "quality": "medium",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "thorned.self-owned-world",
+      "quality": "medium",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "thorned.self-owned-world",
+      "quality": "high",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "thorned.self-owned-world",
+      "quality": "high",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "thorned.self-owned-world",
+      "quality": "cinematic",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "thorned.self-owned-world",
+      "quality": "cinematic",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "wolf-swan.false-choice",
+      "quality": "low",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "wolf-swan.false-choice",
+      "quality": "low",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "wolf-swan.false-choice",
+      "quality": "medium",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "wolf-swan.false-choice",
+      "quality": "medium",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "wolf-swan.false-choice",
+      "quality": "high",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "wolf-swan.false-choice",
+      "quality": "high",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "wolf-swan.false-choice",
+      "quality": "cinematic",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "wolf-swan.false-choice",
+      "quality": "cinematic",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "wolf-swan.convergence",
+      "quality": "low",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "wolf-swan.convergence",
+      "quality": "low",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "wolf-swan.convergence",
+      "quality": "medium",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "wolf-swan.convergence",
+      "quality": "medium",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "wolf-swan.convergence",
+      "quality": "high",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "wolf-swan.convergence",
+      "quality": "high",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "wolf-swan.convergence",
+      "quality": "cinematic",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "wolf-swan.convergence",
+      "quality": "cinematic",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "fire.boundary",
+      "quality": "low",
+      "reduced": false,
+      "count": 12
+    },
+    {
+      "id": "fire.boundary",
+      "quality": "low",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "fire.boundary",
+      "quality": "medium",
+      "reduced": false,
+      "count": 21
+    },
+    {
+      "id": "fire.boundary",
+      "quality": "medium",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "fire.boundary",
+      "quality": "high",
+      "reduced": false,
+      "count": 29
+    },
+    {
+      "id": "fire.boundary",
+      "quality": "high",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "fire.boundary",
+      "quality": "cinematic",
+      "reduced": false,
+      "count": 36
+    },
+    {
+      "id": "fire.boundary",
+      "quality": "cinematic",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "river.wash",
+      "quality": "low",
+      "reduced": false,
+      "count": 7
+    },
+    {
+      "id": "river.wash",
+      "quality": "low",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "river.wash",
+      "quality": "medium",
+      "reduced": false,
+      "count": 11
+    },
+    {
+      "id": "river.wash",
+      "quality": "medium",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "river.wash",
+      "quality": "high",
+      "reduced": false,
+      "count": 16
+    },
+    {
+      "id": "river.wash",
+      "quality": "high",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "river.wash",
+      "quality": "cinematic",
+      "reduced": false,
+      "count": 20
+    },
+    {
+      "id": "river.wash",
+      "quality": "cinematic",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "river.release-surrender",
+      "quality": "low",
+      "reduced": false,
+      "count": 7
+    },
+    {
+      "id": "river.release-surrender",
+      "quality": "low",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "river.release-surrender",
+      "quality": "medium",
+      "reduced": false,
+      "count": 11
+    },
+    {
+      "id": "river.release-surrender",
+      "quality": "medium",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "river.release-surrender",
+      "quality": "high",
+      "reduced": false,
+      "count": 16
+    },
+    {
+      "id": "river.release-surrender",
+      "quality": "high",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "river.release-surrender",
+      "quality": "cinematic",
+      "reduced": false,
+      "count": 20
+    },
+    {
+      "id": "river.release-surrender",
+      "quality": "cinematic",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "fork.weighing",
+      "quality": "low",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "fork.weighing",
+      "quality": "low",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "fork.weighing",
+      "quality": "medium",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "fork.weighing",
+      "quality": "medium",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "fork.weighing",
+      "quality": "high",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "fork.weighing",
+      "quality": "high",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "fork.weighing",
+      "quality": "cinematic",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "fork.weighing",
+      "quality": "cinematic",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "fork.four-verbs",
+      "quality": "low",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "fork.four-verbs",
+      "quality": "low",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "fork.four-verbs",
+      "quality": "medium",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "fork.four-verbs",
+      "quality": "medium",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "fork.four-verbs",
+      "quality": "high",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "fork.four-verbs",
+      "quality": "high",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "fork.four-verbs",
+      "quality": "cinematic",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "fork.four-verbs",
+      "quality": "cinematic",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "fork.relinquish-hope",
+      "quality": "low",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "fork.relinquish-hope",
+      "quality": "low",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "fork.relinquish-hope",
+      "quality": "medium",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "fork.relinquish-hope",
+      "quality": "medium",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "fork.relinquish-hope",
+      "quality": "high",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "fork.relinquish-hope",
+      "quality": "high",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "fork.relinquish-hope",
+      "quality": "cinematic",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "fork.relinquish-hope",
+      "quality": "cinematic",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "climbs.arrival",
+      "quality": "low",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "climbs.arrival",
+      "quality": "low",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "climbs.arrival",
+      "quality": "medium",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "climbs.arrival",
+      "quality": "medium",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "climbs.arrival",
+      "quality": "high",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "climbs.arrival",
+      "quality": "high",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "climbs.arrival",
+      "quality": "cinematic",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "climbs.arrival",
+      "quality": "cinematic",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "climb.mind",
+      "quality": "low",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "climb.mind",
+      "quality": "low",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "climb.mind",
+      "quality": "medium",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "climb.mind",
+      "quality": "medium",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "climb.mind",
+      "quality": "high",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "climb.mind",
+      "quality": "high",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "climb.mind",
+      "quality": "cinematic",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "climb.mind",
+      "quality": "cinematic",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "climb.heart",
+      "quality": "low",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "climb.heart",
+      "quality": "low",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "climb.heart",
+      "quality": "medium",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "climb.heart",
+      "quality": "medium",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "climb.heart",
+      "quality": "high",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "climb.heart",
+      "quality": "high",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "climb.heart",
+      "quality": "cinematic",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "climb.heart",
+      "quality": "cinematic",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "climb.womb",
+      "quality": "low",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "climb.womb",
+      "quality": "low",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "climb.womb",
+      "quality": "medium",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "climb.womb",
+      "quality": "medium",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "climb.womb",
+      "quality": "high",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "climb.womb",
+      "quality": "high",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "climb.womb",
+      "quality": "cinematic",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "climb.womb",
+      "quality": "cinematic",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "crowned.threshold",
+      "quality": "low",
+      "reduced": false,
+      "count": 9
+    },
+    {
+      "id": "crowned.threshold",
+      "quality": "low",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "crowned.threshold",
+      "quality": "medium",
+      "reduced": false,
+      "count": 16
+    },
+    {
+      "id": "crowned.threshold",
+      "quality": "medium",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "crowned.threshold",
+      "quality": "high",
+      "reduced": false,
+      "count": 22
+    },
+    {
+      "id": "crowned.threshold",
+      "quality": "high",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "crowned.threshold",
+      "quality": "cinematic",
+      "reduced": false,
+      "count": 27
+    },
+    {
+      "id": "crowned.threshold",
+      "quality": "cinematic",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "crowned.home",
+      "quality": "low",
+      "reduced": false,
+      "count": 9
+    },
+    {
+      "id": "crowned.home",
+      "quality": "low",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "crowned.home",
+      "quality": "medium",
+      "reduced": false,
+      "count": 16
+    },
+    {
+      "id": "crowned.home",
+      "quality": "medium",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "crowned.home",
+      "quality": "high",
+      "reduced": false,
+      "count": 22
+    },
+    {
+      "id": "crowned.home",
+      "quality": "high",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "crowned.home",
+      "quality": "cinematic",
+      "reduced": false,
+      "count": 27
+    },
+    {
+      "id": "crowned.home",
+      "quality": "cinematic",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "crowned.sovereignty",
+      "quality": "low",
+      "reduced": false,
+      "count": 9
+    },
+    {
+      "id": "crowned.sovereignty",
+      "quality": "low",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "crowned.sovereignty",
+      "quality": "medium",
+      "reduced": false,
+      "count": 16
+    },
+    {
+      "id": "crowned.sovereignty",
+      "quality": "medium",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "crowned.sovereignty",
+      "quality": "high",
+      "reduced": false,
+      "count": 22
+    },
+    {
+      "id": "crowned.sovereignty",
+      "quality": "high",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "crowned.sovereignty",
+      "quality": "cinematic",
+      "reduced": false,
+      "count": 27
+    },
+    {
+      "id": "crowned.sovereignty",
+      "quality": "cinematic",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "epilogue.constellation",
+      "quality": "low",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "epilogue.constellation",
+      "quality": "low",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "epilogue.constellation",
+      "quality": "medium",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "epilogue.constellation",
+      "quality": "medium",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "epilogue.constellation",
+      "quality": "high",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "epilogue.constellation",
+      "quality": "high",
+      "reduced": true,
+      "count": 0
+    },
+    {
+      "id": "epilogue.constellation",
+      "quality": "cinematic",
+      "reduced": false,
+      "count": 0
+    },
+    {
+      "id": "epilogue.constellation",
+      "quality": "cinematic",
+      "reduced": true,
+      "count": 0
+    }
+  ],
+  "regions": [
+    {
+      "kind": "ash",
+      "points": [
+        -1.25,
+        0.10000000149011612,
+        2.75,
+        -0.5296609997749329,
+        1.2311475276947021,
+        3.9067163467407227,
+        0.1906779706478119,
+        2.362295150756836,
+        5.063432693481445,
+        0.9110169410705566,
+        0.4934426248073578,
+        3.720149278640747,
+        -0.8686440587043762,
+        1.6245901584625244,
+        4.876865863800049,
+        -0.14830508828163147,
+        2.755737781524658,
+        3.5335819721221924,
+        0.5720338821411133,
+        0.8868852257728577,
+        4.690298557281494,
+        -1.2076271772384644,
+        2.0180327892303467,
+        3.347014904022217,
+        -0.48728814721107483,
+        0.1491803228855133,
+        4.5037312507629395,
+        0.2330508530139923,
+        1.2803279161453247,
+        3.160447835922241,
+        0.9533898234367371,
+        2.411475419998169,
+        4.317163944244385,
+        -0.8262711763381958,
+        0.5426229238510132,
+        2.9738805294036865,
+        -0.10593220591545105,
+        1.673770546913147,
+        4.130597114562988,
+        0.6144067645072937,
+        2.804918050765991,
+        2.787313461303711,
+        -1.1652542352676392,
+        0.9360655546188354,
+        3.9440298080444336,
+        -0.4449152648448944,
+        2.0672130584716797,
+        5.100746154785156,
+        0.27542373538017273,
+        0.1983606517314911,
+        3.757462739944458,
+        0.9957627058029175,
+        1.3295081853866577,
+        4.91417932510376,
+        -0.7838982939720154,
+        2.460655689239502,
+        3.5708954334259033,
+        -0.06355932354927063,
+        0.591803252696991,
+        4.727612018585205,
+        0.6567796468734741,
+        1.72295081615448,
+        3.3843283653259277,
+        -1.1228814125061035,
+        2.854098320007324,
+        4.54104471206665,
+        -0.402542382478714,
+        0.9852458834648132,
+        3.197761297225952,
+        0.31779661774635315,
+        2.1163933277130127,
+        4.354477405548096,
+        1.0381356477737427,
+        0.24754098057746887,
+        3.0111939907073975,
+        -0.741525411605835,
+        1.3786885738372803,
+        4.167910575866699,
+        -0.02118644118309021,
+        2.509835958480835,
+        2.824626922607422,
+        0.6991525292396545,
+        0.6409835815429688,
+        3.9813432693481445,
+        -1.0805084705352783,
+        1.7721312046051025,
+        5.138059616088867,
+        -0.36016950011253357,
+        2.9032785892486572,
+        3.794776201248169,
+        0.36016950011253357,
+        1.034426212310791,
+        4.9514923095703125,
+        1.0805084705352783,
+        2.165573835372925,
+        3.6082088947296143,
+        -0.6991525292396545,
+        0.29672130942344666,
+        4.764925479888916,
+        0.02118644118309021,
+        1.4278688430786133,
+        3.4216418266296387,
+        0.741525411605835,
+        2.559016466140747,
+        4.578358173370361,
+        -1.0381356477737427,
+        0.6901639103889465,
+        3.235074520111084,
+        -0.31779661774635315,
+        1.8213114738464355,
+        4.391790866851807,
+        0.402542382478714,
+        2.9524590969085693,
+        3.0485074520111084,
+        1.1228814125061035,
+        1.0836066007614136,
+        4.20522403717041,
+        -0.6567796468734741,
+        2.214754104614258,
+        2.861940383911133,
+        0.06355932354927063,
+        0.34590163826942444,
+        4.0186567306518555,
+        0.7838982939720154,
+        1.4770492315292358,
+        5.175373077392578,
+        -0.9957627058029175,
+        2.60819673538208,
+        3.83208966255188,
+        -0.27542373538017273,
+        0.7393442392349243,
+        4.988805770874023,
+        0.4449152648448944,
+        1.870491862297058,
+        3.645522356033325,
+        1.1652542352676392,
+        3.0016393661499023,
+        4.802238941192627,
+        -0.6144067645072937,
+        1.1327868700027466,
+        3.4589552879333496,
+        0.10593220591545105,
+        2.263934373855591,
+        4.615671634674072,
+        0.8262711763381958,
+        0.3950819671154022,
+        3.272387981414795,
+        -0.9533898234367371,
+        1.5262295007705688,
+        4.429104328155518,
+        -0.2330508530139923,
+        2.657377004623413,
+        3.0858209133148193,
+        0.48728814721107483,
+        0.7885245680809021,
+        4.242537498474121,
+        1.2076271772384644,
+        1.9196721315383911,
+        2.8992538452148438,
+        -0.5720338821411133,
+        3.0508196353912354,
+        4.055970191955566,
+        0.14830508828163147,
+        1.1819672584533691,
+        5.212686538696289,
+        0.8686440587043762,
+        2.313114643096924,
+        3.8694028854370117
+      ]
+    },
+    {
+      "kind": "pollen",
+      "points": [
+        -4.300000190734863,
+        0.6000000238418579,
+        1.5,
+        -2.8593220710754395,
+        2.6737704277038574,
+        4.738805770874023,
+        -1.4186440706253052,
+        4.7475409507751465,
+        7.977612018585205,
+        0.022033898159861565,
+        1.3213114738464355,
+        4.2164177894592285,
+        -3.537288188934326,
+        3.3950819969177246,
+        7.45522403717041,
+        -2.0966100692749023,
+        5.468852519989014,
+        3.6940298080444336,
+        -0.6559321880340576,
+        2.0426230430603027,
+        6.932836055755615,
+        -4.215254306793213,
+        4.116393566131592,
+        3.1716418266296387,
+        -2.774576187133789,
+        0.6901639103889465,
+        6.410447597503662,
+        -1.3338983058929443,
+        2.763934373855591,
+        2.6492538452148438,
+        0.10677965730428696,
+        4.837705135345459,
+        5.888059616088867,
+        -3.452542304992676,
+        1.411475419998169,
+        2.1268656253814697,
+        -2.011864423751831,
+        3.485245943069458,
+        5.365671634674072,
+        -0.5711864233016968,
+        5.559016227722168,
+        1.6044776439666748,
+        -4.1305084228515625,
+        2.132786989212036,
+        4.843283653259277,
+        -2.6898305416107178,
+        4.206557273864746,
+        8.0820894241333,
+        -1.2491525411605835,
+        0.7803278565406799,
+        4.320895671844482,
+        0.1915254294872284,
+        2.854098320007324,
+        7.559701442718506,
+        -3.3677966594696045,
+        4.927868843078613,
+        3.7985074520111084,
+        -1.9271186590194702,
+        1.5016393661499023,
+        7.037313461303711,
+        -0.4864406883716583,
+        3.5754098892211914,
+        3.2761194705963135,
+        -4.045762538909912,
+        5.6491804122924805,
+        6.514925479888916,
+        -2.6050846576690674,
+        2.2229509353637695,
+        2.7537312507629395,
+        -1.1644067764282227,
+        4.296721458435059,
+        5.992537498474121,
+        0.27627119421958923,
+        0.8704918026924133,
+        2.2313432693481445,
+        -3.283050775527954,
+        2.9442622661590576,
+        5.470149040222168,
+        -1.8423728942871094,
+        5.018032550811768,
+        1.70895516872406,
+        -0.4016949236392975,
+        1.5918033123016357,
+        4.947761058807373,
+        -3.961016893386841,
+        3.665573835372925,
+        8.186567306518555,
+        -2.520339012145996,
+        5.739344120025635,
+        4.425373077392578,
+        -1.0796610116958618,
+        2.313114643096924,
+        7.66417932510376,
+        0.3610169589519501,
+        4.386885166168213,
+        3.902985095977783,
+        -3.198305130004883,
+        0.9606557488441467,
+        7.141790866851807,
+        -1.7576271295547485,
+        3.034426212310791,
+        3.3805971145629883,
+        -0.31694915890693665,
+        5.10819673538208,
+        6.619402885437012,
+        -3.8762712478637695,
+        1.6819672584533691,
+        2.8582088947296143,
+        -2.4355931282043457,
+        3.755737781524658,
+        6.097014904022217,
+        -0.994915246963501,
+        5.829508304595947,
+        2.3358209133148193,
+        0.4457627236843109,
+        2.4032785892486572,
+        5.574626922607422,
+        -3.1135592460632324,
+        4.477049350738525,
+        1.8134328126907349,
+        -1.6728813648223877,
+        1.0508196353912354,
+        5.052238941192627,
+        -0.2322033941745758,
+        3.1245901584625244,
+        8.291045188903809,
+        -3.791525363922119,
+        5.198360443115234,
+        4.529850959777832,
+        -2.3508474826812744,
+        1.7721312046051025,
+        7.7686567306518555,
+        -0.9101694822311401,
+        3.8459017276763916,
+        4.007462501525879,
+        0.5305084586143494,
+        5.919672012329102,
+        7.2462687492370605,
+        -3.028813600540161,
+        2.4934425354003906,
+        3.485074520111084,
+        -1.5881356000900269,
+        4.56721305847168,
+        6.723880767822266,
+        -0.14745762944221497,
+        1.1409835815429688,
+        2.962686538696289,
+        -3.706779718399048,
+        3.214754104614258,
+        6.2014923095703125,
+        -2.266101598739624,
+        5.288524627685547,
+        2.440298557281494,
+        -0.8254237174987793,
+        1.8622950315475464,
+        5.679104328155518,
+        0.6152542233467102,
+        3.936065673828125,
+        1.9179104566574097,
+        -2.9440677165985107,
+        6.009836196899414,
+        5.156716346740723,
+        -1.503389835357666,
+        2.583606481552124,
+        8.395522117614746,
+        -0.06271186470985413,
+        4.657377243041992,
+        4.634328365325928
+      ]
+    },
+    {
+      "kind": "dust",
+      "points": [
+        -3.5,
+        0.800000011920929,
+        2,
+        -2.3474576473236084,
+        1.742622971534729,
+        3.8507461547851562,
+        -1.1949152946472168,
+        2.685245990753174,
+        5.7014923095703125,
+        -0.04237288236618042,
+        1.127868890762329,
+        3.552238702774048,
+        -2.8898305892944336,
+        2.0704917907714844,
+        5.402985095977783,
+        -1.7372881174087524,
+        3.0131146907806396,
+        3.2537312507629395,
+        -0.5847457647323608,
+        1.4557377099990845,
+        5.104477405548096,
+        -3.4322032928466797,
+        2.3983607292175293,
+        2.955223798751831,
+        -2.279660940170288,
+        0.8409836292266846,
+        4.805970191955566,
+        -1.1271185874938965,
+        1.7836065292358398,
+        2.6567163467407227,
+        0.025423727929592133,
+        2.726229429244995,
+        4.507462501525879,
+        -2.8220338821411133,
+        1.16885244846344,
+        2.3582088947296143,
+        -1.6694915294647217,
+        2.1114754676818848,
+        4.20895528793335,
+        -0.5169491767883301,
+        3.05409836769104,
+        2.059701442718506,
+        -3.3644068241119385,
+        1.4967212677001953,
+        3.910447835922241,
+        -2.211864471435547,
+        2.4393441677093506,
+        5.761194229125977,
+        -1.0593219995498657,
+        0.8819671869277954,
+        3.611940383911133,
+        0.09322033822536469,
+        1.8245902061462402,
+        5.462686538696289,
+        -2.754237174987793,
+        2.7672131061553955,
+        3.3134329319000244,
+        -1.601694941520691,
+        1.2098360061645508,
+        5.16417932510376,
+        -0.44915252923965454,
+        2.152458906173706,
+        3.014925479888916,
+        -3.296610116958618,
+        3.0950820446014404,
+        4.865671634674072,
+        -2.1440677642822266,
+        1.5377049446105957,
+        2.7164180278778076,
+        -0.991525411605835,
+        2.480327844619751,
+        4.567163944244385,
+        0.16101695597171783,
+        0.922950804233551,
+        2.41791033744812,
+        -2.6864407062530518,
+        1.865573763847351,
+        4.2686567306518555,
+        -1.5338983535766602,
+        2.808196783065796,
+        2.1194028854370117,
+        -0.3813559412956238,
+        1.2508196830749512,
+        3.970149278640747,
+        -3.228813648223877,
+        2.1934425830841064,
+        5.820895671844482,
+        -2.0762712955474854,
+        3.1360654830932617,
+        3.6716418266296387,
+        -0.9237288236618042,
+        1.5786885023117065,
+        5.522387981414795,
+        0.2288135588169098,
+        2.5213115215301514,
+        3.3731343746185303,
+        -2.6186439990997314,
+        0.9639344215393066,
+        5.223880767822266,
+        -1.4661016464233398,
+        1.906557321548462,
+        3.074626922607422,
+        -0.31355932354927063,
+        2.849180221557617,
+        4.925373077392578,
+        -3.1610169410705566,
+        1.291803240776062,
+        2.7761194705963135,
+        -2.008474588394165,
+        2.234426259994507,
+        4.626865863800049,
+        -0.8559321761131287,
+        3.177049160003662,
+        2.477612018585205,
+        0.29661017656326294,
+        1.619672179222107,
+        4.328358173370361,
+        -2.5508475303649902,
+        2.5622951984405518,
+        2.1791045665740967,
+        -1.398305058479309,
+        1.0049179792404175,
+        4.029850959777832,
+        -0.24576270580291748,
+        1.9475409984588623,
+        5.880597114562988,
+        -3.0932202339172363,
+        2.8901638984680176,
+        3.7313432693481445,
+        -1.9406780004501343,
+        1.3327869176864624,
+        5.582089424133301,
+        -0.7881355881690979,
+        2.2754099369049072,
+        3.432835817337036,
+        0.3644067943096161,
+        3.2180328369140625,
+        5.2835822105407715,
+        -2.48305082321167,
+        1.6606557369232178,
+        3.1343283653259277,
+        -1.3305084705352783,
+        2.603278636932373,
+        4.985074520111084,
+        -0.17796610295772552,
+        1.0459016561508179,
+        2.8358209133148193,
+        -3.025423765182495,
+        1.9885245561599731,
+        4.686567306518555,
+        -1.8728814125061035,
+        2.931147575378418,
+        2.537313461303711,
+        -0.7203390002250671,
+        1.3737704753875732,
+        4.388059616088867,
+        0.43220338225364685,
+        2.3163933753967285,
+        2.2388060092926025,
+        -2.4152543544769287,
+        3.259016275405884,
+        4.089552402496338,
+        -1.2627118825912476,
+        1.7016392946243286,
+        5.940298557281494,
+        -0.11016949266195297,
+        2.6442623138427734,
+        3.7910447120666504
+      ]
+    },
+    {
+      "kind": "moisture",
+      "points": [
+        3.5,
+        0.10000000149011612,
+        0.5,
+        4.364406585693359,
+        0.5147541165351868,
+        4.66417932510376,
+        5.228813648223877,
+        0.9295082092285156,
+        8.82835865020752,
+        6.093220233917236,
+        0.24426229298114777,
+        3.992537260055542,
+        3.957627058029175,
+        0.6590163707733154,
+        8.156716346740723,
+        4.822033882141113,
+        1.073770523071289,
+        3.3208954334259033,
+        5.686440467834473,
+        0.38852459192276,
+        7.485074520111084,
+        3.5508475303649902,
+        0.8032786846160889,
+        2.6492538452148438,
+        4.41525411605835,
+        0.1180327832698822,
+        6.813432693481445,
+        5.279661178588867,
+        0.5327869057655334,
+        1.9776118993759155,
+        6.144067764282227,
+        0.9475409984588623,
+        6.141790866851807,
+        4.008474349975586,
+        0.26229506731033325,
+        1.3059701919555664,
+        4.8728814125061035,
+        0.6770491600036621,
+        5.470149040222168,
+        5.737287998199463,
+        1.0918033123016357,
+        0.6343283653259277,
+        3.6016948223114014,
+        0.4065573811531067,
+        4.7985076904296875,
+        4.46610164642334,
+        0.8213114738464355,
+        8.962686538696289,
+        5.330508708953857,
+        0.13606557250022888,
+        4.126865863800049,
+        6.194915294647217,
+        0.5508196949958801,
+        8.291045188903809,
+        4.059321880340576,
+        0.965573787689209,
+        3.455223798751831,
+        4.923728942871094,
+        0.28032785654067993,
+        7.619402885437012,
+        5.788135528564453,
+        0.6950819492340088,
+        2.7835819721221924,
+        3.6525423526763916,
+        1.1098361015319824,
+        6.947761058807373,
+        4.51694917678833,
+        0.42459017038345337,
+        2.111940383911133,
+        5.3813557624816895,
+        0.8393442630767822,
+        6.276119232177734,
+        6.245762825012207,
+        0.15409836173057556,
+        1.4402985572814941,
+        4.110169410705566,
+        0.5688524842262268,
+        5.604477405548096,
+        4.974576473236084,
+        0.9836065769195557,
+        0.7686567306518555,
+        5.838983058929443,
+        0.2983606457710266,
+        4.932836055755615,
+        3.703389883041382,
+        0.7131147384643555,
+        9.097015380859375,
+        4.56779670715332,
+        1.127868890762329,
+        4.261194229125977,
+        5.43220329284668,
+        0.44262295961380005,
+        8.425373077392578,
+        6.296610355377197,
+        0.8573770523071289,
+        3.589552164077759,
+        4.161016941070557,
+        0.17213115096092224,
+        7.7537312507629395,
+        5.025423526763916,
+        0.5868852734565735,
+        2.91791033744812,
+        5.889830589294434,
+        1.0016393661499023,
+        7.082089424133301,
+        3.754237174987793,
+        0.3163934350013733,
+        2.2462687492370605,
+        4.6186442375183105,
+        0.7311475276947021,
+        6.410447597503662,
+        5.48305082321167,
+        1.1459016799926758,
+        1.5746269226074219,
+        6.347457408905029,
+        0.46065574884414673,
+        5.738805770874023,
+        4.211864471435547,
+        0.8754098415374756,
+        0.9029850959777832,
+        5.076271057128906,
+        0.19016394019126892,
+        5.067163944244385,
+        5.940678119659424,
+        0.6049180030822754,
+        9.231343269348145,
+        3.805084705352783,
+        1.019672155380249,
+        4.395522594451904,
+        4.669491291046143,
+        0.33442622423171997,
+        8.559701919555664,
+        5.53389835357666,
+        0.7491803169250488,
+        3.7238805294036865,
+        6.3983049392700195,
+        1.1639344692230225,
+        7.888059616088867,
+        4.262712001800537,
+        0.4786885380744934,
+        3.052238702774048,
+        5.1271185874938965,
+        0.8934426307678223,
+        7.2164177894592285,
+        5.991525650024414,
+        0.2081967145204544,
+        2.3805971145629883,
+        3.8559322357177734,
+        0.6229507923126221,
+        6.54477596282959,
+        4.720338821411133,
+        1.0377049446105957,
+        1.70895516872406,
+        5.58474588394165,
+        0.35245901346206665,
+        5.873134136199951,
+        6.44915246963501,
+        0.7672131061553955,
+        1.037313461303711,
+        4.313559532165527,
+        1.1819672584533691,
+        5.2014923095703125,
+        5.177966117858887,
+        0.4967212975025177,
+        9.36567211151123,
+        6.042372703552246,
+        0.911475419998169,
+        4.529850959777832
+      ]
+    },
+    {
+      "kind": "spray",
+      "points": [
+        3.5,
+        0.10000000149011612,
+        0.5,
+        4.364406585693359,
+        0.5147541165351868,
+        4.66417932510376,
+        5.228813648223877,
+        0.9295082092285156,
+        8.82835865020752,
+        6.093220233917236,
+        0.24426229298114777,
+        3.992537260055542,
+        3.957627058029175,
+        0.6590163707733154,
+        8.156716346740723,
+        4.822033882141113,
+        1.073770523071289,
+        3.3208954334259033,
+        5.686440467834473,
+        0.38852459192276,
+        7.485074520111084,
+        3.5508475303649902,
+        0.8032786846160889,
+        2.6492538452148438,
+        4.41525411605835,
+        0.1180327832698822,
+        6.813432693481445,
+        5.279661178588867,
+        0.5327869057655334,
+        1.9776118993759155,
+        6.144067764282227,
+        0.9475409984588623,
+        6.141790866851807,
+        4.008474349975586,
+        0.26229506731033325,
+        1.3059701919555664,
+        4.8728814125061035,
+        0.6770491600036621,
+        5.470149040222168,
+        5.737287998199463,
+        1.0918033123016357,
+        0.6343283653259277,
+        3.6016948223114014,
+        0.4065573811531067,
+        4.7985076904296875,
+        4.46610164642334,
+        0.8213114738464355,
+        8.962686538696289,
+        5.330508708953857,
+        0.13606557250022888,
+        4.126865863800049,
+        6.194915294647217,
+        0.5508196949958801,
+        8.291045188903809,
+        4.059321880340576,
+        0.965573787689209,
+        3.455223798751831,
+        4.923728942871094,
+        0.28032785654067993,
+        7.619402885437012,
+        5.788135528564453,
+        0.6950819492340088,
+        2.7835819721221924,
+        3.6525423526763916,
+        1.1098361015319824,
+        6.947761058807373,
+        4.51694917678833,
+        0.42459017038345337,
+        2.111940383911133,
+        5.3813557624816895,
+        0.8393442630767822,
+        6.276119232177734,
+        6.245762825012207,
+        0.15409836173057556,
+        1.4402985572814941,
+        4.110169410705566,
+        0.5688524842262268,
+        5.604477405548096,
+        4.974576473236084,
+        0.9836065769195557,
+        0.7686567306518555,
+        5.838983058929443,
+        0.2983606457710266,
+        4.932836055755615,
+        3.703389883041382,
+        0.7131147384643555,
+        9.097015380859375,
+        4.56779670715332,
+        1.127868890762329,
+        4.261194229125977,
+        5.43220329284668,
+        0.44262295961380005,
+        8.425373077392578,
+        6.296610355377197,
+        0.8573770523071289,
+        3.589552164077759,
+        4.161016941070557,
+        0.17213115096092224,
+        7.7537312507629395,
+        5.025423526763916,
+        0.5868852734565735,
+        2.91791033744812,
+        5.889830589294434,
+        1.0016393661499023,
+        7.082089424133301,
+        3.754237174987793,
+        0.3163934350013733,
+        2.2462687492370605,
+        4.6186442375183105,
+        0.7311475276947021,
+        6.410447597503662,
+        5.48305082321167,
+        1.1459016799926758,
+        1.5746269226074219,
+        6.347457408905029,
+        0.46065574884414673,
+        5.738805770874023,
+        4.211864471435547,
+        0.8754098415374756,
+        0.9029850959777832,
+        5.076271057128906,
+        0.19016394019126892,
+        5.067163944244385,
+        5.940678119659424,
+        0.6049180030822754,
+        9.231343269348145,
+        3.805084705352783,
+        1.019672155380249,
+        4.395522594451904,
+        4.669491291046143,
+        0.33442622423171997,
+        8.559701919555664,
+        5.53389835357666,
+        0.7491803169250488,
+        3.7238805294036865,
+        6.3983049392700195,
+        1.1639344692230225,
+        7.888059616088867,
+        4.262712001800537,
+        0.4786885380744934,
+        3.052238702774048,
+        5.1271185874938965,
+        0.8934426307678223,
+        7.2164177894592285,
+        5.991525650024414,
+        0.2081967145204544,
+        2.3805971145629883,
+        3.8559322357177734,
+        0.6229507923126221,
+        6.54477596282959,
+        4.720338821411133,
+        1.0377049446105957,
+        1.70895516872406,
+        5.58474588394165,
+        0.35245901346206665,
+        5.873134136199951,
+        6.44915246963501,
+        0.7672131061553955,
+        1.037313461303711,
+        4.313559532165527,
+        1.1819672584533691,
+        5.2014923095703125,
+        5.177966117858887,
+        0.4967212975025177,
+        9.36567211151123,
+        6.042372703552246,
+        0.911475419998169,
+        4.529850959777832
+      ]
+    },
+    {
+      "kind": "none",
+      "points": [
+        3.5,
+        0.10000000149011612,
+        0.5,
+        4.364406585693359,
+        0.5147541165351868,
+        4.66417932510376,
+        5.228813648223877,
+        0.9295082092285156,
+        8.82835865020752,
+        6.093220233917236,
+        0.24426229298114777,
+        3.992537260055542,
+        3.957627058029175,
+        0.6590163707733154,
+        8.156716346740723,
+        4.822033882141113,
+        1.073770523071289,
+        3.3208954334259033,
+        5.686440467834473,
+        0.38852459192276,
+        7.485074520111084,
+        3.5508475303649902,
+        0.8032786846160889,
+        2.6492538452148438,
+        4.41525411605835,
+        0.1180327832698822,
+        6.813432693481445,
+        5.279661178588867,
+        0.5327869057655334,
+        1.9776118993759155,
+        6.144067764282227,
+        0.9475409984588623,
+        6.141790866851807,
+        4.008474349975586,
+        0.26229506731033325,
+        1.3059701919555664,
+        4.8728814125061035,
+        0.6770491600036621,
+        5.470149040222168,
+        5.737287998199463,
+        1.0918033123016357,
+        0.6343283653259277,
+        3.6016948223114014,
+        0.4065573811531067,
+        4.7985076904296875,
+        4.46610164642334,
+        0.8213114738464355,
+        8.962686538696289,
+        5.330508708953857,
+        0.13606557250022888,
+        4.126865863800049,
+        6.194915294647217,
+        0.5508196949958801,
+        8.291045188903809,
+        4.059321880340576,
+        0.965573787689209,
+        3.455223798751831,
+        4.923728942871094,
+        0.28032785654067993,
+        7.619402885437012,
+        5.788135528564453,
+        0.6950819492340088,
+        2.7835819721221924,
+        3.6525423526763916,
+        1.1098361015319824,
+        6.947761058807373,
+        4.51694917678833,
+        0.42459017038345337,
+        2.111940383911133,
+        5.3813557624816895,
+        0.8393442630767822,
+        6.276119232177734,
+        6.245762825012207,
+        0.15409836173057556,
+        1.4402985572814941,
+        4.110169410705566,
+        0.5688524842262268,
+        5.604477405548096,
+        4.974576473236084,
+        0.9836065769195557,
+        0.7686567306518555,
+        5.838983058929443,
+        0.2983606457710266,
+        4.932836055755615,
+        3.703389883041382,
+        0.7131147384643555,
+        9.097015380859375,
+        4.56779670715332,
+        1.127868890762329,
+        4.261194229125977,
+        5.43220329284668,
+        0.44262295961380005,
+        8.425373077392578,
+        6.296610355377197,
+        0.8573770523071289,
+        3.589552164077759,
+        4.161016941070557,
+        0.17213115096092224,
+        7.7537312507629395,
+        5.025423526763916,
+        0.5868852734565735,
+        2.91791033744812,
+        5.889830589294434,
+        1.0016393661499023,
+        7.082089424133301,
+        3.754237174987793,
+        0.3163934350013733,
+        2.2462687492370605,
+        4.6186442375183105,
+        0.7311475276947021,
+        6.410447597503662,
+        5.48305082321167,
+        1.1459016799926758,
+        1.5746269226074219,
+        6.347457408905029,
+        0.46065574884414673,
+        5.738805770874023,
+        4.211864471435547,
+        0.8754098415374756,
+        0.9029850959777832,
+        5.076271057128906,
+        0.19016394019126892,
+        5.067163944244385,
+        5.940678119659424,
+        0.6049180030822754,
+        9.231343269348145,
+        3.805084705352783,
+        1.019672155380249,
+        4.395522594451904,
+        4.669491291046143,
+        0.33442622423171997,
+        8.559701919555664,
+        5.53389835357666,
+        0.7491803169250488,
+        3.7238805294036865,
+        6.3983049392700195,
+        1.1639344692230225,
+        7.888059616088867,
+        4.262712001800537,
+        0.4786885380744934,
+        3.052238702774048,
+        5.1271185874938965,
+        0.8934426307678223,
+        7.2164177894592285,
+        5.991525650024414,
+        0.2081967145204544,
+        2.3805971145629883,
+        3.8559322357177734,
+        0.6229507923126221,
+        6.54477596282959,
+        4.720338821411133,
+        1.0377049446105957,
+        1.70895516872406,
+        5.58474588394165,
+        0.35245901346206665,
+        5.873134136199951,
+        6.44915246963501,
+        0.7672131061553955,
+        1.037313461303711,
+        4.313559532165527,
+        1.1819672584533691,
+        5.2014923095703125,
+        5.177966117858887,
+        0.4967212975025177,
+        9.36567211151123,
+        6.042372703552246,
+        0.911475419998169,
+        4.529850959777832
+      ]
+    }
+  ]
+}

@@ -144,7 +144,7 @@ test('StoryScene mounts real world owners while physics, canonical atmosphere an
   assert.match(forest,/claimForestBuild\([\s\S]*workerRef\.current !== null/);
   assert.match(frame,/const portraitFrame = viewportAspect < 0\.78/);
   assert.match(frame,/routeOpeningHalfAngle = portraitFrame \? 0\.46 : 0\.36/);
-  for (const owner of ['SceneAtmosphere','NarrativeLightingRig','AtmosphericForestPanorama'])assert.match(scene,new RegExp(`narrativeScene \\? null : <${owner}`));
+  for (const owner of ['LegacySceneAtmosphere','NarrativeLightingRig','AtmosphericForestPanorama'])assert.match(scene,new RegExp(`narrativeScene \\? null : <${owner}`));
   assert.match(scene,/<GuidanceController/);
   const guidance=read('src/world/guidance/GuidanceController.tsx');
   assert.match(guidance,/from "\.\.\/terrain\/worldPaths"/);

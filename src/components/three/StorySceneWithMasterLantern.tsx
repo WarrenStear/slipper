@@ -15,6 +15,8 @@ import { resolveWorldVisualState } from "./worldVisualState";
 import { resolveWorldDirector } from "./worldDirector/worldDirector";
 import WorldDirectorDebug from "./worldDirector/WorldDirectorDebug";
 import WorldEngineLayer from "./world/WorldEngineLayer";
+import { useSceneLook } from "./artDirection/SceneLookContext";
+import type { Vector3Tuple } from "../../data/slipper3dTypes";
 import type { WorldMemoryState } from "./worldMemory/WorldMemoryDirector";
 
 type StorySceneWithMasterLanternProps = {
@@ -68,16 +70,6 @@ export function StorySceneWithMasterLantern({
   const physicallyCarried = useJourneyStore(state => state.storyObjectStates["lantern.master"] === "carried");
   const [proximity, setProximity] = useState<SceneProximityState | null>(null);
 
-  const activeEntry = useMemo(
-    () => props.entries.find((entry) => entry.id === props.entryId) ?? props.entries[0],
-    [props.entries, props.entryId],
-  );
-
-  const visualState = useMemo(
-    () => resolveWorldVisualState({ entry: activeEntry, narrativeWorldState }),
-    [activeEntry, narrativeWorldState],
-  );
-
   const handlePlayerProximityChange = useCallback(
     (state: SceneProximityState) => {
       setProximity(state);
@@ -114,20 +106,9 @@ export function StorySceneWithMasterLantern({
     mode === "explore" &&
     lanternNarrative.presence === "carried" && (!eventDriven || physicallyCarried);
 
-  const worldDirector = useMemo(
-    () =>
-      resolveWorldDirector({
-        narrativeWorldState,
-        visualState,
-        qualityProfile,
-        navigationGuidance: Boolean(navigationTargetPosition),
-      }),
-    [narrativeWorldState, navigationTargetPosition, qualityProfile, visualState],
-  );
-
   // StoryScene resolves the canonical scene's authored origin and heading, then
-  // mounts these children inside its single SceneLookDirector. The legacy world
-  // and lantern directors provide geometry/navigation inputs, not a second look.
+  // mounts these children inside its single SceneLookDirector. Legacy projection
+  // is evaluated only for a noncanonical fallback or an explicitly enabled debug view.
   return (
     <StoryScene
       {...props}
@@ -136,15 +117,14 @@ export function StorySceneWithMasterLantern({
       narrativeWorldState={narrativeWorldState}
       qualityProfile={qualityProfile}
       reducedEffects={reducedEffects}
+      ambientParticlesEnabled={mode !== "map" && !openingEnclosed(worldMemory?.sceneId, Boolean(worldMemory?.inventory.lantern || worldMemory?.completedRitualIds?.includes("ritual.accept-lantern")))}
       onPlayerProximityChange={handlePlayerProximityChange}
     >
-      <WorldEngineLayer
-        worldDirector={worldDirector}
-        visualState={visualState}
-        narrativeWorldState={narrativeWorldState}
-        qualityProfile={qualityProfile}
-        navigationTargetPosition={navigationTargetPosition}
+      <WorldPresentationCompatibility
+        entryId={props.entryId} entries={props.entries} narrativeWorldState={narrativeWorldState}
+        qualityProfile={qualityProfile} navigationTargetPosition={navigationTargetPosition}
         enabled={mode !== "map" && !openingEnclosed(worldMemory?.sceneId, Boolean(worldMemory?.inventory.lantern || worldMemory?.completedRitualIds?.includes("ritual.accept-lantern")))}
+        debug={shouldShowDebugOverlay()}
       />
       {showCarriedLantern ? (
         <MasterPlayerLantern
@@ -155,15 +135,33 @@ export function StorySceneWithMasterLantern({
           reducedEffects={reducedEffects}
         />
       ) : null}
-      <WorldDirectorDebug
-        worldDirector={worldDirector}
-        qualityProfile={qualityProfile}
-        narrativeWorldState={narrativeWorldState}
-        enabled={shouldShowDebugOverlay()}
-      />
       {children}
     </StoryScene>
   );
 }
 
 export default StorySceneWithMasterLantern;
+
+
+type WorldProjectionProps = {
+  entryId: string; entries: Slipper3DEntry[]; narrativeWorldState: NarrativeWorldState;
+  qualityProfile: RenderQualityProfile; navigationTargetPosition: Vector3Tuple | null;
+  enabled: boolean; debug: boolean;
+};
+
+/** Canonical air needs no legacy environment or aggregate lantern derivation. */
+function WorldPresentationCompatibility(props: WorldProjectionProps) {
+  const presentation = useSceneLook();
+  if (presentation && !props.debug) return null;
+  return <LegacyWorldProjection {...props} fallback={!presentation} />;
+}
+
+function LegacyWorldProjection({ entryId, entries, narrativeWorldState, qualityProfile, navigationTargetPosition, enabled, debug, fallback }: WorldProjectionProps & { fallback: boolean }) {
+  const entry = useMemo(() => entries.find(candidate => candidate.id === entryId) ?? entries[0], [entries, entryId]);
+  const visualState = useMemo(() => resolveWorldVisualState({ entry, narrativeWorldState }), [entry, narrativeWorldState]);
+  const worldDirector = useMemo(() => resolveWorldDirector({ narrativeWorldState, visualState, qualityProfile, navigationGuidance: Boolean(navigationTargetPosition) }), [narrativeWorldState, visualState, qualityProfile, navigationTargetPosition]);
+  return <>
+    {fallback && enabled ? <WorldEngineLayer worldDirector={worldDirector} visualState={visualState} narrativeWorldState={narrativeWorldState} qualityProfile={qualityProfile} navigationTargetPosition={navigationTargetPosition} enabled /> : null}
+    {debug ? <WorldDirectorDebug worldDirector={worldDirector} qualityProfile={qualityProfile} narrativeWorldState={narrativeWorldState} enabled /> : null}
+  </>;
+}

@@ -1,16 +1,10 @@
-import {WorldEngineLayer} from './src/components/three/world/WorldEngineLayer';
-import {MasterPlayerLantern} from './src/components/three/MasterPlayerLantern';
-import {resolveWorldDirector} from './src/components/three/worldDirector/worldDirector';
-import {resolveWorldVisualState} from './src/components/three/worldVisualState';
 import {entries as contentEntries} from './src/data/slipperContent';
 import {getJourneySceneForEntry} from './src/data/journeyNarrative';
+import {MasterPlayerLantern} from './src/components/three/MasterPlayerLantern';
 const reviewNarrative={visitedCount:12,totalCount:32,traceCount:8,fireCount:1,waterCount:1,memoryCount:3,thresholdCount:1,crownCount:0,fireWaterBalance:0,explorationDepth:.45,memoryPressure:.35,symbolicWeight:.5};
 function ReviewGlobalLayers({id,quality,reduced}){
- const entry=contentEntries.find(e=>getJourneySceneForEntry(e.id)?.id===id)||contentEntries[0];
- const visualState=React.useMemo(()=>resolveWorldVisualState({entry,narrativeWorldState:reviewNarrative}),[entry]);
  const qualityProfile=RENDER_QUALITY_PROFILES[quality];
- const director=React.useMemo(()=>resolveWorldDirector({narrativeWorldState:reviewNarrative,visualState,qualityProfile,navigationGuidance:true}),[visualState,qualityProfile]);
  const lanternPlaced=useJourneyStore(s=>s.storyObjectStates['lantern.master']==='placed');
  const enabled=!id.startsWith('broken')&&!id.startsWith('epilogue');
- return <><WorldEngineLayer worldDirector={director} visualState={visualState} narrativeWorldState={reviewNarrative} qualityProfile={qualityProfile} navigationTargetPosition={[0,0,5]} enabled={enabled}/>{enabled&&!lanternPlaced?<MasterPlayerLantern narrativeWorldState={reviewNarrative} qualityProfile={qualityProfile} reducedEffects={reduced}/>:null}</>;
+ return <>{enabled&&!lanternPlaced?<MasterPlayerLantern narrativeWorldState={reviewNarrative} qualityProfile={qualityProfile} reducedEffects={reduced}/>:null}</>;
 }

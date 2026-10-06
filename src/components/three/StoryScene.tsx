@@ -51,9 +51,9 @@ import { isIntegratedFinaleEntry, usesAuthoredCausalComposition } from "../../wo
 import { NarrativeWeather } from "../../world/atmosphere/NarrativeWeather.tsx";
 import { guidedPathSegment } from "../../world/guidance/routeGeometry.ts";
 import { ContinuousForestBed } from "../../world/forest/ContinuousForestBed.tsx";
-import { SceneAtmosphere } from "../../world/atmosphere/SceneAtmosphere.tsx";
+import { LegacySceneAtmosphere } from "../../world/atmosphere/LegacySceneAtmosphere.tsx";
 import { BiomeWeatherField } from "../../world/atmosphere/BiomeWeatherField.tsx";
-import { NarrativeLightingRig } from "../../world/atmosphere/NarrativeLightingRig.tsx";
+import { NarrativeLightingRig } from "../../world/lighting/NarrativeLightingRig.tsx";
 import { LivingPathRibbon } from "../../world/guidance/LivingPathRibbon.tsx";
 import { MoonlitPathUnderstory } from "../../world/guidance/MoonlitPathUnderstory.tsx";
 import { PathLightMotes } from "../../world/guidance/PathLightMotes.tsx";
@@ -74,6 +74,8 @@ export type { SceneProximityState } from "../../world/guidance/guidanceTypes";
 export type StorySceneProps = {
   /** Global presentation layers share the canonical director and its clocks. */
   children?: ReactNode;
+  /** The production wrapper projects map/opening eligibility for canonical air. */
+  ambientParticlesEnabled?: boolean;
   entryId: string;
   entries: Slipper3DEntry[];
   visuals: Slipper3DVisual[];
@@ -2436,6 +2438,7 @@ function thresholdRotationForNode(
 
 export function StoryScene({
   children,
+  ambientParticlesEnabled = false,
   entryId,
   entries,
   visuals,
@@ -2780,7 +2783,7 @@ export function StoryScene({
       />
       {/* FALLBACK PRESENTATION ONLY: canonical atmosphere, fill, sky and finishing
           are owned by SceneLookDirector below. These legacy rigs must stay gated. */}
-      {narrativeScene ? null : <SceneAtmosphere entry={entry} entries={entries} narrativeWorldState={narrativeWorldState} qualityProfile={qualityProfile} />}
+      {narrativeScene ? null : <LegacySceneAtmosphere entry={entry} entries={entries} narrativeWorldState={narrativeWorldState} qualityProfile={qualityProfile} />}
       {reducedEffects || narrativeScene ? null : (
         <BiomeWeatherField activeEntry={entry} narrativeWorldState={narrativeWorldState} visualState={visualState} qualityProfile={qualityProfile} />
       )}
@@ -2867,10 +2870,10 @@ export function StoryScene({
       {showDebugOverlay ? <SceneDebugOverlay entry={entry} narrativeWorldState={narrativeWorldState} qualityProfile={qualityProfile} visualState={visualState} nodes={spatialNodes} /> : null}
     </>
   );
-  // Include wrapper-provided WorldEngineLayer/MasterPlayerLantern under this same
+  // Include the wrapper-provided lantern and compatibility/debug helpers under this same
   // owner. Keeping origin/camera resolution here avoids a second scene-state tree.
   return narrativeScene ? <SceneLookDirector sceneId={narrativeScene.id} quality={qualityProfile.quality} reducedEffects={reducedEffects} reducedMotion={reducedMotion}
-    cameraAssistance={mode === "explore" && cameraAssistance} origin={authoredSceneOrigin} heading={getJourneySceneLayout(narrativeScene.id).anchor.headingRadians}
+    particlesEnabled={ambientParticlesEnabled} particleScale={qualityProfile.particleMultiplier} origin={authoredSceneOrigin} heading={getJourneySceneLayout(narrativeScene.id).anchor.headingRadians}
     bloomIntensity={visualState.bloomIntensity} vignetteIntensity={visualState.vignetteIntensity}>{children}{world}</SceneLookDirector> : <>{children}{world}</>;
 }
 

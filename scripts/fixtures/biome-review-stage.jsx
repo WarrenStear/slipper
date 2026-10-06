@@ -11,9 +11,9 @@ import { landscapeForScene } from '../../src/components/three/environment/landsc
 import { TactileDetailProvider } from '../../src/components/three/storyEvents/TactileMaterial';
 import { SceneLookContext } from '../../src/components/three/artDirection/SceneLookContext';
 import { resolveSceneLook } from '../../src/components/three/artDirection/SceneLookRegistry';
-import { SceneLighting } from '../../src/components/three/artDirection/SceneLighting';
-import { AuthoredLightShafts } from '../../src/components/three/artDirection/VolumetricLightShaft';
-import { GroundMist } from '../../src/components/three/artDirection/GroundMist';
+import { SceneLighting } from '../../src/world/lighting/SceneLighting';
+import { AuthoredLightShafts } from '../../src/world/atmosphere/VolumetricLightShaft';
+import { GroundMist } from '../../src/world/atmosphere/GroundMist';
 import { advanceSceneMotion } from '../../src/components/three/artDirection/sceneMotion';
 import { activateCinematicProfile, advanceCinematicProfile } from '../../src/cinematics/emotionalCinematography';
 import { BIOME_REVIEW_CASES } from '../biome-review-contract.mjs';

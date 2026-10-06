@@ -1,3 +1,4 @@
+import { useSceneLook } from "../artDirection/SceneLookContext";
 import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Color, type HemisphereLight, type PointLight } from "three";
@@ -6,6 +7,11 @@ import { environmentFamily } from "../environment/chapterEnvironment";
 import { getCurrentCinematicProfile } from "../../../cinematics/emotionalCinematography";
 
 export function CinematicLightingDirector() {
+  const presentation = useSceneLook();
+  return presentation ? null : <LegacyCinematicLightingDirector />;
+}
+
+function LegacyCinematicLightingDirector() {
   const sceneId = useJourneyStore(state => state.sceneId);
   // Authored local rigs provide the key; keep this existing camera
   // light only as a low-intensity readability fill in those chapters.

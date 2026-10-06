@@ -8,6 +8,8 @@ import { chromium } from '@playwright/test';
 import assert from 'node:assert/strict';
 const repo=process.cwd(), port=Number(process.env.REVIEW_PORT||4333);
 const angle=process.env.REVIEW_ANGLE||'swiftshader';
+// Diagnostic subset only; the default still exercises the complete lifecycle.
+const resourcesOnly=process.env.REVIEW_RESOURCES_ONLY==='1';
 if(!['swiftshader','metal'].includes(angle))throw Error('REVIEW_ANGLE must be swiftshader or metal');
 const fixture=await mkdtemp(join(tmpdir(),'slipper-look-lifecycle-'));
 const out=resolve(process.env.REVIEW_OUT||join(tmpdir(),'slipper-look-lifecycle-evidence'));
@@ -25,6 +27,9 @@ import * as THREE from 'three';
 import {StorySceneWithMasterLantern} from './src/components/three/StorySceneWithMasterLantern';
 import {SceneLookDirector} from './src/components/three/artDirection/SceneLookDirector';
 import {CinematicCameraDirector} from './src/components/three/cinematics/CinematicCameraDirector';
+import {EmotionalCinematographyDirector} from './src/components/three/cinematics/EmotionalCinematographyDirector';
+import {CinematicLightingDirector} from './src/components/three/cinematics/CinematicLightingDirector';
+import {CinematicAtmosphereDirector} from './src/components/three/cinematics/CinematicAtmosphereDirector';
 import {useSceneLook} from './src/components/three/artDirection/SceneLookContext';
 import {BrokenFloorChapter} from './src/components/three/chapters/BrokenFloorChapter';
 import {LanternEpilogueChapter} from './src/components/three/chapters/LanternEpilogueChapter';
@@ -47,6 +52,25 @@ const EPILOGUE_ENTRY_ID=contentEntries.find(entry=>getJourneySceneForEntry(entry
 const EPILOGUE_HISTORY=['fragment-001','fragment-060','fragment-040','fragment-060'];
 const EPILOGUE_WITNESSED=['fragment-001','fragment-060','fragment-040'];
 const REMOVED_FINALE_OBJECTS=['realistic-final-blue-moon','resting-wolf','swan-on-moving-water','quiet-seer','remembered-ember-fire','distant-thorned-house','remembered-fork-landmark','remembered-three-climbs-landmark','protected-nest-child-space','recovered-journey-keys','self-owned-home','returned-self-inside-home','final-cracked-look-back-mirror','constellation-resonance-major-nodes','constellation-protected-nest','constellation-released-words','persistent-world-memory','completed-in-world-constellation'];
+const fogIds=new WeakMap();let nextFogId=0;
+function trackTextures(renderer){
+ const context=renderer.getContext(),records=new Map();let nextId=0;
+ const create=context.createTexture.bind(context),remove=context.deleteTexture.bind(context);
+ context.createTexture=()=>{const texture=create();records.set(texture,{id:++nextId,owners:new Set(),stack:new Error().stack});return texture;};
+ context.deleteTexture=texture=>{records.delete(texture);return remove(texture);};
+ const getProperties=renderer.properties.get.bind(renderer.properties),proxies=new WeakMap();
+ const label=(texture,handle,owner)=>{const record=records.get(handle);if(record){record.owners.add(owner+':'+texture.uuid);record.source=texture.source?.data?.currentSrc||texture.source?.data?.src||texture.name;}};
+ // Observe assignment as well as live scene materials: an orphaned upload may
+ // never be reached by a subsequent scene traversal.
+ renderer.properties.get=object=>{const properties=getProperties(object);if(!object?.isTexture)return properties;if(!proxies.has(properties))proxies.set(properties,new Proxy(properties,{set(target,key,value){target[key]=value;if(key==='__webglTexture')label(object,value,'allocation');return true;}}));return proxies.get(properties);};
+ window.__labelTexture=(texture,owner)=>{if(texture?.isTexture)label(texture,getProperties(texture).__webglTexture,owner);};
+ window.__textureSnapshot=()=>Array.from(records.values(),record=>({...record,owners:Array.from(record.owners)}));
+ const setRenderTarget=renderer.setRenderTarget.bind(renderer);
+ renderer.setRenderTarget=(target,...args)=>{const result=setRenderTarget(target,...args);if(target){window.__labelTexture(target.texture,'target:'+target.texture.name+':'+target.texture.uuid);window.__labelTexture(target.depthTexture,'depth:'+target.depthTexture?.uuid);}return result;};
+ const originalDispose=THREE.WebGLRenderTarget.prototype.dispose;
+ THREE.WebGLRenderTarget.prototype.dispose=function(){window.__labelTexture(this.texture,this.texture.name||'unnamed-render-target');return originalDispose.call(this);};
+}
+function SurfaceProbe(){useFrame(({scene})=>{window.__surface={background:scene.background,fog:scene.fog};});return null;}
 function Probe({id,offset,quality,reduced,turning=false,runtime=false}){
  const look=useSceneLook(),{camera,gl,scene}=useThree(),frames=useRef(0);
  const renderer=useMemo(()=>{const context=gl.getContext(),debug=context.getExtension('WEBGL_debug_renderer_info');return context.getParameter(debug?debug.UNMASKED_RENDERER_WEBGL:context.RENDERER);},[gl]);
@@ -57,7 +81,7 @@ function Probe({id,offset,quality,reduced,turning=false,runtime=false}){
  const globalNames=['scene-boundary-veil','scene-breath-field','scene-path-guidance','scene-clearing-breath','master-lantern-flame'];
  const motionObjects=Object.fromEntries(globalNames.map(n=>{const o=scene.getObjectByName(n);return[n,o?[...o.position.toArray(),...o.rotation.toArray().slice(0,3),...o.scale.toArray()]:null]}));
  const opacityObjects=Object.fromEntries(globalNames.map(n=>{const o=scene.getObjectByName(n);let sum=0;o?.traverse(c=>{if(c.material)sum+=c.material.opacity??0;});return[n,sum]}));
- let shadows=0,shafts=0,particleTime=null,particleOpacity=null,particles=0;scene.traverse(o=>{if(o.isLight&&o.castShadow)shadows++;if(o.name==='authored-light-shaft')shafts++;if(o.name.startsWith('scene-particulate:')){particles++;particleTime=o.material.uniforms.time.value;particleOpacity=o.material.uniforms.opacity.value;}});
+ let shadows=0,lights=0,shafts=0,particleTime=null,particleOpacity=null,particleCount=0,particles=0;scene.traverse(o=>{if(o.isLight){lights++;if(o.castShadow)shadows++;}if(o.name==='authored-light-shaft')shafts++;if(o.name.startsWith('scene-particulate:')){particles++;particleCount+=o.geometry.attributes.position.count;particleTime=o.material.uniforms.time.value;particleOpacity=o.material.uniforms.opacity.value;}});
  let authorities=0;scene.traverse(o=>{if(o.name==='scene-look-authority')authorities++});
  const skin=scene.getObjectByName('stillness-sensitive-mirror-surface'),waterRoute=scene.getObjectByName('reflection-only-water-route'),reverse=scene.getObjectByName('reverse-light-lived-places'),routeLights=scene.getObjectByName('reverse-actual-route-lights');
  const formation=scene.getObjectByName('constellation-formation-reveal'),walkedRoute=scene.getObjectByName('constellation-actual-walked-route'),skyBatches=[];
@@ -65,16 +89,32 @@ function Probe({id,offset,quality,reduced,turning=false,runtime=false}){
  const competingFinaleObjects=REMOVED_FINALE_OBJECTS.filter(name=>scene.getObjectByName(name));
  scene.traverse(object=>{if(/^StoryActor:(wolf|swan|seer):/.test(object.name))competingFinaleObjects.push(object.name);});
  const finale={formation:formation?{...formation.userData,visible:formation.visible}:null,skyBatches,routePositions:walkedRoute?Array.from(walkedRoute.geometry.attributes.position.array):null,competingObjects:competingFinaleObjects,completions:window.__finaleCompletions??0,reverseElapsed:routeLights?.material.uniforms.elapsed.value??null};
- window.__look={renderer,finale,turning,stillness:look.stillness,skinDistortion:skin?.material.uniforms.uDistortion.value,waterRouteOpacity:waterRoute?.children[0]?.material.opacity,reverseEntryIds:reverse?.userData.reverseEntryIds,reversePositions:routeLights?Array.from(routeLights.geometry.attributes.position.array):null,semanticMirrorChildren:scene.getObjectByName('story-object:sunset.truth')?.children.length,runtime,authorities,shadows,shafts,particles,particleTime,particleOpacity,opacityObjects,motionObjects,finishing:scene.getObjectByName('scene-finishing-budget')?.userData??null,id,quality,reduced,offset,frames:frames.current,motion:{...look.motion},time:{...look.time},quiet:look.look.stillness,camera:camera.position.toArray(),memory:{...gl.info.memory},programs:gl.info.programs.length,reflection:mirror?.getRenderTarget().width??water?.getRenderTarget().width??0,disturbance:mirror?.material.uniforms.uDisturbance.value,floorDepth:floor?.material.uniforms.hasDepth.value??0,floorTexture:floor?.material.uniforms.liveForest.value.name??'',floorStage:floor?.material.uniforms.stage.value};
- });});return null;
+ if(scene.fog&&!fogIds.has(scene.fog))fogIds.set(scene.fog,++nextFogId);
+ scene.traverse(object=>{
+  if(object.shadow?.map)window.__labelTexture?.(object.shadow.map.texture,object.name+'.shadow');
+  if(object.getRenderTarget)window.__labelTexture?.(object.getRenderTarget().texture,object.name+'.reflection');
+  const materials=Array.isArray(object.material)?object.material:[object.material];
+  for(const material of materials){if(!material)continue;
+   for(const key of ['map','normalMap','roughnessMap','aoMap'])window.__labelTexture?.(material[key],object.name+'.'+key);
+   for(const [key,uniform]of Object.entries(material.uniforms||{}))window.__labelTexture?.(uniform.value,object.name+'.'+key);
+  }
+ });
+ window.__activity={focused:document.hasFocus(),visible:!document.hidden,mode:useWorldStore.getState().mode,physicsPaused:useWorldStore.getState().physicsPaused,insideClearing:useWorldStore.getState().sceneProximity?.insideClearing,delta};
+ const fallbackNames=globalNames.filter(n=>n!=='master-lantern-flame');
+ const competingGlobals=['CinematicLightingDirector','EmotionalCinematographyDirector','chapter-key:blue-moon'].filter(n=>scene.getObjectByName(n));
+ window.__look={fogId:scene.fog?fogIds.get(scene.fog):null,fogDensity:scene.fog?.density??null,exposure:gl.toneMappingExposure,lights,particleCount,fallbacks:fallbackNames.filter(n=>scene.getObjectByName(n)),competingGlobals,paused:useSettingsStore.getState().drawerOpen||useWorldStore.getState().physicsPaused,renderer,finale,turning,stillness:look.stillness,skinDistortion:skin?.material.uniforms.uDistortion.value,waterRouteOpacity:waterRoute?.children[0]?.material.opacity,reverseEntryIds:reverse?.userData.reverseEntryIds,reversePositions:routeLights?Array.from(routeLights.geometry.attributes.position.array):null,semanticMirrorChildren:scene.getObjectByName('story-object:sunset.truth')?.children.length,runtime,authorities,shadows,shafts,particles,particleTime,particleOpacity,opacityObjects,motionObjects,finishing:scene.getObjectByName('scene-finishing-budget')?.userData??null,id,quality,reduced,offset,frames:frames.current,motion:{...look.motion},time:{...look.time},quiet:look.look.stillness,camera:camera.position.toArray(),memory:{...gl.info.memory},programs:gl.info.programs.length,reflection:mirror?.getRenderTarget().width??water?.getRenderTarget().width??0,disturbance:mirror?.material.uniforms.uDisturbance.value,floorDepth:floor?.material.uniforms.hasDepth.value??0,floorTexture:floor?.material.uniforms.liveForest.value.name??'',floorStage:floor?.material.uniforms.stage.value};
+ });});return <SceneLookDirector sceneId={id} quality={quality} reducedEffects={reduced} reducedMotion={false}>
+ <EmotionalCinematographyDirector sceneId={id} reducedMotion={false} cameraAssistance={false}/><CinematicLightingDirector/><CinematicAtmosphereDirector/>
+ </SceneLookDirector>;
 }
-function App(){const [runtime,setRuntime]=useState(false),[turning,setTurning]=useState(false);const [quality,setQuality]=useState('high'),[id,setId]=useState('broken-floor.confession'),[offset,setOffset]=useState(0),[reduced,setReduced]=useState(false),[mounted,setMounted]=useState(true);
+function App(){const [runtime,setRuntime]=useState(false),[turning,setTurning]=useState(false);const [quality,setQuality]=useState('high'),[id,setId]=useState('${resourcesOnly ? 'blue-moon.sanctuary' : 'broken-floor.confession'}'),[offset,setOffset]=useState(0),[reduced,setReduced]=useState(false),[mounted,setMounted]=useState(true);
  const scene=getJourneySceneLayout(id),Chapter=id.startsWith('broken')?BrokenFloorChapter:id.startsWith('sunset')?SunsetSeerChapter:id.startsWith('blue')?BlueMoonSanctuaryChapter:id.startsWith('epilogue')?LanternEpilogueChapter:FireRiverChapter;
  useEffect(()=>{const ending=id==='epilogue.constellation';window.__finaleCompletions=0;
  useJourneyStore.setState({sceneId:id,activeEntryId:ending?EPILOGUE_ENTRY_ID:contentEntries.find(entry=>getJourneySceneForEntry(entry.id)?.id===id).id,storyStarted:true,storyCompleted:false,worldFlags:{'story-events.started':true,'lantern.owned':true,...(ending?{'lantern.placed-and-lit':true}:{})},storyObjectStates:id.startsWith('broken')?{'broken-floor.reflection':'revealed'}:ending?{'lantern.master':'placed','epilogue.reverse-light':'running'}:{'lantern.master':'carried'},history:ending?EPILOGUE_HISTORY:[],witnessedEntryIds:ending?EPILOGUE_WITNESSED:[],completedSceneIds:ending?['broken-floor.confession','blue-moon.sanctuary','sunset.stillness']:[],completedChapterIds:[],completedRitualIds:[],completedStoryEventIds:[],storyPlacementStates:ending?{'lantern.master':'window'}:{}});
  if(ending)publishStorySequencePlayback(id,'epilogue.reverse-light-complete',12000,24000);
- useWorldStore.setState({mode:'explore',controls:'orbit',sceneProximity:{insideClearing:id.startsWith('sunset')}});useSettingsStore.setState({drawerOpen:false,cameraAssistance:false,reducedMotion:false,reducedEffects:reduced});},[id,reduced]);
- return <><div id="controls" data-runtime={String(runtime)} data-offset={offset} data-quality={quality} data-scene={id} data-reduced={String(reduced)}>{['low','medium','high','cinematic'].map(q=><button key={q} onClick={()=>setQuality(q)}>{q}</button>)}<button onClick={()=>setRuntime(v=>!v)}>Runtime</button><button onClick={()=>setOffset(v=>v+1)}>Move sideways</button><button onClick={()=>setId('sunset.stillness')}>Seer</button><button onClick={()=>setTurning(v=>!v)}>Turn camera</button><button onClick={()=>setId('epilogue.constellation')}>Epilogue</button><button onClick={()=>useJourneyStore.setState(state=>({storyObjectStates:{...state.storyObjectStates,'epilogue.reverse-light':'complete'}}))}>Complete reverse reveal</button><button onClick={()=>window.dispatchEvent(new CustomEvent(ASSISTED_STILLNESS_EVENT,{detail:{active:true,ritualId:'ritual.witness-mirror'}}))}>Settle mirror</button><button onClick={()=>setId('blue-moon.sanctuary')}>Blue Moon</button><button onClick={()=>setId('river.release-surrender')}>Surrender</button><button onClick={()=>useJourneyStore.setState(s=>({storyObjectStates:{...s.storyObjectStates,'river.birds':'released','river.white-fabric':'raised'}}))}>Raise cloth</button><button onClick={()=>setReduced(v=>!v)}>Reduce effects</button><button onClick={()=>setMounted(v=>!v)}>Toggle world</button></div><div id="world"><Canvas dpr={1} shadows camera={{fov:65,near:.05,far:180}} gl={{antialias:false,preserveDrawingBuffer:true}} onCreated={({gl})=>{gl.toneMapping=THREE.ACESFilmicToneMapping;gl.outputColorSpace=THREE.SRGBColorSpace;}}><Suspense fallback={null}>{mounted?runtime?<Physics paused><StorySceneWithMasterLantern entryId={contentEntries.find(e=>getJourneySceneForEntry(e.id)?.id===id).id} entries={contentEntries} visuals={[]} controls="none" qualityProfile={RENDER_QUALITY_PROFILES[quality]} reducedEffects={reduced} narrativeAudioSuppressed storyWorldMemory={{sceneId:id,chapterId:getJourneySceneForEntry(contentEntries.find(e=>getJourneySceneForEntry(e.id)?.id===id).id).chapterId,completedRitualIds:['ritual.accept-lantern'],completedActs:[],completedChapterIds:[],completedSceneIds:[],landmarkStates:{},worldFlags:{'lantern.owned':true},resonances:{},inventory:{lantern:true,recoveredKeys:[],symbolicObjects:[]},releasedWords:[],storyStarted:true,storyCompleted:false}}><Probe id={id} offset={offset} quality={quality} reduced={reduced} runtime/></StorySceneWithMasterLantern></Physics>:<SceneLookDirector sceneId={id} quality={quality} reducedMotion={false} reducedEffects={reduced} cameraAssistance={false}><CinematicCameraDirector sceneId={id} reducedMotion={false} cameraAssistance={false}/><ReviewGlobalLayers id={id} quality={quality} reduced={reduced}/><TactileDetailProvider quality={quality} reducedEffects={reduced}><Physics paused><Chapter scene={scene} qualityProfile={RENDER_QUALITY_PROFILES[quality]} reducedEffects={reduced} reducedMotion={false} openingResolved={false} onFinalConstellationFormationComplete={()=>{window.__finaleCompletions=(window.__finaleCompletions??0)+1;}}/></Physics><EnvironmentalChoreography sceneId={id} qualityProfile={RENDER_QUALITY_PROFILES[quality]} reducedEffects={reduced} reducedMotion={false}/><Probe id={id} offset={offset} quality={quality} reduced={reduced} turning={turning}/></TactileDetailProvider></SceneLookDirector>:null}</Suspense></Canvas></div></>;
+ // Paused Rapier is a fixed-camera review setup; the presentation clock starts active.
+ useWorldStore.setState({mode:'explore',controls:'orbit',physicsPaused:false,sceneProximity:{insideClearing:id.startsWith('sunset')}});useSettingsStore.setState({drawerOpen:false,cameraAssistance:false,reducedMotion:false,reducedEffects:reduced});},[id,reduced]);
+ return <><div id="controls" data-runtime={String(runtime)} data-offset={offset} data-quality={quality} data-scene={id} data-reduced={String(reduced)}>{['low','medium','high','cinematic'].map(q=><button key={q} onClick={()=>setQuality(q)}>{q}</button>)}<button onClick={()=>setRuntime(v=>!v)}>Runtime</button><button onClick={()=>setOffset(v=>v+1)}>Move sideways</button><button onClick={()=>setId('sunset.stillness')}>Seer</button><button onClick={()=>setTurning(v=>!v)}>Turn camera</button><button onClick={()=>setId('epilogue.constellation')}>Epilogue</button><button onClick={()=>useJourneyStore.setState(state=>({storyObjectStates:{...state.storyObjectStates,'epilogue.reverse-light':'complete'}}))}>Complete reverse reveal</button><button onClick={()=>window.dispatchEvent(new CustomEvent(ASSISTED_STILLNESS_EVENT,{detail:{active:true,ritualId:'ritual.witness-mirror'}}))}>Settle mirror</button><button onClick={()=>setId('blue-moon.sanctuary')}>Blue Moon</button><button onClick={()=>setId('river.release-surrender')}>Surrender</button><button onClick={()=>useJourneyStore.setState(s=>({storyObjectStates:{...s.storyObjectStates,'river.birds':'released','river.white-fabric':'raised'}}))}>Raise cloth</button><button onClick={()=>setReduced(v=>!v)}>Reduce effects</button><button onClick={()=>setMounted(v=>!v)}>Toggle world</button><button onClick={()=>useSettingsStore.setState(s=>({drawerOpen:!s.drawerOpen}))}>Settings pause</button><button onClick={()=>useWorldStore.setState(s=>({physicsPaused:!s.physicsPaused}))}>Physics pause</button></div><div id="world"><Canvas dpr={1} shadows camera={{fov:65,near:.05,far:180}} gl={{antialias:false,preserveDrawingBuffer:true}} onCreated={({gl})=>{trackTextures(gl);gl.toneMapping=THREE.ACESFilmicToneMapping;gl.outputColorSpace=THREE.SRGBColorSpace;}}><SurfaceProbe/><Suspense fallback={null}>{mounted?runtime?<Physics paused><StorySceneWithMasterLantern entryId={contentEntries.find(e=>getJourneySceneForEntry(e.id)?.id===id).id} entries={contentEntries} visuals={[]} controls="none" qualityProfile={RENDER_QUALITY_PROFILES[quality]} reducedEffects={reduced} narrativeAudioSuppressed storyWorldMemory={{sceneId:id,chapterId:getJourneySceneForEntry(contentEntries.find(e=>getJourneySceneForEntry(e.id)?.id===id).id).chapterId,completedRitualIds:['ritual.accept-lantern'],completedActs:[],completedChapterIds:[],completedSceneIds:[],landmarkStates:{},worldFlags:{'lantern.owned':true},resonances:{},inventory:{lantern:true,recoveredKeys:[],symbolicObjects:[]},releasedWords:[],storyStarted:true,storyCompleted:false}}><Probe id={id} offset={offset} quality={quality} reduced={reduced} runtime/></StorySceneWithMasterLantern></Physics>:<SceneLookDirector sceneId={id} quality={quality} reducedMotion={false} reducedEffects={reduced} cameraAssistance={false}><CinematicCameraDirector sceneId={id} reducedMotion={false} cameraAssistance={false}/><ReviewGlobalLayers id={id} quality={quality} reduced={reduced}/><TactileDetailProvider quality={quality} reducedEffects={reduced}><Physics paused><Chapter scene={scene} qualityProfile={RENDER_QUALITY_PROFILES[quality]} reducedEffects={reduced} reducedMotion={false} openingResolved={false} onFinalConstellationFormationComplete={()=>{window.__finaleCompletions=(window.__finaleCompletions??0)+1;}}/></Physics><EnvironmentalChoreography sceneId={id} qualityProfile={RENDER_QUALITY_PROFILES[quality]} reducedEffects={reduced} reducedMotion={false}/><Probe id={id} offset={offset} quality={quality} reduced={reduced} turning={turning}/></TactileDetailProvider></SceneLookDirector>:null}</Suspense></Canvas></div></>;
 }
 window.__memoryExpected=Array.from(new Float32Array(['fragment-060','fragment-040','fragment-001'].flatMap(memoryGroundPosition)));
 window.__skyExpected=Array.from(new Float32Array(EPILOGUE_WITNESSED.flatMap(memoryStarPosition)));
@@ -85,15 +125,17 @@ createRoot(document.getElementById('root')).render(<App/>);
 await writeFile(fixture+'/vite.config.mjs',`export default {root:${JSON.stringify(fixture)},esbuild:{jsx:'automatic'},resolve:{preserveSymlinks:true}};`);
 execFileSync(process.execPath,[repo+'/node_modules/vite/bin/vite.js','build','--config',fixture+'/vite.config.mjs','--outDir',fixture+'/dist'],{cwd:fixture,stdio:'pipe',timeout:120000});
 const server=spawn(process.execPath,[repo+'/node_modules/vite/bin/vite.js','preview','--config',fixture+'/vite.config.mjs','--host','127.0.0.1','--port',String(port),'--strictPort'],{cwd:fixture,stdio:'pipe'});
-let browser;const report={angle,renderer:null,cases:[],errors:[]};
+let browser,page;const report={angle,scope:resourcesOnly?'resources':'complete',renderer:null,cases:[],errors:[]};
 try{
  for(let i=0;i<80;i++){try{if((await fetch(baseURL)).ok)break;}catch{}await new Promise(r=>setTimeout(r,250));}
- browser=await chromium.launch({args:['--enable-webgl','--ignore-gpu-blocklist','--use-angle='+angle]});const page=await browser.newPage({viewport:{width:1100,height:720}});
+ browser=await chromium.launch({args:['--enable-webgl','--ignore-gpu-blocklist','--use-angle='+angle]});page=await browser.newPage({viewport:{width:1100,height:720}});
  page.on('pageerror',e=>report.errors.push(e.message));page.on('console',m=>{if(m.type()==='error')report.errors.push(m.text());});
  await page.goto(baseURL);await page.bringToFront();
  const stable=()=>page.waitForFunction(()=>{const control=document.getElementById('controls'),state=window.__look;return state?.frames>35&&String(state.offset)===control.dataset.offset&&state.quality===control.dataset.quality&&state.id===control.dataset.scene&&String(state.reduced)===control.dataset.reduced&&String(state.runtime)===control.dataset.runtime;},null,{timeout:60000});
  const snap=async name=>{await stable();const data=await page.evaluate(()=>window.__look);report.renderer=data.renderer;report.cases.push({name,...data});console.log(name,JSON.stringify(data));await page.screenshot({path:out+'/lifecycle-'+name+'.png'});return data;};
- let data=await snap('underfloor-high');assert.equal(data.floorDepth,1);assert.equal(data.floorTexture,'bounded-underfloor-world');
+ let data;
+ if(!resourcesOnly){
+ data=await snap('underfloor-high');assert.equal(data.floorDepth,1);assert.equal(data.floorTexture,'bounded-underfloor-world');
  await page.getByText('Move sideways',{exact:true}).click();data=await snap('underfloor-parallax');assert.equal(data.camera[0],1);assert.equal(data.floorDepth,1);
  await page.getByText('cinematic',{exact:true}).click();data=await snap('underfloor-cinematic');assert.equal(data.quality,'cinematic');
  await page.getByText('low',{exact:true}).click();data=await snap('underfloor-low');assert.equal(data.floorDepth,0);
@@ -110,15 +152,24 @@ try{
  await page.getByText('Blue Moon',{exact:true}).click();await page.getByText('cinematic',{exact:true}).click();data=await snap('moon-cinematic');assert.equal(data.reflection,768);
  await page.getByText('Reduce effects',{exact:true}).click();data=await snap('moon-reduced');assert.equal(data.reflection,0);assert.equal(data.finishing,null);assert.equal(data.particles,0);assert.equal(data.shafts,0);
  await page.getByText('Reduce effects',{exact:true}).click();await page.getByText('low',{exact:true}).click();await snap('moon-low-warmup');
- const memory=[];for(let i=0;i<3;i++){await page.getByText('cinematic',{exact:true}).click();await stable();await page.getByText('low',{exact:true}).click();await stable();memory.push((await page.evaluate(()=>window.__look)).memory);}
- assert.equal(memory[2].textures,memory[0].textures);assert.equal(memory[2].geometries,memory[0].geometries);report.qualityCycleMemory=memory;
+ }else{await page.getByText('cinematic',{exact:true}).click();await snap('resource-cinematic-warmup');await page.getByText('low',{exact:true}).click();await snap('resource-low-warmup');}
+ const memory=[];report.qualityCycleTextures=[];for(let i=0;i<3;i++){await page.getByText('cinematic',{exact:true}).click();await stable();await page.getByText('low',{exact:true}).click();await stable();memory.push((await page.evaluate(()=>window.__look)).memory);report.qualityCycleTextures.push(await page.evaluate(()=>window.__textureSnapshot()));}
+ report.qualityCycleMemory=memory;assert.equal(memory[2].textures,memory[0].textures);assert.equal(memory[2].geometries,memory[0].geometries);
+ if(!resourcesOnly){
+ const fogBeforePause=(await page.evaluate(()=>window.__look)).fogId;
+ for(const [button,name]of [['Settings pause','settings'],['Physics pause','physics']]){
+  await page.getByText(button,{exact:true}).click();await page.waitForFunction(()=>window.__look.paused);
+  const held=await page.evaluate(()=>window.__look);await page.waitForFunction(f=>window.__look.frames>f+30,held.frames,{timeout:30000});
+  const stopped=await snap(name+'-clock-paused');assert.deepEqual(stopped.time,held.time);assert.equal(stopped.particleTime,held.particleTime);assert.equal(stopped.fogId,fogBeforePause);
+  await page.getByText(button,{exact:true}).click();await page.waitForFunction(()=>!window.__look.paused);const resumed=await snap(name+'-clock-resumed');assert.ok(resumed.time.water>held.time.water,'the attended world resumes its shared clock');
+ }
+
  await page.getByText('Surrender',{exact:true}).click();await page.getByText('high',{exact:true}).click();data=await snap('surrender-before');assert.ok(data.motion.water>0);
  const pressureBefore=data;const camera=data.camera;await page.getByText('Raise cloth',{exact:true}).click();await page.waitForFunction(()=>window.__look?.quiet&&window.__look.stillness===1&&Object.values(window.__look.motion).every(x=>x===0),null,{timeout:45000});data=await snap('surrender-still');assert.deepEqual(data.camera,camera);assert.equal(data.particles,1);
- assert.ok(data.opacityObjects['scene-boundary-veil'] < pressureBefore.opacityObjects['scene-boundary-veil'] * .15, 'boundary pressure fades after Surrender');
- assert.ok(data.opacityObjects['scene-breath-field'] < pressureBefore.opacityObjects['scene-breath-field'] * .1, 'breathing field recedes');
+ assert.deepEqual(data.fallbacks,[],'canonical Surrender does not mount procedural pressure layers');
  assert.ok(data.particleOpacity < .001, 'decorative particles become imperceptible');
  const frozen=data;await page.waitForFunction(f=>window.__look.frames>f+40,data.frames,{timeout:30000});data=await snap('surrender-held');assert.deepEqual(data.time,frozen.time);assert.equal(data.particleTime,frozen.particleTime);
- for(const name of ['scene-boundary-veil','scene-breath-field','scene-path-guidance','scene-clearing-breath','master-lantern-flame']){assert.ok(data.motionObjects[name],name+' must be mounted');data.motionObjects[name].forEach((v,i)=>assert.ok(Math.abs(v-frozen.motionObjects[name][i])<.000001,name+' must stop'));}
+ assert.ok(data.motionObjects['master-lantern-flame']);data.motionObjects['master-lantern-flame'].forEach((v,i)=>assert.ok(Math.abs(v-frozen.motionObjects['master-lantern-flame'][i])<.000001,'local lantern motion must stop'));assert.deepEqual(data.fallbacks,[]);
  await page.getByText('Blue Moon',{exact:true}).click();data=await snap('motion-resumed');assert.ok(data.motion.water>0&&data.time.water>frozen.time.water);assert.ok(data.particleOpacity > .001, "particle visibility restores in the next scene");
 
  // Reverse geometry is intentionally present only before constellation formation.
@@ -141,11 +192,16 @@ try{
  await page.waitForFunction(frames=>window.__look.frames>frames+40,data.frames,{timeout:30000});
  assert.equal((await page.evaluate(()=>window.__look)).finale.completions,1,'completed formation must not repeat its handoff');
  await page.getByText('Blue Moon',{exact:true}).click();await stable();
- await page.getByText('Toggle world',{exact:true}).click();await page.waitForFunction(()=>window.__look===undefined);await page.getByText('Toggle world',{exact:true}).click();await snap('remounted');
- await page.getByText('Surrender',{exact:true}).click();await page.getByText('Runtime',{exact:true}).click();data=await snap('canonical-runtime-moving');assert.equal(data.authorities,1);assert.ok(data.motionObjects['master-lantern-flame']);assert.ok(data.motionObjects['scene-boundary-veil']);
+ await page.getByText('Toggle world',{exact:true}).click();await page.waitForFunction(()=>window.__look===undefined&&window.__surface?.fog===null&&window.__surface?.background===null);await page.getByText('Toggle world',{exact:true}).click();await snap('remounted');
+ await page.getByText('Surrender',{exact:true}).click();await page.getByText('Runtime',{exact:true}).click();data=await snap('canonical-runtime-moving');assert.equal(data.authorities,1);assert.ok(data.motionObjects['master-lantern-flame']);assert.deepEqual(data.fallbacks,[]);assert.deepEqual(data.competingGlobals,[]);
  await page.getByText('Raise cloth',{exact:true}).click();await page.waitForFunction(()=>window.__look.quiet&&window.__look.stillness===1&&Object.values(window.__look.motion).every(x=>x===0),null,{timeout:60000});data=await snap('canonical-runtime-still');
- const liveFrozen=data;await page.waitForFunction(f=>window.__look.frames>f+40,data.frames,{timeout:60000});data=await snap('canonical-runtime-held');assert.equal(data.particleTime,liveFrozen.particleTime);assert.deepEqual(data.time,liveFrozen.time);for(const n of ['scene-boundary-veil','scene-breath-field','master-lantern-flame'])assert.deepEqual(data.motionObjects[n],liveFrozen.motionObjects[n]);
+ const liveFrozen=data;await page.waitForFunction(f=>window.__look.frames>f+40,data.frames,{timeout:60000});data=await snap('canonical-runtime-held');assert.equal(data.particleTime,liveFrozen.particleTime);assert.deepEqual(data.time,liveFrozen.time);for(const n of ['master-lantern-flame'])assert.deepEqual(data.motionObjects[n],liveFrozen.motionObjects[n]);
  await page.getByText('Seer',{exact:true}).click();data=await snap('canonical-seer-single-mirror');assert.equal(data.reflection,384);assert.equal(data.semanticMirrorChildren,0,'semantic interaction anchor remains without a duplicate mirror model');assert.equal(data.authorities,1);
  await page.getByText('Reduce effects',{exact:true}).click();data=await snap('canonical-seer-reduced');assert.equal(data.reflection,0);assert.equal(data.finishing,null);assert.equal(data.semanticMirrorChildren,0);
- assert.ok(report.cases.every(c=>c.shadows<=1));assert.ok(report.cases.find(c=>c.name==='underfloor-cinematic').finishing.bloomTargets===4);assert.ok(report.cases.find(c=>c.name==='underfloor-high').finishing.method==='fxaa');assert.deepEqual(report.errors,[]);
+ assert.ok(report.cases.every(c=>c.shadows<=1&&c.authorities===1&&c.fallbacks.length===0&&c.competingGlobals.length===0&&Number.isFinite(c.fogDensity)&&Number.isFinite(c.exposure)));assert.ok(report.cases.find(c=>c.name==='underfloor-cinematic').finishing.bloomTargets===4);assert.ok(report.cases.find(c=>c.name==='underfloor-high').finishing.method==='fxaa');assert.deepEqual(report.errors,[]);
+ }
+}catch(error){
+ report.failure={error:String(error),snapshot:await page?.evaluate(()=>({look:window.__look,activity:window.__activity,textures:window.__textureSnapshot?.()})).catch(()=>null)};
+ await page?.screenshot({path:out+'/lifecycle-failure.png'}).catch(()=>{});
+ throw error;
 }finally{await browser?.close();server.kill('SIGTERM');await writeFile(out+'/scene-look-lifecycle.json',JSON.stringify(report,null,2));await rm(fixture,{recursive:true,force:true});}

@@ -1,10 +1,11 @@
 import { useProductionMaterialMaps } from "../materials/useProductionMaterialMaps";
-import { createContext, memo, useCallback, useContext, useMemo, type ReactNode } from "react";
+import { createContext, memo, useCallback, useContext, useMemo, useRef, type ReactNode } from "react";
 import * as THREE from "three";
 import { applyTactileShader, tactileDetailFor, tactileProgramKey, type StorySurface, type TactileDetail } from "./tactileShader";
 import { useSceneLook } from "../artDirection/SceneLookContext";
 import { resolveMaterialMemory, resolveSurfaceDefaults, type MaterialMemory } from "../materials/materialLibrary";
 import { createMaterialMapGuard } from "../materials/productionMaterialRuntime";
+import { attachMaterialShadow } from "../materials/materialShadowOwnership";
 
 export { TACTILE_PATTERNS, TACTILE_RELIEF_NORMAL, tactileDetailFor } from "./tactileShader";
 export type { StorySurface, TactileDetail } from "./tactileShader";
@@ -63,6 +64,12 @@ export const TactileMaterial = memo(function TactileMaterial({ surface, detail, 
     return result.multiplyScalar(state.brightness);
   }, [color, state.brightness, hasAuthoredAlbedo]);
   const mapGuard = useMemo(() => createMaterialMapGuard(mapsAllowed ? maps ?? productionMaps : undefined), [maps, productionMaps, mapsAllowed]);
+  const mapGuardRef = useRef(mapGuard);
+  mapGuardRef.current = mapGuard;
+  // R3F's attach interface describes generic instances; this material belongs
+  // to a mesh, and the callback identity survives map readiness/tier changes.
+  const attach = useCallback((mesh: unknown, material: unknown) =>
+    attachMaterialShadow(mesh as THREE.Mesh, material as THREE.MeshStandardMaterial, () => mapGuardRef.current), []);
   const shaderMemory = useMemo(() => ({ value: [0, 0, 0, 0] }), []);
   shaderMemory.value[0] = state.wetness; shaderMemory.value[1] = state.wear;
   shaderMemory.value[2] = state.damage; shaderMemory.value[3] = (memory?.reintegrated ?? look?.look.materials.reintegrated) ? 1 : 0;
@@ -71,6 +78,6 @@ export const TactileMaterial = memo(function TactileMaterial({ surface, detail, 
   }, [surface, resolved, shaderMemory, constructionCoordinates]);
   const cacheKey = useCallback(() => tactileProgramKey(surface, resolved, constructionCoordinates), [surface, resolved, constructionCoordinates]);
   const normalScale = useMemo(() => new THREE.Vector2(.24, .24), []);
-  return <meshStandardMaterial key={cacheKey()} normalScale={normalScale} color={tint} roughness={state.roughness} metalness={finish.metalness} side={side}
+  return <meshStandardMaterial attach={attach} key={cacheKey()} normalScale={normalScale} color={tint} roughness={state.roughness} metalness={finish.metalness} side={side}
     {...appearance} onBeforeRender={mapGuard} onBeforeCompile={compile} customProgramCacheKey={cacheKey} />;
 });

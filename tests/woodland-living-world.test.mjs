@@ -4,8 +4,8 @@ import { readFileSync } from 'node:fs';
 import { createMushroomClusterBuffers } from '../src/components/three/environmentArt/woodlandGrowthBuffers.ts';
 import { woodlandAccentsLayout } from '../src/components/three/environment/woodlandAccentsLayout.ts';
 import { createFireflyField, fireflyCount, FIREFLY_VERTEX, FIREFLY_FRAGMENT } from '../src/components/three/environment/woodlandFireflyField.ts';
-import { groundMistPatches, GROUND_MIST_VERTEX, GROUND_MIST_FRAGMENT } from '../src/components/three/artDirection/groundMistField.ts';
-const source = path => readFileSync(new URL(`../src/components/three/${path}`, import.meta.url), 'utf8');
+import { groundMistPatches, GROUND_MIST_VERTEX, GROUND_MIST_FRAGMENT } from '../src/world/atmosphere/groundMistField.ts';
+const source = path => readFileSync(new URL(path.startsWith("world/") ? `../src/${path}` : `../src/components/three/${path}`, import.meta.url), 'utf8');
 const cross = (a,b) => [a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
 const sub = (a,b) => a.map((v,i)=>v-b[i]);
 const dot = (a,b) => a.reduce((sum,v,i)=>sum+v*b[i],0);
@@ -105,7 +105,7 @@ test('mist retains original patch placements and positive scales',()=>{
   for(const patch of groundMistPatches('enchanted.rabbit-hole'))assert.ok(patch.every(Number.isFinite)&&patch.slice(3).every(v=>v>0));
 });
 test('mist batching wires shared instancing, proper normals and one bounded draw',()=>{
-  const code=source('artDirection/GroundMist.tsx');
+  const code=source('world/atmosphere/GroundMist.tsx');
   assert.equal((code.match(/<instancedMesh /g)||[]).length,1);assert.equal((code.match(/<shaderMaterial /g)||[]).length,1);
   for(const pattern of [/drawCallBudget: 1/,/computeBoundingBox/,/computeBoundingSphere/,/look\.budget\.shafts/,/presentation\.time\.vegetation/])assert.match(code,pattern);
   assert.match(GROUND_MIST_VERTEX,/normal \/ max\(instanceScale/);assert.match(GROUND_MIST_FRAGMENT,/float nearby=smoothstep/);
@@ -134,13 +134,13 @@ test('medium sky return is restrained and disabled for low/reduced-effects',asyn
 });
 test('lighting tier reaches the sole scene lighting owner',()=>{
   assert.match(source('artDirection/SceneLookDirector.tsx'),/<SceneLighting quality=\{quality\}/);
-  const code=source('artDirection/SceneLighting.tsx');
+  const code=source('world/lighting/SceneLighting.tsx');
   assert.match(code,/skyReturnStrength\(quality, presentation\.reducedEffects\)/);
   assert.match(code,/returnStrength > 0 && accent/);
   assert.match(code,/intensity=\{accent\.intensity \* returnStrength\} castShadow=\{false\}/);
 });
 test('low-detail sky bypasses cloud noise without adding a rendering pass',()=>{
-  const code=source('artDirection/SceneAtmosphere.tsx');
+  const code=source('world/atmosphere/SceneAtmosphere.tsx');
   assert.match(code,/if \(structure > \.001\) \{\s*float veil=cloud/);
   assert.equal((code.match(/<shaderMaterial /g)||[]).length,1);
 });

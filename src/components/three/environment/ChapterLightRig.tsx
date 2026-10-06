@@ -5,8 +5,13 @@ import * as THREE from "three";
 import { CHAPTER_ENVIRONMENTS, environmentTime, type EnvironmentFamily } from "./chapterEnvironment";
 
 /** Replaces a chapter's existing key light; no new shadow maps or global fog. */
-export const ChapterLightRig = memo(function ChapterLightRig({ family, reducedMotion = false, reducedEffects = false }: { family: EnvironmentFamily; reducedMotion?: boolean; reducedEffects?: boolean }) {
+type ChapterLightRigProps = { family: EnvironmentFamily; reducedMotion?: boolean; reducedEffects?: boolean };
+export const ChapterLightRig = memo(function ChapterLightRig(props: ChapterLightRigProps) {
   const presentation = useSceneLook();
+  return presentation ? null : <LegacyChapterLightRig {...props} />;
+});
+
+function LegacyChapterLightRig({ family, reducedMotion = false, reducedEffects = false }: ChapterLightRigProps) {
   const preset = CHAPTER_ENVIRONMENTS[family];
   const intensity = preset.keyIntensity * (reducedEffects ? preset.reducedKeyScale ?? 1 : 1);
   const target = useMemo(() => {
@@ -18,10 +23,9 @@ export const ChapterLightRig = memo(function ChapterLightRig({ family, reducedMo
     time.current = environmentTime(time.current, delta, !document.hidden, reducedMotion || reducedEffects);
     light.current.intensity = intensity * (reducedMotion || reducedEffects ? 1 : 1 + Math.sin(time.current * .8) * .025);
   });
-  if (presentation) return null;
   return <group name={`chapter-key:${family}`} userData={{ shadowMaps: 0, anchored: true }}>
     <primitive object={target} />
     {preset.keyType === "spot" ? <spotLight ref={light} position={preset.keyPosition} target={target} color={preset.keyColor} intensity={intensity} distance={15} decay={2} angle={1.02} penumbra={1} castShadow={false} />
       : <directionalLight position={preset.keyPosition} target={target} color={preset.keyColor} intensity={intensity} castShadow={false} />}
   </group>;
-});
+}

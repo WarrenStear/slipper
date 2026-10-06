@@ -56,9 +56,9 @@ test("the master lantern and canvas own their render responsibilities", () => {
   assert.doesNotMatch(atmosphere, /gl\.toneMapping|gl\.outputColorSpace/);
   assert.doesNotMatch(engine, /<WorldAtmosphere|<WorldLightingRig/);
   assert.match(read("src/world/atmosphere/CelestialMoon.tsx"), /function CelestialMoon/);
-  assert.match(read("src/world/atmosphere/SceneAtmosphere.tsx"), /<CelestialMoon/);
-  assert.match(scene, /from "\.\.\/\.\.\/world\/atmosphere\/SceneAtmosphere\.tsx"/);
-  assert.match(scene, /<SceneAtmosphere/);
+  assert.match(read("src/world/atmosphere/LegacySceneAtmosphere.tsx"), /<CelestialMoon/);
+  assert.match(scene, /from "\.\.\/\.\.\/world\/atmosphere\/LegacySceneAtmosphere\.tsx"/);
+  assert.match(scene, /<LegacySceneAtmosphere/);
   assert.match(read("src/world/forest/useForestTextures.ts"), /FOREST_GROUND_ALBEDO_PATH/);
   assert.match(read("src/world/forest/ContinuousForestBed.tsx"), /useSafeForestTextures/);
   assert.match(read("src/world/atmosphere/AtmosphericForestPanorama.tsx"), /FIRST_WOOD_PANORAMA_PATH/);
@@ -69,7 +69,7 @@ test("the master lantern and canvas own their render responsibilities", () => {
   assert.match(read("src/world/atmosphere/CinematicForestDepthPlate.tsx"), /forest-sky-horizon-v1\.webp/);
   assert.match(scene, /from "\.\/environment\/ProceduralDome"/);
   assert.match(read("src/components/three/environment/ProceduralDome.tsx"), /function ProceduralDome[\s\S]*skyFbm/);
-  assert.match(read("src/world/atmosphere/SceneAtmosphere.tsx"), /activeVisualState\.showStars && qualityProfile\.starMultiplier > 0/);
+  assert.match(read("src/world/atmosphere/LegacySceneAtmosphere.tsx"), /activeVisualState\.showStars && qualityProfile\.starMultiplier > 0/);
   assert.match(read("src/world/atmosphere/DistantForestSilhouetteRing.tsx"), /function DistantForestSilhouetteRing/);
   assert.match(scene, /<DistantForestSilhouetteRing/);
   assert.match(scene, /showDepthPlate=\{visualState\.biome === "firstWood" && qualityProfile\.quality !== "low"\}/);
@@ -540,7 +540,7 @@ test("the epilogue composes the travelled world from the current journey history
   assert.match(read("src/world/worldPresentationPolicy.ts"), /function isIntegratedFinaleEntry/);
   assert.match(read("src/world/worldPresentationPolicy.ts"), /function usesAuthoredCausalComposition/);
   assert.match(read("src/world/worldPresentationPolicy.ts"), /function hasAuthoredChapterMoon/);
-  assert.match(read("src/world/atmosphere/SceneAtmosphere.tsx"), /suppressAmbientMoon \? null : \(/);
+  assert.match(read("src/world/atmosphere/LegacySceneAtmosphere.tsx"), /suppressAmbientMoon \? null : \(/);
   assert.match(scene, /mode === "explore" && !suppressLegacyActiveLandmark \? <StoryText/);
 });
 

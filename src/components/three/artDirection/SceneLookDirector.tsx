@@ -6,21 +6,34 @@ import { useSettingsStore } from "../../../stores/useSettingsStore";
 import { useWorldStore } from "../../../stores/useWorldStore";
 import type { JourneySceneId } from "../../../lib/storyJourneyState";
 import { resolveSceneLook, type LookPoint, type LookQuality } from "./SceneLookRegistry";
-import { SceneLookContext, type ScenePresentation } from "./SceneLookContext";
-import { AuthoredLightShafts } from "./VolumetricLightShaft";
-import { GroundMist } from "./GroundMist";
-import { SceneLighting } from "./SceneLighting";
-import { SceneAtmosphere } from "./SceneAtmosphere";
+import { SceneLookContext, useSceneLook, type ScenePresentation } from "./SceneLookContext";
+import { AuthoredLightShafts } from "../../../world/atmosphere/VolumetricLightShaft";
+import { GroundMist } from "../../../world/atmosphere/GroundMist";
+import { SceneLighting } from "../../../world/lighting/SceneLighting";
+import { SceneAtmosphere } from "../../../world/atmosphere/SceneAtmosphere";
 import { ScenePostProcessing } from "./ScenePostProcessing";
 import { useStillnessState } from "../../../hooks/useStillnessState";
 import { ASSISTED_STILLNESS_EVENT } from "../rituals/RitualInteraction";
 import { advanceSceneMotion } from "./sceneMotion";
+import { SceneParticles } from "../../../world/atmosphere/SceneParticles";
+import { scenePresentationActive } from "../../../world/presentationActivity";
+import { RENDER_QUALITY_PROFILES } from "../renderQuality";
 
-/** The sole global look owner. CameraController owns the camera; this layer never writes story facts. */
-export function SceneLookDirector({ sceneId, quality, reducedEffects, reducedMotion, cameraAssistance, origin = [0, 0, 0], heading = 0, focusPosition, bloomIntensity = .6, vignetteIntensity = .1, children }: {
-  sceneId: JourneySceneId; quality: LookQuality; reducedEffects: boolean; reducedMotion: boolean; cameraAssistance: boolean;
-  origin?: LookPoint; heading?: number; focusPosition?: LookPoint | null; bloomIntensity?: number; vignetteIntensity?: number; children: ReactNode;
-}) {
+export type SceneLookDirectorProps = {
+  sceneId: JourneySceneId; quality: LookQuality; reducedEffects: boolean; reducedMotion: boolean;
+  /** Historic camera props are accepted by review callers; CameraController owns these. */
+  cameraAssistance?: boolean; focusPosition?: LookPoint | null;
+  origin?: LookPoint; heading?: number; bloomIntensity?: number; vignetteIntensity?: number; children: ReactNode;
+  particlesEnabled?: boolean; particleScale?: number;
+};
+
+/** The sole global look owner. Nested compatibility callers cannot create another rig. */
+export function SceneLookDirector(props: SceneLookDirectorProps) {
+  const existing = useSceneLook();
+  return existing ? <>{props.children}</> : <SceneLookOwner {...props} />;
+}
+
+function SceneLookOwner({ sceneId, quality, reducedEffects, reducedMotion, origin = [0, 0, 0], heading = 0, bloomIntensity = .6, vignetteIntensity = .1, particlesEnabled = true, particleScale = RENDER_QUALITY_PROFILES[quality].particleMultiplier, children }: SceneLookDirectorProps) {
   const objects = useJourneyStore(s => s.storyObjectStates);
   const flags = useJourneyStore(s => s.worldFlags);
   const measuredStillness = useStillnessState({ requiredSeconds: 2.4, enabled: sceneId === "sunset.stillness", observeCamera: true });
@@ -50,7 +63,8 @@ export function SceneLookDirector({ sceneId, quality, reducedEffects, reducedMot
   presentation.current = context;
   useEffect(() => activateCinematicProfile(), []);
   useFrame((_, delta) => {
-    const active = !document.hidden && !useSettingsStore.getState().drawerOpen && useWorldStore.getState().mode === "explore";
+    const world = useWorldStore.getState();
+    const active = scenePresentationActive({ visible: !document.hidden, focused: document.hasFocus(), overlayOpen: useSettingsStore.getState().drawerOpen, mode: world.mode, physicsPaused: world.physicsPaused });
     const dt = advanceSceneMotion(presentation.current, target, delta, active, reducedMotion, reducedEffects);
     advanceCinematicProfile(target.emotional, dt);
   }, -3);
@@ -58,6 +72,7 @@ export function SceneLookDirector({ sceneId, quality, reducedEffects, reducedMot
     <group name="scene-look-authority" userData={{ sceneId, hero: target.composition.heroLandmark, quality }}>
       <SceneAtmosphere heading={heading} />
       <group position={origin} rotation={[0, heading, 0]}><SceneLighting quality={quality} /><AuthoredLightShafts /><GroundMist /></group>
+      <SceneParticles particleScale={particleScale} enabled={particlesEnabled} />
       {target.budget.edgeSmoothing ? <ScenePostProcessing bloomIntensity={bloomIntensity} vignetteIntensity={vignetteIntensity} /> : null}
     </group>
     {children}

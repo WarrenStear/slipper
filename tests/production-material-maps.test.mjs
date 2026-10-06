@@ -61,6 +61,7 @@ test('material review metadata rejects malformed values without throwing or admi
 
 import { BufferGeometry, Float32BufferAttribute, Texture, MeshStandardMaterial, SRGBColorSpace, NoColorSpace, RepeatWrapping } from 'three';
 import { cloneReviewedMaterialMaps, createMaterialMapCache, createMaterialMapGuard, disposeMaterialMaps, requestReviewedMaterialMaps, MAX_MATERIAL_SOURCE_MAPS } from '../src/components/three/materials/productionMaterialRuntime.ts';
+import { attachMaterialShadow } from '../src/components/three/materials/materialShadowOwnership.ts';
 const texture = (width = 512, height = 512) => new Texture({ width, height });
 const deferred = () => { let resolve, reject; const promise = new Promise((yes, no) => { resolve = yes; reject = no; }); return { promise, resolve, reject }; };
 const tick = () => new Promise(resolve => setImmediate(resolve));
@@ -225,10 +226,11 @@ test('the actual tactile component gates both automatic and override maps by cha
   const map = texture(), exports = {};
   const host = (type, props) => ({ type, props });
   const imports = {
-    react: { createContext: value => ({ value }), memo: component => component, useContext: () => inherited, useMemo: callback => callback(), useCallback: callback => callback },
+    react: { createContext: value => ({ value }), memo: component => component, useContext: () => inherited, useMemo: callback => callback(), useCallback: callback => callback, useRef: value => ({ current: value }) },
     'react/jsx-runtime': { jsx: host, jsxs: host }, three: THREE,
     '../materials/useProductionMaterialMaps': { useProductionMaterialMaps: (_surface, enabled) => { requested = enabled; return enabled ? { map } : undefined; } },
     '../materials/productionMaterialRuntime': { createMaterialMapGuard },
+    '../materials/materialShadowOwnership': { attachMaterialShadow },
     './tactileShader': tactileShader,
     '../artDirection/SceneLookContext': { useSceneLook: () => null },
     '../materials/materialLibrary': materialLibrary,
