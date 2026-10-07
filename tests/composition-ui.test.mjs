@@ -74,8 +74,17 @@ test('reader footer keeps directed and completed capabilities and delegates ever
 });
 
 const mapProps={capabilities:getSlipperExperienceCapabilities('first-journey'),entries,activeEntryId:a.id,visitedEntryIds:entries.map(entry=>entry.id),sceneProximity:null,mobile:true,activePane:'constellation',onChangePane:noop,workspaceRef:{current:null},onReturnToForest:noop,onOpenEntry:noop,onGuideEntry:noop};
+async function waitForLazyMapOwner(){
+ const mounted=()=>cpu.elements().some(element=>element.type==='aside'&&element.props?.className?.startsWith('constellation-panel'))
+  && !cpu.elements().some(element=>element.props?.className==='forest-loader');
+ const deadline=Date.now()+10_000;
+ // The actual lazy TSX import needs loader I/O, not only resolved microtasks.
+ // Keep first-use Suspense and yield until its production owner replaces it.
+ while(!mounted()&&Date.now()<deadline)await cpu.asyncAct(()=>new Promise(resolve=>setImmediate(resolve)));
+ assert.ok(mounted(),'Actual lazy ConstellationMap must mount and remove its Suspense fallback within 10 seconds');
+}
 test('actual directed MapWorkspace retains one named read-only panel and reveals exactly witnessed entries despite all visited IDs',async()=>{
- seed([a.id]);const before=snapshot(),calls=[],ref={current:null};cpu=mount(MapWorkspace,{...mapProps,workspaceRef:ref,onReturnToForest:()=>calls.push('forest'),onOpenEntry:id=>calls.push(id),onGuideEntry:id=>calls.push(id)});await cpu.asyncAct(()=>{});
+ seed([a.id]);const before=snapshot(),calls=[],ref={current:null};cpu=mount(MapWorkspace,{...mapProps,workspaceRef:ref,onReturnToForest:()=>calls.push('forest'),onOpenEntry:id=>calls.push(id),onGuideEntry:id=>calls.push(id)});await waitForLazyMapOwner();
  assert.equal(ref.current.props['aria-label'],'Story map workspace');assert.equal(ref.current.props.tabIndex,-1);assert.equal(ref.current.props['data-constellation-scope'],'witnessed-only');
  assert.equal(cpu.elements().filter(element=>element.props?.role==='tablist').length,0);assert.equal(cpu.elements().filter(element=>element.props?.role==='tabpanel').length,0);
  assert.equal(cpu.elements().filter(element=>element.props?.className==='archive-index').length,0);
@@ -86,7 +95,7 @@ test('actual directed MapWorkspace retains one named read-only panel and reveals
 });
 
 test('actual full mobile workspace preserves controlled tab selection, keyboard focus and linked panel IDs without progression',async()=>{
- seed([a.id]);const before=snapshot(),changes=[];cpu=mount(MapWorkspace,{...mapProps,capabilities:getSlipperExperienceCapabilities('free-woods'),visitedEntryIds:[a.id],onChangePane:pane=>changes.push(pane)});await cpu.asyncAct(()=>{});
+ seed([a.id]);const before=snapshot(),changes=[];cpu=mount(MapWorkspace,{...mapProps,capabilities:getSlipperExperienceCapabilities('free-woods'),visitedEntryIds:[a.id],onChangePane:pane=>changes.push(pane)});await waitForLazyMapOwner();
  const tabs=cpu.elements().filter(element=>element.props?.role==='tab');assert.equal(tabs.length,2);const first=tabs[0],second=tabs[1];
  assert.equal(first.props['aria-selected'],true);assert.equal(first.props.tabIndex,0);assert.equal(second.props.tabIndex,-1);
  let prevented=0;cpu.act(()=>first.props.onKeyDown({key:'End',preventDefault(){prevented++;}}));assert.deepEqual(changes,['archive']);assert.equal(prevented,1);assert.equal(focused,second);
@@ -97,7 +106,7 @@ test('actual full mobile workspace preserves controlled tab selection, keyboard 
 });
 
 test('desktop workspace omits mobile tab semantics and delegates full archive callbacks without altering target IDs',async()=>{
- seed([a.id]);const calls=[];cpu=mount(MapWorkspace,{...mapProps,mobile:false,capabilities:getSlipperExperienceCapabilities('free-woods'),entries:[a,b],visitedEntryIds:[a.id],onOpenEntry:id=>calls.push(['open',id]),onGuideEntry:id=>calls.push(['guide',id])});await cpu.asyncAct(()=>{});
+ seed([a.id]);const calls=[];cpu=mount(MapWorkspace,{...mapProps,mobile:false,capabilities:getSlipperExperienceCapabilities('free-woods'),entries:[a,b],visitedEntryIds:[a.id],onOpenEntry:id=>calls.push(['open',id]),onGuideEntry:id=>calls.push(['guide',id])});await waitForLazyMapOwner();
  assert.equal(cpu.elements().filter(element=>element.props?.role==='tablist'||element.props?.role==='tabpanel').length,0);
  const cards=cpu.elements().filter(element=>element.props?.className?.startsWith('archive-index-card'));
  cpu.act(()=>cards[0].props.onClick());cpu.act(()=>cards[1].props.onClick());assert.deepEqual(calls,[['open',a.id],['guide',b.id]]);

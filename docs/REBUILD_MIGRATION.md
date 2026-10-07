@@ -1028,3 +1028,20 @@ device test skips remain. Physical tests use real floor gestures and walking;
 completed menu/reader tests use explicitly labelled capability fixtures. Native
 evidence is in `phase-11-composition-preparation`. Later chapter, Constellation,
 material/audio/photo changes and obsolete-source cleanup remain separate phases.
+
+Cloudflare deployed composition commit `e4f283f` successfully as
+`ce23b988-5b4b-4c6d-89c2-9874b4a0404e`; the custom domain reports that exact
+clean `main` revision. Two fresh live native journeys passed on high desktop
+and low/reduced portrait, including physical floor/walking admission and the
+earned reader/partial map. Evidence is in `cloudflare-e4f283f-native`.
+
+Hosted composition validation found two premature lazy-map assertions: the CPU
+harness had flushed resolved microtasks without yielding for the actual TSX
+module's filesystem/loader work. The tests now keep first-use Suspense and yield
+the real event loop until the actual Constellation owner is mounted and its
+loading fallback is gone, with a ten-second deadline. No import preload, fixed
+sleep, production change or weakened privacy/tab assertion is involved. All
+fourteen focused cases pass on Node 24.15.0 and CI-major Node 22.23.3; the entire
+1,215-case unit suite passes on Node 22.23.3. Original failed hosted receipts
+remain in `phase-d-preparation/hosted-e4f283f-review`; the repaired commit still
+requires its own complete hosted result.
