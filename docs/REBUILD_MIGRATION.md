@@ -1084,3 +1084,70 @@ Hosted run 37598261403 certifies the prior `bcdb9bd` commit: source/build/securi
 decoder delivery and all five browser projects passed. Cloudflare production
 `780fd2f5-d063-4fd5-be69-d97f4a1f4c02` serves that exact clean main revision.
 The next pushed commit requires its own served-revision verification.
+
+### Visual finishing direction — 7 October 2026
+
+The current production brief retains the extracted narrative, player, world,
+scene and UI owners. Further work concerns rendered composition and performance:
+forest foundation; authored hero fallbacks; Broken Floor and First Wood; water
+worlds; domestic worlds; transformation worlds; Constellation and Epilogue;
+valuable material additions; audio and explicitly mapped photographic memories;
+then a complete journey restraint pass. Every scene is judged at arrival,
+discovery, transformation and departure. Appearance fixtures remain distinct
+from earned physical progression evidence.
+
+The material parent-transfer repair releases a component's former private depth
+material when R3F reconstructs an instanced mesh. Actual installed R3F Strict
+Mode tests cover repeated transfers and independent sibling ownership. Native
+Metal confirms four abandoned depth materials and two retained programs in the
+negative control, versus zero abandoned depths and zero programs after unmount
+with the repair. Shader references plateau after the first reconstruction. The
+full Node 22 check passes 1,224 unit and seven security cases. The broader House
+review's earlier baseline shader-count failures are retained separately and are
+not represented as passing lifetime evidence.
+
+Fresh, unseeded mobile-high and desktop-cinematic journeys were profiled through
+physical floor wipes, inversion and the first approximately 25-metre walk. Chrome
+traces, source-mapped CPU profiles and bounded WebGL call observations identify
+the first-memory render burst: 283 ms on the mobile profile and 404 ms on the
+desktop profile in the second capture. Program-info queries account for 221.6 ms
+and 328.2 ms respectively; a separate preceding mount/geometry task costs about
+67–68 ms. The driver supports parallel shader compilation. These are measured
+local Chromium/Apple M1 runs, not real-phone frame-rate certification or proof of
+an OS-level cold shader cache. Raw traces and retained failed reviews are under
+`artifacts/rebuild-20261005/arrival-performance-preparation` outside this checkout.
+No shader-error checks were disabled to obtain these measurements.
+
+### Visual phase 1 — forest foundation
+
+The eight existing tree archetypes now have different basal shoulders, branch
+birth heights, torn-limb scars and separated crown layers. Moss and bark vertex
+tones strengthen root contact. Understory uses four unequal growth pockets and
+unplanted intervals; distant trees form three depth bands and irregular groves.
+The remaining Meadow and Hearth stepping-disc rows are removed. Canonical
+routes, collisions, interaction targets and world topology are unchanged.
+
+The trunk budget stays at 208 vertices / 292 triangles per archetype, with 140
+low-tier or 532 richer crown triangles. Understory and distant-tree population
+limits, batches, material maps and frame owners are unchanged. Actual worker
+matrices verify that the new short scars remain inside the prior rooted envelope.
+
+Native Metal evidence covers 18 successful before/after art pairs across all
+four quality tiers, desktop, portrait, landscape, reduced effects and reduced
+motion, including the four First Wood moments and contextual ground views.
+Successful pairs have no increased draw, triangle, light, shadow, program,
+texture, geometry or frame-owner count. Whole-scene arrival lifecycle reviews
+pass. A cropped departure baseline released two formerly visible geometries on
+remount; its failed strict review is retained, and the subsequent cropped views
+are explicitly art-only comparisons rather than whole-world lifetime evidence.
+An earlier transient high-portrait program-cache mismatch is also retained;
+identical held-clock all-tier warmups pass the paired comparison.
+
+The full phase-1 check passes 1,234 unit and seven security cases, content and
+asset validation, TypeScript, production build and Pages Functions. Fresh mobile
+and desktop runs complete the physical floor-wipe, inversion and first-memory
+walk. Earlier desktop attempts with long stationary gaps between test-driver
+inputs remain failed; the unchanged continuity guard passes on the reruns.
+The images, raw receipts and failed attempts are retained externally under
+`artifacts/rebuild-20261005/phase-1-forest-*` and
+`artifacts/rebuild-20261005/arrival-performance-preparation`.

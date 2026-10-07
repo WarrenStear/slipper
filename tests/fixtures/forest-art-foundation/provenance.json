@@ -1,0 +1,21 @@
+{
+  "purpose": "Exact production owner bodies immediately before the new visual-forest-foundation changes; includes current architecture and material fix, without F overlays.",
+  "sources": {
+    "forestGeometry.txt": {
+      "source": "src/world/forest/forestGeometry.ts",
+      "sha256": "d47a2fb8339ed212778dc3a5fab9e26b3e4c7b573f5091bc1e49112bc281f6b4"
+    },
+    "pathUnderstoryHabitat.txt": {
+      "source": "src/world/guidance/pathUnderstoryHabitat.ts",
+      "sha256": "0b12fc20e01f10ec4b6010ed2e2b4d0e4f9f052cf2976e0af3c6929b00183baa"
+    },
+    "distantWoodlandLayout.txt": {
+      "source": "src/components/three/environment/distantWoodlandLayout.ts",
+      "sha256": "94d63e16437e2aa675025bf9278028ebdbf5a7f4cda9b5bc12778de334726ebd"
+    },
+    "FirstWoodScene.txt": {
+      "source": "src/scenes/first-wood/FirstWoodScene.tsx",
+      "sha256": "2b56c633067bc177b2b024ef42e1170981ed4919deffb53c0686cec74f5a68dc"
+    }
+  }
+}

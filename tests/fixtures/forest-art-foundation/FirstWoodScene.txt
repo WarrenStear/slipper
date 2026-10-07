@@ -10,6 +10,7 @@ import {
   FloatingMotes,
   LanternProp,
   SceneGround,
+  StonePath,
   WaterSurface,
 } from "../../components/three/chapters/ChapterPrimitives";
 import { ForestDepth } from "../../components/three/environment/EnvironmentDressing";
@@ -40,6 +41,7 @@ function FirstWoodSceneComponent({
     <group>
       <SceneGround radius={16} color="#8a886c" textured />
       <ForestDepth quality={qualityProfile.quality} reducedEffects={reducedEffects} variant="enchanted-wood" />
+      {!isRabbitHole ? <StonePath color="#716756" count={11} length={18} /> : null}
       {!isRabbitHole ? <FloatingMotes
         qualityProfile={qualityProfile}
         reducedEffects={reducedEffects}

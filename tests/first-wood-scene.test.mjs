@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { runInNewContext } from 'node:vm';
 import ts from 'typescript';
 import { getStoryObject, eventsForScene } from '../src/storyEvents/storyEventRegistry.ts';
@@ -47,11 +48,18 @@ const nodes = (tree, type) => elements(tree).filter(node => node.type === type);
 const plain = value => JSON.parse(JSON.stringify(value));
 const variants = () => ['low','medium','high','cinematic'].flatMap(quality => [false,true].flatMap(reducedEffects => [false,true].flatMap(reducedMotion => [false,true].map(eventDriven => ({ quality,reducedEffects,reducedMotion,eventDriven })))));
 
-test('substantive FirstWood owner retains byte-identical meadow/hearth presentation for all original state/quality/accessibility gates', () => {
+function withoutPathDiscs(value) {
+  if(Array.isArray(value))return value.filter(item=>item!==null&&item!==false&&item?.type!=='StonePath').map(withoutPathDiscs);
+  if(value&&typeof value==='object')return Object.fromEntries(Object.entries(value).map(([key,item])=>[key,withoutPathDiscs(item)]));
+  return value;
+}
+
+test('FirstWood retains exact meadow/hearth presentation except removed competing path discs across every gate', () => {
   for (const sceneId of ['enchanted.friendship-meadow','enchanted.masked-hearth']) for (const v of variants()) {
     const before = renderScene(former,sceneId,v.eventDriven,v.quality,v.reducedEffects,v.reducedMotion);
     const after = renderScene(current,sceneId,v.eventDriven,v.quality,v.reducedEffects,v.reducedMotion);
-    assert.deepEqual(plain(after.tree), plain(before.tree), `${sceneId} ${JSON.stringify(v)}`);
+    assert.equal(nodes(after.tree,'StonePath').length,0); assert.equal(nodes(before.tree,'StonePath').length,1);
+    assert.deepEqual(withoutPathDiscs(plain(after.tree)), withoutPathDiscs(plain(before.tree)), `${sceneId} ${JSON.stringify(v)}`);
     assert.equal(after.exports.FirstWoodScene, after.exports.EnchantedWoodChapter);
     assert.equal(after.exports.default, after.exports.FirstWoodScene);
   }
@@ -116,5 +124,16 @@ test('actual actor owner suppresses only Rabbit lantern duplicate while preservi
     const actual=nodes(renderActors(sceneId,owned,placed),'AuthoredActor').map(node=>node.props.definition);
     const expected=cues.filter(cue=>!(sceneId.startsWith('sunset.')&&cue.actor==='seer')&&(cue.actor!=='lantern'||(sceneId!=='enchanted.rabbit-hole'&&!owned&&!placed)));
     assert.deepEqual(plain(actual),plain(expected),`${sceneId} owned=${owned} placed=${placed}`);
+  }
+});
+
+test('all three current First Wood bodies remove only StonePath, preserving every collider, landmark and gate',()=>{
+  const baseline=read('tests/fixtures/forest-art-foundation/FirstWoodScene.txt');
+  assert.equal(createHash('sha256').update(baseline).digest('hex'),'2b56c633067bc177b2b024ef42e1170981ed4919deffb53c0686cec74f5a68dc');
+  for(const id of ['enchanted.rabbit-hole','enchanted.friendship-meadow','enchanted.masked-hearth'])for(const v of variants()){
+    const before=renderScene(baseline,id,v.eventDriven,v.quality,v.reducedEffects,v.reducedMotion).tree;
+    const after=renderScene(current,id,v.eventDriven,v.quality,v.reducedEffects,v.reducedMotion).tree;
+    assert.deepEqual(withoutPathDiscs(plain(after)),withoutPathDiscs(plain(before)));
+    assert.equal(nodes(after,'StonePath').length,0);
   }
 });

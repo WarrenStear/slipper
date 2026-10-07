@@ -66,22 +66,12 @@ export function createPathUnderstoryInstances(segment: MazePathSegment, quality:
   const source = pathHabitatForScene(getJourneySceneForEntry(segment.sourceEntry.id)?.id ?? "");
   const target = pathHabitatForScene(getJourneySceneForEntry(segment.targetEntry.id)?.id ?? "");
   return Array.from({ length: count }, (_, index) => {
-    // Four unequal growth pockets leave long unplanted intervals. Each pocket
-    // exists even on low; richer tiers add companions within those same banks.
-    const pocket = Math.min(3, Math.floor(index * 4 / count));
-    const starts = [0, Math.ceil(count / 4), Math.ceil(count / 2), Math.ceil(count * 3 / 4)];
-    const size = (starts[pocket + 1] ?? count) - starts[pocket];
-    const member = index - starts[pocket];
-    const centre = [.09, .34, .61, .88][pocket] + (seededUnit(seed, pocket + 401) - .5) * .028;
-    const t = Math.max(.025, Math.min(.975, centre + ((member + .5) / size - .5) * .09
-      + (seededUnit(seed, index + 7) - .5) * .011));
+    const t = Math.max(.025, Math.min(.975, (index + .7) / (count + .4) + (seededUnit(seed, index + 7) - .5) * .032));
     const point = curvedPathPointAt(segment, t, morph), tangent = curvedPathTangentAt(segment, t, morph);
-    const side = (pocket + Math.floor(member / 3)) % 2 === 0 ? -1 : 1;
-    const offset = 2.35 + seededUnit(seed, pocket + 431) * .85 + seededUnit(seed, index + 31) * .85;
+    const side = index % 2 === 0 ? -1 : 1, offset = 2.25 + seededUnit(seed, index + 31) * 1.85;
     const length = Math.max(.0001, Math.hypot(tangent.x, tangent.y));
     const x = point.x - tangent.y / length * offset * side, z = point.y + tangent.x / length * offset * side;
-    const scale = .56 + seededUnit(seed, pocket + 457) * .18 + seededUnit(seed, index + 53) * .36;
-    const spread = .84 + seededUnit(seed, index + 89) * .32;
+    const scale = .62 + seededUnit(seed, index + 53) * .44, spread = .9 + seededUnit(seed, index + 89) * .28;
     const warmth = seededUnit(seed, index + 97), heading = Math.atan2(tangent.x, tangent.y) + (seededUnit(seed, index + 79) - .5) * 1.18;
     const step = .35, y = sampleGroundY(x, z);
     const slopeX = (sampleGroundY(x + step, z) - sampleGroundY(x - step, z)) / (step * 2);

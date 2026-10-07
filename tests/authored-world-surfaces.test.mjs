@@ -108,10 +108,10 @@ test('habitat resources dispose independently and introduce no animation or coll
   assert.match(s,/drawCallBudget: 3/);
 });
 
-test('First Wood owner retains root threshold and grounds one guide while Rabbit omits competing path discs', () => {
+test('First Wood owner retains root threshold and grounds one guide while all its scenes omit competing path discs', () => {
   const s=read('src/scenes/first-wood/FirstWoodScene.tsx');
   assert.match(s,/isRabbitHole \? <RootThreshold \/>/);assert.doesNotMatch(s,/torusGeometry/);
-  assert.match(s,/!isRabbitHole \? <StonePath color="#716756" count=\{11\} length=\{18\}/);
+  assert.doesNotMatch(s,/StonePath/);
   assert.match(s,/!isRabbitHole \? <FloatingMotes/);
   assert.match(s,/getStoryObject\("enchanted\.guide"\)/);
   assert.match(s,/position=\{rabbitGuideGroundPosition\}[^>]*light=\{false\}/);

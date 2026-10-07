@@ -101,7 +101,8 @@ test('scene wiring retains existing landmarks and completion callbacks', () => {
   const end=source('src/components/three/chapters/IntegratedFinalTableau.tsx');
   for(const pattern of [/name="final-woods-remain"/,/<WitnessedMemoryConstellation/,/<ReverseMemoryLights/,/onFormationComplete=\{onFinalConstellationFormationComplete\}/,/<FinalWoodlandDetails/,/<ChapterLightRig family="lantern-epilogue"/])assert.match(end,pattern);
   const wood=source('src/scenes/first-wood/FirstWoodScene.tsx');
-  for(const pattern of [/<MeadowFlowers/,/variant="enchanted-wood"/,/<FabricVeil/,/<LanternProp/,/<WaterSurface/,/<StonePath/])assert.match(wood,pattern);
+  for(const pattern of [/<MeadowFlowers/,/variant="enchanted-wood"/,/<FabricVeil/,/<LanternProp/,/<WaterSurface/])assert.match(wood,pattern);
+  assert.doesNotMatch(wood,/StonePath/);
 });
 
 // Conservative crown-envelope checks complement screenshots. They do not prove
