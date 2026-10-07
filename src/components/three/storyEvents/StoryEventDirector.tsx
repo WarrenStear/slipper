@@ -323,6 +323,7 @@ export function StoryEventDirector({ sceneId, reducedMotion, enabled = true, qui
       const chapterOwnsVisual = (sceneId.startsWith("sunset.") && object.kind === "mirror")
         || (sceneId === "blue-moon.intimacy" && object.kind === "swan")
         || (sceneId === "blue-moon.sanctuary" && object.id === "blue-moon.water")
+        || (sceneId === "river.wash" && object.id === "river.water")
         || (sceneId === "fire.boundary" && object.id === "fire.flame")
         || (sceneId === "fork.weighing" && object.id === "fork.weighing-stone");
       const placement = state === "reset" || state === "resting" ? undefined : object.targets?.find(item => item.id === placements[object.id]);

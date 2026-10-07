@@ -1257,3 +1257,43 @@ The full Node 22 release check passes 1,249 unit and seven security cases,
 TypeScript, content/assets, production build and Pages Functions. Raw images,
 normal physical receipts, the original failure and controlled comparisons are
 retained under `artifacts/rebuild-20261005/phase3-*` outside this checkout.
+
+### Visual phase 4 — water, reflection and quiet banks
+
+Blue Moon has a larger powder-blue moon, darker weathered bridge and lower
+targets for the existing key/fill lighting. The chapter-local duplicate forest
+and isolated decorative lily are removed; the canonical forest remains. Seer's
+duplicate trees and stepping discs are removed around the monumental mirror.
+Its existing capture and fallback surfaces clear with actual stillness, using
+scalar uniforms on their current materials rather than another reflection view.
+
+River opens horizontally while retaining its fire-facing bank and wash target.
+The large decorative Surrender disc and the small duplicate water-object disc
+are removed. The latter uses the existing chapter-owned visual rule: its semantic
+group, pose, radius, fresh physical observation and wash outcomes remain intact.
+The soot response remains and fades after washing. Surrender's wider white cloth
+has shallow smooth folds and receives the existing moon key from a more legible
+direction; its pole edge, raise state, motion owner and reduced settings persist.
+Inactive fire is smaller and quieter, with no redundant ember layer. Active
+Fire and all canonical interaction requirements remain unchanged.
+
+The final change adds no asset, light, reflection pass, capture target or frame
+owner. The cloth adds fourteen triangles within substantial whole-scene savings
+from removed duplicate decoration. Three new installed-R3F tests cover the
+cloth's ownership, outline/pole attachment, raised/rest state and disposal.
+
+Incremental matched native reviews retain 74 images across 37 pairs, covering
+all nine water/Seer/Fire subscenes. Distributed profiles include low, medium,
+high, cinematic, portrait, landscape, reduced effects and reduced motion; this
+is not a Cartesian device/scene certification. Strict arrival reviews retain
+the unchanged three-cycle and remount resource bounds. Separate moment galleries
+exercise real reducer-replayed discovery, transformation and departure states.
+Final River images show the uninterrupted surface and preserved soot release;
+the final Surrender profiles retain cloth contrast and the natural exposed bank.
+These are rendered scene fixtures, not earned physical journey evidence.
+
+The unsuccessful Blue terrain-tint audition and the faceted first cloth audition
+remain outside production. Their reports are retained alongside the selected
+lighting, smooth-cloth and chapter-water variants in `phase4-*`. No render limit
+was weakened. The complete Node 22 release check passes 1,252 unit and seven
+security tests, TypeScript, content/assets, production build and Pages Functions.

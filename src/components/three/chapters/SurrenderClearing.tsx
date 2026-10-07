@@ -6,7 +6,6 @@ import {
   Beam,
   BirdSwarm,
   FabricVeil,
-  StonePath,
 } from "./ChapterPrimitives";
 
 type SurrenderClearingProps = {
@@ -37,17 +36,7 @@ function SurrenderClearingComponent({
       position={[0, 0, 8.4]}
       userData={{ storyRoute: "surrender", ritual: "release-and-surrender", active, resolved }}
     >
-      <group position={[0, 0, -5.2]}>
-        <StonePath color={awake ? "#8e887c" : "#514c45"} count={7} length={10.5} />
-      </group>
-      <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-        <circleGeometry args={[4.6, 40]} />
-        <meshStandardMaterial color={awake ? "#46453f" : "#2c2925"} roughness={1} />
-      </mesh>
-      <mesh position={[0, 0.045, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[3.35, 3.46, 48]} />
-        <meshBasicMaterial color={awake ? "#d9d6cb" : "#615e57"} transparent opacity={awake ? 0.58 : 0.22} />
-      </mesh>
+
 
       {actorsEnabled ? <group position={[0, awake ? 3.6 : 3.15, -0.2]} scale={awake ? 1 : 0.78}>
         <Beam from={[-1.95, -3.35, 0]} to={[-1.95, 2.05, 0]} radius={0.055} color="#80786a" />

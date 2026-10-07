@@ -1,10 +1,9 @@
 import { HeroAssetSlot } from "../actors/HeroAssetSlot";
-import { ForestDepth } from "../environment/EnvironmentDressing";
 import { ChapterLightRig } from "../environment/ChapterLightRig";
 import { SanctuaryWater } from "../environment/SanctuaryWater";
 import { memo, useMemo } from "react";
 import { SwanModel } from "../storyEvents/SwanModel";
-import { BotanicalBatch, BotanicalCluster } from "../environmentArt/EnvironmentArt";
+import { BotanicalBatch } from "../environmentArt/EnvironmentArt";
 import { TimberAssembly } from "./ChapterArt";
 import { SanctuaryShoreline } from "./SanctuaryShoreline";
 import type { ConstructionPiece } from "./chapterArtGeometry";
@@ -33,7 +32,7 @@ export function WornSanctuaryBridge() {
     position: [Math.sin(index * 2.7) * .075, Math.sin(index * .45) * .018, -7.38 + index * .438],
     size: [3.65 + Math.sin(index * 1.8) * .16, .18, .408 + Math.sin(index * 2.4) * .011],
     rotation: [0, Math.sin(index * 3.1) * .006, Math.sin(index * 1.2) * .005],
-    color: ["#b0a18d", "#9b9382", "#c3b59b", "#a59989", "#b5aa96"][index % 5],
+    color: ["#8e8777", "#7f8074", "#9a9382", "#858275", "#929080"][index % 5],
   })), []);
   const supports = useMemo<ConstructionPiece[]>(() => [-1, 1].flatMap(side => [
     { position: [side * 1.47, -.26, 0] as [number, number, number], size: [.23, .35, 15.5] as [number, number, number] },
@@ -54,7 +53,7 @@ export function WornSanctuaryBridge() {
     ]),
   ]), []);
   return <group position={[0, .3, 0]} name="weathered-sanctuary-bridge">
-    <TimberAssembly pieces={boards} color="#b8ad98" surface="wet-wood" />
+    <TimberAssembly pieces={boards} color="#aaa38f" surface="wet-wood" />
     <TimberAssembly pieces={supports} color="#756955" surface="wet-wood" />
     <TimberAssembly name="bridge-post-caps-and-knee-braces" pieces={joinery} color="#8b7c62" surface="wet-wood" />
     <TimberAssembly name="bridge-iron-fasteners" surface="metal" color="#393b34" pieces={BRIDGE_PLANKS.flatMap(i => [-1, 1].map(side => ({ position: [side * 1.47, .096 + Math.sin(i * .45) * .018, -7.38 + i * .438], size: [.028, .009, .04] })))} />
@@ -71,8 +70,8 @@ function SanctuaryMoon({
       <MoonDisc
         position={[0, 0, 0]}
         radius={2.8}
-        authoredRadius={6.5}
-        color="#dceaf4"
+        authoredRadius={7}
+        color="#bdddf2"
         intensity={1.5}
         qualityProfile={qualityProfile}
         reducedEffects={reducedEffects}
@@ -107,10 +106,9 @@ function BlueMoonSanctuaryChapterComponent({
 
   return (
     <group>
-      <SceneGround radius={21} color="#82928a" textured />
+      <SceneGround radius={21} color="#26332f" textured />
       <SanctuaryWater reducedMotion={reducedMotion} reducedEffects={reducedEffects} />
       <SanctuaryShoreline />
-      <ForestDepth quality={qualityProfile.quality} reducedEffects={reducedEffects} />
       <SanctuaryMoon
         qualityProfile={qualityProfile}
         reducedEffects={reducedEffects}
@@ -120,7 +118,6 @@ function BlueMoonSanctuaryChapterComponent({
       <HeroAssetSlot id="moon-bridge"><WornSanctuaryBridge /></HeroAssetSlot>
       <BotanicalBatch kind="lily" seed={23} color="#d5c8cf" placements={LILIES.slice(1, lilyCount).map((lily, index) => ({ position: [lily.x, .1, lily.z], scale: lily.scale * 1.4, rotation: [0, index * .7, 0] }))} />
 
-      <BotanicalCluster kind="lily" position={[-7, .1, -5]} scale={.63} seed={23} />
       {!eventDriven ? <group name="blue-moon-candle-path" position={[-4.2, 0, -2]}>
         {candlesLit ? (
           <CandleField qualityProfile={qualityProfile} reducedEffects={reducedEffects} count={22} radius={8.2} color="#ffd49a" />

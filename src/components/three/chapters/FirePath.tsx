@@ -152,7 +152,7 @@ function WolfGuardian({ resting }: { resting: boolean }) {
 }
 
 /** One concentrated fire reads against quiet ash, with no candle-ring proxy. */
-function BoundaryFire({ resolved, reducedMotion }: { resolved: boolean; reducedMotion: boolean }) {
+function BoundaryFire({ resolved, reducedMotion, active }: { resolved: boolean; reducedMotion: boolean; active: boolean }) {
   const presentation = useSceneLook();
   const tongues = useRef<THREE.InstancedMesh>(null);
   const transform = useMemo(() => new THREE.Object3D(), []);
@@ -184,7 +184,7 @@ function BoundaryFire({ resolved, reducedMotion }: { resolved: boolean; reducedM
     if (!tongues.current) return;
     const time = reducedMotion ? 0 : presentation?.time.flame ?? 0;
     for (let i = 0; i < 7; i++) {
-      const height = (1.3 + i % 3 * .32) * (1 + Math.sin(time * (5.1 + i * .43) + i) * .08);
+      const height = (active ? 1 : .46) * (1.3 + i % 3 * .32) * (1 + Math.sin(time * (5.1 + i * .43) + i) * .08);
       transform.position.set(Math.sin(i * 2.4) * .55, .22 + height * .5, Math.cos(i * 2.4) * .42);
       transform.scale.set(.24 + i % 3 * .055, height, .22 + i % 2 * .035);
       transform.rotation.set(Math.sin(time * 2 + i) * .035, i * .9, Math.cos(time * 2.7 + i) * .04);
@@ -195,7 +195,7 @@ function BoundaryFire({ resolved, reducedMotion }: { resolved: boolean; reducedM
   return <group name="contained-ash-and-timber-fire" position={FIRE_SOURCE_LOCAL_POSITION}>
     <mesh geometry={ash} position={[0, .014, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow><TactileMaterial surface="ash" color="#3e3b32" roughness={1} /></mesh>
     <TimberAssembly pieces={logs} color="#302823" surface="charred-wood" />
-    {resolved ? null : <instancedMesh ref={tongues} geometry={geometry} args={[undefined, undefined, 7]} frustumCulled={false}><meshBasicMaterial vertexColors /></instancedMesh>}
+    {resolved ? null : <instancedMesh ref={tongues} geometry={geometry} args={[undefined, undefined, 7]} frustumCulled={false}><meshBasicMaterial vertexColors color={active ? "#ffffff" : "#665548"} /></instancedMesh>}
   </group>;
 }
 
@@ -208,7 +208,7 @@ function FirePathComponent({
   surrendered,
   actorsEnabled = true,
 }: FirePathProps) {
-  const intensity = surrendered ? 0.2 : resolved ? 0.28 : active ? 3.2 : 1.45;
+  const intensity = surrendered ? 0.2 : resolved ? 0.28 : active ? 3.2 : .34;
   const placement = firePathPlacement(active);
 
   return (
@@ -218,16 +218,16 @@ function FirePathComponent({
       rotation={placement.rotation}
       userData={{ storyRoute: "fire", ritual: "burn-what-cannot-continue", active, resolved }}
     >
-      <StonePath color={resolved ? "#53514a" : active ? "#5d3a2b" : "#49382f"} count={10} length={17} fork={-0.28} />
-      <BoundaryFire resolved={resolved} reducedMotion={reducedMotion} />
+      {active ? <StonePath color={resolved ? "#53514a" : active ? "#5d3a2b" : "#49382f"} count={10} length={17} fork={-0.28} /> : null}
+      <BoundaryFire resolved={resolved} reducedMotion={reducedMotion || !active} active={active} />
       <CharredThreshold active={active && !resolved} />
-      <EmberAndAsh
+      {active ? <EmberAndAsh
         qualityProfile={qualityProfile}
         reducedEffects={reducedEffects}
         reducedMotion={reducedMotion}
         active={active}
         resolved={resolved}
-      />
+      /> : null}
       {resolved ? (
         <group name="fire-path-new-growth" position={FIRE_SOURCE_LOCAL_POSITION}>
           {FIRE_RECOVERY_SHOOTS.map(([x, y, z, rotation]) => (
@@ -244,7 +244,7 @@ function FirePathComponent({
         color={resolved ? "#8d765c" : active ? "#ff6b31" : "#b94f2e"}
         intensity={intensity}
         distance={active ? 22 : 14}
-        reducedMotion={reducedMotion}
+        reducedMotion={reducedMotion || !active}
       />
     </group>
   );

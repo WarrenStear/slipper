@@ -19,7 +19,7 @@ type AuthoredLook = {
 const worlds = {
   room: { source: "window", keyColor: "#b5c8d2", keyPosition: [5.8, 5.2, -6], keyIntensity: 1.2, sky: "#11161a", horizon: "#252c30", fog: "#1c262d", ground: "#211e19", leaf: "#23372f", reflection: "floor", wetness: .8, wear: .8, saturation: .82 },
   wood: { source: "canopy", keyColor: "#d6d9b9", keyPosition: [-7, 13, 8], keyIntensity: 1.35, sky: "#10202b", horizon: "#53635a", fog: "#253c3d", ground: "#222b21", leaf: "#354e3e", reflection: "none", wetness: .28, wear: .7, saturation: .86 },
-  moon: { source: "moon", keyColor: "#cadfe9", keyPosition: [6, 18, 38], keyIntensity: 2, sky: "#050c17", horizon: "#182e40", fog: "#162b35", ground: "#101b22", leaf: "#23393c", reflection: "moonwater", wetness: .72, wear: .74, saturation: .8 },
+  moon: { source: "moon", keyColor: "#cadfe9", keyPosition: [6, 18, 38], keyIntensity: 1.2, sky: "#050c17", horizon: "#182e40", fog: "#162b35", ground: "#101b22", leaf: "#23393c", reflection: "moonwater", wetness: .72, wear: .74, saturation: .8 },
   nest: { source: "dawn", keyColor: "#e3d0ac", keyPosition: [8, 11, -7], keyIntensity: 1.6, sky: "#657b8a", horizon: "#b1ac91", fog: "#7e8e87", ground: "#373c2a", leaf: "#526447", reflection: "none", wetness: .08, wear: .65, saturation: .88 },
   seer: { source: "sunset", keyColor: "#dbb08c", keyPosition: [-16, 5, 10], keyIntensity: 1.5, sky: "#192b3e", horizon: "#967465", fog: "#35434c", ground: "#252c2a", leaf: "#374640", reflection: "mirror", wetness: .54, wear: .9, saturation: .7 },
   house: { source: "domestic", keyColor: "#e8c69b", keyPosition: [-3.8, 3.1, -.4], keyIntensity: 28, sky: "#151b20", horizon: "#343c40", fog: "#302a24", ground: "#2d2720", leaf: "#3b4234", reflection: "none", wetness: .12, wear: .9, saturation: .76 },
@@ -44,7 +44,7 @@ export const SCENE_LOOKS = {
   "enchanted.masked-hearth": image("wood", "small domestic light behind branches", [0, 1.5, 6], .5, .72, .18, { keyIntensity: .9 }),
   "blue-moon.sanctuary": image("moon", "narrow bridge beneath the moon", [0, 2, 9], .85, .2, .65),
   "blue-moon.intimacy": image("moon", "white cloth and Swan against black water", [-3, 1.2, 4], .75, .18, .6),
-  "blue-moon.caged-bird": image("moon", "familiar bridge held by closed architecture", [0, 2, 5], .68, .3, .5, { keyIntensity: 1.65 }),
+  "blue-moon.caged-bird": image("moon", "familiar bridge held by closed architecture", [0, 2, 5], .68, .3, .5, { keyIntensity: 1.05 }),
   "nest.two-hands": image("nest", "protected linen centre in morning light", [0, 1, 3], .48, .3, .3),
   "nest.unsupported-cycle": image("nest", "warm child space inside occupied edges", [0, 1, 3], .28, .75, .18, { keyIntensity: 1.3 }),
   "nest.protection": image("nest", "safe centre with breathing room", [0, 1.5, 3], .6, .28, .45),
@@ -58,7 +58,7 @@ export const SCENE_LOOKS = {
   "wolf-swan.convergence": image("integration", "one open passage through three familiar materials", [0, 1.5, 8], .72, .24, .72),
   "fire.boundary": image("fire", "contained fire beside a broad dark river", [0, 1.5, 4], .6, .3, .52),
   "river.wash": image("river", "open water with remembered embers in view", [5, .2, 5], .78, .2, .74),
-  "river.release-surrender": image("river", "still cloth between water and extinguished ash", [0, 1.8, 8], .9, .12, .8, { saturation: .66, keyIntensity: 1.1 }),
+  "river.release-surrender": image("river", "still cloth between water and extinguished ash", [0, 1.8, 8], .9, .12, .8, { saturation: .66, keyIntensity: 1.1, keyPosition: [12, 18, -7] }),
   "fork.weighing": image("fork", "enclosed familiar bend beside an unreadable horizon", [0, 1, 9], .72, .38, .85),
   "fork.four-verbs": image("fork", "warmth held behind a chosen door", [0, 1, 6], .76, .3, .86),
   "fork.relinquish-hope": image("fork", "waiting light beside an unpromised horizon", [0, 1.2, 4], .84, .25, .9),
@@ -91,7 +91,7 @@ function fillFloor(sceneId: JourneySceneId) {
   // Outdoor readability reveals bark/cloth without adding another light.
   // Water remains dark; the motivated key still establishes the composition.
   if (sceneId.startsWith("enchanted.")) return .3;
-  if (sceneId === "blue-moon.sanctuary" || sceneId === "blue-moon.intimacy") return .24;
+  if (sceneId === "blue-moon.sanctuary" || sceneId === "blue-moon.intimacy") return .14;
   if (sceneId.startsWith("blue-moon.") || sceneId.startsWith("epilogue.")) return .09;
   if (sceneId.startsWith("crowned.")) return .32;
   return .17;

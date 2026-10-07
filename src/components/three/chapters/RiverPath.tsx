@@ -4,8 +4,6 @@ import { memo } from "react";
 import { SanctuaryShoreline } from "./SanctuaryShoreline";
 import type { RenderQualityProfile } from "../renderQuality";
 import {
-  MoonDisc,
-  StonePath,
   WaterSurface,
 } from "./ChapterPrimitives";
 
@@ -21,7 +19,6 @@ type RiverPathProps = {
 function SwanGuardian() { return <group name="river-swan-guardian" position={[2.45, .18, 4.8]} rotation={[0, -.5, 0]}><group rotation={[0, Math.PI / 2, 0]} scale={1.55}><AuthoredNpcSilhouette kind="swan" /></group></group>; }
 
 function RiverPathComponent({
-  qualityProfile,
   reducedEffects,
   reducedMotion,
   active,
@@ -39,23 +36,16 @@ function RiverPathComponent({
       rotation={[0, active ? 0 : 0.36, 0]}
       userData={{ storyRoute: "river", ritual: "wash-what-still-aches", active, resolved }}
     >
-      <StonePath color={active ? "#8a9698" : "#647075"} count={10} length={17} fork={0.28} y={0.055} />
-      <WaterSurface reducedMotion={reducedMotion} reducedEffects={reducedEffects} flow={.65}
-        position={[0, 0.018, 3.4]}
-        size={[7.8, 15.5]}
-        color={resolved ? "#294a57" : active ? "#1d4458" : "#193441"}
+      {/* Keep the fire-facing bank at x=-3.9 and the wash target at [0, 3].
+          Only the quiet bank opens, using the same draw and unchanged floor height. */}
+      <WaterSurface reducedMotion={reducedMotion} reducedEffects={reducedEffects} flow={resolved ? .18 : .38}
+        position={[3.3, 0.018, 3.4]}
+        size={[14.4, 15.5]}
+        roughness={resolved ? .3 : .27}
+        color={resolved ? "#233c40" : active ? "#162c35" : "#17292e"}
         opacity={resolved ? 0.93 : 0.86}
       />
-      <group name="river-sediment-margins" position={[0, 0, 3.4]} scale={[.39, 1, .91]}><SanctuaryShoreline /></group>
-      <MoonDisc
-        position={[2.9, 8.8, -7.8]}
-        radius={active ? 2.55 : 2.15}
-        color={resolved ? "#e4edef" : "#cfdee7"}
-        intensity={active ? 1.8 : 1.25}
-        qualityProfile={qualityProfile}
-        reducedEffects={reducedEffects}
-        reducedMotion={reducedMotion}
-      />
+      <group name="river-sediment-margins" position={[3.3, 0, 3.4]} scale={[.72, 1, .91]}><SanctuaryShoreline /></group>
       {actorsEnabled ? <SwanGuardian /> : null}
       <LegacyChapterLight><pointLight
         position={[0, 2.4, 3.2]}

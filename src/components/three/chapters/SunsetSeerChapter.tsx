@@ -3,8 +3,6 @@ import { memo } from "react";
 import { TimberAssembly } from "./ChapterArt";
 import {
   SceneGround,
-  StonePath,
-  TreeGrove,
 } from "./ChapterPrimitives";
 import { ReflectionDirector } from "../reflections/ReflectionDirector";
 import { WaterMemoryReflection } from "../reflections/WaterMemoryReflection";
@@ -21,9 +19,7 @@ function SunsetSeerChapterComponent({
   return (
     <group>
       <SceneGround radius={18} color="#211f1d" />
-      <TreeGrove qualityProfile={qualityProfile} reducedEffects={reducedEffects} tint="#31352f" trunk="#2b211c" radius={18} />
       <WaterMemoryReflection truthful={isTruthful} reducedEffects={reducedEffects} />
-      <StonePath color="#5d574f" count={9} length={14} y={0.06} />
 
       <ReflectionDirector
         sceneId={scene.id}

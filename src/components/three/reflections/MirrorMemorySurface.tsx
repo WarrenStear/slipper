@@ -127,6 +127,11 @@ function MirrorMemorySurfaceComponent({
     if (!material) return;
     if (!presentation) time.current = environmentTime(time.current, delta, !document.hidden, reducedMotion || reducedEffects);
     material.uniforms.uTime.value = reducedMotion || reducedEffects ? 0 : presentation ? presentation.time.water : time.current;
+    // A settled reflection clears the existing aged skin, including fallback tiers.
+    // This is a scalar on the current material, with no new view or motion owner.
+    const clarity = presentation ? Math.min(1, Math.max(0, presentation.stillness)) : Number(still);
+    const baseOpacity = liveReflection ? .16 : reducedEffects ? .62 : .54;
+    material.uniforms.uOpacity.value = baseOpacity - clarity * (liveReflection ? .07 : .08);
     material.uniforms.uDistortion.value = presentation
       ? reducedMotion || reducedEffects ? 0 : (warm ? .065 : .04) * (1 - presentation.stillness)
       : THREE.MathUtils.damp(

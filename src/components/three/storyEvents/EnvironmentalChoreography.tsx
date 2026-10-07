@@ -154,6 +154,22 @@ function DomesticResponse({ state, house, reducedMotion }: { state: Environmenta
   </group>;
 }
 
+/** Shallow static folds keep the entire original outline and pole edge fixed.
+ * R3F retains the sole geometry owner; the existing group owns all cloth motion. */
+function foldSurrenderCloth(geometry: THREE.PlaneGeometry) {
+  const positions = geometry.attributes.position;
+  const uv = geometry.attributes.uv;
+  for (let index = 0; index < positions.count; index += 1) {
+    const u = uv.getX(index), v = uv.getY(index);
+    const interior = Math.sin(u * Math.PI) * Math.sin(v * Math.PI);
+    positions.setZ(index, interior * .16 * Math.sin(u * Math.PI * 5));
+  }
+  positions.needsUpdate = true;
+  geometry.computeVertexNormals();
+  geometry.computeBoundingBox();
+  geometry.computeBoundingSphere();
+}
+
 function WhiteFabric({ raised, reducedMotion }: { raised: boolean; reducedMotion: boolean }) {
   const presentation = useSceneLook();
   const relocation = useJourneyStore(state => state.sceneRelocationRevision);
@@ -172,7 +188,7 @@ function WhiteFabric({ raised, reducedMotion }: { raised: boolean; reducedMotion
       : cloth.current.position.y + (target - cloth.current.position.y) * (1 - Math.exp(-delta * .6));
     cloth.current.rotation.z = reducedMotion ? 0 : Math.sin((presentation?.time.cloth ?? clock.elapsedTime) * .42) * (presentation ? presentation.motion.cloth * .13 : getCurrentCinematicProfile().airMovement * .13);
   });
-  return <group position={[1, 0, 4]} name="surrender-white-fabric-response"><Beam from={[-0.7, 0, 0]} to={[-0.7, 3.4, 0]} radius={0.025} color="#6a6558" /><group ref={cloth} position={[0, raised ? 2.3 : 0.8, 0]}><mesh><planeGeometry args={[1.4, 0.85]} /><meshStandardMaterial color="#e5e4d9" roughness={1} side={THREE.DoubleSide} /></mesh></group></group>;
+  return <group position={[1, 0, 4]} name="surrender-white-fabric-response"><Beam from={[-0.7, 0, 0]} to={[-0.7, 3.4, 0]} radius={0.025} color="#6a6558" /><group ref={cloth} position={[0, raised ? 2.3 : 0.8, 0]}><mesh position={[.5, 0, 0]}><planeGeometry args={[2.4, 1.25, 4, 2]} onUpdate={foldSurrenderCloth} /><meshStandardMaterial color="#e5e4d9" roughness={1} side={THREE.DoubleSide} /></mesh></group></group>;
 }
 
 function ChosenContinuity({ memory, creation, atHome, reducedMotion }: { memory: string; creation: string; atHome: boolean; reducedMotion: boolean }) {

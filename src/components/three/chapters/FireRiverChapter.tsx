@@ -48,17 +48,17 @@ function FireRiverChapterComponent({
       }}
     >
       <SceneGround radius={23} color={surrendered ? "#282826" : "#24201d"} />
-      <TreeGrove
+      {atFire ? <TreeGrove
         qualityProfile={qualityProfile}
         reducedEffects={reducedEffects}
         tint={surrendered ? "#303531" : "#292d29"}
         trunk="#211a17"
         radius={23}
-      />
+      /> : null}
 
-      <group name="fork-threshold" position={[0, 0, -3.7]}>
+      {atFire ? <group name="fork-threshold" position={[0, 0, -3.7]}>
         <StonePath color="#5c554a" count={6} length={8.5} />
-      </group>
+      </group> : null}
 
       <FirePath
         qualityProfile={qualityProfile}
