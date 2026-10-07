@@ -11,8 +11,8 @@ export const AuthoredNpcSilhouette = memo(function AuthoredNpcSilhouette({ kind,
   const alpha = Math.min(1, Math.max(0, Number.isFinite(opacity) ? opacity : 1));
   const appearance = { transparent: alpha < 1, opacity: alpha, depthWrite: alpha >= 1 };
   return <group name={`authored-${kind}-silhouette`} userData={{ forwardAxis: "+Z", appearanceOnly: true }}>
-    <mesh geometry={geometry.body} receiveShadow><TactileMaterial surface={kind === "swan" ? "paper" : kind === "phantom" ? "linen" : "velvet"} color={kind === "swan" ? "#e0ded2" : kind === "phantom" ? "#b4bfbe" : "#474a42"} roughness={kind === "swan" ? .78 : .96} side={THREE.DoubleSide} {...appearance} /></mesh>
-    <mesh geometry={geometry.accent}><TactileMaterial surface={kind === "phantom" ? "velvet" : "paper"} color={kind === "swan" ? "#ac7854" : kind === "phantom" ? "#303b3c" : "#60665a"} roughness={.9} {...appearance} /></mesh>
+    <mesh geometry={geometry.body} receiveShadow><TactileMaterial surface={kind === "swan" ? "paper" : kind === "phantom" ? "linen" : "velvet"} vertexColors={kind !== "phantom"} color={kind === "swan" ? "#e5e1d5" : kind === "phantom" ? "#b4bfbe" : "#60635a"} roughness={kind === "swan" ? .78 : .96} side={THREE.DoubleSide} {...appearance} /></mesh>
+    <mesh geometry={geometry.accent}><TactileMaterial surface={kind === "phantom" ? "velvet" : "paper"} vertexColors={kind !== "phantom"} color={kind === "swan" ? "#a47c5c" : kind === "phantom" ? "#303b3c" : "#727669"} roughness={.9} {...appearance} /></mesh>
     {kind !== "phantom" ? <mesh geometry={geometry.dark}><meshStandardMaterial color="#222925" roughness={.65} {...appearance} /></mesh> : null}
   </group>;
 });

@@ -1,10 +1,11 @@
+// Frozen constructor reviewed in root native studio 2026-10-07T11:01:05.735164+00:00.
+// Historical Candidate export names are required by the existing golden loader.
 import { Color, CylinderGeometry, Float32BufferAttribute, LatheGeometry, MathUtils, Vector2, type BufferGeometry } from "three";
 import { createLanternHousingGeometry } from "./heroGeometry.ts";
 import { mergeArtGeometries } from "./authoredGeometry.ts";
 
-/** UNREVIEWED native fallback candidate. This is not a production asset or an
- * approved visual change. Existing coordinate/material/draw contracts remain.
- */
+/** Frozen hero finish reviewed in the native studio; canonical release
+ * acceptance is tracked separately. This constructor admits no GLB. */
 export function createCandidateLanternHousingGeometry(): BufferGeometry {
   const housing = createLanternHousingGeometry();
   const additions: BufferGeometry[] = [];
@@ -32,10 +33,10 @@ export function createCandidateLanternHousingGeometry(): BufferGeometry {
     const x = position.getX(i), y = position.getY(i), z = position.getZ(i);
     // Soot gathers toward the chimney cowl; rubbed horizontal seams and the
     // handled bail retain warmer brass. No baked photograph, glow or new map.
-    const soot = MathUtils.smoothstep(y, .71, .94) * .20;
+    const soot = MathUtils.smoothstep(y, .71, .94) * .23;
     const burner = (1 - MathUtils.smoothstep(Math.abs(y - .264), .022, .068)) * .08;
-    const touched = MathUtils.smoothstep(y, .98, 1.15) * .055;
-    const rubbed = Math.abs(normal.getY(i)) * (y < .23 || y > .72 ? .075 : .025);
+    const touched = MathUtils.smoothstep(y, .98, 1.15) * .12;
+    const rubbed = Math.abs(normal.getY(i)) * (y < .23 || y > .72 ? .12 : .025);
     const variation = .025 * Math.sin(x * 29 + y * 13 + z * 21);
     const value = MathUtils.clamp(.82 - soot - burner + touched + rubbed + variation, .5, 1);
     tint.setRGB(value, Math.min(1, value * .97 + rubbed * .04), Math.min(1, value * .9 + rubbed * .05));
@@ -46,14 +47,15 @@ export function createCandidateLanternHousingGeometry(): BufferGeometry {
   return geometry;
 }
 
-/** Contained asymmetric wick-tip candidate; topology, colour gradient and all
+/** Candidate narrower contained asymmetric wick tip; topology, colour gradient and all
  * runtime flame pulse/rotation/brightness formulas stay unchanged.
  */
 export function shapeCandidateLanternFlame(geometry: BufferGeometry) {
   const position = geometry.getAttribute("position");
   for (let i = 0; i < position.count; i++) {
     const amount = MathUtils.smootherstep(position.getY(i), .005, .108);
-    position.setX(i, position.getX(i) + .007 * amount);
+    position.setX(i, position.getX(i) * .72 + .007 * amount);
+    position.setZ(i, position.getZ(i) * .72);
   }
   geometry.computeVertexNormals(); geometry.computeBoundingBox(); geometry.computeBoundingSphere();
   return geometry;

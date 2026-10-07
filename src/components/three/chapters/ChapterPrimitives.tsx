@@ -769,7 +769,7 @@ export const HouseShell = memo(function HouseShell({
 
 export const KeyProp = memo(function KeyProp({
   position = [0, 1.1, 0],
-  color = "#b99252",
+  color = "#a18a63",
   scale = 1,
 }: {
   position?: Vec3;
@@ -779,7 +779,7 @@ export const KeyProp = memo(function KeyProp({
   const geometry = useMemo(createKeyGeometry, []);
   useEffect(() => () => geometry.dispose(), [geometry]);
   return <group position={position} rotation={[Math.PI / 2, 0, .18]} scale={scale}>
-    <HeroAssetSlot id="key"><mesh name="worn-warded-key" geometry={geometry} castShadow><TactileMaterial surface="metal" color={color} vertexColors metalness={.64} roughness={.48} memory={{ wear: .72, damage: .12 }} /></mesh></HeroAssetSlot>
+    <HeroAssetSlot id="key"><mesh name="worn-warded-key" geometry={geometry} castShadow><TactileMaterial surface="metal" color={color} vertexColors metalness={.58} roughness={.61} memory={{ wear: .72, damage: .12 }} /></mesh></HeroAssetSlot>
   </group>;
 });
 

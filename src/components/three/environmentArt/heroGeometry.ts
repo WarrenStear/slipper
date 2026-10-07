@@ -54,7 +54,7 @@ export function createKeyGeometry() {
   const bit = new THREE.ExtrudeGeometry(stem, { depth: .075, bevelEnabled: true, bevelSize: .009, bevelThickness: .008, bevelSegments: 1, curveSegments: 1, steps: 1 });bit.translate(0,0,-.0375);
   const barrel = createSweptGeometry([[.23,0,0],[.32,.008,0],[.72,.012,0],[1.19,.004,0]],[.054,.046,.039,.042],10,14);
   const shoulder = new THREE.LatheGeometry([[.049,.23],[.068,.265],[.066,.31],[.049,.34]].map(([r,y])=>new THREE.Vector2(r,y)),12);shoulder.rotateZ(-Math.PI/2);
-  return agedMetal(mergeArtGeometries([bow,barrel,shoulder,bit]));
+  return finishHandledKey(agedMetal(mergeArtGeometries([bow,barrel,shoulder,bit])));
 }
 
 /** Warm rubbed edges over blackened metal; stable vertex colour, no extra draw. */
@@ -67,6 +67,21 @@ function agedMetal(geometry: THREE.BufferGeometry) {
     colors.set([patina+edge*.12,patina+edge*.07,patina*.94],i*3);
   }
   geometry.setAttribute("color",new THREE.BufferAttribute(colors,3));return geometry;
+}
+
+/** Use the existing forged bow and cut ward: wear follows fingers and lock contact. */
+function finishHandledKey(geometry: THREE.BufferGeometry) {
+  const p=geometry.getAttribute("position"),n=geometry.getAttribute("normal"),color=geometry.getAttribute("color");
+  for(let i=0;i<p.count;i++) {
+    const x=p.getX(i),y=p.getY(i),z=p.getZ(i);
+    const shoulder=Math.exp(-Math.pow((x-.285)/.078,2));
+    const broadFace=Math.abs(n.getZ(i)),touch=x<.19?THREE.MathUtils.smoothstep(Math.hypot(x+.045,y),.16,.31):0;
+    const ward=x>.92?THREE.MathUtils.smoothstep(Math.abs(y),.04,.24):0;
+    const value=THREE.MathUtils.clamp(.62+touch*.27+ward*.12+broadFace*.065-shoulder*.18+.022*Math.sin(x*37+y*23),.40,1);
+    color.setXYZ(i,value,value*.985,value*.925);
+    if(x<.20)p.setY(i,y*(.963+.009*Math.sin(x*14)));
+  }
+  geometry.computeVertexNormals();geometry.computeBoundingBox();geometry.computeBoundingSphere();return geometry;
 }
 
 /** Rolled fuel reservoir, open vent slots, pressed guards and pinned bail handle. */
@@ -111,7 +126,19 @@ export function createMirrorFrameGeometry(width=5.4,height=6) {
     const hole=new THREE.Path();hole.moveTo(-x,-y);hole.lineTo(-x,y);hole.lineTo(x,y);hole.lineTo(x,-y);hole.closePath();shape.holes.push(hole);
     const rail=new THREE.ExtrudeGeometry(shape,{depth,bevelEnabled:true,bevelSize:.012,bevelThickness:.014,bevelSegments:1,steps:1,curveSegments:10});rail.translate(0,0,z);parts.push(rail);
   }
-  return agedMetal(mergeArtGeometries(parts));
+  const geometry=agedMetal(mergeArtGeometries(parts)),p=geometry.getAttribute("position"),color=geometry.getAttribute("color");
+  // Keep every opening-edge coordinate exact; settle the outer moulding into
+  // worn joinery, with the strongest wear at corners and the lower sill.
+  for(let i=0;i<p.count;i++) {
+    const x=p.getX(i),y=p.getY(i),z=p.getZ(i),outer=Math.max(Math.abs(x)-width/2,Math.abs(y)-height/2);
+    const corner=THREE.MathUtils.smoothstep(Math.abs(x),width*.35,width*.49)*THREE.MathUtils.smoothstep(Math.abs(y),height*.37,height*.49);
+    const low=1-THREE.MathUtils.smoothstep(y,-height*.48,-height*.26);
+    const rubbed=THREE.MathUtils.smoothstep(z,-.06,.12);
+    const value=THREE.MathUtils.clamp(.74+rubbed*.16-corner*.19-low*.11+.045*Math.sin(y*2.9+x*.7),.43,.96);
+    color.setXYZ(i,value,value*.98,value*.925);
+    if(outer>.04)p.setZ(i,z-.010*corner*(.5+.5*Math.sin(x*9+y*7)));
+  }
+  geometry.computeVertexNormals();geometry.computeBoundingBox();geometry.computeBoundingSphere();return geometry;
 }
 
 /** The shoulder/neck line carries recognition; the lower contour remains incomplete. */

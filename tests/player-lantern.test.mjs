@@ -185,11 +185,11 @@ test("reviewed wick shape preserves flame topology/colour and the exact glass/gl
 });
 
 
-test("extracted material flags and exact glow shaders preserve the actual current owner", () => {
+test("material flags and exact glow shaders remain stable with the reviewed metal finish", () => {
   const actual = createPlayerLanternMaterials(), frozen = reference();
   for (const name of ["metal", "glass", "flame", "glow"]) {
     for (const key of ["type", "transparent", "opacity", "depthWrite", "depthTest", "side", "blending", "toneMapped", "vertexColors", "roughness", "metalness", "emissiveIntensity", "vertexShader", "fragmentShader"]) assert.equal(actual[name][key], frozen.materials[name][key], `${name}.${key}`);
-    if (actual[name].color) vectorClose(actual[name].color, frozen.materials[name].color);
+    if (actual[name].color) vectorClose(actual[name].color, name === "metal" ? new THREE.Color("#5b523d") : frozen.materials[name].color);
     if (actual[name].emissive) vectorClose(actual[name].emissive, frozen.materials[name].emissive);
   }
   assert.equal(actual.glow.uniforms.glowOpacity.value, .075);

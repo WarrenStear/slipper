@@ -1,5 +1,5 @@
 {
-  "baseline": "d933acfe57bc92f08473b39bc7c396c1ef61d55b",
+  "baseline": "d933acfe57bc92f08473b39bc7c396c1ef61d55b; six Wolf/Swan cases from 2026-10-07T11:01:05.735164+00:00 reviewed native hero studio",
   "description": "SHA-256 of expanded Float32 position/normal/UV attributes from the immutable authored-art baseline, omitting only triangles with exactly coincident vertex positions. Captured before geometry indexing/pole optimization.",
   "cases": {
     "chair": {
@@ -46,19 +46,21 @@
       "triangles": 2028,
       "attributes": {
         "body": {
-          "position": "a10a994af7ac21c4286ba859d74cc2c6cfff1f74494f5c5710824fa40eb22634",
+          "position": "269d86b21c1b6996839bd375129cf4c162a11381020f8a565aaa69cae8492e73",
           "uv": "c46a0f0d20272f852952b1974b588e4e5bc0deded61c27309c9d287c7e29f8d8",
-          "normal": "be95eef12e656f544e21e40543b9e9e1a0a2a4cb91c5f79dac8b1c936441c05f"
+          "normal": "719618407656fb79ce29e8c09648aac42fcf2b13835726e6a06f3ba7e110aa60",
+          "color": "2692144df016bd38699f7b0b31cfbcd7171696577e16b144d6ca0088ea2ff3f2"
         },
         "accent": {
-          "position": "78a227e62068d3cf8251dbf06a69a9174ffadb7e4617db75a2c96ce329c12396",
+          "position": "a491bb041ed1cf54fe4cd7e9a5009e16bcc9ecb5f3112dc243988663d26163fb",
           "uv": "82371c404618f12040610e80e5180c3f03a566b265b14414b72c00ce4ba1bbc6",
-          "normal": "b90145b6964af070ddb24855fecc198c872e707c8f1843f5118c8ad0eee696cc"
+          "normal": "d798e2ab57dc34856557bba9e2ef57a20ee8888f2f421abbc02d23a6389dd0a1",
+          "color": "9b09c6f983ab798d16225cfbf47321e578713912dbffa124560e3c5cc0bff713"
         },
         "dark": {
-          "position": "3af90e8d6783fc5d5a9fade8e1e2d5fa82cd4b3aad1ee636829dafbfdb55c399",
+          "position": "f418877624e05027c5fc2217776cc8dbd331d28dca3ed5ac23f6fd8e685142b2",
           "uv": "07165aecc1e3402dfc5afc70851d1e9bdb3bdbc91ef7ca61dde20c64dd122c79",
-          "normal": "49634a48e318bc64cf0dbf7a43ba200d3ea930e1dfcd97438cc211b6aee25a70"
+          "normal": "de618c66aed28e1b956c77f40ac7527df2f4688bd40ea6518ab2ef43da16d90c"
         }
       }
     },
@@ -66,19 +68,21 @@
       "triangles": 2028,
       "attributes": {
         "body": {
-          "position": "59710207734d5be08a3aae42281c21fa0e305577192b891486285de321d8e737",
+          "position": "32e8b62965514d718d124a5f60d989ad8a0c1661c9c86b5ca6e40db593a9b3ed",
           "uv": "c46a0f0d20272f852952b1974b588e4e5bc0deded61c27309c9d287c7e29f8d8",
-          "normal": "0bd66598598c8dc29ecbde240f3bc1782920785c7f4277ffccd6e882050e3b7a"
+          "normal": "3cf1ed5202962f1052aeddbb79d7bf3de6a118fbb6d3f1caae538e3fc5277930",
+          "color": "9bef0a46cfec19ccae415eecdca9b04a8ab8abcfd735fbfecbdcbc341a6c3141"
         },
         "accent": {
-          "position": "29304f170155c42fadc00858b57d94327f509aaaea65823ca8c90c83ae350342",
+          "position": "57d2c8fa68fab2aee0e6e6789712f4937c8b17508960ff8c2ed28ed92292ae22",
           "uv": "82371c404618f12040610e80e5180c3f03a566b265b14414b72c00ce4ba1bbc6",
-          "normal": "7091a786f2c05adca7726fee192abfbd06af98bf78914338258f37b1377d5df7"
+          "normal": "6216896fab0547f6a4f2b6e8e625c37f43dc07c4e54183798c1cfd17a0217343",
+          "color": "8d0016cfcde1c80c8fcf89873a30daee7ba2ffeb764e76b85a696a410243bcbf"
         },
         "dark": {
-          "position": "0a092c7f07497815367d38062d9abe4a39727322cb40332775cf2c04d1ba950a",
+          "position": "ae20c44ded54920de0b4728a270aa84fad151ecc796cae527ff7a5b925954909",
           "uv": "07165aecc1e3402dfc5afc70851d1e9bdb3bdbc91ef7ca61dde20c64dd122c79",
-          "normal": "49634a48e318bc64cf0dbf7a43ba200d3ea930e1dfcd97438cc211b6aee25a70"
+          "normal": "de618c66aed28e1b956c77f40ac7527df2f4688bd40ea6518ab2ef43da16d90c"
         }
       }
     },
@@ -86,17 +90,19 @@
       "triangles": 1184,
       "attributes": {
         "body": {
-          "position": "702da136b567930a1e0e53afec69cb3e3fe08f64a68fdf227169d9c2c649024f",
+          "position": "bc0277f7b5c77c80cf36bf4506f7ea7d45b2be7f047b1683c84f9e9c6c6c0d6a",
           "uv": "2d95ab29b33dd6fb731a9155e29b884a27c7460f9ccd2581e0fd556ac06e3eaf",
-          "normal": "be3821d6a1bec05f4d83dd702109ef776e4d758c498ed1bd382c496dbb45fb5a"
+          "normal": "364bc77b87b356a3d533753567b799cad008102cbc5af8a38e6d8c7c8f698afb",
+          "color": "342fed9baea9bca7892de48fc85ad8352168e1c5493e913465ab0d69cb3ff93f"
         },
         "accent": {
           "position": "ebe292b134ba506c8e0603c0827cd238343c48da78b9a4994a72fd56cab68992",
           "uv": "ea5e1afb445123dca167ddff9dbbe93fdc78bf18714818596ee370c0705bdfd5",
-          "normal": "49a4349cd84ca8d5c18926470518d516345df7529051fc58a52c4ae8592617e8"
+          "normal": "49a4349cd84ca8d5c18926470518d516345df7529051fc58a52c4ae8592617e8",
+          "color": "5e3f43199d1899102b8ce720262c9ce8b2361a5d4aa24db1dc77349518707e22"
         },
         "dark": {
-          "position": "d6a2db3c097bbf0dbd6ff0b43e29f2f702cafd91b8b8754375482fd110888798",
+          "position": "35476f0b3c3331706822439c2c4b35cf5f268fd9b0c113dbd962fc492b71e6a5",
           "uv": "07165aecc1e3402dfc5afc70851d1e9bdb3bdbc91ef7ca61dde20c64dd122c79",
           "normal": "3e9ebf5a76c2d068a0ecf37aec3d39087ac5fbc32a4d939859d44c4d916268be"
         }
@@ -186,19 +192,21 @@
       "triangles": 2600,
       "attributes": {
         "body": {
-          "position": "5d94e54384c277d3e0a67b773fe604b3c725fe8978ed0e3c886b9a890578d477",
+          "position": "3484c18340e5eda2cbad087a0f7eb9f2d7994e2c586992b309c42ec72e9ebc25",
           "uv": "6b9df90830fd90d8c843b96212f1b21522169b21ef77ec5b203e7d2fa841d8eb",
-          "normal": "7e0510eff73b440c09767b55cdedddbf2a3d190c2f42a0168959c2e50a3c06e8"
+          "normal": "565bb263ef16c1b7f6d4b6db1554ae2747b1c4fad8bab469d50ab85a43645d7c",
+          "color": "6143c5374d11783a8b8d75903a23242ae8a5216c0feb92cb9888d5a02a001d74"
         },
         "accent": {
-          "position": "62245d2115c583e2d75e2ae9c5c3cc856ace175241293db8f76ba2eec1c1ee77",
+          "position": "04dbb072fdab0d0ece593ddf8c7f4c6868be904671ed6f7c945912507085400a",
           "uv": "b06394599bc3b33718e474450e02b78dbc6051d3fbe78fb1ea83a7d7545f5394",
-          "normal": "39829963b2bd61a65d92b107d86ca7239e63d8062ef4b8d93295428619fc4302"
+          "normal": "cccc14012967ec297211c55332164fba738c82235a1bf4c095224782c8d31c9e",
+          "color": "e06728483779dae4633340b7c8bbf4ad955bb6913433dd9b63fea09aa7bc20d1"
         },
         "dark": {
-          "position": "3af90e8d6783fc5d5a9fade8e1e2d5fa82cd4b3aad1ee636829dafbfdb55c399",
+          "position": "f418877624e05027c5fc2217776cc8dbd331d28dca3ed5ac23f6fd8e685142b2",
           "uv": "07165aecc1e3402dfc5afc70851d1e9bdb3bdbc91ef7ca61dde20c64dd122c79",
-          "normal": "49634a48e318bc64cf0dbf7a43ba200d3ea930e1dfcd97438cc211b6aee25a70"
+          "normal": "de618c66aed28e1b956c77f40ac7527df2f4688bd40ea6518ab2ef43da16d90c"
         }
       }
     },
@@ -206,19 +214,21 @@
       "triangles": 2600,
       "attributes": {
         "body": {
-          "position": "45dc6f27ced16faf0f542484e34955872bc1079580094592773eac7a2ce39dfb",
+          "position": "3d471404896f5163dffbcba95fb0b4c1139beb433fcbf0fd94438d3cca66ae5a",
           "uv": "6b9df90830fd90d8c843b96212f1b21522169b21ef77ec5b203e7d2fa841d8eb",
-          "normal": "a96f383ae81bad269ddf5b3e445718daff7ec51f348dffdef10b164e357e7e9a"
+          "normal": "be67f534395440d1a1971c46d04cab69e0cb16a461986f57dd8a7041e9838d83",
+          "color": "0877785f7c7cf2de13c400bff606851f40febb438d4fecf6108231aff4ff53f9"
         },
         "accent": {
-          "position": "e722085f025dac0071f7a335b5a28765f4d64d0c6c599768ea718e09f2bf3de6",
+          "position": "88a80558d69084f3bc279cc6199c181619f2a79bd90f9ab4fbe6e39c16d98b5b",
           "uv": "b06394599bc3b33718e474450e02b78dbc6051d3fbe78fb1ea83a7d7545f5394",
-          "normal": "1aa233723426daf0c2914f21435876a7d4281031a93093fd85f7df788479b9ef"
+          "normal": "37efb1f7046b1df03a879bbbc184cfd73b3ca4bd415c8bb9d667d62520eff49c",
+          "color": "c8497af3f0092ae04ec2f17cf41099201a4861378e73778a291da26af12f4f77"
         },
         "dark": {
-          "position": "0a092c7f07497815367d38062d9abe4a39727322cb40332775cf2c04d1ba950a",
+          "position": "ae20c44ded54920de0b4728a270aa84fad151ecc796cae527ff7a5b925954909",
           "uv": "07165aecc1e3402dfc5afc70851d1e9bdb3bdbc91ef7ca61dde20c64dd122c79",
-          "normal": "49634a48e318bc64cf0dbf7a43ba200d3ea930e1dfcd97438cc211b6aee25a70"
+          "normal": "de618c66aed28e1b956c77f40ac7527df2f4688bd40ea6518ab2ef43da16d90c"
         }
       }
     },
@@ -226,17 +236,19 @@
       "triangles": 1560,
       "attributes": {
         "body": {
-          "position": "da58de4faf0bdc1b534d3dac2c5ec286026986a2bdc4e108b56f57fc05b4e6b4",
+          "position": "e07204e3ed215e3ef3774e1f2e32914677e39ede1e0d59ce1ac87061e19f6d3a",
           "uv": "d8400d8918435dbcbd8c0111460fe993bee235451fb3780c71ec531f4376f31a",
-          "normal": "5fca1a97851a174808c8dfb773810871038461e3cf745dda98dd8ad443745b36"
+          "normal": "77f702d8efeca2ac9e2e4ba2e6c5a0eacce62c961166b0a99b83a3279ccf4d96",
+          "color": "6c83b27833cdeeb04e7da71f0a2d7bbe5ab123c57b7264e88f0fbda3e0ab134c"
         },
         "accent": {
           "position": "ebe292b134ba506c8e0603c0827cd238343c48da78b9a4994a72fd56cab68992",
           "uv": "ea5e1afb445123dca167ddff9dbbe93fdc78bf18714818596ee370c0705bdfd5",
-          "normal": "49a4349cd84ca8d5c18926470518d516345df7529051fc58a52c4ae8592617e8"
+          "normal": "49a4349cd84ca8d5c18926470518d516345df7529051fc58a52c4ae8592617e8",
+          "color": "5e3f43199d1899102b8ce720262c9ce8b2361a5d4aa24db1dc77349518707e22"
         },
         "dark": {
-          "position": "d6a2db3c097bbf0dbd6ff0b43e29f2f702cafd91b8b8754375482fd110888798",
+          "position": "35476f0b3c3331706822439c2c4b35cf5f268fd9b0c113dbd962fc492b71e6a5",
           "uv": "07165aecc1e3402dfc5afc70851d1e9bdb3bdbc91ef7ca61dde20c64dd122c79",
           "normal": "3e9ebf5a76c2d068a0ecf37aec3d39087ac5fbc32a4d939859d44c4d916268be"
         }
@@ -356,5 +368,73 @@
     }
   },
   "localSourceImport": "0e17af9 (byte-identical runtime source import)",
-  "animalArtRevision": "2026-09-24: authored spine/shoulder/hip anatomy, grounded resting pose and folded Swan wings. Only six animal entries supersede the original optimization baseline; budgets and all other baselines are retained."
+  "animalArtRevision": "2026-09-24: authored spine/shoulder/hip anatomy, grounded resting pose and folded Swan wings. Only six animal entries supersede the original optimization baseline; budgets and all other baselines are retained.",
+  "phase2HeroReview": {
+    "reviewedBy": "root agent explicit message",
+    "reviewedAt": "2026-10-07T11:01:05.735164+00:00",
+    "scope": "studio-only",
+    "changedCases": [
+      "wolf-base",
+      "resting-wolf-base",
+      "swan-base",
+      "wolf-relief",
+      "resting-wolf-relief",
+      "swan-relief"
+    ],
+    "evidence": [
+      {
+        "path": "/Users/warrenstear/Documents/ChatGPT/Slipper in the wodds/artifacts/rebuild-20261005/phase2-heroes-high/review.json",
+        "sha256": "5ca0a9ab122977ae2a8c69d9214c82e0a24ad20efb1908cac130ecf1ef3b5b96"
+      },
+      {
+        "path": "/Users/warrenstear/Documents/ChatGPT/Slipper in the wodds/artifacts/rebuild-20261005/phase2-heroes-high/after-key-quarter-high-lit.png",
+        "sha256": "7ace3db2aadc7ee5d6eed627359aa14b24459f545d22753fbfff27afc131dc5f"
+      },
+      {
+        "path": "/Users/warrenstear/Documents/ChatGPT/Slipper in the wodds/artifacts/rebuild-20261005/phase2-heroes-high/after-lantern-quarter-high-lit.png",
+        "sha256": "b2a74c5ca288df7eb181e5fc9512605332d673b1ef7ab8baf33a28501d07c928"
+      },
+      {
+        "path": "/Users/warrenstear/Documents/ChatGPT/Slipper in the wodds/artifacts/rebuild-20261005/phase2-heroes-high/after-mirror-quarter-high-lit.png",
+        "sha256": "c66f94ba886c94f8c51569e72b438b87f2c6c263c5c3b8fc75ae835fe25d6eb8"
+      },
+      {
+        "path": "/Users/warrenstear/Documents/ChatGPT/Slipper in the wodds/artifacts/rebuild-20261005/phase2-heroes-high/after-resting-wolf-quarter-high-lit.png",
+        "sha256": "ab7f242c916903366696bce5e430d8d53b48e9cf53847233cf0fb48e388456e5"
+      },
+      {
+        "path": "/Users/warrenstear/Documents/ChatGPT/Slipper in the wodds/artifacts/rebuild-20261005/phase2-heroes-high/after-swan-quarter-high-lit.png",
+        "sha256": "1aecad8346270434f213dfaec6ddfe2fe64068c4401e3a63c630aa7c4f2b8e56"
+      },
+      {
+        "path": "/Users/warrenstear/Documents/ChatGPT/Slipper in the wodds/artifacts/rebuild-20261005/phase2-heroes-high/after-wolf-quarter-high-lit.png",
+        "sha256": "30ed5694d3c5f33a465d90087719401e12b77b926874adbc1f608a47bfe582c9"
+      },
+      {
+        "path": "/Users/warrenstear/Documents/ChatGPT/Slipper in the wodds/artifacts/rebuild-20261005/phase2-heroes-high/before-key-quarter-high-lit.png",
+        "sha256": "8ddfa23af6dae94d3ba6360559b6c810c11f3f3482f15473e4bad5f12eb01a5d"
+      },
+      {
+        "path": "/Users/warrenstear/Documents/ChatGPT/Slipper in the wodds/artifacts/rebuild-20261005/phase2-heroes-high/before-lantern-quarter-high-lit.png",
+        "sha256": "de24b2c4b82d97ac00db0e8ca6a6eac478dfe14264bf2bcc2192d7bc1639ca5f"
+      },
+      {
+        "path": "/Users/warrenstear/Documents/ChatGPT/Slipper in the wodds/artifacts/rebuild-20261005/phase2-heroes-high/before-mirror-quarter-high-lit.png",
+        "sha256": "5fb0b3bb325c2db438eba772e458ea5aa611dabdde6c81b7a5ed281d0dc143a8"
+      },
+      {
+        "path": "/Users/warrenstear/Documents/ChatGPT/Slipper in the wodds/artifacts/rebuild-20261005/phase2-heroes-high/before-resting-wolf-quarter-high-lit.png",
+        "sha256": "8273b0f129fdae9088d26a4d4c795c71bd6d0bcb46a024269650588e4ed18ef0"
+      },
+      {
+        "path": "/Users/warrenstear/Documents/ChatGPT/Slipper in the wodds/artifacts/rebuild-20261005/phase2-heroes-high/before-swan-quarter-high-lit.png",
+        "sha256": "a5c8d94d10b731daf143dc7562ce64435fc6cb42662b228c5862fa8375a5e486"
+      },
+      {
+        "path": "/Users/warrenstear/Documents/ChatGPT/Slipper in the wodds/artifacts/rebuild-20261005/phase2-heroes-high/before-wolf-quarter-high-lit.png",
+        "sha256": "2a57dfc7088bb0c6ce07ca1892e829a7408a66bf10f4687814e96f9f17832719"
+      }
+    ],
+    "originalSha256": "a516fdcd8af2b3d14c21b4c9812a5c87b20df05c56aab93fd016c420232e59be"
+  }
 }

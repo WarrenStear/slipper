@@ -1178,3 +1178,38 @@ cover arrival, so its timing attribution uses direct GL durations, long-task
 receipts, mapped GL stacks and program identities rather than sampled CPU time.
 The combined Node 22 release check passes 1,240 unit and seven security cases,
 content and asset validation, TypeScript, production build and Pages Functions.
+
+### Visual phase 2 — authored hero language
+
+The existing carried Lantern has a narrower asymmetric flame, warmer handled
+brass and restrained soot. The key's bow and shoulder have less uniform polish;
+the mirror frame has uneven corner and sill wear without changing its opening.
+Swan wings settle lower, and the Wolf/resting Wolf have a more continuous neck,
+ruff and head contour. These remain authored fallbacks: all 13 production hero
+slots retain null URLs and unchanged approval status. No asset, mesh, triangle,
+light, reflection, frame owner or interaction surface is added. Animal vertex
+tones add at most 15.7 KB to an existing geometry's runtime colour attribute.
+
+Native evidence includes 72 paired studio images across high/low/cinematic,
+reduced effects and portrait/landscape, plus six animal lifetime images with
+three identical quality cycles and warmed remounts. Five canonical scene pairs
+cover First Wood, Blue Moon, Seer, House and Integration on matching forest and
+shader-preparation sources; every paired rendering/resource delta is zero.
+The previous geometry-art fixtures are retained externally, and the checked-in
+goldens update only the reviewed Lantern constructor/metal colour and six
+affected animal geometry cases.
+
+The original Integration baseline lifecycle failed at 40 versus 36 geometries.
+It compared six seconds of initial SceneLook motion with zero remount motion.
+A separate review resets the public stopped R3F clock only after every world
+frame owner and pending delivery is gone, then replays the same positive-time
+history on both mounts. Both before and after pass the unchanged strict limits:
+40 geometries, 16 textures and 90 programs after each cycle and remount. Actual
+installed-loop tests reject negative deltas; the failed original report remains
+retained. This is a review-history correction, not a production resource waiver.
+
+The isolated hero release check passes 1,240 unit and seven security cases,
+content/assets, TypeScript, build and Pages Functions. Evidence is under
+`artifacts/rebuild-20261005/phase2-heroes-*` and
+`artifacts/rebuild-20261005/phase2-integration-same-history-*`. Native scene
+fixtures assess appearance and ownership; they do not claim earned progression.

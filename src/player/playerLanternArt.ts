@@ -2,9 +2,9 @@ import { Color, CylinderGeometry, Float32BufferAttribute, LatheGeometry, MathUti
 import { createLanternHousingGeometry } from "../components/three/environmentArt/heroGeometry.ts";
 import { mergeArtGeometries } from "../components/three/environmentArt/authoredGeometry.ts";
 
-/** Reviewed native fallback for the carried lantern. Paired studio/carried
- * views and all-tier native lifetime cycles retain the existing draw/material
- * contracts. This geometry does not admit a GLB or change the asset registry.
+/** Candidate finish over the previously reviewed carried fallback. The existing
+ * geometry/material/ownership contracts remain; this finish awaits paired
+ * native visual acceptance. It does not admit a GLB or change HERO_ASSETS.
  */
 export function createReviewedLanternHousingGeometry(): BufferGeometry {
   const housing = createLanternHousingGeometry();
@@ -33,10 +33,10 @@ export function createReviewedLanternHousingGeometry(): BufferGeometry {
     const x = position.getX(i), y = position.getY(i), z = position.getZ(i);
     // Soot gathers toward the chimney cowl; rubbed horizontal seams and the
     // handled bail retain warmer brass. No baked photograph, glow or new map.
-    const soot = MathUtils.smoothstep(y, .71, .94) * .20;
+    const soot = MathUtils.smoothstep(y, .71, .94) * .23;
     const burner = (1 - MathUtils.smoothstep(Math.abs(y - .264), .022, .068)) * .08;
-    const touched = MathUtils.smoothstep(y, .98, 1.15) * .055;
-    const rubbed = Math.abs(normal.getY(i)) * (y < .23 || y > .72 ? .075 : .025);
+    const touched = MathUtils.smoothstep(y, .98, 1.15) * .12;
+    const rubbed = Math.abs(normal.getY(i)) * (y < .23 || y > .72 ? .12 : .025);
     const variation = .025 * Math.sin(x * 29 + y * 13 + z * 21);
     const value = MathUtils.clamp(.82 - soot - burner + touched + rubbed + variation, .5, 1);
     tint.setRGB(value, Math.min(1, value * .97 + rubbed * .04), Math.min(1, value * .9 + rubbed * .05));
@@ -47,14 +47,15 @@ export function createReviewedLanternHousingGeometry(): BufferGeometry {
   return geometry;
 }
 
-/** Reviewed contained asymmetric wick tip; topology, colour gradient and all
+/** Candidate narrower contained asymmetric wick tip; topology, colour gradient and all
  * runtime flame pulse/rotation/brightness formulas stay unchanged.
  */
 export function shapeReviewedLanternFlame(geometry: BufferGeometry) {
   const position = geometry.getAttribute("position");
   for (let i = 0; i < position.count; i++) {
     const amount = MathUtils.smootherstep(position.getY(i), .005, .108);
-    position.setX(i, position.getX(i) + .007 * amount);
+    position.setX(i, position.getX(i) * .72 + .007 * amount);
+    position.setZ(i, position.getZ(i) * .72);
   }
   geometry.computeVertexNormals(); geometry.computeBoundingBox(); geometry.computeBoundingSphere();
   return geometry;

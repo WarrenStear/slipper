@@ -21,7 +21,7 @@ export function createPlayerLanternMaterials() {
       side: THREE.DoubleSide,
     });
     const metal = new THREE.MeshStandardMaterial({
-      color: "#403b2d",
+      color: "#5b523d",
       vertexColors: true,
       emissive: "#160c05",
       emissiveIntensity: 0.025,
