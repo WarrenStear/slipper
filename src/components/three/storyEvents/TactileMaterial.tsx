@@ -72,8 +72,19 @@ export const TactileMaterial = memo(function TactileMaterial({ surface, detail, 
   mapGuardRef.current = mapGuard;
   // R3F's attach interface describes generic instances; this material belongs
   // to a mesh, and the callback identity survives map readiness/tier changes.
-  const attach = useCallback((mesh: unknown, material: unknown) =>
-    attachMaterialShadow(mesh as THREE.Mesh, material as THREE.MeshStandardMaterial, () => mapGuardRef.current), []);
+  // R3F can move this material to a reconstructed mesh when its args change.
+  // That transfer replaces the previous attach cleanup, so release our former
+  // parent before establishing the component's next private depth owner.
+  const attachmentRef = useRef<ReturnType<typeof attachMaterialShadow>>();
+  const attach = useCallback((mesh: unknown, material: unknown) => {
+    attachmentRef.current?.();
+    const release = attachMaterialShadow(mesh as THREE.Mesh, material as THREE.MeshStandardMaterial, () => mapGuardRef.current);
+    attachmentRef.current = release;
+    return () => {
+      release();
+      if (attachmentRef.current === release) attachmentRef.current = undefined;
+    };
+  }, []);
   const shaderMemory = useMemo(() => ({ value: [0, 0, 0, 0] }), []);
   shaderMemory.value[0] = state.wetness; shaderMemory.value[1] = state.wear;
   shaderMemory.value[2] = state.damage; shaderMemory.value[3] = (memory?.reintegrated ?? look?.look.materials.reintegrated) ? 1 : 0;
