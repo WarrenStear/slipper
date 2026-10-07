@@ -1,0 +1,60 @@
+import { Color, CylinderGeometry, Float32BufferAttribute, LatheGeometry, MathUtils, Vector2, type BufferGeometry } from "three";
+import { createLanternHousingGeometry } from "./heroGeometry.ts";
+import { mergeArtGeometries } from "./authoredGeometry.ts";
+
+/** UNREVIEWED native fallback candidate. This is not a production asset or an
+ * approved visual change. Existing coordinate/material/draw contracts remain.
+ */
+export function createCandidateLanternHousingGeometry(): BufferGeometry {
+  const housing = createLanternHousingGeometry();
+  const additions: BufferGeometry[] = [];
+  // Thin pinned-bail washers and the usable wick wheel sit in the existing
+  // silhouette envelope; they never bridge the chimney or close a vent slot.
+  for (const side of [-1, 1]) {
+    const washer = new LatheGeometry([[.034, -.003], [.046, -.003], [.046, .003], [.034, .003], [.034, -.003]].map(([r, y]) => new Vector2(r, y)), 12);
+    washer.rotateZ(Math.PI / 2); washer.translate(side * .244, .785, 0); additions.push(washer);
+  }
+  const wheel = new CylinderGeometry(.023, .023, .018, 12, 1);
+  const wheelPosition = wheel.getAttribute("position");
+  for (let i = 0; i < wheelPosition.count; i++) {
+    const x = wheelPosition.getX(i), z = wheelPosition.getZ(i), tooth = 1 + .06 * Math.cos(Math.atan2(z, x) * 6);
+    wheelPosition.setX(i, x * tooth); wheelPosition.setZ(i, z * tooth);
+  }
+  wheel.computeVertexNormals(); wheel.rotateZ(Math.PI / 2); wheel.translate(.215, .264, 0); additions.push(wheel);
+  for (const addition of additions) {
+    const colors = new Float32Array(addition.getAttribute("position").count * 3); colors.fill(1);
+    addition.setAttribute("color", new Float32BufferAttribute(colors, 3));
+  }
+  const geometry = mergeArtGeometries([housing, ...additions]);
+  const position = geometry.getAttribute("position"), normal = geometry.getAttribute("normal"), color = geometry.getAttribute("color");
+  const tint = new Color();
+  for (let i = 0; i < position.count; i++) {
+    const x = position.getX(i), y = position.getY(i), z = position.getZ(i);
+    // Soot gathers toward the chimney cowl; rubbed horizontal seams and the
+    // handled bail retain warmer brass. No baked photograph, glow or new map.
+    const soot = MathUtils.smoothstep(y, .71, .94) * .20;
+    const burner = (1 - MathUtils.smoothstep(Math.abs(y - .264), .022, .068)) * .08;
+    const touched = MathUtils.smoothstep(y, .98, 1.15) * .055;
+    const rubbed = Math.abs(normal.getY(i)) * (y < .23 || y > .72 ? .075 : .025);
+    const variation = .025 * Math.sin(x * 29 + y * 13 + z * 21);
+    const value = MathUtils.clamp(.82 - soot - burner + touched + rubbed + variation, .5, 1);
+    tint.setRGB(value, Math.min(1, value * .97 + rubbed * .04), Math.min(1, value * .9 + rubbed * .05));
+    color.setXYZ(i, tint.r, tint.g, tint.b);
+  }
+  color.needsUpdate = true;
+  geometry.computeBoundingBox(); geometry.computeBoundingSphere();
+  return geometry;
+}
+
+/** Contained asymmetric wick-tip candidate; topology, colour gradient and all
+ * runtime flame pulse/rotation/brightness formulas stay unchanged.
+ */
+export function shapeCandidateLanternFlame(geometry: BufferGeometry) {
+  const position = geometry.getAttribute("position");
+  for (let i = 0; i < position.count; i++) {
+    const amount = MathUtils.smootherstep(position.getY(i), .005, .108);
+    position.setX(i, position.getX(i) + .007 * amount);
+  }
+  geometry.computeVertexNormals(); geometry.computeBoundingBox(); geometry.computeBoundingSphere();
+  return geometry;
+}

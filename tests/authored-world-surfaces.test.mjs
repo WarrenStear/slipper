@@ -108,10 +108,13 @@ test('habitat resources dispose independently and introduce no animation or coll
   assert.match(s,/drawCallBudget: 3/);
 });
 
-test('rabbit threshold replaces concentric rings without modifying chapter control flow', () => {
-  const s=read('src/components/three/chapters/EnchantedWoodChapter.tsx');
+test('First Wood owner retains root threshold and grounds one guide while Rabbit omits competing path discs', () => {
+  const s=read('src/scenes/first-wood/FirstWoodScene.tsx');
   assert.match(s,/isRabbitHole \? <RootThreshold \/>/);assert.doesNotMatch(s,/torusGeometry/);
-  assert.match(s,/<StonePath color="#716756" count=\{11\} length=\{18\}/);
+  assert.match(s,/!isRabbitHole \? <StonePath color="#716756" count=\{11\} length=\{18\}/);
+  assert.match(s,/!isRabbitHole \? <FloatingMotes/);
+  assert.match(s,/getStoryObject\("enchanted\.guide"\)/);
+  assert.match(s,/position=\{rabbitGuideGroundPosition\}[^>]*light=\{false\}/);
   assert.match(s,/<LanternProp position=\{\[0.4, 0.15, 7.6\]\}/);
 });
 
@@ -132,7 +135,7 @@ test('chapter ground reuses existing compressed art with private transform/dispo
 test('only selected forest chapter floors opt into the detailed ground map', () => {
   const source=read('src/components/three/chapters/ChapterPrimitives.tsx');
   assert.match(source,/textured = false/);
-  assert.match(read('src/components/three/chapters/EnchantedWoodChapter.tsx'),/radius=\{16\}[^>]*textured/);
+  assert.match(read('src/scenes/first-wood/FirstWoodScene.tsx'),/radius=\{16\}[^>]*textured/);
   assert.match(read('src/components/three/chapters/BlueMoonSanctuaryChapter.tsx'),/radius=\{21\}[^>]*textured/);
 });
 

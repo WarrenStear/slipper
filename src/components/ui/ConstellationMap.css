@@ -879,3 +879,47 @@
     animation: none;
   }
 }
+.constellation-unwitnessed-dot {
+  fill: #a5a294;
+  opacity: 0.12;
+  pointer-events: none;
+}
+
+.constellation-panel[data-constellation-scope="witnessed-only"] .constellation-header {
+  justify-content: flex-start;
+}
+
+.constellation-panel[data-constellation-scope="witnessed-only"] .constellation-status {
+  max-width: 38ch;
+}
+
+.map-workspace.is-partial-constellation {
+  grid-template-columns: minmax(0, 1fr) !important;
+  grid-template-rows: auto minmax(0, 1fr);
+  width: min(52rem, calc(100vw - 2rem));
+  max-width: calc(100vw - 2rem);
+  padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+  box-sizing: border-box;
+  margin-inline: auto;
+  overflow: auto !important;
+  overscroll-behavior: contain;
+}
+
+.map-workspace.is-partial-constellation .constellation-panel {
+  width: 100%;
+  min-width: 0;
+  max-height: none;
+  box-sizing: border-box;
+}
+
+.map-workspace.is-partial-constellation > .memory-return {
+  justify-self: start;
+  pointer-events: auto;
+}
+
+@media (max-width: 700px) {
+  .map-workspace.is-partial-constellation {
+    width: 100%;
+    max-width: 100%;
+  }
+}

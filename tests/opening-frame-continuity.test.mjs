@@ -1,12 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { advanceOpeningRoom, openingRoomAppearance } from '../src/world/opening/openingComposition.ts';
 import { openingMotionDelta, openingRoomTarget } from '../src/cinematics/openingPresentation.ts';
 
-// Reproduce the chapter's existing Three.MathUtils.damp equation without a
-// renderer. Browser tests remain responsible for visible presentation evidence.
+// Execute the actual supplied-time owner; rendering acceptance is separate.
 function roomStep(current, target, delta, active = true) {
-  const elapsed = openingMotionDelta(delta, active);
-  return current + (target - current) * (1 - Math.exp(-(3 / 8) * elapsed));
+  const stage = target === 1 ? 3 : target * 5;
+  return advanceOpeningRoom(current, stage, delta, active, false);
 }
 
 for (const delta of [.251, .5, 1, 20]) {
@@ -59,7 +59,7 @@ test('normal frame cadence retains the existing authored damping', () => {
   for (const delta of [1 / 144, 1 / 60, 1 / 30, .05]) {
     assert.equal(openingMotionDelta(delta, true), delta);
     const expected = .2 + .8 * (1 - Math.exp(-(3 / 8) * delta));
-    assert.equal(roomStep(.2, 1, delta), expected);
+    assert.ok(Math.abs(roomStep(.2, 1, delta) - expected) <= 1e-15);
   }
 });
 
@@ -74,4 +74,22 @@ test('an already settled room does not drift', () => {
     const target = openingRoomTarget(stage);
     for (const delta of [1 / 60, .5, 20]) assert.equal(roomStep(target, target, delta), target);
   }
+});
+
+
+test('the aperture cannot expose ordinary boards during the shared room yield', () => {
+  for (let value = 0; value <= 1; value += .001) {
+    const appearance = openingRoomAppearance(value);
+    if (appearance.floorVisible) assert.equal(appearance.apertureOpacity, .94);
+    if (appearance.apertureOpacity < .94) assert.equal(appearance.floorVisible, false);
+    assert.ok(appearance.roomOpacity >= 0 && appearance.roomOpacity <= 1);
+  }
+  assert.equal(openingRoomAppearance(.4).apertureOpacity, .94);
+  assert.equal(openingRoomAppearance(1).apertureOpacity, 0);
+});
+test('reduced motion and restored entered state start at the same final composition', () => {
+  const reduced = advanceOpeningRoom(.4, 3, 1/60, true, true);
+  assert.equal(reduced, 1);
+  assert.deepEqual(openingRoomAppearance(reduced), openingRoomAppearance(openingRoomTarget(3)));
+  assert.equal(advanceOpeningRoom(.4, 3, 1/60, false, true), .4);
 });

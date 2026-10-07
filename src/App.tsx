@@ -1,4 +1,5 @@
 import GuidedStoryMoment from "./components/ui/GuidedStoryMoment";
+import "./ui/MemoryReturn.css";
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import type { NarrativeWorldState, SceneProximityState, StorySceneControls, StorySceneMode } from "./components/three/StoryScene";
 import ArchiveIndex, {
@@ -269,6 +270,9 @@ function ExperienceApplication() {
   );
   const previousPlayerPositionRef = useRef<Vector3Tuple | null>(null);
   const readerRef = useRef<HTMLDivElement>(null);
+  const forestRef = useRef<HTMLElement>(null);
+  const mapWorkspaceRef = useRef<HTMLElement>(null);
+  const constellationTriggerRef = useRef<HTMLButtonElement>(null);
 
   const reducedMotion = useSettingsStore((state) => state.reducedMotion);
   const reducedEffects = useSettingsStore((state) => state.reducedEffects);
@@ -327,6 +331,7 @@ function ExperienceApplication() {
   const startState = resolveSlipperStartState({ storyStarted, storyCompleted });
 
   const mode = useWorldStore((state) => state.mode) as AppMode;
+  const previousViewRef = useRef(mode);
   const controls = useWorldStore((state) => state.controls) as StorySceneControls;
   const sceneProximity = useWorldStore((state) => state.sceneProximity);
   const setMode = useWorldStore((state) => state.setMode);
@@ -717,6 +722,18 @@ function ExperienceApplication() {
     return undefined;
   }, [mode, reducedMotion, resolvedActiveEntryId, readerFocusNonce]);
 
+  useEffect(() => {
+    const previous = previousViewRef.current;
+    previousViewRef.current = mode;
+    if (previous === mode || !experienceStarted || archiveOpen || accessibleJourney) return;
+    const target = mode === "map" ? mapWorkspaceRef
+      : mode === "explore" && (previous === "read" || previous === "map")
+        ? { current: constellationTriggerRef.current ?? forestRef.current } : null;
+    if (!target) return;
+    const timer = window.setTimeout(() => target.current?.focus({ preventScroll: true }), 0);
+    return () => window.clearTimeout(timer);
+  }, [mode, experienceStarted, archiveOpen, accessibleJourney]);
+
   const updateReaderProgress = useCallback(() => {
     const element = readerRef.current;
     if (!element) return;
@@ -817,6 +834,8 @@ function ExperienceApplication() {
   return (
     <RenderRecoveryBoundary onContinueTextJourney={enterTextJourney}>
     <main
+      ref={forestRef}
+      tabIndex={-1}
       id="primary-experience"
       data-experience-root
       data-active-entry={resolvedActiveEntryId}
@@ -1079,9 +1098,13 @@ function ExperienceApplication() {
         </section>
       ) : null}
 
-      {experienceCapabilities.allowConstellationNavigation && mode === "map" ? (
-        <section className="map-workspace" aria-label="Story map workspace">
-          {mobileViewport.isMobile ? (
+      {experienceCapabilities.constellationScope === "witnessed-only" && mode === "explore" && prologueResolved && resolvedActiveEntryId !== "fragment-001" && canReadActiveEntry ? (
+        <button ref={constellationTriggerRef} className="memory-return first-constellation-access" type="button" onClick={() => setMode("map")}>Constellation</button>
+      ) : null}
+      {experienceCapabilities.allowConstellationView && mode === "map" ? (
+        <section ref={mapWorkspaceRef} tabIndex={-1} className={`map-workspace${experienceCapabilities.constellationScope === "witnessed-only" ? " is-partial-constellation" : ""}`} aria-label="Story map workspace" data-constellation-scope={experienceCapabilities.constellationScope}>
+          {experienceCapabilities.constellationScope === "witnessed-only" ? <button className="memory-return" type="button" onClick={() => setMode("explore")}>Return to forest</button> : null}
+          {mobileViewport.isMobile && experienceCapabilities.allowFullArchive ? (
             <MapWorkspaceTabs activePane={mobileMapPane} onChange={setMobileMapPane} />
           ) : null}
 
@@ -1093,32 +1116,31 @@ function ExperienceApplication() {
             }
           >
             <ConstellationMap
+              scope={experienceCapabilities.constellationScope}
               entries={entries}
               activeEntryId={resolvedActiveEntryId}
               visitedEntryIds={visitedEntryIds}
               sceneProximity={sceneProximity}
-              onOpenEntry={(entryId) =>
-                openRememberedEntry(entryId, "read")
-              }
-              onGuideEntry={requestGuidance}
+              onOpenEntry={experienceCapabilities.allowConstellationNavigation ? (entryId) => openRememberedEntry(entryId, "read") : undefined}
+              onGuideEntry={experienceCapabilities.allowConstellationNavigation ? requestGuidance : undefined}
               panelId={
-                mobileViewport.isMobile
+                mobileViewport.isMobile && experienceCapabilities.allowFullArchive
                   ? STORY_MAP_CONSTELLATION_PANEL_ID
                   : undefined
               }
               labelledBy={
-                mobileViewport.isMobile
+                mobileViewport.isMobile && experienceCapabilities.allowFullArchive
                   ? STORY_MAP_CONSTELLATION_TAB_ID
                   : undefined
               }
               hidden={
-                mobileViewport.isMobile &&
+                mobileViewport.isMobile && experienceCapabilities.allowFullArchive &&
                 mobileMapPane !== "constellation"
               }
             />
           </Suspense>
 
-          <ArchiveIndex
+          {experienceCapabilities.allowFullArchive ? <ArchiveIndex
             entries={entries}
             activeEntryId={resolvedActiveEntryId}
             visitedEntryIds={visitedEntryIds}
@@ -1127,7 +1149,7 @@ function ExperienceApplication() {
             panelId={mobileViewport.isMobile ? STORY_MAP_ARCHIVE_PANEL_ID : undefined}
             labelledBy={mobileViewport.isMobile ? STORY_MAP_ARCHIVE_TAB_ID : undefined}
             hidden={mobileViewport.isMobile && mobileMapPane !== "archive"}
-          />
+          /> : null}
         </section>
       ) : null}
 
@@ -1170,6 +1192,7 @@ function ExperienceApplication() {
                 <button type="button" onClick={() => requestGuidance(authoredJourneyTarget?.id)}>Follow the next path</button>
               ) : null}
               <button type="button" onClick={requestExperienceSettingsOpen}>Settings</button>
+              {experienceCapabilities.constellationScope === "witnessed-only" ? <button type="button" onClick={() => setMode("map")}>Constellation</button> : null}
               {experienceMode === "free-woods" ? (
                 <>
                   <button type="button" aria-pressed={isBookmarked} onClick={() => toggleBookmark(resolvedActiveEntryId)}>

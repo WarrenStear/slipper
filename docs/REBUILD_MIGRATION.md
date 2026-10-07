@@ -780,3 +780,77 @@ The unchanged Linux WebKit and complete hosted matrix remain pending.
 Failed hosted logs remain in `runtime-host-preparation/ci-ff1999a-*`; accepted
 local receipts are `native-ci-repair-accepted`, `native-ci-repair-mobile`,
 `native-visual-ci-repair` and `ci-repair-snapshot-check.log`.
+
+
+### Phase C: impossible floor, First Wood and earned memory slice
+
+The opening's actual room/boards and chapter geometry now live in
+`scenes/broken-floor/BrokenFloorScene`; the reflection, mask, private capture,
+underfloor geometry and shared-clock branch motion live in `world/opening`. Old
+paths are compatibility exports. The room and boards recede over an authored
+blend while forest geometry coexists below the wet plane; the aperture then
+fades. Stages zero through two retain the original .94 floor opacity. Capture
+activity pauses with the existing foreground/overlay/physics policy, forces a
+fresh capture on resume and preserves its tier resolution/cadence. Error paths
+restore renderer state. Reduced motion retains deliberate static/snap behavior.
+
+`scenes/first-wood/FirstWoodScene` owns the actual existing outdoor chapter.
+Rabbit Hole removes its eleven decorative path discs and floating motes, keeps
+its terrain/ecology and both threshold colliders, and grounds one unlit lantern
+prop at the canonical guide object. Its former floating actor is suppressed only
+there. Meadow/hearth branches and the canonical world guide/event positions are
+unchanged. Seventeen native woodland captures passed: Meadow and Epilogue counts
+match exactly; Rabbit uses one fewer low-tier draw/two fewer high-tier draws,
+660 fewer triangles and one fewer light. This review uses fixed source fixtures,
+not inferred journey completion.
+
+`player/PlayerLantern` now owns the original carried frame/material/resource
+behavior and the reviewed authored fallback. Added bail washers/wick detail,
+restrained vertex wear/soot and a contained flame-tip offset add 240 housing
+triangles while retaining four meshes, two local lights and no new texture. The
+explicit original factory and immutable fixtures remain available for parity.
+Both baseline and reviewed default retain all 2,160 actual component pose/light/
+material comparisons. The canonical wrapper still decides when a lantern is
+physically carried; acceptance of the opening rite does not invent inventory or
+change the later ownership event. No production GLB or asset-registry approval
+is claimed.
+
+Paired native studio and canonical carried fixtures passed twelve captures each
+across high/cinematic, low portrait and comfort modes. Their strict lifetime
+review records 61 stages each, primes all four quality tiers before comparison
+and repeats identical warming on each remount. Three complete cycles retain
+exact per-tier geometry/texture/light/shadow/program counts. Studio release is
+zero geometry/texture/program; carried-world release is zero geometry/light/
+shadow with the same borrowed-cache texture and renderer program retained.
+The earlier cold-versus-warmed failures and their ownership investigation remain
+available; the residual shader's precise identity is not claimed proven.
+
+Directed journeys can now open a witnessed-only Constellation after a canonical
+memory is earned. Its nodes, labels, edges, regions, breadcrumbs and memory list
+contain only witnessed entries; future points are anonymous, dim, noninteractive
+and hidden from accessibility. No arbitrary navigation/Archive capability is
+granted. Current view/focus handoffs are explicit, and mobile partial maps have
+a named standalone complementary region rather than an orphan tab panel. The
+access-button styling loads eagerly so it remains above mobile controls before
+the first lazy map load. Reader prose/paragraphs and save schemas are unchanged.
+
+The complete current check passed 1,180 unit tests, seven security tests, type/
+source/lint/content/assets/world checks, production build and Pages Functions.
+The unseeded native Metal slice passed four projects: desktop and portrait,
+low/reduced and high/full. Each uses actual floor strokes/tap, independent mobile
+look, a measured physical walk, earned Fragment, focus return and partial sky.
+The walk covers 22.60–23.03 m of the 25.20 m route before entering its 3.15 m
+threshold, with 43–48 timestamped actual DOM position commits and maximum commit
+gaps of 310–562 ms. These are coarse 200 ms physical-observation receipts, not
+camera-frame performance certification. All four expose exactly witnessed 001/
+008 and 64 anonymous future points, retain privacy, request no opening photograph
+and record zero browser/console errors.
+
+Failed first-run driver-read gaps/mobile lazy-style overlap, and the subsequent
+high-effects attempt to read during arrival, are retained. Qualification now uses
+actual committed-position timestamps with the same speed/gap bounds, and the
+test waits for authored admission before reading. Acceptance artifacts are
+`phase-c/physical-slice-reviewed-lantern`, `phase-c/woodland-native-first`,
+`phase-c-lantern-preparation/native-studio`, `native-carried` and
+`native-lifecycle-all-tier-warm`. These prove the bounded slice and render
+comparisons; they do not certify every later chapter or human route usability.

@@ -2614,7 +2614,7 @@ export function StoryScene({
     storyWorldMemory?.inventory.lantern ||
       storyWorldMemory?.completedRitualIds?.includes("ritual.accept-lantern"),
   );
-  const exteriorVisible = !openingEnclosed(narrativeScene?.id, openingResolved);
+  const exteriorVisible = !openingEnclosed(narrativeScene?.id, openingResolved || openingReflectionInverted);
 
   const start = entry?.engine3d.cameraStart ?? DEFAULT_CAMERA_POSITION;
   const authoredArrival = useMemo(() => sceneManifest && mode === "explore" && controls === "walk"

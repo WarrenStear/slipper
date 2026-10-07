@@ -180,7 +180,7 @@ export function useStoryNavigation(options: StoryNavigationOptions) {
       const world = useWorldStore.getState(), key = event.key.toLowerCase(), walking = world.mode === "explore" && world.controls === "walk";
       if (key === "escape" || key === "e") { event.preventDefault(); world.setMode("explore"); }
       else if (key === "f") { event.preventDefault(); navigation.readActiveEntry(); }
-      else if ((key === "m" || key === "i") && config.capabilities.allowConstellationNavigation) {
+      else if ((key === "m" || key === "i") && config.capabilities.allowConstellationView && useJourneyStore.getState().witnessedEntryIds.length > 0) {
         event.preventDefault(); world.setMode(world.mode === "map" ? "explore" : "map");
       } else if (config.capabilities.showGenericNavigation && (key === "b" || key === "arrowleft" && !walking)) {
         event.preventDefault(); navigation.moveToPrevious();

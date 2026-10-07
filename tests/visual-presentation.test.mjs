@@ -56,7 +56,7 @@ test('surface shaders retain lit materials and independent program cache keys', 
   assert.doesNotMatch(text, /TextureLoader|setState|requestAnimationFrame|WebGLRenderTarget/);
 });
 test('floor visual treatment consumes the existing mask and does not grant events', () => {
-  const text = source('../src/components/three/storyEvents/WetFloorReveal.tsx');
+  const text = source('../src/world/opening/WetFloorReveal.tsx') + source('../src/world/opening/wetFloorShader.ts');
   assert.match(text, /texture2D\(coverageMask,vUv\)/);
   assert.match(text, /planeGeometry args=\{\[12\.8, 12\.5\]\}/);
   assert.match(text, /woodHash/);

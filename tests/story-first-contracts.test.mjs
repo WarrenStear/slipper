@@ -263,7 +263,9 @@ test("directed journey capabilities gate every software-like App entry point", (
   assert.match(app, /if \(archiveOpen && experienceCapabilities\.allowFullArchive\)/);
   assert.match(navigation, /function openArchive\(\)[\s\S]{0,140}if \(!config\.capabilities\.allowFullArchive\) return/);
   assert.match(navigation, /config\.capabilities\.showGenericNavigation &&[\s\S]{0,160}key === "b"/);
-  assert.match(navigation, /key === "m"[\s\S]{0,80}config\.capabilities\.allowConstellationNavigation/);
+  assert.match(navigation, /key === "m"[\s\S]{0,80}config\.capabilities\.allowConstellationView/);
+  assert.match(navigation, /allowConstellationView && useJourneyStore\.getState\(\)\.witnessedEntryIds\.length > 0/);
+  assert.match(app, /scope=\{experienceCapabilities\.constellationScope\}/);
   assert.match(app, /experienceMode === "free-woods" \? <MagicLinkSignIn \/> : null/);
   assert.match(app, /experienceMode === "free-woods" && showMiniMap \? <MiniMapHUD/);
   assert.match(app, /prologueResolved && mode === "explore"[\s\S]{0,360}showContextualGuidance \? <ContextualNavigationPrompt/);

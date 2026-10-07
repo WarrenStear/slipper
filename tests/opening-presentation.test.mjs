@@ -28,7 +28,7 @@ test('restored room pose is derived directly from its accepted stage', () => {
   assert.equal(openingRoomTarget(20), 1);
 });
 test('reduced motion snaps rather than accelerating involuntary room motion', () => {
-  assert.match(source('src/components/three/chapters/BrokenFloorChapter.tsx'), /reducedMotion && active \? targetProgress/);
+  assert.match(source('src/world/opening/openingComposition.ts'), /reducedMotion && active \? target/);
 });
 test('paused room cannot accrue presentation time', () => {
   for (const delta of [0, 1/60, .2, 100]) assert.equal(openingMotionDelta(delta, false), 0);
@@ -42,7 +42,7 @@ test('stalled but active frames are clamped without freezing or fast-forwarding 
 test('normal witnessed frame deltas are bounded without changing the authored damping formula', () => {
   assert.equal(openingMotionDelta(1/60,true),1/60);
   assert.equal(openingMotionDelta(.25,true),.05);
-  assert.match(source('src/components/three/chapters/BrokenFloorChapter.tsx'), /THREE\.MathUtils\.damp\(inversionProgressRef\.current, targetProgress, 3 \/ 8, openingMotionDelta/);
+  assert.match(source('src/world/opening/openingComposition.ts'), /MathUtils\.damp\(previous, target, 3 \/ 8, openingMotionDelta/);
 });
 test('only the unresolved Broken Floor owns the enclosed presentation', () => {
   assert.equal(openingEnclosed('broken-floor.confession',false),true);
@@ -80,7 +80,7 @@ test('click boundary preserves pointer input and cleans up global listeners', ()
   }
 });
 test('photograph and coverage use distinct colour interpretations without changing the source asset', () => {
-  const text=source('src/components/three/storyEvents/WetFloorReveal.tsx');
+  const text=source('src/world/opening/WetFloorReveal.tsx') + source('src/world/opening/wetFloorResources.ts') + source('src/world/opening/wetFloorShader.ts');
   assert.match(text,/source\.clone\(\)/);assert.match(text,/texture\.colorSpace = THREE\.SRGBColorSpace/);
   assert.match(text,/THREE\.RedFormat/);assert.match(text,/#include <colorspace_fragment>/);
   assert.match(text,/toneMapped=\{false\}/);assert.match(text,/forest\.dispose\(\)/);
@@ -88,13 +88,13 @@ test('photograph and coverage use distinct colour interpretations without changi
   assert.match(text,/planeGeometry args=\{\[12\.8, 12\.5\]\}/);
 });
 test('rendered-stage readiness is published by an actual draw callback, not a timer', () => {
-  const text=source('src/components/three/storyEvents/WetFloorReveal.tsx');
+  const text=source('src/world/opening/WetFloorReveal.tsx');
   assert.match(text,/onAfterRender=\{recordRenderedStage\}/);
   assert.match(text,/Math\.abs\(uniforms\.stage\.value - stage\)/);
   assert.doesNotMatch(text,/dispatchStoryEvent|setTimeout|setInterval/);
 });
 test('opening work keeps one authored chapter and batches the original boards', () => {
-  const chapter=source('src/components/three/chapters/BrokenFloorChapter.tsx');
+  const chapter=source('src/scenes/broken-floor/BrokenFloorScene.tsx');
   assert.match(chapter,/useRef\(openingRoomTarget\(revealStage\)\)/);
   assert.match(chapter,/OpeningFloorboards count=\{plankCount\}/);
   assert.match(chapter,/computeBoundingBox\(\)/);assert.match(chapter,/computeBoundingSphere\(\)/);

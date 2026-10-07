@@ -46,6 +46,7 @@ export type SlipperExperienceCapabilities = Readonly<{
   showArchiveInPrimaryNavigation: boolean;
   constellationScope: SlipperConstellationScope;
   showConstellationInPrimaryNavigation: boolean;
+  allowConstellationView: boolean;
   allowConstellationNavigation: boolean;
   allowArbitraryEntryNavigation: boolean;
   allowSceneRevisiting: boolean;
@@ -68,6 +69,7 @@ const DIRECTED_JOURNEY_CAPABILITIES = Object.freeze({
   showArchiveInPrimaryNavigation: false,
   constellationScope: "witnessed-only",
   showConstellationInPrimaryNavigation: false,
+  allowConstellationView: true,
   allowConstellationNavigation: false,
   allowArbitraryEntryNavigation: false,
   allowSceneRevisiting: false,
@@ -90,6 +92,7 @@ const FREE_WOODS_CAPABILITIES = Object.freeze({
   showArchiveInPrimaryNavigation: true,
   constellationScope: "full",
   showConstellationInPrimaryNavigation: true,
+  allowConstellationView: true,
   allowConstellationNavigation: true,
   allowArbitraryEntryNavigation: true,
   allowSceneRevisiting: true,

@@ -49,6 +49,17 @@ test("the carried lantern has exactly one production composition owner", () => {
   assert.deepEqual(mountsOf("src/components/three/MasterPlayerLantern.tsx", "default"),
     ["src/components/three/StorySceneWithMasterLantern.tsx"]);
   assert.deepEqual(mountsOf("src/components/three/MasterPlayerLantern.tsx", "MasterPlayerLantern"), []);
+  // Compatibility exports retain the canonical slot. Direct imports of the
+  // substantive owner cannot create a second carried frame/resource owner.
+  for (const name of ["default", "PlayerLantern"]) assert.deepEqual(mountsOf("src/player/PlayerLantern.tsx", name), []);
+  const compatibility = readFileSync(resolve(root, "src/components/three/MasterPlayerLantern.tsx"), "utf8");
+  const ast = ts.createSourceFile("MasterPlayerLantern.tsx", compatibility, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  const forwarding = ast.statements.filter(ts.isExportDeclaration);
+  assert.equal(forwarding.length, 2);
+  assert.ok(forwarding.every(statement => statement.moduleSpecifier.text === "../../player/PlayerLantern"));
+  const values = forwarding.filter(statement => !statement.isTypeOnly).flatMap(statement => statement.exportClause.elements
+    .map(binding => [(binding.propertyName ?? binding.name).text, binding.name.text]));
+  assert.deepEqual(values, [["PlayerLantern", "MasterPlayerLantern"], ["PlayerLantern", "default"]]);
 });
 
 test("canonical lighting and atmosphere are mounted only by the shared scene look", () => {

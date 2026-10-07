@@ -267,6 +267,95 @@ test('actual fresh hook/StrictMode mount and keyboard are observational until ex
   cpu.unmount();
 });
 
+test('actual directed M/I remain blocked before witnessing, then toggle only the earned viewer without commands or saved progress', () => {
+  for (const storyStarted of [false, true]) {
+    seed(fresh({ storyStarted })); const cpu = mount({ prologueResolved: true }); enter(cpu);
+    const capabilities = getSlipperExperienceCapabilities(cpu.ui.sessionJourneyMode);
+    assert.equal(capabilities.constellationScope, 'witnessed-only');
+    assert.equal(capabilities.allowConstellationView, true);
+    assert.equal(capabilities.allowConstellationNavigation, false);
+    assert.equal(capabilities.allowFullArchive, false);
+    assert.equal(capabilities.showGenericNavigation, false);
+    const unearned = snapshot(), unearnedCommands = commandTrace.length;
+    assert.deepEqual(unearned.witnessedEntryIds, []);
+    for (const value of ['m', 'i']) {
+      cpu.act(() => assert.equal(key(value).defaultPrevented, false));
+      assert.equal(useWorldStore.getState().mode, 'explore');
+      assert.deepEqual(snapshot(), unearned);
+      assert.equal(commandTrace.length, unearnedCommands);
+    }
+    const lease = cpu.host.runtime.currentLease();
+    cpu.act(() => assert.equal(cpu.host.runtime.dispatch({ type: 'witness', entryId: state().activeEntryId, lease }).accepted, true));
+    assert.deepEqual(state().witnessedEntryIds, [state().activeEntryId], 'Only an explicit canonical witness earns the viewer');
+    const earned = snapshot(), saved = storage.get('sidtw:journey:v3'), commands = commandTrace.length, earnedScope = scope();
+    assert.ok(saved, 'The comparison must include the real persisted journey envelope');
+    const unchanged = () => {
+      assert.deepEqual(snapshot(), earned);
+      assert.equal(storage.get('sidtw:journey:v3'), saved);
+      assert.equal(commandTrace.length, commands, 'Viewing and returning must issue no canonical navigation, witness, event, beat, or outcome command');
+      assert.deepEqual(scope(), earnedScope);
+      assert.equal(cpu.host.runtime.currentLease(), lease);
+      assert.equal(cpu.ui.archiveOpen, false);
+      assert.equal(cpu.ui.guidanceEntryId, null);
+      assert.equal(windowTarget.location.pathname, '/');
+    };
+    cpu.act(() => assert.equal(key('m').defaultPrevented, true));
+    assert.equal(useWorldStore.getState().mode, 'map'); assert.equal(cpu.host.physicalActive(), false); unchanged();
+    cpu.act(() => assert.equal(key('i').defaultPrevented, true));
+    assert.equal(useWorldStore.getState().mode, 'explore'); unchanged();
+    cpu.act(() => { key('b'); key('ArrowRight'); cpu.navigation.openArchive(); });
+    assert.equal(useWorldStore.getState().mode, 'explore'); unchanged();
+    cpu.unmount();
+  }
+});
+
+test('actual directed M/I cannot donate map dwell to an earned canonical attention event or persistence', () => {
+  const event = STORY_EVENTS.find(item => item.id === 'enchanted.meadow-warmth'); assert.ok(event?.durationMs);
+  const scene = blueprint.journeyScenes.find(item => item.id === event.sceneId); assert.ok(scene);
+  const priorScenes = blueprint.journeyScenes.slice(0, blueprint.journeyScenes.indexOf(scene)).map(item => item.id);
+  seed(sanitizeStoryJourneyState(fresh({ activeEntryId: scene.keystoneEntryId, storyStarted: true,
+    completedSceneIds: priorScenes,
+    completedChapterIds: blueprint.journeyChapters.filter(chapter => chapter.sceneIds.every(id => priorScenes.includes(id))).map(chapter => chapter.id),
+    completedRitualIds: blueprint.JOURNEY_RITUAL_IDS,
+    worldFlags: Object.fromEntries(blueprint.JOURNEY_WORLD_FLAG_IDS.map(id => [id, true])),
+    inventory: { lantern: true, recoveredKeys: blueprint.JOURNEY_RECOVERED_KEY_IDS, symbolicObjects: blueprint.JOURNEY_SYMBOLIC_OBJECT_IDS },
+    completedStoryEventIds: STORY_EVENTS.filter(item => item.sceneId === scene.id && item.id !== event.id).map(item => item.id),
+  }), snapshotOptions));
+  const cpu = mount({ prologueResolved: true }); enter(cpu); assert.equal(cpu.ui.sessionJourneyMode, 'returning-journey');
+  const lease = cpu.host.runtime.currentLease();
+  cpu.act(() => assert.equal(cpu.host.runtime.dispatch({ type: 'witness', entryId: state().activeEntryId, lease }).accepted, true));
+  assert.ok(getAvailableStoryEvents(state()).some(item => item.id === event.id));
+  const attention = cpu.host.runtime.beginAttention(lease, event.id); assert.ok(attention);
+  tick(0); tick(500); assert.equal(cpu.host.runtime.readAttention(attention).elapsedMs, 500);
+  const before = snapshot(), saved = storage.get('sidtw:journey:v3'), commands = commandTrace.length;
+  cpu.act(() => key('m')); assert.equal(useWorldStore.getState().mode, 'map');
+  assert.equal(cpu.host.runtime.readAttention(attention).paused, true);
+  assert.equal(cpu.host.runtime.readAttention(attention).elapsedMs, 0, 'Viewing interrupts continuous attention immediately');
+  for (let time = 1000; time <= event.durationMs + 2500; time += 500) tick(time);
+  assert.equal(cpu.host.runtime.readAttention(attention).elapsedMs, 0);
+  assert.equal(cpu.host.runtime.readAttention(attention).completed, false);
+  assert.deepEqual(snapshot(), before); assert.equal(storage.get('sidtw:journey:v3'), saved); assert.equal(commandTrace.length, commands);
+  cpu.act(() => key('i')); assert.equal(useWorldStore.getState().mode, 'explore');
+  tick(now + 500);
+  assert.equal(cpu.host.runtime.readAttention(attention).elapsedMs, 0, 'Returning re-primes the clock; map time cannot be credited');
+  assert.equal(cpu.host.runtime.readAttention(attention).completed, false);
+  assert.deepEqual(snapshot(), before); assert.equal(storage.get('sidtw:journey:v3'), saved); assert.equal(commandTrace.length, commands);
+  assert.equal(cpu.host.runtime.currentLease(), lease); assert.equal(state().activeEntryId, scene.keystoneEntryId);
+  cpu.unmount();
+});
+
+test('actual completed-journey M/I retain the full viewer capability without changing earned progress', () => {
+  seed(completed()); const cpu = mount({ prologueResolved: true }); enter(cpu);
+  const capabilities = getSlipperExperienceCapabilities('free-woods');
+  assert.equal(capabilities.constellationScope, 'full'); assert.equal(capabilities.allowConstellationNavigation, true);
+  assert.equal(capabilities.allowFullArchive, true); assert.equal(capabilities.showGenericNavigation, true);
+  const before = snapshot(), saved = storage.get('sidtw:journey:v3'), commands = commandTrace.length;
+  cpu.act(() => key('m')); assert.equal(useWorldStore.getState().mode, 'map');
+  cpu.act(() => key('i')); assert.equal(useWorldStore.getState().mode, 'explore');
+  assert.deepEqual(snapshot(), before); assert.equal(storage.get('sidtw:journey:v3'), saved); assert.equal(commandTrace.length, commands);
+  cpu.unmount();
+});
+
 test('actual retained keyboard/click callbacks consult latest canonical state and ignore interactive/modifier/Settings input', () => {
   seed(completed()); const cpu = mount({ prologueResolved: true }); enter(cpu);
   const callback = cpu.navigation.continueToNext, stable = cpu.navigation;

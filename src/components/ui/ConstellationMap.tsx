@@ -15,6 +15,7 @@ import {
   type JourneyTechnicalBiome,
 } from "../../data/journeyNarrative";
 import type { Slipper3DEntry } from "../../data/slipper3dTypes";
+import type { SlipperConstellationScope } from "../../lib/experienceMode";
 import {
   buildStoryConstellationModel,
   deriveLanternNarrative,
@@ -37,6 +38,8 @@ export type ConstellationMapProps = {
   entries: Slipper3DEntry[];
   activeEntryId: string;
   visitedEntryIds: string[];
+  /** Directed journeys disclose only canonical witnessed memories. */
+  scope?: SlipperConstellationScope;
   sceneProximity?: SceneProximityState | null;
   /** Opens or returns to a remembered fragment. */
   onOpenEntry?: (entryId: string) => void;
@@ -210,6 +213,7 @@ export function ConstellationMap({
   entries,
   activeEntryId,
   visitedEntryIds,
+  scope = "full",
   sceneProximity,
   onOpenEntry,
   onGuideEntry,
@@ -247,15 +251,32 @@ export function ConstellationMap({
     storyCompleted: state.storyCompleted,
   })));
 
-  const storyModel = useMemo(
-    () => buildStoryConstellationModel({ ...journeyState, activeEntryId }),
-    [activeEntryId, journeyState],
-  );
+  const witnessedSet = useMemo(() => new Set(journeyState.witnessedEntryIds.filter(
+    entryId => Boolean(getJourneySceneForEntry(entryId)),
+  )), [journeyState.witnessedEntryIds]);
+  const storyModel = useMemo(() => {
+    const model = buildStoryConstellationModel({ ...journeyState, activeEntryId });
+    if (scope === "full") return model;
+    // Adapt the existing earned model; filtering never invents an edge between
+    // remembered endpoints whose actual route crossed an unwitnessed memory.
+    const nodes = model.nodes.filter(node => witnessedSet.has(node.entryId));
+    return {
+      ...model,
+      nodes,
+      edges: model.edges.filter(edge => witnessedSet.has(edge.sourceEntryId) && witnessedSet.has(edge.targetEntryId)),
+      routeEntryIds: model.routeEntryIds.filter(entryId => witnessedSet.has(entryId)),
+      chapters: model.chapters.map(chapter => ({ ...chapter,
+        visibleEntryIds: chapter.visibleEntryIds.filter(entryId => witnessedSet.has(entryId)),
+      })).filter(chapter => chapter.visibleEntryIds.length > 0),
+      isNearlyEmpty: nodes.length <= 1,
+    };
+  }, [activeEntryId, journeyState, scope, witnessedSet]);
   const lantern = useMemo(
     () => deriveLanternNarrative(journeyState),
     [journeyState],
   );
   const visitedSet = useMemo(() => new Set(visitedEntryIds), [visitedEntryIds]);
+  const rememberedSet = scope === "witnessed-only" ? witnessedSet : visitedSet;
   const storyNodeMap = useMemo(
     () => new Map(storyModel.nodes.map((node) => [node.entryId, node])),
     [storyModel.nodes],
@@ -276,13 +297,13 @@ export function ConstellationMap({
     [spatialNodes],
   );
   const activeNode = nodeMap.get(activeEntryId);
-  const activeEntry = activeNode?.entry;
-  const activeChapter = getJourneyChapterForEntry(activeEntryId);
+  const activeEntry = scope === "full" || witnessedSet.has(activeEntryId) ? activeNode?.entry : undefined;
+  const activeChapter = activeEntry ? getJourneyChapterForEntry(activeEntryId) : undefined;
   const liveSceneProximity = sceneProximity?.activeEntryId === activeEntryId
     ? sceneProximity
     : null;
   const mapFallbackNavigationTarget = useMemo(
-    () => resolveNavigationTarget({
+    () => scope === "witnessed-only" ? null : resolveNavigationTarget({
       nodes: spatialNodes,
       activeEntryId,
       visitedEntryIds,
@@ -296,10 +317,13 @@ export function ConstellationMap({
       liveSceneProximity?.playerPosition,
       spatialNodes,
       visitedEntryIds,
+      scope,
     ],
   );
-  const navigationTargetId =
+  const proposedNavigationTargetId =
     liveSceneProximity?.navigationTargetId ?? mapFallbackNavigationTarget?.entryId ?? null;
+  const navigationTargetId = scope === "full" || proposedNavigationTargetId && witnessedSet.has(proposedNavigationTargetId)
+    ? proposedNavigationTargetId : null;
   const navigationTargetReason =
     liveSceneProximity?.navigationTargetReason ?? mapFallbackNavigationTarget?.reason ?? "planned";
   const mapTrailState = liveSceneProximity?.trailState ?? "map-planned";
@@ -307,6 +331,9 @@ export function ConstellationMap({
     (storyModel.progress.witnessedEntries / Math.max(1, STORY_CONSTELLATION_ENTRY_COUNT)) * 100,
   );
   const progressStyle = { "--progress": `${progressPercent}%` } as CSSProperties;
+  const anonymousPoints = useMemo(() => scope === "witnessed-only"
+    ? entries.filter(entry => !witnessedSet.has(entry.id)).map(entry => projection.project(entryWorldPosition(entry, entries)))
+    : [], [entries, projection, scope, witnessedSet]);
 
   const chapterRegions = useMemo(() => {
     if (storyModel.isNearlyEmpty) return [];
@@ -412,15 +439,16 @@ export function ConstellationMap({
     const selected: Slipper3DEntry[] = [];
     const seen = new Set<string>();
     for (const entryId of ids) {
+      if (scope === "witnessed-only" && !witnessedSet.has(entryId)) continue;
       if (seen.has(entryId)) continue;
       const entry = entryMap.get(entryId);
       if (!entry) continue;
       seen.add(entryId);
       selected.push(entry);
-      if (selected.length >= 12) break;
+      if (scope === "full" && selected.length >= 12) break;
     }
     return selected;
-  }, [entryMap, navigationTargetId, storyModel.nodes, storyModel.routeEntryIds]);
+  }, [entryMap, navigationTargetId, scope, storyModel.nodes, storyModel.routeEntryIds, witnessedSet]);
 
   const svgClientToMap = (event: { clientX: number; clientY: number }) => {
     const rect = svgRef.current?.getBoundingClientRect();
@@ -482,11 +510,16 @@ export function ConstellationMap({
   };
 
   const resetMap = () => setViewport({ x: 0, y: 0, scale: 1 });
-  const actionForEntry = (entryId: string) =>
-    visitedSet.has(entryId) ? openRememberedEntry : onGuideEntry;
+  const actionForEntry = (entryId: string) => {
+    if (scope === "witnessed-only") {
+      return witnessedSet.has(entryId) && useJourneyStore.getState().witnessedEntryIds.includes(entryId)
+        ? openRememberedEntry : undefined;
+    }
+    return visitedSet.has(entryId) ? openRememberedEntry : onGuideEntry;
+  };
   const activateEntry = (entryId: string) => actionForEntry(entryId)?.(entryId);
   const entryActionLabel = (entry: Slipper3DEntry) => {
-    if (!visitedSet.has(entry.id)) {
+    if (!rememberedSet.has(entry.id)) {
       return `Guide through the forest to unread fragment: ${entry.title}`;
     }
     if (entry.id === activeEntryId) {
@@ -514,6 +547,7 @@ export function ConstellationMap({
         role={isKeyboardLandmark ? "button" : undefined}
         tabIndex={isKeyboardLandmark && actionAvailable ? 0 : -1}
         data-keyboard-landmark={isKeyboardLandmark ? "true" : undefined}
+        data-constellation-entry-id={storyNode.entryId}
         onPointerDown={(event) => event.stopPropagation()}
         onClick={() => activateEntry(storyNode.entryId)}
         onKeyDown={(event) => {
@@ -549,6 +583,7 @@ export function ConstellationMap({
       aria-label={labelledBy ? undefined : "Living story constellation controls"}
       tabIndex={labelledBy ? 0 : undefined}
       hidden={hidden}
+      data-constellation-scope={scope}
     >
       <div className="constellation-header">
         <div>
@@ -556,20 +591,23 @@ export function ConstellationMap({
           <h2 className="constellation-title">{activeEntry?.title ?? "Unlit memory"}</h2>
           <span className="constellation-lantern-phase">{lantern.title}</span>
         </div>
-        <div className="constellation-progress" style={progressStyle}>
+        {scope === "full" ? <div className="constellation-progress" style={progressStyle}>
           <p className="constellation-progress-text">{progressPercent}% witnessed</p>
           <div className="constellation-progress-bar" aria-hidden="true">
             <span className="constellation-progress-fill" style={{ width: `${progressPercent}%` }} />
           </div>
-        </div>
+        </div> : null}
       </div>
 
       <p className="constellation-status" role="status">
-        {storyModel.isNearlyEmpty
+        {scope === "witnessed-only" ? storyModel.nodes.length === 0
+          ? "The constellation is almost dark."
+          : "Witnessed memories remain in the constellation."
+          : storyModel.isNearlyEmpty
           ? "The constellation is almost dark. One present point remains."
           : `${storyModel.nodes.length} memories shape the visible constellation.`}{" "}
-        {storyModel.progress.routeSteps} travelled steps are retained.{" "}
-        {storyModel.progress.completedChapters} of {journeyChapters.length} chapters are complete.
+        {scope === "full" ? <>{storyModel.progress.routeSteps} travelled steps are retained.{" "}
+        {storyModel.progress.completedChapters} of {journeyChapters.length} chapters are complete.</> : null}
       </p>
 
       <div
@@ -619,6 +657,8 @@ export function ConstellationMap({
           </defs>
 
           <g transform={`translate(${viewport.x.toFixed(1)} ${viewport.y.toFixed(1)}) scale(${viewport.scale.toFixed(3)})`}>
+            {anonymousPoints.map((point, index) => <circle key={index} className="constellation-unwitnessed-dot"
+              data-constellation-future="true" aria-hidden="true" cx={point.x} cy={point.y} r="0.8" />)}
             {chapterRegions.map((region) => (
               <g
                 key={region.id}
@@ -749,22 +789,22 @@ export function ConstellationMap({
           </g>
         </svg>
 
-        <div className="constellation-legend" aria-hidden="true">
+        {scope === "full" ? <div className="constellation-legend" aria-hidden="true">
           <span className="is-entry">{storyModel.progress.witnessedEntries}/66 witnessed</span>
           <span className="is-tag">{mapTrailState}</span>
           <span className="is-chapter">{storyModel.progress.completedChapters}/{journeyChapters.length} chapters</span>
           <span className="is-active">{lantern.id}</span>
-        </div>
+        </div> : null}
       </div>
 
-      <div className="constellation-story-summary" aria-label="Constellation memory state">
+      {scope === "full" ? <div className="constellation-story-summary" aria-label="Constellation memory state">
         <span>{storyModel.progress.completedScenes}/32 scenes</span>
         <span>{storyModel.progress.completedRituals} story moments</span>
         <span>{storyModel.landmarkMemory.activeCount} landmarks</span>
         <span>{storyModel.releasedWordCount} words released</span>
-      </div>
+      </div> : null}
 
-      <div className="constellation-route-panel">
+      {scope === "full" || targetNode ? <div className="constellation-route-panel">
         <div>
           <p className="constellation-kicker">guidance target</p>
           <strong>{targetNode?.entry.title ?? "No target resolved"}</strong>
@@ -780,15 +820,15 @@ export function ConstellationMap({
           onClick={() => targetNode && activateEntry(targetNode.entry.id)}
           aria-label={targetNode ? entryActionLabel(targetNode.entry) : "No guidance target available"}
         >
-          {targetNode && visitedSet.has(targetNode.entry.id) ? "Read target" : "Guide me there"}
+          {targetNode && rememberedSet.has(targetNode.entry.id) ? "Read target" : "Guide me there"}
         </button>
-      </div>
+      </div> : null}
 
       <div className="constellation-list">
         {listedEntries.map((entry) => {
           const storyNode = storyNodeMap.get(entry.id);
           const isActive = entry.id === activeEntryId;
-          const isVisited = visitedSet.has(entry.id);
+          const isVisited = rememberedSet.has(entry.id);
           const isTarget = entry.id === navigationTargetId;
           const scene = getJourneySceneForEntry(entry.id);
           const actionAvailable = Boolean(actionForEntry(entry.id));

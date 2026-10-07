@@ -117,8 +117,11 @@ export function StoryActorDirector({ sceneId, position = ORIGIN, qualityProfile,
   const cues = CINEMATIC_ACTOR_CUES[sceneId] ?? NO_CUES;
   // The Sunset chapter owns its one monumental mirror and its local apparition.
   const chapterOwnsSeer = sceneId.startsWith("sunset.");
+  // Rabbit's canonical grounded guide is owned by FirstWoodScene; retain the
+  // moving lantern actor in every other authored scene and its carrying gates.
+  const chapterOwnsGuideLantern = sceneId === "enchanted.rabbit-hole";
   return <group position={position} name="StoryActorDirector">
-    {cues.filter((definition) => !(chapterOwnsSeer && definition.actor === "seer") && (definition.actor !== "lantern" || (!lanternOwned && !lanternPlaced))).map((definition) => <AuthoredActor key={`${sceneId}:${definition.actor}`} definition={definition} reducedMotion={reducedMotion} />)}
+    {cues.filter((definition) => !(chapterOwnsSeer && definition.actor === "seer") && (definition.actor !== "lantern" || (!chapterOwnsGuideLantern && !lanternOwned && !lanternPlaced))).map((definition) => <AuthoredActor key={`${sceneId}:${definition.actor}`} definition={definition} reducedMotion={reducedMotion} />)}
     {sceneId === "river.release-surrender" ? <InstancedStoryFlock qualityProfile={qualityProfile} reducedEffects={reducedEffects} reducedMotion={reducedMotion} released={birdsReleased} /> : null}
     {sceneId === "blue-moon.intimacy" || sceneId === "blue-moon.sanctuary" ? <InstancedStoryFlock origami awakened={origamiAwakened} qualityProfile={qualityProfile} reducedEffects={reducedEffects} reducedMotion={reducedMotion} released={false} /> : null}
   </group>;

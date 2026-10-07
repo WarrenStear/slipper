@@ -80,10 +80,10 @@ test('room shell removes only downward triangles without changing the interactiv
   const indices=[0,1,2, 3,4,5];
   assert.deepEqual(roomShellWithoutFloor(indices,normals),[3,4,5]);
   assert.deepEqual(indices,[0,1,2,3,4,5]);
-  const chapter=source('src/components/three/chapters/BrokenFloorChapter.tsx');
+  const chapter=source('src/scenes/broken-floor/BrokenFloorScene.tsx');
   assert.match(chapter,/geometry=\{roomGeometry\}/);
   assert.match(chapter,/<WetFloorReveal stage=\{revealStage\}/);
-  assert.match(source('src/components/three/storyEvents/WetFloorReveal.tsx'),/planeGeometry args=\{\[12\.8, 12\.5\]\}/);
+  assert.match(source('src/world/opening/WetFloorReveal.tsx'),/planeGeometry args=\{\[12\.8, 12\.5\]\}/);
 });
 test('reduced motion snaps chapter fog without an extra transition', () => {
   assert.match(source('src/components/three/cinematics/CinematicAtmosphereDirector.tsx'),/const alpha = reducedMotion \? 1/);

@@ -1,7 +1,7 @@
 import { chromium } from '@playwright/test';
 import { spawn, execFileSync } from 'node:child_process';
 import { mkdir, writeFile, rm } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
 
 // Verified main before the restraint/finale pass; earlier review SHAs lack these source paths.
 // An explicit override must contain every required baseline file; never fall back silently.
@@ -14,9 +14,12 @@ const originals = [
   'cinematics/CinematicAtmosphereDirector.tsx', 'cinematics/CinematicLightingDirector.tsx',
   'environment/chapterEnvironment.ts',
 ];
+const firstWoodOwner = 'src/scenes/first-wood/FirstWoodScene.tsx';
+const firstWoodBaselineOwner = 'src/scenes/first-wood/WoodlandBaselineFirstWoodScene.tsx';
 const copies = originals.map(p => [`src/components/three/${p}`, `src/components/three/${p.replace(/([^/]+)$/, 'WoodlandBaseline$1')}`]);
 const report = {
   candidate: execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(), baseline, requestedAngle: angle,
+  candidateFirstWoodOwner: firstWoodOwner,
   method: 'Same-camera, settled-profile source-component fixtures. Seeded ending state is appearance evidence only, not an earned gameplay completion. No real-device FPS claim.',
   captures: [], failures: [],
 };
@@ -33,7 +36,8 @@ async function server(args, port) {
 }
 const stage = `import React,{Suspense,useLayoutEffect,useRef} from 'react';
 import {createRoot} from 'react-dom/client';import {Canvas,useFrame,useThree} from '@react-three/fiber';
-import {EnchantedWoodChapter} from '../src/components/three/chapters/EnchantedWoodChapter';
+import {Physics} from '@react-three/rapier';
+import {FirstWoodScene} from '../src/scenes/first-wood/FirstWoodScene';
 import {EnchantedWoodChapter as BeforeWood} from '../src/components/three/chapters/WoodlandBaselineEnchantedWoodChapter';
 import {IntegratedFinalTableau} from '../src/components/three/chapters/IntegratedFinalTableau';
 import {IntegratedFinalTableau as BeforeEnd} from '../src/components/three/chapters/WoodlandBaselineIntegratedFinalTableau';
@@ -52,14 +56,14 @@ const scene=getJourneySceneLayout(sceneId),entries=journeyChapters.flatMap(c=>c.
 // Explicitly seeded visual states, never a replacement for physical or semantic tests.
 useJourneyStore.setState({sceneId,storyCompleted:false,storyObjectStates:ending?{'epilogue.reverse-light':'complete','lantern.master':'placed'}:{},worldFlags:ending?{'story-events.started':true,'lantern.placed-and-lit':true}:{},storyPlacementStates:{},history:ending?entries:[],witnessedEntryIds:ending?entries:[],completedSceneIds:ending?journeyScenes.map(s=>s.id):[],completedChapterIds:ending?journeyChapters.map(c=>c.id):[]});
 useSettingsStore.setState({reducedMotion:true,reducedEffects:quality==='low'});useWorldStore.setState({mode:'explore'});
-const Chapter=ending?(before?BeforeEnd:IntegratedFinalTableau):(before?BeforeWood:EnchantedWoodChapter);
+const Chapter=ending?(before?BeforeEnd:IntegratedFinalTableau):(before?BeforeWood:FirstWoodScene);
 const Fog=before?BeforeFog:CinematicAtmosphereDirector,Light=before?BeforeLight:CinematicLightingDirector;
 const profile=resolveCinematicProfile(sceneId,{});for(let i=0;i<300;i++)advanceCinematicProfile(profile,.1);
 function Evidence(){const {camera,scene,gl}=useThree(),frames=useRef(0);
  useLayoutEffect(()=>{if(ending){camera.position.set(0,3.3,6.5);camera.lookAt(0,4.8,-15);}else{camera.position.set(0,2.7,-8);camera.lookAt(0,2.8,6);}camera.updateProjectionMatrix();},[camera]);
  useFrame((_,delta)=>advanceCinematicProfile(profile,delta),-2);
  useFrame(()=>{if(++frames.current===25){let lights=0,shadowLights=0;const names=[],batches=[];scene.traverse(o=>{if(o.name)names.push(o.name);if(o.isLight){lights++;if(o.castShadow)shadowLights++;}if(o.isInstancedMesh)batches.push({name:o.name,count:o.count});});window.__woodlandEvidence={calls:gl.info.render.calls,triangles:gl.info.render.triangles,lights,shadowLights,names,batches,camera:camera.position.toArray(),fog:{density:scene.fog?.density,color:scene.fog?.color.getHexString()}};document.body.dataset.ready='true';}});return null;}
-createRoot(document.getElementById('root')).render(<Canvas dpr={1} camera={{fov:65,near:.05,far:150}} gl={{antialias:true,preserveDrawingBuffer:true}}><color attach='background' args={['#080e11']}/><hemisphereLight args={['#b9c8cf','#30251e',.45]}/><Suspense fallback={null}><Chapter scene={scene} qualityProfile={RENDER_QUALITY_PROFILES[quality]} reducedEffects={quality==='low'} reducedMotion/><Light/><Fog/><Evidence/></Suspense></Canvas>);`;
+createRoot(document.getElementById('root')).render(<Canvas dpr={1} camera={{fov:65,near:.05,far:150}} gl={{antialias:true,preserveDrawingBuffer:true}}><color attach='background' args={['#080e11']}/><hemisphereLight args={['#b9c8cf','#30251e',.45]}/><Suspense fallback={null}><Physics paused><Chapter scene={scene} qualityProfile={RENDER_QUALITY_PROFILES[quality]} reducedEffects={quality==='low'} reducedMotion/></Physics><Light/><Fog/><Evidence/></Suspense></Canvas>);`;
 async function capture(which,width,height,quality,before){
   const ctx=await browser.newContext({viewport:{width,height},deviceScaleFactor:1,reducedMotion:'reduce'}),page=await ctx.newPage(),errors=[];
   const name=`${before?'before':'after'}-${which}-${quality}-${width}`;
@@ -96,10 +100,22 @@ try{
   await mkdir(out,{recursive:true});
   execFileSync('git',['cat-file','-e',`${baseline}^{commit}`]);
   for(const [required] of copies) execFileSync('git',['cat-file','-e',`${baseline}:${required}`]);
+  // Older baselines contain the actual chapter body. Newer baselines contain
+  // only the compatibility export: copy their immutable scene body as well,
+  // never let a baseline adapter resolve the current candidate's composition.
+  const baselineWood = execFileSync('git',['show',baseline+':src/components/three/chapters/EnchantedWoodChapter.tsx'],{encoding:'utf8'});
+  const usesFirstWoodOwner = baselineWood.includes('scenes/first-wood/FirstWoodScene');
+  if(usesFirstWoodOwner){
+    execFileSync('git',['cat-file','-e',`${baseline}:${firstWoodOwner}`]);
+    copies.push([firstWoodOwner,firstWoodBaselineOwner]);
+  }
   await mkdir(fixture,{recursive:true});
   for(const [original,copy]of copies){
     let text=execFileSync('git',['show',baseline+':'+original],{encoding:'utf8'});
+    if(original==='src/components/three/chapters/EnchantedWoodChapter.tsx' && usesFirstWoodOwner)
+      text=text.replace('scenes/first-wood/FirstWoodScene','scenes/first-wood/WoodlandBaselineFirstWoodScene');
     if(original.includes('/cinematics/'))text=text.replace('../environment/chapterEnvironment','../environment/WoodlandBaselinechapterEnvironment');
+    await mkdir(dirname(copy),{recursive:true});
     await writeFile(copy,text);
   }
   await writeFile(fixture+'/index.html','<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>Woodland component comparison</title><style>html,body,#root{width:100%;height:100%;margin:0;overflow:hidden}</style></head><body><div id="root"></div><script type="module" src="./stage.tsx"></script></body></html>');

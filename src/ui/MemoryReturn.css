@@ -1,0 +1,35 @@
+.memory-return {
+  min-height: 44px;
+  padding: .55rem .7rem;
+  color: #e8dfcf;
+  background: #111b1dcc;
+  border: 0;
+  border-bottom: 1px solid #ccbc8d66;
+  font: 400 .83rem/1.5 Georgia, "Times New Roman", serif;
+  cursor: pointer;
+}
+
+.memory-return:focus-visible {
+  outline: 2px solid #efd6a0;
+  outline-offset: 4px;
+}
+
+.first-constellation-access {
+  position: fixed;
+  z-index: 95;
+  right: max(1rem, env(safe-area-inset-right));
+  bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+html[data-mobile="true"] .first-constellation-access {
+  bottom: max(12rem, calc(env(safe-area-inset-bottom) + 11rem));
+}
+
+@media (forced-colors: active) {
+  .memory-return {
+    color: LinkText;
+    background: Canvas;
+    border-color: LinkText;
+  }
+  .memory-return:focus-visible { outline-color: Highlight; }
+}

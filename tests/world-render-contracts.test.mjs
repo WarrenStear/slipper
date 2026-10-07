@@ -248,7 +248,7 @@ test("the prologue, story roles, and guidance express authored progression", () 
   const app = read("src/App.tsx");
   const scene = read("src/components/three/StoryScene.tsx");
   const guidance = read("src/world/guidance/GuidanceController.tsx");
-  const brokenFloor = read("src/components/three/chapters/BrokenFloorChapter.tsx");
+  const brokenFloor = read("src/scenes/broken-floor/BrokenFloorScene.tsx");
   const onboarding = read("src/components/ui/OnboardingGate.tsx");
   const onboardingStyles = read("src/components/ui/OnboardingGate.css");
   const ritual = read("src/components/three/rituals/RitualInteraction.tsx");
@@ -280,8 +280,8 @@ test("the prologue, story roles, and guidance express authored progression", () 
   assert.match(brokenFloor, /name="forest-beneath-wet-reflection"/);
   assert.match(brokenFloor, /storyObjectStates\?\.\["broken-floor\.reflection"\]/);
   assert.match(brokenFloor, /<WetFloorReveal stage=\{revealStage\}/);
-  assert.match(brokenFloor, /const targetProgress = openingResolved \? 1 : revealStage \/ 5/);
-  assert.match(brokenFloor, /THREE\.MathUtils\.damp\(inversionProgressRef\.current, targetProgress/);
+  assert.match(read("src/world/opening/openingComposition.ts"), /const target = openingRoomTarget\(stage\)/);
+  assert.match(brokenFloor, /advanceOpeningRoom\(inversionProgressRef\.current, revealStage, delta, active, reducedMotion\)/);
   assert.doesNotMatch(brokenFloor, /inversionProgressRef\.current \+ delta \/ duration/);
   assert.match(brokenFloor, /roomMaterialRef\.current\.opacity = roomOpacity/);
   assert.match(brokenFloor, /name="distant-light-recedes-into-wood"/);
@@ -371,7 +371,8 @@ test("disabled audio stays unmounted and render loops avoid known allocations", 
   const scene = read("src/components/three/StoryScene.tsx");
   const engine = read("src/components/three/world/WorldEngineLayer.tsx");
   const ground = read("src/components/three/world/PerfectWorldGround.tsx");
-  const lantern = read("src/components/three/MasterPlayerLantern.tsx");
+  const lantern = read("src/player/PlayerLantern.tsx");
+  const lanternGeometry = read("src/player/playerLanternGeometry.ts");
   const repair = read("scripts/enforce-single-master-lantern.mjs");
   const guidance = read("src/world/guidance/GuidanceController.tsx");
 
@@ -393,7 +394,10 @@ test("disabled audio stays unmounted and render loops avoid known allocations", 
   assert.doesNotMatch(engine, /\.lerp\(new THREE\.(?:Vector3|Color)/);
   assert.doesNotMatch(ground, /\.lerp\(new THREE\.(?:Vector3|Color)/);
   assert.match(lantern, /const director = useMemo\(/);
-  assert.match(lantern, /const metal = createLanternHousingGeometry\(\)/);
+  assert.match(lanternGeometry, /housingBuilder: \(\) => THREE\.BufferGeometry = createLanternHousingGeometry/);
+  assert.match(lanternGeometry, /const metal = housingBuilder\(\)/);
+  assert.match(lantern, /useMemo\(geometryFactory, \[geometryFactory\]\)/);
+  assert.match(lantern, /geometryFactory = createReviewedPlayerLanternGeometries/);
   assert.match(read("src/components/three/environmentArt/heroGeometry.ts"), /mergeArtGeometries\(parts\)/);
   assert.match(lantern, /<pointLight[\s\S]*castShadow=\{false\}/);
   assert.doesNotMatch(lantern, /visible=\{false\}/);

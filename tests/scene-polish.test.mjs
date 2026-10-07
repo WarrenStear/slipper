@@ -130,7 +130,7 @@ test('house pose easing stays bounded and reaches the authored destination', () 
 });
 test('the renderer consumes coverage and viewer history rather than free-running reflection motion', () => {
   const text=p=>readFileSync(new URL(p,import.meta.url),'utf8');
-  assert.match(text('../src/components/three/storyEvents/WetFloorReveal.tsx'),/texture2D\(coverageMask,vUv\)/);
+  assert.match(text('../src/world/opening/wetFloorShader.ts'),/texture2D\(coverageMask,vUv\)/);
   const mirror=text('../src/components/three/storyEvents/ObservedSanctuaryReflection.tsx');
   assert.match(mirror,/recordReflectionPose\(history, now, pose\)/);assert.match(mirror,/sampleReflectionPose/);
   assert.match(mirror,/<ReflectivePanel position=\{\[0, 0, 0\]\}/);
