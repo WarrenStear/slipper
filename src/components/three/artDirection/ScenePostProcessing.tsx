@@ -2,6 +2,8 @@ import { useEffect, useMemo } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { DepthTexture, HalfFloatType, ShaderMaterial, UnsignedByteType, UnsignedIntType, Vector2, WebGLRenderTarget } from "three";
 import { FullScreenQuad } from "three/examples/jsm/postprocessing/Pass.js";
+import type { JourneySceneId } from "../../../lib/storyJourneyState";
+import { enqueueFirstWoodPrograms } from "./firstWoodPrograms";
 import { useSceneLook } from "./SceneLookContext";
 import { blendWorldValue, worldTransitionAlpha, WORLD_GRADE_FRAGMENT } from "./worldVisualContinuity";
 
@@ -62,7 +64,7 @@ export const FINISH_FRAGMENT = /* glsl */ `
 
 /** High: one FXAA composite. Cinematic: MSAA + two bounded bloom scales + contacts.
  * No normal prepass, SSR, temporal history or camera jitter. */
-export function ScenePostProcessing({ bloomIntensity, vignetteIntensity }: { bloomIntensity: number; vignetteIntensity: number }) {
+export function ScenePostProcessing({ sceneId, bloomIntensity, vignetteIntensity }: { sceneId: JourneySceneId; bloomIntensity: number; vignetteIntensity: number }) {
   const presentation = useSceneLook()!;
   const cinematic = presentation.look.budget.finishing;
   const { gl, size } = useThree();
@@ -86,6 +88,7 @@ export function ScenePostProcessing({ bloomIntensity, vignetteIntensity }: { blo
     const intermediate = (fragmentShader: string) => new ShaderMaterial({ depthTest: false, depthWrite: false, toneMapped: false, uniforms: { inputMap: { value: target.texture }, stepSize: { value: new Vector2() } }, vertexShader: VERTEX, fragmentShader });
     return { metadata: { width: 1, height: 1, bloomTargets: levels.length, samples: target.samples, method: cinematic ? "msaa-bloom-contact" : "fxaa" }, target, levels, material, bright: intermediate(BRIGHT), blur: intermediate(BLUR), quad: new FullScreenQuad(material), hdr };
   }, [gl, cinematic]);
+  const preparation = useMemo(() => ({ attempted: false }), [sceneId, resources]);
   useEffect(() => () => {
     resources.target.depthTexture?.dispose(); resources.target.dispose(); resources.levels.forEach(t => t.dispose());
     resources.material.dispose(); resources.bright.dispose(); resources.blur.dispose(); resources.quad.dispose();
@@ -112,7 +115,12 @@ export function ScenePostProcessing({ bloomIntensity, vignetteIntensity }: { blo
     const previous = gl.getRenderTarget(), autoReset = gl.info.autoReset;
     gl.info.autoReset = false; gl.info.reset();
     try {
-      gl.setRenderTarget(target); gl.clear(); gl.render(scene, camera);
+      gl.setRenderTarget(target);
+      if (!preparation.attempted) {
+        preparation.attempted = true;
+        enqueueFirstWoodPrograms(sceneId, gl, scene, camera);
+      }
+      gl.clear(); gl.render(scene, camera);
       if (levels.length) {
         quad.material = bright; bright.uniforms.inputMap.value = target.texture; bright.uniforms.stepSize.value.set(.5 / w, .5 / h);
         gl.setRenderTarget(levels[0]); quad.render(gl);

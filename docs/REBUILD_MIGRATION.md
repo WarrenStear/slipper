@@ -1151,3 +1151,30 @@ inputs remain failed; the unchanged continuity guard passes on the reruns.
 The images, raw receipts and failed attempts are retained externally under
 `artifacts/rebuild-20261005/phase-1-forest-*` and
 `artifacts/rebuild-20261005/arrival-performance-preparation`.
+
+### First-memory shader preparation
+
+First Wood now submits its actual visible standard-material shaders together
+before the existing beauty render when parallel shader compilation is supported.
+It preserves normal shader error checks, geometry-specific UV map admission,
+controls and same-frame rendering. Preparation is bounded, adds no draw, target,
+material or frame owner, and leaves unsupported renderers on the existing path.
+
+Matched fresh physical journeys retain exactly the same complete program-source
+multisets: 74 programs on mobile high and 95 on desktop cinematic. In these native
+samples, the main arrival render task falls from 410 to 178 ms on mobile and
+1,091 to 534 ms on cinematic desktop. Aggregate first-use program-log waiting
+falls from 368.8 to 138.9 ms and 965.3 to 355.6 ms respectively. The GL trace shows
+25 mobile and 31 cinematic variants linked together before their first log query,
+allowing driver compilation to overlap instead of serializing each first use.
+
+Both configurations pass unchanged earned-state and physical continuity
+assertions, with no browser or shader-console errors. Residual arrival stalls
+remain: these are measured local sample improvements, not a stutter-free or
+device-wide performance claim. Two earlier desktop driver-gap failures remain
+retained separately; unchanged retries pass without relaxing the 1.2-second
+evidence limit. The baseline desktop CPU sample timestamps do not coherently
+cover arrival, so its timing attribution uses direct GL durations, long-task
+receipts, mapped GL stacks and program identities rather than sampled CPU time.
+The combined Node 22 release check passes 1,240 unit and seven security cases,
+content and asset validation, TypeScript, production build and Pages Functions.

@@ -75,7 +75,7 @@ function SceneLookOwner({ sceneId, quality, reducedEffects, reducedMotion, origi
       <SceneAtmosphere heading={heading} />
       <group position={origin} rotation={[0, heading, 0]}><SceneLighting quality={quality} /><AuthoredLightShafts /><GroundMist /></group>
       <SceneParticles particleScale={particleScale} enabled={particlesEnabled} />
-      {target.budget.edgeSmoothing ? <ScenePostProcessing bloomIntensity={bloomIntensity} vignetteIntensity={vignetteIntensity} /> : null}
+      {target.budget.edgeSmoothing ? <ScenePostProcessing sceneId={sceneId} bloomIntensity={bloomIntensity} vignetteIntensity={vignetteIntensity} /> : null}
     </group>
     {children}
   </SceneLookContext.Provider>;

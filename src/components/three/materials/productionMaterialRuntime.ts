@@ -1,4 +1,4 @@
-import { NoColorSpace, RepeatWrapping, SRGBColorSpace, type BufferGeometry, type MeshStandardMaterial, type Texture } from "three";
+import { NoColorSpace, RepeatWrapping, SRGBColorSpace, type BufferGeometry, type MeshStandardMaterial, type Texture, type Mesh, type WebGLRenderer, type Scene, type Camera } from "three";
 import { approvedMaterialMaps, isLocalMaterialMapUrl, MATERIAL_MAP_CHANNELS, type MapChannel, type ReviewedMaterialMaps } from "./materialMapRegistry.ts";
 
 export type MaterialMaps = Partial<Record<MapChannel, Texture | null>>;
@@ -171,18 +171,33 @@ function usableUv(geometry: BufferGeometry, channel: number) {
   return maxX > minX && maxY > minY;
 }
 
+const registeredMapGuards = new WeakSet<MeshStandardMaterial["onBeforeRender"]>();
+function registerMapGuard(guard: MeshStandardMaterial["onBeforeRender"]) {
+  registeredMapGuards.add(guard);
+  return guard;
+}
+
+/** Compile visits do not run onBeforeRender. Only our geometry admission callback
+ * may prepare a sampler variant; unrelated callbacks and reflection owners stay
+ * exclusively in their existing render paths. No map is loaded or cloned here. */
+export function prepareMaterialMapsForCompile(material: MeshStandardMaterial, renderer: WebGLRenderer, scene: Scene, camera: Camera, mesh: Mesh) {
+  if (registeredMapGuards.has(material.onBeforeRender)) {
+    material.onBeforeRender(renderer, scene, camera, mesh.geometry, mesh, null!);
+  }
+}
+
 /** Three calls this before program selection. No UV creation or story mutation;
  * checks are cached by attribute identity and mutation version, not material name. */
 export function createMaterialMapGuard(maps?: MaterialMaps): MeshStandardMaterial["onBeforeRender"] {
-  if (!maps) return function (this: MeshStandardMaterial) {
+  if (!maps) return registerMapGuard(function (this: MeshStandardMaterial) {
     if (this.map || this.normalMap || this.roughnessMap || this.aoMap) {
       this.map = this.normalMap = this.roughnessMap = this.aoMap = null; this.needsUpdate = true;
     }
-  };
+  });
   type Attribute = ReturnType<BufferGeometry["getAttribute"]>;
   const version = (attribute?: Attribute) => attribute && ("version" in attribute ? attribute.version : attribute.data.version);
   const checked = new WeakMap<BufferGeometry, { position: Attribute; uv: Attribute; uv1: Attribute; version0: number | undefined; version1: number | undefined; count: number; valid0: boolean; valid1: boolean }>();
-  return function (this: MeshStandardMaterial, _renderer, _scene, _camera, geometry) {
+  return registerMapGuard(function (this: MeshStandardMaterial, _renderer, _scene, _camera, geometry) {
     const position = geometry.getAttribute("position"), uv = geometry.getAttribute("uv"), uv1 = geometry.getAttribute("uv1");
     let result = checked.get(geometry);
     if (!result || result.position !== position || result.uv !== uv || result.uv1 !== uv1 || result.version0 !== version(uv) || result.version1 !== version(uv1) || result.count !== position?.count) {
@@ -195,5 +210,5 @@ export function createMaterialMapGuard(maps?: MaterialMaps): MeshStandardMateria
       const next = valid ? texture : null;
       if (this[channel] !== next) { this[channel] = next; this.needsUpdate = true; }
     }
-  };
+  });
 }
