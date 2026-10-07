@@ -252,6 +252,7 @@ function ExperienceApplication() {
   const [sessionJourneyMode, setSessionJourneyMode] = useState<"first-journey" | "returning-journey" | null>(null);
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [readerProgress, setReaderProgress] = useState(0);
+  const [readerFocusNonce, setReaderFocusNonce] = useState(0);
   const [guidanceEntryId, setGuidanceEntryId] = useState<string | null>(null);
   const [guidanceStatus, setGuidanceStatus] = useState("");
   const [sceneResetNonce, setSceneResetNonce] = useState(0);
@@ -695,6 +696,7 @@ function ExperienceApplication() {
     experienceStarted, archiveOpen, prologueResolved, guidanceEntryId,
     setGuidanceEntryId, setGuidanceStatus, setArchiveOpen, setExperienceStarted,
     setSessionJourneyMode, setSceneResetNonce,
+    requestReaderFocus: () => setReaderFocusNonce(value => value + 1),
   });
 
   const visitedCount = visitedEntryIds.length;
@@ -705,12 +707,15 @@ function ExperienceApplication() {
   useEffect(() => {
     setReaderProgress(0);
     readerRef.current?.scrollTo({ top: 0, behavior: reducedMotion ? "auto" : "smooth" });
+  }, [mode, reducedMotion, resolvedActiveEntryId]);
+
+  useEffect(() => {
     if (mode === "read") {
       const focusTimer = window.setTimeout(() => readerRef.current?.focus(), 0);
       return () => window.clearTimeout(focusTimer);
     }
     return undefined;
-  }, [mode, reducedMotion, resolvedActiveEntryId]);
+  }, [mode, reducedMotion, resolvedActiveEntryId, readerFocusNonce]);
 
   const updateReaderProgress = useCallback(() => {
     const element = readerRef.current;
@@ -1008,7 +1013,7 @@ function ExperienceApplication() {
               key={candidateMode}
               type="button"
               className={mode === candidateMode ? "is-active" : ""}
-              onClick={() => setMode(candidateMode)}
+              onClick={() => candidateMode === "read" ? readActiveEntry() : setMode(candidateMode)}
               aria-pressed={mode === candidateMode}
             >
               {modeLabel(candidateMode)}

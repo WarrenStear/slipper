@@ -29,6 +29,7 @@ export type StoryNavigationOptions = {
   setExperienceStarted: Setter<boolean>;
   setSessionJourneyMode: Setter<"first-journey" | "returning-journey" | null>;
   setSceneResetNonce: Setter<number>;
+  requestReaderFocus: () => void;
 };
 
 /** Clicks and keyboard use the same fresh command path; this owns no story state. */
@@ -45,10 +46,11 @@ export function useStoryNavigation(options: StoryNavigationOptions) {
     };
     function readActiveEntry() {
       const config = optionsRef.current, state = useJourneyStore.getState();
-      if (useWorldStore.getState().mode === "map") return navigateToEntry(state.activeEntryId, "read");
+      const mode = useWorldStore.getState().mode;
+      if (mode === "map" || mode === "read") return navigateToEntry(state.activeEntryId, "read");
       const lease = config.host?.runtime.currentLease();
       if (!lease || !config.host?.runtime.dispatch({ type: "read", entryId: state.activeEntryId, lease }).accepted) return false;
-      useWorldStore.getState().setMode("read"); return true;
+      useWorldStore.getState().setMode("read"); config.requestReaderFocus(); return true;
     }
     function navigateToEntry(entryId: string, nextMode = useWorldStore.getState().mode) {
       const config = optionsRef.current, state = useJourneyStore.getState();
@@ -58,7 +60,9 @@ export function useStoryNavigation(options: StoryNavigationOptions) {
       if (!result?.accepted) { config.setGuidanceStatus(journeyEntryLockMessage(entryId)); return false; }
       clearGuidance();
       if (entryId !== state.activeEntryId) config.setSceneResetNonce(value => value + 1);
-      useWorldStore.getState().setMode(nextMode); return true;
+      useWorldStore.getState().setMode(nextMode);
+      if (nextMode === "read") config.requestReaderFocus();
+      return true;
     }
     function goBack() {
       const config = optionsRef.current, state = useJourneyStore.getState();

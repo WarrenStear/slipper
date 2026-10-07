@@ -14,6 +14,7 @@ import {
 import {
   JOURNEY_RITUAL_PROGRESSION,
   applyJourneySceneRewards,
+  canEnterNarrativeEntry,
 } from "../src/lib/journeyProgression";
 import {
   JOURNEY_PLAYER_ACTIONS,
@@ -940,7 +941,32 @@ test.describe("canonical reconstructed story journey", () => {
 
     for (const gate of gateCases) {
       await test.step(gate.name, async () => {
-        await openSeededDirectedJourney(page, gate.blocked);
+        if (canEnterNarrativeEntry(gate.blocked.activeEntryId, gate.blocked)) {
+          await openSeededDirectedJourney(page, gate.blocked);
+        } else {
+          // Explicit Continue recovers a malformed locked position to an
+          // admitted earlier clearing; it cannot supply the missing rite.
+          await seedPersistedJourney(page, gate.blocked);
+          await page.evaluate(key => localStorage.removeItem(key), DEDICATION_ACKNOWLEDGEMENT_STORAGE_KEY);
+          await page.goto("/?accessible=1", { waitUntil: "domcontentloaded" });
+          const threshold = page.getByRole("dialog");
+          await expect(threshold).toBeVisible();
+          const before = await page.evaluate(key => JSON.parse(localStorage.getItem(key)!).state, JOURNEY_STORAGE_KEY);
+          const activeIndex = journeyScenes.findIndex(scene => scene.entryIds.includes(before.activeEntryId));
+          const earlier = journeyScenes.slice(0, activeIndex).reverse()
+            .filter(scene => canEnterNarrativeEntry(scene.keystoneEntryId, before));
+          const remembered = new Set([before.lastSafeEntryId, ...before.history]);
+          const recovered = earlier.find(scene => scene.entryIds.some(id => remembered.has(id))) ?? earlier[0];
+          if (!recovered) throw new Error("No admitted earlier canonical clearing for the malformed fixture.");
+          await threshold.getByRole("button", { name: "Continue the Journey", exact: true }).click();
+          const root = page.locator("[data-accessible-journey='true']");
+          await expect(root).toHaveAttribute("data-active-entry", recovered.keystoneEntryId);
+          await expect(threshold).toBeHidden();
+          const after = await page.evaluate(key => JSON.parse(localStorage.getItem(key)!).state, JOURNEY_STORAGE_KEY);
+          for (const field of ["completedRitualIds", "completedSceneIds", "completedChapterIds", "completedActs", "witnessedEntryIds", "storyCompleted"]) {
+            expect(after[field]).toEqual(before[field]);
+          }
+        }
         await page.waitForTimeout(400);
         expect(await completedSceneCountInStorage(page)).toBe(gate.blockedCount);
         await expect(page.locator(".constellation-panel")).toHaveCount(0);

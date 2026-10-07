@@ -67,6 +67,17 @@ const rejected = (reason: string): StoryIntentResult => ({ accepted: false, reas
 const PHYSICAL_AUTOMATIC = new Set(["volume-enter", "volume-exit", "gaze", "stillness", "scene-complete", "sequence-complete"]);
 const attentionDuration = (event: StoryEventDefinition) => event.durationMs ?? (event.trigger === "gaze" ? 1100 : event.trigger === "stillness" ? 4500 : 0);
 
+/** An explicit continuation can recover a malformed location, never its missing
+ * outcomes. Saved/history candidates must be admitted and canonically earlier. */
+function continuationRecoveryEntry(state: StoryRuntimeStore) {
+  const activeIndex = journeyScenes.findIndex(scene => scene.entryIds.includes(state.activeEntryId));
+  if (activeIndex <= 0) return undefined;
+  const earlier = journeyScenes.slice(0, activeIndex).reverse()
+    .filter(scene => canEnterNarrativeEntry(scene.keystoneEntryId, state));
+  const remembered = new Set([state.lastSafeEntryId, ...state.history]);
+  return (earlier.find(scene => scene.entryIds.some(id => remembered.has(id))) ?? earlier[0])?.keystoneEntryId;
+}
+
 /**
  * Instance-local intent authority around the existing command sink. Construction,
  * subscription and presentation observations never infer entry or apply outcomes.
@@ -195,8 +206,17 @@ export function createStoryRuntime({ getState, getActivity, subscribe }: {
     if (!activityAllows(intent.type !== "begin" && intent.type !== "continue" && intent.type !== "navigate" && intent.type !== "back")) return rejected("inactive");
     if (intent.type === "begin" || intent.type === "continue") {
       const state = getState();
-      if (!Object.prototype.hasOwnProperty.call(JOURNEY_ENTRY_PROGRESS, state.activeEntryId)
-        || !canEnterNarrativeEntry(state.activeEntryId, state)) return rejected("entry-locked");
+      if (!Object.prototype.hasOwnProperty.call(JOURNEY_ENTRY_PROGRESS, state.activeEntryId)) return rejected("entry-locked");
+      if (!canEnterNarrativeEntry(state.activeEntryId, state)) {
+        const recovered = intent.type === "continue" ? continuationRecoveryEntry(state) : undefined;
+        if (!recovered) return rejected("entry-locked");
+        invalidate(); state.navigateToEntry(recovered);
+        if (getState().activeEntryId !== recovered) return rejected("navigation-rejected");
+        getState().startStory(); issueLease();
+        // Recovery admits the existing scene entry only. Missing rites and
+        // completions still require their own authored commands afterwards.
+        return { accepted: true, lease: owned?.token, eventIds: enterCurrent(), messages: [], settled: 0 };
+      }
       invalidate(); state.startStory(); issueLease();
       return accepted(enterCurrent());
     }

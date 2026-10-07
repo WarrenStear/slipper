@@ -738,3 +738,45 @@ tests, source/lint checks, type checking, content/asset/world validation, the
 production build and Pages Functions compilation. Remote browser regression
 jobs for `21ce695` still require their failure audit and a repaired-commit run;
 these local receipts do not certify those remote jobs.
+
+
+### Phase 5 follow-up: foreground reading and incomplete-save recovery
+
+The hosted `ff1999a` story-interaction smoke run succeeded. Its full browser run
+identified four remaining cases: repeated reader focus, a keyboard request during
+arrival, an invalid first-wood cloud fixture, and a River fixture missing its prior
+burn rite. The visual job also rejected the earlier 2,500 ms opacity deadline: the
+actual authored action takes 2,350 ms of delay plus 1,000 ms of animation. The
+review now waits for opacity at least .95 within 4,000 ms, preserving its original
+title, subtitle, visibility, centering, overflow and Begin assertions.
+
+Accepted repeated Fragment commands request a transient focus handoff without
+resetting the reader's scroll or progress. The keyboard fixture waits for the
+existing action/prose admission before its single F press; contemplation remains
+a valid reading phase, so it does not require an idle transition. The cloud fixture
+now earns the opening through its actual ordered reducer events and derives
+metadata from the canonical blueprint, leaving future memories unwitnessed.
+
+Explicit foreground Continue also repairs a malformed locked location by moving
+to an admitted earlier canonical clearing. It never supplies the missing rite or
+settles unrelated completion. Saved last-safe/history candidates must be earlier
+and admitted; otherwise the nearest admitted earlier keystone is used. Unknown
+IDs, Begin, background/overlay/initialization requests remain nonmutating. Actual
+store/runtime tests prove River recovery to Fire for legacy and event saves,
+unchanged ritual/completion/witness/inventory state, and the ordinary Continue
+path across all 32 valid scenes. No save schema or persisted authority changes.
+
+The isolated repair snapshot passed the complete check with 1,139 unit tests,
+seven security tests, source/lint/type checks, content/assets/world validation,
+production build and Pages Functions compilation. The corrected native checks
+passed eight desktop Chromium/Firefox cases and three mobile Chromium cases,
+with the desktop-only mobile keyboard case skipped. The native visual review
+passed all thirteen entry/component captures. Earlier wrong idle/raw-fixture
+expectations and their failed traces are retained. Local WebKit failed before
+app loading with unsupported PushAPIEnabled: this host is macOS 14, and the
+installed Playwright browser manifest pins its frozen WebKit override. Reinstall
+confirmed that limit; no application assertion or SDK was altered to bypass it.
+The unchanged Linux WebKit and complete hosted matrix remain pending.
+Failed hosted logs remain in `runtime-host-preparation/ci-ff1999a-*`; accepted
+local receipts are `native-ci-repair-accepted`, `native-ci-repair-mobile`,
+`native-visual-ci-repair` and `ci-repair-snapshot-check.log`.

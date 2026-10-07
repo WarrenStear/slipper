@@ -599,6 +599,8 @@ test("desktop exposes keyboard navigation and never mounts the mobile overlay", 
       document.activeElement.blur();
     }
   });
+  await expect(root).toHaveAttribute("data-story-actions", "available");
+  await expect(root).toHaveAttribute("data-story-prose", "available");
   await page.keyboard.press("f");
   await expect(root).toHaveAttribute("data-world-mode", "read");
   await expect(

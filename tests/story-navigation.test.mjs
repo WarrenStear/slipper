@@ -28,6 +28,7 @@ class RecordedTarget extends EventTarget {
 }
 const oldGlobals = { window: globalThis.window, document: globalThis.document };
 const windowTarget = new RecordedTarget(), documentTarget = new RecordedTarget(), storage = new Map(), frames = new Map();
+const focusTimers = new Map();
 let now = 0, focused = true, frameId = 0;
 windowTarget.localStorage = { getItem: key => storage.get(key) ?? null, setItem: (key, value) => storage.set(key, value), removeItem: key => storage.delete(key) };
 windowTarget.matchMedia = () => ({ matches: false, addEventListener() {}, removeEventListener() {} });
@@ -37,6 +38,8 @@ windowTarget.history = { state: null, pushState(_state, _title, url) {
 } };
 windowTarget.requestAnimationFrame = callback => { const id = ++frameId; frames.set(id, callback); return id; };
 windowTarget.cancelAnimationFrame = id => frames.delete(id);
+windowTarget.setTimeout = callback => { const id = ++frameId; focusTimers.set(id, callback); return id; };
+windowTarget.clearTimeout = id => focusTimers.delete(id);
 documentTarget.hidden = false; documentTarget.hasFocus = () => focused; documentTarget.pointerLockElement = null;
 documentTarget.documentElement = { dataset: {}, classList: { toggle() {}, contains: () => false } };
 globalThis.window = windowTarget; globalThis.document = documentTarget;
@@ -60,6 +63,9 @@ const { createFreshStoryJourneyState, sanitizeStoryJourneyState } = await import
 const { NODE_ACTIVATION_RADIUS_SQ } = await import('../src/player/interactionProximity.ts');
 const { getSceneManifestForEntry, resolveSceneManifestArrival } = await import('../src/narrative/StoryManifest.ts');
 const { getJourneyEntryWorldPosition } = await import('../src/data/journeyWorldLayout.ts');
+const { STORY_EVENTS, getAvailableStoryEvents } = await import('../src/storyEvents/storyEventRegistry.ts');
+const { dispatchStoryEventState } = await import('../src/storyEvents/storyEventState.ts');
+const { incompleteStoryJourney } = await import('../e2e/story-first-fixtures.ts');
 
 // Execute both actual TSX owners with installed React and their real imports.
 // Only the DOM/frame backend changes. Canonical command tracing delegates to the
@@ -83,6 +89,34 @@ async function actualOwner(relative, overrides = {}) {
 }
 const { StoryRuntimeProvider, useStoryRuntimeShell } = await actualOwner('../src/experience/StoryRuntimeContext.tsx');
 const { useStoryNavigation } = await actualOwner('../src/experience/useStoryNavigation.ts');
+const appSource = readFileSync(new URL('../src/App.tsx', import.meta.url), 'utf8');
+const appAst = ts.createSourceFile('App.tsx', appSource, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+let focusEffect, readerResetEffect, modeClick;
+function readerBindings(node) {
+  if (ts.isCallExpression(node) && node.expression.getText(appAst) === 'useEffect') {
+    const body = node.arguments[0]?.getText(appAst) ?? '';
+    if (body.includes('const focusTimer') && body.includes('readerRef.current?.focus()')) focusEffect = node.getText(appAst);
+    if (body.includes('setReaderProgress(0)')) readerResetEffect = node.getText(appAst);
+  }
+  if (ts.isJsxAttribute(node) && node.name.getText(appAst) === 'onClick'
+    && node.initializer?.getText(appAst).includes('candidateMode === "read"')) modeClick = node.initializer.expression.getText(appAst);
+  ts.forEachChild(node, readerBindings);
+}
+readerBindings(appAst); assert.ok(focusEffect); assert.ok(readerResetEffect); assert.ok(modeClick);
+const readerExports = {};
+vm.runInNewContext(ts.transpileModule(`export function readerEffects(mode,reducedMotion,resolvedActiveEntryId,readerFocusNonce,readerRef,setReaderProgress) {
+  ${readerResetEffect}; ${focusEffect};
+} export function modeButton(candidateMode,readActiveEntry,setMode) { return (${modeClick}); }`,
+  { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS } }).outputText,
+{ exports: readerExports, useEffect: React.useEffect, window: windowTarget });
+const cloudFixtureSource = readFileSync(new URL('../e2e/story-first-experience.spec.ts', import.meta.url), 'utf8');
+const cloudFixtureAst = ts.createSourceFile('story-first-experience.spec.ts', cloudFixtureSource, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+const cloudFixture = cloudFixtureAst.statements.find(node => ts.isFunctionDeclaration(node) && node.name?.text === 'restoredFirstWoodCloudJourney');
+assert.ok(cloudFixture);
+const cloudExports = {};
+vm.runInNewContext(ts.transpileModule(`export ${cloudFixture.getText(cloudFixtureAst)}`,
+  { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS } }).outputText,
+{ exports: cloudExports, ...blueprint, incompleteStoryJourney, STORY_EVENTS, dispatchStoryEventState });
 const interactionFrames = new Set(), interactionCamera = new THREE.PerspectiveCamera(), interactionReports = [];
 const { InteractionController } = await actualOwner('../src/player/InteractionController.tsx', { three: THREE,
   '@react-three/fiber': { useThree: () => ({ camera: interactionCamera }), useFrame(callback) {
@@ -121,6 +155,7 @@ function seed(snapshot = fresh()) {
   assert.equal(frames.size, 0, 'Previous host scheduler cleaned up'); now = 0; focused = true; documentTarget.hidden = false;
   commandTrace.length = 0;
   interactionReports.length = 0; assert.equal(interactionFrames.size, 0);
+  assert.equal(focusTimers.size, 0);
   windowTarget.location.pathname = '/'; windowTarget.location.search = '';
   useSettingsStore.setState({ drawerOpen: false, reducedMotion: true, audioEnabled: false });
   useWorldStore.setState({ mode: 'explore', controls: 'walk', physicsPaused: false, sceneProximity: null });
@@ -148,18 +183,24 @@ const renderer = Reconciler({
 function mount(initial = {}) {
   const listenerBaseline = windowTarget.count() + documentTarget.count();
   let navigation, host, ui, setUi;
+  const reader = { focused: false, focuses: 0, scrolls: 0,
+    focus() { this.focused = true; this.focuses++; }, scrollTo() { this.scrolls++; } };
   function Capture() {
     const journey = useJourneyStore();
+    const mode = useWorldStore(state => state.mode), readerRef = React.useRef(reader);
     [ui, setUi] = React.useState({ ready: true, experienceStarted: false, archiveOpen: false, prologueResolved: false,
-      accessibleJourney: false, guidanceEntryId: null, guidanceStatus: '', sessionJourneyMode: null, sceneResetNonce: 0, ...initial });
-    host = useStoryRuntimeShell({ ready: ui.ready, participating: ui.experienceStarted, overlayOpen: ui.archiveOpen, allowActions: true });
+      accessibleJourney: false, guidanceEntryId: null, guidanceStatus: '', sessionJourneyMode: null, sceneResetNonce: 0,
+      readerFocusNonce: 0, readerProgress: 0, allowActions: true, ...initial });
+    host = useStoryRuntimeShell({ ready: ui.ready, participating: ui.experienceStarted, overlayOpen: ui.archiveOpen, allowActions: ui.allowActions });
     const set = key => value => setUi(current => ({ ...current, [key]: typeof value === 'function' ? value(current[key]) : value }));
     navigation = useStoryNavigation({ host, accessibleJourney: ui.accessibleJourney, audioEnabled: false,
       capabilities: getSlipperExperienceCapabilities(journey.storyCompleted ? 'free-woods' : ui.sessionJourneyMode ?? 'first-journey'),
       experienceStarted: ui.experienceStarted, archiveOpen: ui.archiveOpen, prologueResolved: ui.prologueResolved,
       guidanceEntryId: ui.guidanceEntryId, setGuidanceEntryId: set('guidanceEntryId'), setGuidanceStatus: set('guidanceStatus'),
       setArchiveOpen: set('archiveOpen'), setExperienceStarted: set('experienceStarted'),
-      setSessionJourneyMode: set('sessionJourneyMode'), setSceneResetNonce: set('sceneResetNonce') });
+      setSessionJourneyMode: set('sessionJourneyMode'), setSceneResetNonce: set('sceneResetNonce'),
+      requestReaderFocus: () => set('readerFocusNonce')(value => value + 1) });
+    readerExports.readerEffects(mode, false, journey.activeEntryId, ui.readerFocusNonce, readerRef, set('readerProgress'));
     if (!ui.physicalController) return null;
     const ids = [ui.controllerOriginId, ui.controllerTargetId], scope = { entryId: journey.activeEntryId, sceneId: journey.sceneId, revision: journey.sceneRelocationRevision };
     const observeThreshold = thresholdExports.threshold(host, blueprint.getJourneySceneForEntry(journey.activeEntryId),
@@ -174,8 +215,10 @@ function mount(initial = {}) {
   const render = child => React.act(() => renderer.flushSync(() => renderer.updateContainer(child, root, null, null)));
   render(el(React.StrictMode, null, el(StoryRuntimeProvider, null, el(Capture))));
   activeCpu = { get navigation() { return navigation; }, get host() { return host; }, get ui() { return ui; },
+    reader, flushFocus() { const pending = [...focusTimers.values()]; focusTimers.clear(); for (const callback of pending) callback(); },
+    modeButton(mode) { reader.focused = false; return readerExports.modeButton(mode, navigation.readActiveEntry, useWorldStore.getState().setMode); },
     act: callback => React.act(callback), configure: patch => React.act(() => setUi(current => ({ ...current, ...patch }))),
-    unmount() { render(null); activeCpu = null; assert.equal(frames.size, 0); assert.equal(interactionFrames.size, 0);
+    unmount() { render(null); activeCpu = null; assert.equal(frames.size, 0); assert.equal(interactionFrames.size, 0); assert.equal(focusTimers.size, 0);
       assert.equal(windowTarget.count() + documentTarget.count(), listenerBaseline); } };
   return activeCpu;
 }
@@ -270,6 +313,72 @@ test('F from the actual map uses explicit current-entry reading without enabling
   const active = state().activeEntryId;
   cpu.act(() => key('f')); assert.equal(useWorldStore.getState().mode, 'read'); assert.equal(state().activeEntryId, active);
   assert.equal(canReadStoryEntry(active, state()), true); cpu.unmount();
+});
+
+test('actual Fragment button and repeated F refocus accepted current reading without resetting scroll or saved progress', () => {
+  seed(completed()); const cpu = mount({ prologueResolved: true }); enter(cpu);
+  cpu.act(cpu.modeButton('read')); cpu.flushFocus();
+  assert.equal(useWorldStore.getState().mode, 'read'); assert.equal(cpu.reader.focused, true);
+  const initialLease = cpu.host.runtime.currentLease(), before = snapshot(), scrolls = cpu.reader.scrolls;
+  cpu.configure({ readerProgress: 72 });
+  for (const activate of [() => cpu.modeButton('read')(), () => key('f')]) {
+    const priorFocuses = cpu.reader.focuses, priorNonce = cpu.ui.readerFocusNonce;
+    cpu.reader.focused = false; cpu.act(activate); cpu.flushFocus();
+    assert.equal(cpu.reader.focused, true); assert.equal(cpu.reader.focuses, priorFocuses + 1);
+    assert.equal(cpu.ui.readerFocusNonce, priorNonce + 1); assert.equal(cpu.ui.readerProgress, 72);
+    assert.equal(cpu.reader.scrolls, scrolls, 'Repeated activation focuses the existing document without resetting its reading position');
+    assert.deepEqual(snapshot(), before); assert.notEqual(cpu.host.runtime.currentLease(), initialLease);
+  }
+  assert.equal(canReadStoryEntry('fragment-002', state()), false, 'Refocusing cannot disclose another unwitnessed fragment');
+  cpu.unmount();
+});
+
+test('actual Fragment button and read callbacks keep private/unready/background/Settings guards before focus', () => {
+  seed(); const freshCpu = mount({ prologueResolved: true }); const untouched = snapshot();
+  freshCpu.act(freshCpu.modeButton('read')); freshCpu.flushFocus();
+  assert.equal(freshCpu.reader.focused, false); assert.equal(freshCpu.ui.readerFocusNonce, 0);
+  assert.equal(useWorldStore.getState().mode, 'explore'); assert.deepEqual(snapshot(), untouched);
+  assert.deepEqual(commandTrace, []); freshCpu.unmount();
+  seed(completed()); const cpu = mount({ prologueResolved: true }); enter(cpu);
+  cpu.act(cpu.modeButton('read')); cpu.flushFocus();
+  const currentRead = cpu.navigation.readActiveEntry;
+  for (const edge of ['arrival', 'background', 'settings', 'unready']) {
+    if (edge === 'arrival') { cpu.act(() => useWorldStore.getState().setMode('explore')); cpu.configure({ allowActions: false }); }
+    if (edge === 'background') focused = false;
+    if (edge === 'settings') cpu.act(() => useSettingsStore.getState().setDrawerOpen(true));
+    if (edge === 'unready') cpu.configure({ ready: false });
+    const before = snapshot(), commands = commandTrace.length, nonce = cpu.ui.readerFocusNonce;
+    cpu.reader.focused = false; cpu.act(() => assert.equal(currentRead(), false)); cpu.flushFocus();
+    assert.equal(cpu.reader.focused, false, edge); assert.equal(cpu.ui.readerFocusNonce, nonce, edge);
+    assert.deepEqual(snapshot(), before, edge); assert.equal(commandTrace.length, commands, edge);
+    if (edge === 'arrival') cpu.configure({ allowActions: true });
+    if (edge === 'background') focused = true;
+    if (edge === 'settings') cpu.act(() => useSettingsStore.getState().setDrawerOpen(false));
+    if (edge === 'unready') cpu.configure({ ready: true });
+  }
+  cpu.act(() => assert.equal(currentRead(), true)); cpu.flushFocus(); assert.equal(cpu.reader.focused, true);
+  cpu.unmount();
+});
+
+test('actual remote fixture earns only the opening through canonical reducers before one explicit first-wood Continue', () => {
+  const remote = cloudExports.restoredFirstWoodCloudJourney(), opening = blueprint.journeyScenes[0], next = blueprint.journeyScenes[1];
+  const canonical = sanitizeStoryJourneyState(remote, snapshotOptions), context = blueprint.JOURNEY_ENTRY_PROGRESS[next.keystoneEntryId];
+  assert.deepEqual(canonical.completedSceneIds, [opening.id]);
+  assert.deepEqual(canonical.witnessedEntryIds, [opening.keystoneEntryId]);
+  assert.equal(canonical.activeEntryId, next.keystoneEntryId);
+  for (const field of ['actId', 'chapterId', 'sceneId', 'beatId']) assert.equal(canonical[field], context[field]);
+  assert.deepEqual(canonical.completedStoryEventIds, STORY_EVENTS.filter(event => event.sceneId === opening.id).map(event => event.id));
+  assert.equal(canonical.storyObjectStates['broken-floor.reflection'], 'inverted');
+  assert.equal(canonical.inventory.lantern, true); assert.equal(canonical.resonances.seer, 6);
+  assert.deepEqual(canonical.completedRitualIds, ['ritual.accept-lantern']);
+  seed(canonical); const before = snapshot(), cpu = mount({ accessibleJourney: true, prologueResolved: true });
+  assert.deepEqual(commandTrace, []); assert.deepEqual(snapshot(), before); enter(cpu);
+  assert.equal(state().activeEntryId, next.keystoneEntryId); assert.equal(state().sceneId, next.id);
+  assert.deepEqual(state().witnessedEntryIds, [opening.keystoneEntryId]);
+  assert.deepEqual(state().completedSceneIds, [opening.id]); assert.deepEqual(state().completedRitualIds, ['ritual.accept-lantern']);
+  assert.ok(commandTrace.includes('startStory')); assert.ok(!commandTrace.includes('navigateToEntry'));
+  assert.equal(canReadStoryEntry(next.keystoneEntryId, state()), false, 'The cloud arrival does not manufacture a future witness');
+  cpu.unmount();
 });
 
 test('actual crossing reports issue no canonical command until DOM RAF; stale/far/replayed poses cannot navigate or witness', () => {

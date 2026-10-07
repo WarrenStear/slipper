@@ -1,6 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 import { completeNextCinematicEvent } from "./cinematic-story-controls";
-import { journeyScenes } from "../src/data/journeyBlueprint";
+import { JOURNEY_ENTRY_PROGRESS, getJourneyRitualBeat, journeyChapters, journeyScenes } from "../src/data/journeyBlueprint";
+import { STORY_EVENTS } from "../src/storyEvents/storyEventRegistry";
+import { dispatchStoryEventState } from "../src/storyEvents/storyEventState";
 import { deriveLanternNarrative } from "../src/lib/lanternNarrative";
 import type { StoryJourneyState } from "../src/lib/storyJourneyState";
 import {
@@ -26,6 +28,44 @@ const SOFTWARE_UI = [
 type JourneyEvidence = StoryJourneyState & {
   bookmarkedEntryIds?: string[];
 };
+
+function restoredFirstWoodCloudJourney(): StoryJourneyState {
+  const openingScene = journeyScenes[0], remoteScene = journeyScenes[1];
+  if (!openingScene || !remoteScene) throw new Error("Missing canonical opening route.");
+  const context = JOURNEY_ENTRY_PROGRESS[remoteScene.keystoneEntryId];
+  if (!context) throw new Error("Missing canonical first-wood metadata.");
+  let opening: StoryJourneyState = {
+    ...incompleteStoryJourney(),
+    completedRitualIds: [], completedStoryEventIds: [],
+    storyObjectStates: {}, storyPlacementStates: {}, worldFlags: {}, landmarkStates: {},
+    inventory: { lantern: false, recoveredKeys: [], symbolicObjects: [] },
+    resonances: { wolf: 0, swan: 0, seer: 0 },
+  };
+  // Earn the prior scene through its real ordered reducer events. The restored
+  // first-wood arrival has no future witness, ritual, or completion evidence.
+  for (const event of STORY_EVENTS.filter(event => event.sceneId === openingScene.id)) {
+    opening = dispatchStoryEventState(opening, {
+      sceneId: event.sceneId, eventId: event.id, trigger: event.trigger,
+      objectId: event.objectId, targetId: event.targetId,
+    }).state;
+  }
+  return {
+    ...opening,
+    inventory: { ...opening.inventory, lantern: opening.completedRitualIds.some(ritualId =>
+      getJourneyRitualBeat(ritualId)?.outcomes?.some(outcome => outcome.type === "award-lantern")) },
+    actId: context.actId, chapterId: context.chapterId,
+    sceneId: context.sceneId, beatId: context.beatId,
+    activeEntryId: remoteScene.keystoneEntryId,
+    history: [openingScene.keystoneEntryId],
+    visitedEntryIds: [openingScene.keystoneEntryId, remoteScene.keystoneEntryId],
+    witnessedEntryIds: [openingScene.keystoneEntryId],
+    completedSceneIds: [openingScene.id],
+    completedChapterIds: journeyChapters
+      .filter(chapter => chapter.sceneIds.every(id => id === openingScene.id))
+      .map(chapter => chapter.id),
+    updatedAt: "2099-09-13T08:00:00.000Z",
+  };
+}
 
 type EndingEvidence = {
   reveal: string | null;
@@ -276,11 +316,7 @@ test.describe("story-first gift experience", () => {
     const remoteScene = journeyScenes[1];
     if (!remoteScene) throw new Error("The canonical journey needs a second scene.");
     const remoteJourney = {
-      ...incompleteStoryJourney(),
-      activeEntryId: remoteScene.keystoneEntryId,
-      visitedEntryIds: ["fragment-001", remoteScene.keystoneEntryId],
-      witnessedEntryIds: ["fragment-001"],
-      updatedAt: "2099-09-13T08:00:00.000Z",
+      ...restoredFirstWoodCloudJourney(),
       cloudSchemaVersion: 2,
       migratedFromNavigation: false,
     };

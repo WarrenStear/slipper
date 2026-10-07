@@ -116,12 +116,13 @@ async function captureEntry(width,height) {
     await page.locator('.onboarding-gate[aria-busy="false"]').waitFor({timeout:20000});
     const button=page.getByRole('button',{name:'Begin',exact:true});
     await button.waitFor({state:'visible',timeout:15000});
-    // Wait for the actual entry animation, within the existing 2500ms budget,
-    // before retaining the unchanged visibility/overflow/centering assertions.
+    // The authored CTA takes 2350ms of delay + 1000ms of animation. Allow
+    // that 3350ms timeline plus 650ms of scheduling, then keep the unchanged
+    // visibility/overflow/centering assertions.
     await page.waitForFunction(()=>{
       const actions=document.querySelector('.onboarding-actions');
       return actions!==null&&Number(getComputedStyle(actions).opacity)>=.95;
-    },null,{timeout:2500});
+    },null,{timeout:4000});
     const title=await page.locator('#onboarding-title').innerText();
     const subtitle=await page.locator('#onboarding-description').innerText();
     const measure=await page.evaluate(()=>({width:innerWidth,scrollWidth:document.documentElement.scrollWidth,buttonOpacity:getComputedStyle(document.querySelector('.onboarding-actions')).opacity,cardCentre:document.querySelector('.onboarding-card').getBoundingClientRect().top+document.querySelector('.onboarding-card').getBoundingClientRect().height/2,height:innerHeight}));

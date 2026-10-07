@@ -109,6 +109,54 @@ test("every canonical scene has an explicit entry edge, and all34 authored entry
   assert.equal(seen.size,34);
 });
 
+test("only explicit foreground Continue recovers a locked River to admitted Fire without earning missing rites or completion",()=>{
+  const river=journeyScenes.find(scene=>scene.id==="river.wash"),fire=journeyScenes.find(scene=>scene.id==="fire.boundary");
+  const names=["startStory","navigateToEntry","dispatchStoryEvent","witnessEntry","enterBeat","completeRitual","completeScene","completeChapter","completeAct","completeStory"];
+  for(const legacy of [false,true]){
+    const trace=[],snapshot=fixtureFor(river,{history:[fire.keystoneEntryId,"fragment-066"],
+      completedRitualIds:JOURNEY_RITUAL_IDS.filter(id=>id!=="ritual.burn-boundary"),
+      completedStoryEventIds:legacy?[]:["broken-floor.confession.enter"],
+      witnessedEntryIds:[fire.keystoneEntryId,river.keystoneEntryId]});
+    const c=runtime(snapshot,trace,names),before=c.state().getSnapshot();
+    c.state().lastSafeEntryId="fragment-066";
+    assert.equal(c.session.currentLease(),null);c.session.sample(5000);
+    assert.deepEqual(trace,[]);assert.deepEqual(c.state().getSnapshot(),before,"Binding/sampling cannot infer recovery");
+    assert.equal(c.session.dispatch({type:"begin"}).accepted,false);assert.deepEqual(trace,[]);
+    for(const denial of [{ready:false},{foreground:false},{overlayOpen:true}]){
+      Object.assign(c.activity,denial);assert.equal(c.session.dispatch({type:"continue"}).accepted,false);
+      assert.deepEqual(c.state().getSnapshot(),before);assert.deepEqual(trace,[]);
+      Object.assign(c.activity,{ready:true,foreground:true,overlayOpen:false});
+    }
+    const revision=c.state().sceneRelocationRevision,result=c.session.dispatch({type:"continue"});
+    assert.equal(result.accepted,true);assert.equal(result.settled,0);assert.ok(result.lease);
+    assert.equal(c.state().activeEntryId,fire.keystoneEntryId);assert.equal(c.state().sceneId,fire.id);
+    assert.equal(c.state().sceneRelocationRevision,revision,"Recovery uses the normal canonical navigation revision contract");
+    assert.equal(c.session.currentLease(),result.lease);
+    assert.ok(result.eventIds.every(id=>STORY_EVENTS.some(event=>event.id===id&&event.sceneId===fire.id&&event.trigger==="scene-enter")));
+    for(const field of ["completedRitualIds","completedSceneIds","completedChapterIds","completedActs","witnessedEntryIds","inventory","resonances","releasedWords","storyCompleted"]){
+      assert.deepEqual(c.state().getSnapshot()[field],before[field],field);
+    }
+    assert.ok(!c.state().completedRitualIds.includes("ritual.burn-boundary"));assert.ok(!c.state().completedSceneIds.includes(river.id));
+    assert.deepEqual(trace.map(([name])=>name),["navigateToEntry","startStory","dispatchStoryEvent"]);
+    assert.ok(!c.state().completedStoryEventIds.includes("river.entered"));c.session.dispose();
+  }
+});
+
+test("valid Continue retains its canonical entry path and unknown restored entries remain nonmutating",()=>{
+  const names=["startStory","navigateToEntry","dispatchStoryEvent","witnessEntry"];
+  for(const scene of journeyScenes){
+    const trace=[],c=runtime(fixtureFor(scene),trace,names),active=c.state().activeEntryId,revision=c.state().sceneRelocationRevision;
+    const result=c.session.dispatch({type:"continue"});assert.equal(result.accepted,true,scene.id);
+    assert.equal(c.state().activeEntryId,active);assert.equal(c.state().sceneRelocationRevision,revision);
+    assert.equal(trace.filter(([name])=>name==="navigateToEntry").length,0);
+    assert.deepEqual(trace.slice(0,2).map(([name])=>name),["startStory","dispatchStoryEvent"]);
+    assert.equal(trace.filter(([name])=>name==="witnessEntry").length,0);c.session.dispose();
+  }
+  const trace=[],c=runtime(fresh({activeEntryId:"unknown"}),trace,names),before=c.state().getSnapshot();
+  assert.equal(c.session.dispatch({type:"continue"}).accepted,false);assert.deepEqual(trace,[]);
+  assert.deepEqual(c.state().getSnapshot(),before);assert.equal(c.session.currentLease(),null);c.session.dispose();
+});
+
 test("accepted lantern placement earns reverse-light only on explicit epilogue entry, preserving strict scene ownership",()=>{
   const scene=journeyScenes.find(s=>s.id==="crowned.sovereignty");
   const c=runtime(fixtureFor(scene,{worldFlags:{"story-events.started":true},storyObjectStates:{"lantern.master":"carried"},completedStoryEventIds:["crown.recognised"],storyPlacementStates:{},witnessedEntryIds:[scene.keystoneEntryId]}));

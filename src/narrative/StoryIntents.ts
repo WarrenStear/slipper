@@ -31,6 +31,7 @@ export type StoryCommandSink = StoryActionSink & {
 };
 export type StoryRuntimeStore = StoryJourneyState & StoryCommandSink & {
   sceneRelocationRevision?: number;
+  lastSafeEntryId?: string;
 };
 export type StoryIntent =
   | { type: "begin" }
