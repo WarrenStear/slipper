@@ -1,3 +1,5 @@
+import { resolveQuietGuidance, type QuietGuidanceActivity } from "../../../ui/quietGuidancePresentation";
+import { OpeningGuidance } from "../../../ui/OpeningGuidance";
 import { resolveGuidedStory } from "../../../storyEvents/guidedStory";
 import { Html } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
@@ -44,7 +46,7 @@ function eventLocation(event: StoryEventDefinition, objects: readonly StoryObjec
 }
 
 /** Physical inputs and semantic controls share one authored reducer. No frame enters durable state. */
-export function StoryEventDirector({ sceneId, reducedMotion, enabled = true }: { sceneId: JourneySceneId; reducedMotion: boolean; enabled?: boolean }) {
+export function StoryEventDirector({ sceneId, reducedMotion, enabled = true, quietGuidanceActivity }: { sceneId: JourneySceneId; reducedMotion: boolean; enabled?: boolean; quietGuidanceActivity?: QuietGuidanceActivity }) {
   const { camera, gl, scene: renderedScene } = useThree();
   const runtime = useStoryRuntime();
   const host = useStoryRuntimeHost();
@@ -65,12 +67,15 @@ export function StoryEventDirector({ sceneId, reducedMotion, enabled = true }: {
   const [focused, setFocused] = useState<StoryEventDefinition | null>(null);
   const focusRef = useRef<StoryEventDefinition | null>(null);
   const [lastAction, setLastAction] = useState("");
-  const [touched, setTouched] = useState(false);
   const [intentionalStillnessId, setIntentionalStillnessId] = useState<string | null>(null);
   const objects = useMemo(() => objectsForScene(sceneId), [sceneId]);
   const pending = useMemo(() => getAvailableStoryEvents(useJourneyStore.getState(), sceneId), [events, objectStates, placements, flags, inventory, completedScenes, sceneId]);
   const pendingRef = useRef(pending); pendingRef.current = pending;
   const guidedBeat = useMemo(() => resolveGuidedStory(useJourneyStore.getState()), [pending]);
+  const quietGuidance = resolveQuietGuidance({ sceneId, kind: guidedBeat.kind, instruction: guidedBeat.instruction,
+    active: enabled, idleMs: quietGuidanceActivity?.idleMs ?? 0,
+    detailRequested: quietGuidanceActivity?.detailRequested, assistanceEnabled: guidance });
+  const detailedGuidance = quietGuidance.detailsOpen;
   const guidedEvent = guidedBeat.kind === "action" ? pending.find(event => event.id === guidedBeat.eventIds[0]) : undefined;
   const carried = getCarriedStoryObjects(useJourneyStore.getState()).filter(object => object.id !== "lantern.master");
   const localCamera = useRef(new THREE.Vector3());
@@ -134,7 +139,6 @@ export function StoryEventDirector({ sceneId, reducedMotion, enabled = true }: {
     const canInput = () => !document.hidden && document.hasFocus() && !useSettingsStore.getState().drawerOpen && useWorldStore.getState().mode === "explore";
     const down = (event: PointerEvent) => {
       if (!canInput() || !beginStoryPointerGesture(gesture.current, event.pointerId, focusRef.current, event.clientX, event.clientY, event.button)) return;
-      setTouched(true);
       if (focusRef.current?.objectId === "broken-floor.reflection" && focusRef.current.trigger === "wipe") { beginFloorStroke(); move(event); }
     };
     const move = (event: PointerEvent) => {
@@ -294,7 +298,7 @@ export function StoryEventDirector({ sceneId, reducedMotion, enabled = true }: {
       } else target.current.set(location.position[0], location.position[1], location.position[2]);
       target.current.y += 1.1;
       guideAnchor.current.position.copy(target.current);
-      guideAnchor.current.visible = guidance && !best && renderedObject?.userData.storyPresentationSettled !== false;
+      guideAnchor.current.visible = detailedGuidance && !best && renderedObject?.userData.storyPresentationSettled !== false;
       // Html is a DOM overlay: Three group visibility alone does not hide its label.
       if (guideLabel.current) guideLabel.current.style.visibility = guideAnchor.current.visible ? "visible" : "hidden";
     }
@@ -336,7 +340,7 @@ export function StoryEventDirector({ sceneId, reducedMotion, enabled = true }: {
     <group ref={carriedGroup} name="first-person-story-carry">
       {carried.map((object, index) => <group key={object.id} position={[index * .36, 0, 0]} scale={.36} name={`carried:${object.id}`}><StoryObjectModel kind={object.kind} state="carried" reducedMotion={reducedMotion} /><StoryObjectIdentity objectId={object.id} /></group>)}
     </group>
-    {guidance && guidedEvent && sceneId !== "broken-floor.confession" ? (
+    {detailedGuidance && guidedEvent && sceneId !== "broken-floor.confession" ? (
       <group ref={guideAnchor} visible={false} name="current-story-intention">
         <Html center zIndexRange={[25, 20]} style={{ pointerEvents: "none" }}>
           <span ref={guideLabel} className="story-guided-target" style={{ visibility: "hidden" }} aria-hidden="true">{guidedBeat.targetLabel}</span>
@@ -346,10 +350,10 @@ export function StoryEventDirector({ sceneId, reducedMotion, enabled = true }: {
     <group ref={hudAnchor}>
     <Html fullscreen zIndexRange={[45, 40]} style={{ pointerEvents: "none" }}>
       <div className="story-object-hud" data-story-scene={sceneId} data-story-events={events.join(" ")}>
-        {visible ? <button type="button" className="story-object-focus" data-story-object-id={focused.objectId} data-story-event-id={focused.id} onClick={() => dispatch(focused)}>
+        {visible ? <button type="button" className={`story-object-focus${sceneId === "broken-floor.confession" && quietGuidance.openingStage < 3 && focused.objectId === "broken-floor.reflection" && ["wipe", "touch"].includes(focused.trigger) ? " is-quiet-floor-control" : ""}`} data-story-object-id={focused.objectId} data-story-event-id={focused.id} onClick={() => dispatch(focused)}>
           <span>{VERBS[focused.trigger] ?? focused.trigger}</span><small>{eventLocation(focused, objects).label}</small>
         </button> : null}
-        {sceneId === "broken-floor.confession" && (!touched || !events.includes("broken-floor.first-wipe")) ? <p className="story-object-onboarding">Look down. Drag across the wet floor.</p> : null}
+        {sceneId === "broken-floor.confession" && guidedBeat.kind !== "complete" && quietGuidance.visible ? <OpeningGuidance line={quietGuidance.line} hint={guidedBeat.hint} detailed={detailedGuidance} stage={quietGuidance.openingStage} focusRequested={quietGuidanceActivity?.detailRequested === true} /> : null}
         {!surrenderQuiet && carried.some(item => !item.keepsake) ? <button type="button" className="story-object-focus story-object-drop" style={{ bottom: "31%", right: "1rem", left: "auto", transform: "none" }} onClick={() => {
           const item = getCarriedStoryObjects(useJourneyStore.getState()).find(item => !item.keepsake);
           const lease = runtime?.currentLease();

@@ -1,3 +1,4 @@
+import { selectMemoryView } from "./quiet-memory-controls";
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { completeNextCinematicEvent } from "./cinematic-story-controls";
 import { readFileSync } from "node:fs";
@@ -403,7 +404,7 @@ async function openSeededConstellation(page: Page, snapshot: StoryJourneyState) 
   await onboarding
     .getByRole("button", { name: "Return to the Woods", exact: true })
     .click();
-  await storyModeButton(page, "map").click();
+  await selectMemoryView(page, "Constellation");
 
   const root = page.locator("[data-experience-root]");
   const constellation = page.locator(".constellation-panel");
@@ -476,7 +477,10 @@ function storyModeButton(page: Page, mode: JourneyUiMode) {
 async function chooseJourneyMode(page: Page, mode: JourneyUiMode) {
   const root = experienceRoot(page);
   if ((await root.getAttribute("data-world-mode")) !== mode) {
-    await storyModeButton(page, mode).click();
+    const semanticModes = page.getByRole("group", { name: "Story modes" });
+    if (await semanticModes.count()) await storyModeButton(page, mode).click();
+    else if (mode === "explore") await page.getByRole("button", { name: "Return to forest", exact: true }).click();
+    else await selectMemoryView(page, JOURNEY_UI_MODES[mode] as "Fragment" | "Constellation");
   }
   await expect(root).toHaveAttribute("data-world-mode", mode);
 }
@@ -624,14 +628,20 @@ test.describe("canonical reconstructed story journey", () => {
     await expect(root).toHaveAttribute("data-experience-mode", "first-journey");
     await expect(root).toHaveAttribute("data-prologue-resolved", "false");
     await expect(page.locator(".story-object-hud[data-story-scene='broken-floor.confession']")).toBeVisible();
-    await expect(page.getByText("Look down. Drag across the wet floor.")).toBeVisible();
+    await expect(page.locator(".story-object-onboarding[data-quiet-guidance]")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Memories", exact: true })).toBeVisible();
     await expect(
       page.getByRole("region", { name: "Slipper in the Woods navigation" }),
     ).toHaveCount(0);
     await expect(page.locator(".story-hud, .mini-map-hud, .contextual-nav-prompt")).toHaveCount(0);
     await expect(page.getByRole("link", { name: "Skip to story navigation" })).toHaveCount(0);
     const firstWipe = page.locator("button[data-story-event-id='broken-floor.first-wipe']");
+    await expect(firstWipe).toHaveClass(/is-quiet-floor-control/);
+    await firstWipe.focus();
+    await expect(firstWipe).toBeFocused();
     await expect(firstWipe).toBeVisible();
+    const revealedBox = await firstWipe.boundingBox();
+    expect(revealedBox!.height).toBeGreaterThanOrEqual(44);
     await page.waitForTimeout(1_200);
     await expect(root).toHaveAttribute("data-prologue-resolved", "false");
     await expect(
@@ -641,10 +651,14 @@ test.describe("canonical reconstructed story journey", () => {
     await firstWipe.press("Enter");
     await expect(root).toHaveAttribute("data-prologue-resolved", "false");
     const secondWipe = page.locator("button[data-story-event-id='broken-floor.forest-revealed']");
+    await secondWipe.focus();
+    await expect(secondWipe).toBeFocused();
     await expect(secondWipe).toBeVisible();
     await secondWipe.press("Enter");
     await expect(root).toHaveAttribute("data-prologue-resolved", "false");
     const touchReflection = page.locator("button[data-story-event-id='broken-floor.inversion']");
+    await touchReflection.focus();
+    await expect(touchReflection).toBeFocused();
     await expect(touchReflection).toBeVisible();
     await touchReflection.press("Enter");
     await expect(root).toHaveAttribute("data-prologue-resolved", "true");

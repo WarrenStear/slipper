@@ -1,3 +1,5 @@
+import { resolveLanternGuidanceTarget } from "../../ui/lanternGuidancePresentation";
+import type { QuietGuidanceActivity } from "../../ui/quietGuidancePresentation";
 import { openingEnclosed } from "../../cinematics/openingPresentation";
 import { useJourneyStore } from "../../stores/useJourneyStore";
 import { useCallback, useMemo, useState, type ReactNode } from "react";
@@ -32,6 +34,7 @@ type StorySceneWithMasterLanternProps = {
   storyWorldMemory?: WorldMemoryState;
   lockedEntryIds?: string[];
   navigationTargetEntryId?: string | null;
+  quietGuidanceActivity?: QuietGuidanceActivity;
   initialPlayerPosition?: import("../../data/slipper3dTypes").Vector3Tuple | null;
   narrativeAudioSuppressed?: boolean;
   onFinalConstellationFormationComplete?: () => void;
@@ -78,8 +81,9 @@ export function StorySceneWithMasterLantern({
     [onPlayerProximityChange],
   );
 
-  const navigationTargetPosition =
-    proximity?.navigationTargetWorldPosition ?? proximity?.approachingWorldPosition ?? proximity?.nearestWorldPosition ?? null;
+  const navigationTargetPosition = useMemo(() =>
+    resolveLanternGuidanceTarget(props.entries, props.navigationTargetEntryId),
+    [props.entries, props.navigationTargetEntryId]);
 
   const worldMemory = props.storyWorldMemory;
   const lanternNarrative = useMemo(
@@ -131,7 +135,7 @@ export function StorySceneWithMasterLantern({
           narrativeWorldState={narrativeWorldState}
           qualityProfile={qualityProfile}
           narrativePhase={lanternNarrative}
-          navigationTargetPosition={eventDriven ? null : navigationTargetPosition}
+          navigationTargetPosition={navigationTargetPosition}
           reducedEffects={reducedEffects}
         />
       ) : null}

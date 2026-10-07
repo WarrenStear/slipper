@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { completedStoryJourney, seedStoryJourney } from "./story-first-fixtures";
 import { readCinematicStory } from "./cinematic-story-controls";
+import { selectMemoryView } from "./quiet-memory-controls";
 
 test.beforeEach(async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
@@ -60,10 +61,15 @@ test("settings stays reachable during the 3D opening and preserves progress in t
   await page.goto("/?quality=low");
   await page.getByRole("button", { name: "Begin", exact: true }).click();
   await expect(page.locator("canvas").first()).toHaveAttribute("data-opening-rendered-stage", "0", { timeout: 30_000 });
-  await page.locator("button[data-story-event-id='broken-floor.first-wipe']").click();
+  await expect(page.locator("[data-experience-root]")).toHaveAttribute("data-story-actions", "available", { timeout: 30_000 });
+  // The opening control is deliberately veiled; activate its actual semantic action with keyboard focus.
+  const wipe = page.locator("button[data-story-event-id='broken-floor.first-wipe']");
+  await wipe.focus();
+  await expect(wipe).toBeFocused();
+  await page.keyboard.press("Enter");
   await expect.poll(async () => (await readCinematicStory(page)).completedStoryEventIds.includes("broken-floor.first-wipe")).toBe(true);
   const earned = (await readCinematicStory(page)).completedStoryEventIds;
-  await page.getByRole("button", { name: "Settings", exact: true }).click();
+  await selectMemoryView(page, "Settings");
   await expect(page.getByRole("dialog", { name: "Experience settings" })).toBeVisible();
   await page.getByRole("button", { name: "Continue with text journey" }).click();
   await expect(page).toHaveURL(/accessible=1/);

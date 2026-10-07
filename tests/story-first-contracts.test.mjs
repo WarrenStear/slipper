@@ -266,9 +266,12 @@ test("directed journey capabilities gate every software-like App entry point", (
   assert.match(navigation, /key === "m"[\s\S]{0,80}config\.capabilities\.allowConstellationView/);
   assert.match(navigation, /allowConstellationView && useJourneyStore\.getState\(\)\.witnessedEntryIds\.length > 0/);
   assert.match(app, /scope=\{experienceCapabilities\.constellationScope\}/);
-  assert.match(app, /experienceMode === "free-woods" \? <MagicLinkSignIn \/> : null/);
-  assert.match(app, /experienceMode === "free-woods" && showMiniMap \? <MiniMapHUD/);
-  assert.match(app, /prologueResolved && mode === "explore"[\s\S]{0,360}showContextualGuidance \? <ContextualNavigationPrompt/);
+  const menu = source("src/ui/ExperienceMenu.tsx");
+  assert.match(menu, /capabilities.showGenericNavigation &&[\s\S]*?<details>/);
+  assert.match(menu, /capabilities.allowFullArchive \? <button/);
+  assert.match(app, /navigationDetails=\{<>[\s\S]*?<MagicLinkSignIn \/>/);
+  assert.match(app, /showMiniMap && canReadActiveEntry \? <div[\s\S]*?<MiniMapHUD[\s\S]*?witnessedEntryIds=\{witnessedEntryIds\}/);
+  assert.match(app, /navigationDetails=\{<>[\s\S]*?showContextualGuidance \? <ContextualNavigationPrompt sceneProximity=\{menuProximity\}/);
   assert.match(app, /experienceMode === "free-woods" \? \([\s\S]{0,900}<button type="button" onClick=\{openArchive\}>Open archive<\/button>/);
   assert.match(app, /<AccessibleStoryJourney[\s\S]{0,240}experienceMode=\{experienceMode\}/);
   assert.match(app, /freeWoods=\{experienceMode === "free-woods"\}/);

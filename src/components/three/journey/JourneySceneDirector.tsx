@@ -1,3 +1,4 @@
+import type { QuietGuidanceActivity } from "../../../ui/quietGuidancePresentation";
 import { OutdoorLandscape } from "../environment/OutdoorLandscape";
 import { EnvironmentalChoreography } from "../storyEvents/EnvironmentalChoreography";
 import { StoryEventDirector } from "../storyEvents/StoryEventDirector";
@@ -60,6 +61,7 @@ export type JourneySceneDirectorProps = {
   renderAdjacent?: boolean;
   openingResolved?: boolean;
   interactionsEnabled?: boolean;
+  quietGuidanceActivity?: QuietGuidanceActivity;
   onFinalConstellationFormationComplete?: () => void;
 };
 
@@ -121,6 +123,7 @@ function JourneySceneDirectorComponent({
   renderAdjacent = true,
   openingResolved = true,
   interactionsEnabled = true,
+  quietGuidanceActivity,
   onFinalConstellationFormationComplete,
 }: JourneySceneDirectorProps) {
   const activeManifest = getSceneManifest(activeSceneId);
@@ -150,7 +153,7 @@ function JourneySceneDirectorComponent({
               position={position}
               rotation={[0, scene.anchor.headingRadians, 0]}
             >
-              {interactionsEnabled ? <StoryEventDirector sceneId={entry.sceneId} reducedMotion={reducedMotion} /> : null}
+              {interactionsEnabled ? <StoryEventDirector sceneId={entry.sceneId} reducedMotion={reducedMotion} quietGuidanceActivity={quietGuidanceActivity} /> : null}
               {interactionsEnabled ? <ActiveStoryActors sceneId={entry.sceneId} qualityProfile={qualityProfile} reducedEffects={reducedEffects} reducedMotion={reducedMotion} /> : null}
               <EnvironmentalChoreography sceneId={entry.sceneId} qualityProfile={qualityProfile} reducedEffects={reducedEffects} reducedMotion={reducedMotion} />
               <OutdoorLandscape sceneId={manifest.sceneId} quality={qualityProfile.quality} reducedEffects={reducedEffects} reducedMotion={reducedMotion} collidable={interactionsEnabled} />

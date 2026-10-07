@@ -49,6 +49,25 @@ async function enterForest(page: Page) {
   return root;
 }
 
+async function openMemories(page: Page, paths = false) {
+  await page.getByRole("button", { name: "Memories", exact: true }).click();
+  const menu = page.getByRole("dialog", { name: "Memories", exact: true });
+  await expect(menu).toBeVisible();
+  if (paths) {
+    const summary = menu.getByText("Walking and remembered paths", { exact: true });
+    if (!await summary.evaluate((element) => element.parentElement?.hasAttribute("open"))) {
+      await summary.click();
+    }
+  }
+  return menu;
+}
+
+async function openConstellation(page: Page) {
+  const menu = await openMemories(page);
+  await menu.getByRole("button", { name: "Constellation", exact: true }).click();
+  await expect(menu).not.toBeVisible();
+}
+
 async function dispatchSyntheticTouchDrag(
   target: Locator,
   pointerId: number,
@@ -272,34 +291,51 @@ test.describe("mobile navigation surfaces", () => {
       name: "Mobile forest controls",
     });
     await expectWebGL(controls).toHaveClass(/controls-right/);
-    await expectWebGL(
-      controls.getByRole("button", { name: "Direct", pressed: true }),
-    ).toBeVisible();
+    await expectWebGL(controls).toHaveClass(/is-direct/);
+    const memories = page.getByRole("button", { name: "Memories", exact: true });
+    const memoriesBox = await memories.boundingBox();
+    expect(memoriesBox, "mobile Memories target should have a layout box").not.toBeNull();
+    expect(memoriesBox!.width).toBeGreaterThanOrEqual(44);
+    expect(memoriesBox!.height).toBeGreaterThanOrEqual(44);
 
+    let menu = await openMemories(page, true);
+    const direct = menu.getByRole("radio", { name: "Direct mobile controls", exact: true });
+    const guided = menu.getByRole("radio", { name: "Guided mobile controls", exact: true });
+    await expect(direct).toBeChecked();
     for (const target of [
-      controls.getByRole("button", { name: "More" }),
-      controls.getByRole("button", { name: "Read", exact: true }),
-      controls.getByRole("button", { name: "Map", exact: true }),
+      menu.getByRole("button", { name: "Fragment", exact: true }),
+      menu.getByRole("button", { name: "Constellation", exact: true }),
+    ]) {
+      const box = await target.boundingBox();
+      expect(box, "mobile memory target should have a layout box").not.toBeNull();
+      expect(box!.width).toBeGreaterThanOrEqual(44);
+      expect(box!.height).toBeGreaterThanOrEqual(44);
+    }
+    await guided.check();
+    await expect(guided).toBeChecked();
+    await menu.getByRole("button", { name: "Close memories", exact: true }).click();
+    await expectWebGL(controls).toHaveClass(/is-guided/);
+    for (const target of [
       controls.getByRole("group", { name: "Analogue movement control" }),
       controls.getByRole("group", { name: "Drag to look around" }),
     ]) {
       const box = await target.boundingBox();
-      expect(box, "mobile target should have a layout box").not.toBeNull();
+      expect(box, "mobile movement target should have a layout box").not.toBeNull();
       expect(box!.width).toBeGreaterThanOrEqual(44);
       expect(box!.height).toBeGreaterThanOrEqual(44);
     }
 
     await page.reload({ waitUntil: "domcontentloaded" });
-    await page
-      .getByRole("button", { name: "Return to the Woods", exact: true })
-      .click();
+    await enterForest(page);
     controls = page.getByRole("region", {
       name: "Mobile forest controls",
     });
     await expectWebGL(controls).toHaveClass(/controls-right/);
-
-    await controls.getByRole("button", { name: "More" }).click();
-    await controls.getByRole("button", { name: "Settings" }).click();
+    await expectWebGL(controls).toHaveClass(/is-guided/);
+    menu = await openMemories(page, true);
+    await expect(menu.getByRole("radio", { name: "Guided mobile controls", exact: true })).toBeChecked();
+    await menu.getByRole("radio", { name: "Direct mobile controls", exact: true }).check();
+    await menu.getByRole("button", { name: "Settings", exact: true }).click();
     await settings.getByLabel("Movement control side").selectOption("left");
     await settings
       .getByRole("button", { name: "Close settings" })
@@ -321,10 +357,7 @@ test.describe("mobile navigation surfaces", () => {
     page.setDefaultTimeout(WEBGL_TIMEOUT_MS);
 
     const root = await enterForest(page);
-    await page
-      .getByRole("region", { name: "Mobile forest controls" })
-      .getByRole("button", { name: "Map", exact: true })
-      .click();
+    await openConstellation(page);
     await expect(root).toHaveAttribute("data-world-mode", "map");
 
     const constellation = page.getByRole("tab", {
@@ -389,10 +422,7 @@ test.describe("mobile navigation surfaces", () => {
     await page.reload({ waitUntil: "domcontentloaded" });
 
     const root = await enterForest(page);
-    await page
-      .getByRole("region", { name: "Mobile forest controls" })
-      .getByRole("button", { name: "Map", exact: true })
-      .click();
+    await openConstellation(page);
     const activeBefore = await root.getAttribute("data-active-entry");
     expect(activeBefore).toBeTruthy();
 
@@ -434,19 +464,19 @@ test.describe("mobile navigation surfaces", () => {
     const controls = page.getByRole("region", {
       name: "Mobile forest controls",
     });
-    await controls.getByRole("button", { name: "Guided" }).click();
-    await expect(
-      controls.getByRole("button", { name: "Guided", pressed: true }),
-    ).toBeVisible();
-    await controls
-      .getByRole("button", { name: /Follow lantern|Refresh route/ })
-      .click();
+    const guidanceBefore = await root.getAttribute("data-guidance-target");
+    const menu = await openMemories(page, true);
+    const guided = menu.getByRole("radio", { name: "Guided mobile controls", exact: true });
+    await guided.check();
+    await expect(guided).toBeChecked();
+    await expect(controls).toHaveClass(/is-guided/);
+    await menu.getByRole("button", { name: /Follow lantern|Refresh route/ }).click();
+    await expect(menu).not.toBeVisible();
     await expect(root).toHaveAttribute("data-active-entry", activeBefore!);
+    await expect(root).toHaveAttribute("data-guidance-target", guidanceBefore!);
 
-    await controls.getByRole("button", { name: "More" }).click();
-    await controls
-      .getByRole("button", { name: "Last clearing" })
-      .click();
+    const recoveryMenu = await openMemories(page, true);
+    await recoveryMenu.getByRole("button", { name: "Last clearing", exact: true }).click();
     await expect(root).toHaveAttribute("data-world-mode", "explore");
     await expect(root).toHaveAttribute("data-active-entry", activeBefore!);
     await expect(root).toHaveAttribute("data-guidance-target", "");
@@ -497,6 +527,10 @@ test.describe("mobile navigation surfaces", () => {
     );
 
     const root = await enterForest(page);
+    // Proximity telemetry also samples the camera during its arrival. Start the
+    // ground-movement baseline only after the authored handoff admits walking.
+    await expect(root).toHaveAttribute("data-story-transition", "idle", { timeout: 45_000 });
+    await expect(root).toHaveAttribute("data-story-actions", "available", { timeout: 45_000 });
     const initial = await waitForTelemetry(root, 45_000);
     expect(
       initial,

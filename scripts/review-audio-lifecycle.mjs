@@ -190,7 +190,11 @@ try {
   const dialog = () => page.getByRole('dialog', { name: 'Experience settings', exact: true });
   const audio = () => dialog().getByRole('button', { name: /Audio atmosphere/ });
   const openSettings = async () => {
-    await page.getByRole('button', { name: 'Settings', exact: true }).last().click();
+    await page.getByRole('button', { name: 'Memories', exact: true }).click();
+    const menu = page.getByRole('dialog', { name: 'Memories', exact: true });
+    await expect(menu).toBeVisible();
+    await menu.getByRole('button', { name: 'Settings', exact: true }).click();
+    await expect(menu).not.toBeVisible();
     await expect(dialog()).toBeVisible();
     // The drawer schedules its initial keyboard focus on the next frame. Wait
     // for that handoff before focusing the slider, or it can steal Home/End.

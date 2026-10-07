@@ -72,10 +72,14 @@ test("visibility follows the actual caption and disconnects stale observers", ()
 test("focus moves only after explicit guide controls, never on every new caption", () => {
   const guide = read("src/components/ui/GuidedStoryMoment.tsx");
   assert.match(guide, /pendingFocus.current = "intention";[\s\S]{0,100}dismiss\(\)/);
-  assert.match(guide, /if \(target === "intention"\) captionRef.current\?\.focus\(\{ preventScroll: true \}\)/);
+  assert.match(guide, /if \(requested === "intention" && captionRef.current\) captionRef.current.focus\(\{ preventScroll: true \}\)/);
   assert.match(guide, /onFocusCapture=\{\(\) => setFocusWithin\(true\)\}/);
   assert.match(guide, /event.relatedTarget instanceof Node/);
   assert.match(guide, /tabIndex=\{-1\}/);
+  const quiet = read("src/ui/QuietGuidance.tsx");
+  assert.match(quiet, /onFocusCapture=\{\(\) => onFocusWithinChange\?\.\(true\)\}/);
+  assert.match(quiet, /event.relatedTarget instanceof Node/);
+  assert.match(guide, /onQuietFocusRequest\?\.\(\); setLocalDetails\(false\)/);
 });
 
 test("quiet and sequence scenes do not acquire a next-step target", () => {

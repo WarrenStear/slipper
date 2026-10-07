@@ -1,5 +1,7 @@
 import GuidedStoryMoment from "./components/ui/GuidedStoryMoment";
 import "./ui/MemoryReturn.css";
+import { ExperienceMenu } from "./ui/ExperienceMenu";
+import { useQuietActivity } from "./ui/useQuietActivity";
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import type { NarrativeWorldState, SceneProximityState, StorySceneControls, StorySceneMode } from "./components/three/StoryScene";
 import ArchiveIndex, {
@@ -79,12 +81,6 @@ const VALID_ENTRY_IDS = entries.map((entry) => entry.id);
 
 type AppMode = StorySceneMode;
 
-function modeLabel(mode: AppMode) {
-  if (mode === "explore") return "Forest";
-  if (mode === "read") return "Fragment";
-  return "Constellation";
-}
-
 function entryParagraphs(entry?: Slipper3DEntry) {
   if (!entry) return [];
   return entry.paragraphs?.length ? entry.paragraphs : [entry.body].filter(Boolean);
@@ -145,15 +141,18 @@ function MiniMapHUD({
   entries,
   activeEntryId,
   sceneProximity,
+  witnessedEntryIds,
 }: {
   entries: Slipper3DEntry[];
   activeEntryId: string;
+  witnessedEntryIds: readonly string[];
   sceneProximity: SceneProximityState | null;
 }) {
   const activeEntry = entries.find((entry) => entry.id === activeEntryId);
   const fallbackNearestEntryId = sceneProximity?.nearestEntryId && sceneProximity.nearestEntryId !== activeEntryId ? sceneProximity.nearestEntryId : null;
   const approachingEntryId = sceneProximity?.navigationTargetId ?? sceneProximity?.approachingEntryId ?? fallbackNearestEntryId;
-  const approachingEntry = entries.find((entry) => entry.id === approachingEntryId);
+  const approachingEntry = approachingEntryId && witnessedEntryIds.includes(approachingEntryId)
+    ? entries.find((entry) => entry.id === approachingEntryId) : undefined;
   const playerPosition = sceneProximity?.playerPosition ?? sceneProximity?.activeWorldPosition ?? ([0, 0, 0] as Vector3Tuple);
   const targetPosition = sceneProximity?.navigationTargetWorldPosition ?? sceneProximity?.approachingWorldPosition ?? sceneProximity?.nearestWorldPosition ?? null;
   const blip = minimapVector(playerPosition, targetPosition, sceneProximity?.cameraYaw ?? 0);
@@ -252,6 +251,12 @@ function ExperienceApplication() {
   const [experienceStarted, setExperienceStarted] = useState(false);
   const [sessionJourneyMode, setSessionJourneyMode] = useState<"first-journey" | "returning-journey" | null>(null);
   const [archiveOpen, setArchiveOpen] = useState(false);
+  const [memoriesOpen, setMemoriesOpen] = useState(false);
+  const [detailRequested, setDetailRequested] = useState<boolean | null>(null);
+  const drawerOpen = useSettingsStore(state => state.drawerOpen);
+  const { idleMs, noteActivity } = useQuietActivity(experienceStarted, archiveOpen || memoriesOpen || drawerOpen);
+  const quietGuidanceActivity = useMemo(() => ({ idleMs, detailRequested }), [idleMs, detailRequested]);
+  const priorMenuPhysics = useRef<boolean | null>(null);
   const [readerProgress, setReaderProgress] = useState(0);
   const [readerFocusNonce, setReaderFocusNonce] = useState(0);
   const [guidanceEntryId, setGuidanceEntryId] = useState<string | null>(null);
@@ -263,11 +268,6 @@ function ExperienceApplication() {
   );
   const [storyTransitionPhase, setStoryTransitionPhase] = useState<StoryTransitionPhase>("idle");
   const [finalConstellationRevealed, setFinalConstellationRevealed] = useState(false);
-  const [idleMs, setIdleMs] = useState(0);
-  const [showMovementHint, setShowMovementHint] = useState(true);
-  const lastActivityAtRef = useRef(
-    typeof performance === "undefined" ? 0 : performance.now(),
-  );
   const previousPlayerPositionRef = useRef<Vector3Tuple | null>(null);
   const readerRef = useRef<HTMLDivElement>(null);
   const forestRef = useRef<HTMLElement>(null);
@@ -344,6 +344,7 @@ function ExperienceApplication() {
     resetPlayerInput();
     setAccessibleJourney(true);
     setArchiveOpen(false);
+    setMemoriesOpen(false);
     setStoryTransitionPhase("idle");
     setMode("explore");
     window.history.replaceState(window.history.state, "", textJourneyUrl());
@@ -360,12 +361,10 @@ function ExperienceApplication() {
       previousPlayerPositionRef.current = [...current] as Vector3Tuple;
     } else if (Math.hypot(current[0] - previous[0], current[2] - previous[2]) > 0.08) {
       previousPlayerPositionRef.current = [...current] as Vector3Tuple;
-      lastActivityAtRef.current = performance.now();
-      setIdleMs(0);
-      setShowMovementHint(false);
+      noteActivity();
     }
     setSceneProximity(next);
-  }, [setSceneProximity]);
+  }, [setSceneProximity, noteActivity]);
   const prologueResolved =
     completedChapterIds.includes("broken-floor") ||
     completedRitualIds.includes("ritual.accept-lantern") ||
@@ -396,21 +395,9 @@ function ExperienceApplication() {
     setFinalConstellationRevealed(true);
   }, []);
 
-  useEffect(() => {
-    const resetActivity = () => {
-      lastActivityAtRef.current = performance.now();
-      setIdleMs(0);
-    };
-    window.addEventListener("keydown", resetActivity, { passive: true });
-    window.addEventListener("pointerdown", resetActivity, { passive: true });
-    const interval = window.setInterval(() => {
-      setIdleMs(Math.max(0, performance.now() - lastActivityAtRef.current));
-    }, 1_000);
-    return () => {
-      window.removeEventListener("keydown", resetActivity);
-      window.removeEventListener("pointerdown", resetActivity);
-      window.clearInterval(interval);
-    };
+  useEffect(() => { setDetailRequested(null); noteActivity(); }, [storySceneId, noteActivity]);
+  useEffect(() => () => {
+    if (priorMenuPhysics.current !== null) useWorldStore.getState().setPhysicsPaused(priorMenuPhysics.current);
   }, []);
 
   useEffect(() => {
@@ -480,16 +467,43 @@ function ExperienceApplication() {
   const returnToContinuation = useCallback(() => {
     if (document.pointerLockElement) document.exitPointerLock?.();
     resetPlayerInput();
-    setArchiveOpen(false); setExperienceStarted(false);
+    setArchiveOpen(false); setMemoriesOpen(false); setExperienceStarted(false);
   }, []);
   const runtimeHost = useStoryRuntimeShell({
     ready: journeyInitialized && cloudJourney.bootstrapReady,
     participating: experienceStarted,
-    overlayOpen: archiveOpen,
+    overlayOpen: archiveOpen || memoriesOpen,
     allowActions: accessibleJourney || transitionAllowsAction,
     onMessage: setGuidanceStatus,
     onAuthorizationLost: returnToContinuation,
   });
+  const changeMemories = useCallback((open: boolean) => {
+    const world = useWorldStore.getState();
+    if (open) {
+      if (document.pointerLockElement) document.exitPointerLock?.();
+      resetPlayerInput();
+      if (priorMenuPhysics.current === null) priorMenuPhysics.current = world.physicsPaused;
+      world.setPhysicsPaused(true);
+    } else if (priorMenuPhysics.current !== null) {
+      world.setPhysicsPaused(priorMenuPhysics.current); priorMenuPhysics.current = null;
+    }
+    // Admission changes at the input edge, before a possible delayed React commit.
+    runtimeHost?.configure({ ready: journeyInitialized && cloudJourney.bootstrapReady,
+      participating: experienceStarted, overlayOpen: archiveOpen || open,
+      allowActions: accessibleJourney || transitionAllowsAction,
+      onMessage: setGuidanceStatus, onAuthorizationLost: returnToContinuation });
+    noteActivity(); setMemoriesOpen(open);
+  }, [runtimeHost, journeyInitialized, cloudJourney.bootstrapReady, experienceStarted,
+      archiveOpen, accessibleJourney, transitionAllowsAction, returnToContinuation, noteActivity]);
+  useEffect(() => { if (drawerOpen && memoriesOpen) changeMemories(false); }, [drawerOpen, memoriesOpen, changeMemories]);
+  useEffect(() => {
+    if (!experienceStarted || archiveOpen || accessibleJourney) {
+      if (priorMenuPhysics.current !== null) {
+        useWorldStore.getState().setPhysicsPaused(priorMenuPhysics.current); priorMenuPhysics.current = null;
+      }
+      setMemoriesOpen(false);
+    }
+  }, [experienceStarted, archiveOpen, accessibleJourney]);
   const transitionSuppressesAudio = storyTransitionSuppressesAudio(
     storyTransitionPhase,
   );
@@ -538,9 +552,10 @@ function ExperienceApplication() {
       id: chapter.id,
       chapter: chapter.title,
       total: chapter.entryIds.length,
+      revealed: chapter.entryIds.some(entryId => witnessedEntryIds.includes(entryId)),
       visited: chapter.entryIds.filter((entryId) => visited.has(entryId)).length,
     }));
-  }, [visitedEntryIds]);
+  }, [visitedEntryIds, witnessedEntryIds]);
   const activeVisual = useMemo(
     () => visuals.find((visual) => visual.id === activeEntry?.engine3d.linkedVisualId),
     [activeEntry],
@@ -698,12 +713,20 @@ function ExperienceApplication() {
     continueAuthoredStory, moveToPrevious, readActiveEntry,
   } = useStoryNavigation({
     host: runtimeHost, accessibleJourney, audioEnabled, capabilities: experienceCapabilities,
-    experienceStarted, archiveOpen, prologueResolved, guidanceEntryId,
+    experienceStarted, archiveOpen: archiveOpen || memoriesOpen, prologueResolved, guidanceEntryId,
     setGuidanceEntryId, setGuidanceStatus, setArchiveOpen, setExperienceStarted,
     setSessionJourneyMode, setSceneResetNonce,
     requestReaderFocus: () => setReaderFocusNonce(value => value + 1),
   });
 
+  const menuProximity = useMemo(() => {
+    if (!sceneProximity) return null;
+    const title = (id?: string | null) => id && witnessedEntryIds.includes(id)
+      ? getEntryById(entries, id)?.title ?? "A remembered clearing" : "Unread memory";
+    return { ...sceneProximity, nearestTitle: title(sceneProximity.nearestEntryId),
+      approachingTitle: title(sceneProximity.approachingEntryId),
+      navigationTargetTitle: title(sceneProximity.navigationTargetId) };
+  }, [sceneProximity, witnessedEntryIds]);
   const visitedCount = visitedEntryIds.length;
   const totalCount = entries.length;
   const canReadActiveEntry = canReadStoryEntry(resolvedActiveEntryId, { witnessedEntryIds });
@@ -725,14 +748,14 @@ function ExperienceApplication() {
   useEffect(() => {
     const previous = previousViewRef.current;
     previousViewRef.current = mode;
-    if (previous === mode || !experienceStarted || archiveOpen || accessibleJourney) return;
+    if (previous === mode || !experienceStarted || archiveOpen || memoriesOpen || accessibleJourney) return;
     const target = mode === "map" ? mapWorkspaceRef
       : mode === "explore" && (previous === "read" || previous === "map")
         ? { current: constellationTriggerRef.current ?? forestRef.current } : null;
     if (!target) return;
     const timer = window.setTimeout(() => target.current?.focus({ preventScroll: true }), 0);
     return () => window.clearTimeout(timer);
-  }, [mode, experienceStarted, archiveOpen, accessibleJourney]);
+  }, [mode, experienceStarted, archiveOpen, memoriesOpen, accessibleJourney]);
 
   const updateReaderProgress = useCallback(() => {
     const element = readerRef.current;
@@ -745,18 +768,6 @@ function ExperienceApplication() {
     contentDiagnostics.duplicateEntryIds.length > 0 ||
     contentDiagnostics.duplicateVisualIds.length > 0;
   const isWalkingForest = mode === "explore" && controls === "walk";
-  const floatingUiOpacity = isWalkingForest ? Math.max(0.06, Math.min(1, sceneProximity?.uiPresence ?? 1)) : 1;
-  const floatingUiStyle = {
-    opacity: floatingUiOpacity,
-    pointerEvents: floatingUiOpacity > 0.35 ? "auto" : "none",
-    transition: "opacity 700ms ease",
-  } as const;
-  const softUiStyle = {
-    opacity: isWalkingForest ? Math.max(0.12, Math.min(0.92, (sceneProximity?.uiPresence ?? 1) * 0.82)) : 1,
-    pointerEvents: isWalkingForest && (sceneProximity?.uiPresence ?? 1) < 0.3 ? "none" : "auto",
-    transition: "opacity 700ms ease",
-  } as const;
-
   const shellClasses = [
     "app-shell",
     `app-mode-${mode}`,
@@ -837,6 +848,8 @@ function ExperienceApplication() {
       ref={forestRef}
       tabIndex={-1}
       id="primary-experience"
+      data-quiet-memories="true"
+      data-memories-open={memoriesOpen ? "true" : "false"}
       data-experience-root
       data-active-entry={resolvedActiveEntryId}
       data-guidance-target={guidanceEntryId ?? ""}
@@ -856,23 +869,7 @@ function ExperienceApplication() {
       data-prologue-resolved={prologueResolved ? "true" : "false"}
       className={shellClasses}
     >
-      {prologueResolved ? <a className="skip-link" href="#story-navigation">Skip to story navigation</a> : null}
-      {experienceMode === "free-woods" ? <MagicLinkSignIn /> : null}
-
-      {!prologueResolved && showContextualGuidance ? (
-        <section
-          className="broken-floor-prologue"
-          aria-label="The Broken Floor"
-          aria-live="polite"
-        >
-          <div className="broken-floor-prologue-lines">
-            <p>“I’m so so broken”</p>
-            <p>How is it possible to be so sorrowful and so numb at the same time.</p>
-            <p>A silent cry A roaring river with rapids of nothingness.</p>
-          </div>
-          <span>Look into the reflection. The light is waiting.</span>
-        </section>
-      ) : null}
+      <a className="skip-link" href="#experience-memories-trigger">Skip to memories</a>
 
       {mode !== "map" ? (
         <Suspense fallback={<div className="forest-loader" role="status">Drawing the nearby wood…</div>}>
@@ -884,6 +881,7 @@ function ExperienceApplication() {
             visitedEntryIds={visitedEntryIds}
             initialPlayerPosition={initialPlayerPosition}
             navigationTargetEntryId={worldNavigationTargetEntryId}
+            quietGuidanceActivity={quietGuidanceActivity}
             onPortalSelect={handlePortalSelect}
             onMapSelectEntry={handleMapSelectEntry}
             controls={controls}
@@ -922,10 +920,14 @@ function ExperienceApplication() {
         onJourneyMessage={setGuidanceStatus}
       />
 
-      {experienceMode !== "free-woods" && activeNarrativeScene && prologueResolved ? (
+      {activeNarrativeScene && prologueResolved ? (
         <GuidedStoryMoment
           sceneId={activeNarrativeScene.id}
-          active={mode === "explore" && storyTransitionPhase === "idle"}
+          active={mode === "explore" && !memoriesOpen && storyTransitionPhase === "idle"}
+          idleMs={idleMs}
+          detailRequested={detailRequested}
+          onDetailRequestedChange={setDetailRequested}
+          onQuietFocusRequest={() => constellationTriggerRef.current?.focus({ preventScroll: true })}
           canRead={witnessedEntryIds.includes(resolvedActiveEntryId)}
           canFollow={canContinueAuthoredStory}
           onRead={readActiveEntry}
@@ -948,17 +950,11 @@ function ExperienceApplication() {
         onOpenReader={readActiveEntry}
       />
 
-      {prologueResolved && mode === "explore" ? (
-        <>
-          {experienceMode === "free-woods" && showMiniMap ? <MiniMapHUD entries={entries} activeEntryId={resolvedActiveEntryId} sceneProximity={sceneProximity} /> : null}
-          {showContextualGuidance ? <ContextualNavigationPrompt sceneProximity={sceneProximity} /> : null}
-        </>
-      ) : null}
-
       {prologueResolved && mobileViewport.isMobile && mode === "explore" && controls === "walk" ? (
         <MobileExploreControls
           mode={experienceMode === "free-woods" ? mobileControlMode : "direct"}
           freeWoods={experienceMode === "free-woods"}
+          quietShell
           contemplativeIdle={experienceMode !== "free-woods" && idleMs > 6_500}
           controlSide={mobileControlSide}
           lookSensitivity={mobileLookSensitivity}
@@ -996,114 +992,56 @@ function ExperienceApplication() {
 
       <p className="sr-only" role="status" aria-live="polite">{guidanceStatus}</p>
 
-      {experienceMode !== "free-woods" && mode === "explore" && storyTransitionPhase === "idle" && prologueResolved && showMovementHint ? (
-        <p className="first-input-hint" data-first-input-hint="movement">
-          {mobileViewport.isMobile ? "Move to walk · drag to look" : "WASD / arrows to walk · F to read nearby words"}
-        </p>
-      ) : null}
+      <ExperienceMenu
+        open={memoriesOpen} onOpenChange={changeMemories} triggerRef={constellationTriggerRef}
+        capabilities={experienceCapabilities} fragmentAvailable={canReadActiveEntry}
+        constellationAvailable={witnessedEntryIds.length > 0}
+        onFragment={() => {
+          const state = useJourneyStore.getState();
+          // Deliberate overlay navigation uses the existing bounded host port.
+          return state.witnessedEntryIds.includes(state.activeEntryId) && navigateToEntry(state.activeEntryId, "read");
+        }}
+        onConstellation={() => { setMobileMapPane("constellation"); setMode("map"); }}
+        onArchive={openArchive} onSettings={requestExperienceSettingsOpen}
+        onHelp={() => {
+          setDetailRequested(true);
+        }}
+        navigationActions={[
+          { id: "back", label: "Back", disabled: history.length === 0 && !adjacency?.previous, onSelect: moveToPrevious },
+          { id: "next", label: "Next", disabled: !nextEntry, onSelect: continueToNext },
+          { id: "last-clearing", label: "Last clearing", onSelect: returnToLastClearing },
+          { id: "unread", label: "Find unread", disabled: !nextUnreadEntry, onSelect: () => requestGuidance(nextUnreadEntry?.id) },
+          { id: "chapter-path", label: "Chapter path", onSelect: returnToChapterPath },
+          { id: "refresh-guidance", label: guidanceEntryId ? "Refresh route" : "Follow lantern", disabled: !guidedTargetEntry, onSelect: () => requestGuidance(guidedTargetEntry?.id) },
+          { id: "cancel-guidance", label: "Cancel lantern guidance", disabled: !guidanceEntryId, onSelect: () => { setGuidanceEntryId(null); setGuidanceStatus("Lantern guidance cancelled."); } },
+          { id: "controls", label: controls === "walk" ? "Orbit" : "Walk", disabled: mobileViewport.isMobile, onSelect: toggleControls },
+          { id: "threshold", label: "Threshold", onSelect: leaveForest },
+        ]}
+        navigationDetails={<>
+          <MagicLinkSignIn />
+          <p>{visitedCount}/{totalCount} seen · {contentDiagnostics.visualCount} visuals · {journeyChapters.length} chapters</p>
+          <p>{mobileViewport.isMobile ? "Move with the analogue pad and drag Look to turn." : "WASD / arrows walk. F reads. M or I opens the constellation. B goes back."}</p>
+          <label><input type="checkbox" checked={showMiniMap} onChange={event => setSetting("showMiniMap", event.target.checked)} /> Mini-map in navigation details</label>
+          {showMiniMap && canReadActiveEntry ? <div className="experience-menu__minimap"><MiniMapHUD entries={entries} activeEntryId={resolvedActiveEntryId} sceneProximity={menuProximity} witnessedEntryIds={witnessedEntryIds} /></div> : null}
+          <label><input type="checkbox" checked={showCompass} onChange={event => setSetting("showCompass", event.target.checked)} /> Compass in navigation details</label>
+          {showCompass ? <p>{controls === "walk" ? "Walk" : "Drag to look"} · {canReadActiveEntry ? sceneLabel(activeEntry) : "A path still forming"}</p> : null}
+          {showContextualGuidance ? <ContextualNavigationPrompt sceneProximity={menuProximity} /> : null}
+          <label><input type="radio" name="mobile-mode" checked={mobileControlMode === "direct"} onChange={() => setSetting("mobileControlMode", "direct")} /> Direct mobile controls</label>
+          <label><input type="radio" name="mobile-mode" checked={mobileControlMode === "guided"} onChange={() => setSetting("mobileControlMode", "guided")} /> Guided mobile controls</label>
+          <nav aria-label="Recent remembered trail">{recentBreadcrumbs.filter(entry => witnessedEntryIds.includes(entry.id)).map(entry =>
+            <button key={entry.id} type="button" onClick={() => { if (navigateToEntry(entry.id, "explore")) changeMemories(false); }}>{entry.title}</button>)}</nav>
+          <nav aria-label="Current chapter path">{currentChapterEntries.map((entry, index) =>
+            <button key={entry.id} type="button" onClick={() => {
+              const accepted = witnessedEntryIds.includes(entry.id) ? navigateToEntry(entry.id, "explore") : requestGuidance(entry.id);
+              if (accepted) changeMemories(false);
+            }}>{witnessedEntryIds.includes(entry.id) ? entry.title : `Unread memory ${index + 1}`}</button>)}</nav>
+          <div aria-label="Chapter progress">{chapterProgress.map(chapter => <p key={chapter.id}>{chapter.revealed ? chapter.chapter : "A chapter still forming"} · {chapter.visited}/{chapter.total}</p>)}</div>
+        </>}
+      />
 
-      {experienceMode === "free-woods" && prologueResolved ? <section
-        id="story-navigation"
-        className="story-hud"
-        aria-label="Slipper in the Woods navigation"
-        tabIndex={-1}
-        style={floatingUiStyle}
-      >
-        <div className="story-hud-copy">
-          <p className="story-hud-kicker">Slipper in the Woods / walkable memory archive</p>
-          <h2>{activeEntry?.title ?? "Unknown clearing"}</h2>
-          <p>
-            {activeJourneyChapter?.title ?? activeEntry?.chapter ?? "No chapter"}
-            {activeEntry?.engine3d.mood ? ` / ${activeEntry.engine3d.mood}` : ""}
-          </p>
-          <p className="story-hud-stats">
-            {visitedCount}/{totalCount} seen / {contentDiagnostics.visualCount} visuals / {journeyChapters.length} chapters
-          </p>
-          {guidanceEntryId ? (
-            <p className="story-hud-guidance" aria-live="polite">
-              Lantern guidance: {getEntryById(entries, guidanceEntryId)?.title ?? "selected clearing"}
-            </p>
-          ) : null}
-        </div>
-
-        <div className="story-mode-switch" role="group" aria-label="Story modes">
-          {(["explore", "read", "map"] as AppMode[]).map((candidateMode) => (
-            <button
-              key={candidateMode}
-              type="button"
-              className={mode === candidateMode ? "is-active" : ""}
-              onClick={() => candidateMode === "read" ? readActiveEntry() : setMode(candidateMode)}
-              aria-pressed={mode === candidateMode}
-            >
-              {modeLabel(candidateMode)}
-            </button>
-          ))}
-        </div>
-
-        <div className="story-hud-actions">
-          <button type="button" onClick={moveToPrevious} disabled={history.length === 0 && !adjacency?.previous}>
-            Back
-          </button>
-          <button type="button" onClick={continueToNext} disabled={!nextEntry}>
-            Next
-          </button>
-          <button type="button" onClick={openArchive}>Archive</button>
-          <details className="story-hud-more">
-            <summary aria-label="More journey actions">More</summary>
-            <div
-              className="story-hud-overflow"
-              role="group"
-              aria-label="More journey actions"
-              onClick={(event) => event.currentTarget.closest("details")?.removeAttribute("open")}
-            >
-              <button type="button" onClick={returnToLastClearing}>Last clearing</button>
-              <button type="button" onClick={() => requestGuidance(nextUnreadEntry?.id)} disabled={!nextUnreadEntry}>
-                Find unread
-              </button>
-              <button type="button" onClick={returnToChapterPath}>Chapter path</button>
-              <button type="button" onClick={requestExperienceSettingsOpen}>Settings</button>
-              <button type="button" onClick={leaveForest}>Threshold</button>
-              {!mobileViewport.isMobile ? (
-                <button type="button" onClick={toggleControls}>
-                  {controls === "walk" ? "Orbit" : "Walk"}
-                </button>
-              ) : null}
-            </div>
-          </details>
-        </div>
-      </section> : null}
-
-      {experienceMode === "free-woods" && mode === "explore" && storyGuidance.poeticLine ? (
-        <section
-          className={`story-guidance story-guidance--level-${storyGuidance.level}`}
-          aria-live="polite"
-          data-guidance-directional={storyGuidance.allowDirectionalCue ? "true" : "false"}
-        >
-          <p>{storyGuidance.poeticLine}</p>
-          {storyGuidance.allowDirectionalCue && guidedTargetEntry ? (
-            <span>Follow the warmer edge of the lantern light.</span>
-          ) : null}
-        </section>
-      ) : null}
-
-      {experienceMode === "free-woods" && mode === "explore" && !isWalkingForest ? (
-        <section className="journey-trail" aria-label="Recent remembered trail" style={floatingUiStyle}>
-          <span className="journey-trail-label">Trail</span>
-          {recentBreadcrumbs.map((entry) => (
-            <button key={entry.id} type="button" onClick={() => navigateToEntry(entry.id, "explore")}>
-              {shortTitle(entry.title, 18)}
-            </button>
-          ))}
-          <strong>{shortTitle(activeEntry?.title, 24)}</strong>
-        </section>
-      ) : null}
-
-      {experienceCapabilities.constellationScope === "witnessed-only" && mode === "explore" && prologueResolved && resolvedActiveEntryId !== "fragment-001" && canReadActiveEntry ? (
-        <button ref={constellationTriggerRef} className="memory-return first-constellation-access" type="button" onClick={() => setMode("map")}>Constellation</button>
-      ) : null}
       {experienceCapabilities.allowConstellationView && mode === "map" ? (
         <section ref={mapWorkspaceRef} tabIndex={-1} className={`map-workspace${experienceCapabilities.constellationScope === "witnessed-only" ? " is-partial-constellation" : ""}`} aria-label="Story map workspace" data-constellation-scope={experienceCapabilities.constellationScope}>
-          {experienceCapabilities.constellationScope === "witnessed-only" ? <button className="memory-return" type="button" onClick={() => setMode("explore")}>Return to forest</button> : null}
+          <button className="memory-return" type="button" onClick={() => setMode("explore")}>Return to forest</button>
           {mobileViewport.isMobile && experienceCapabilities.allowFullArchive ? (
             <MapWorkspaceTabs activePane={mobileMapPane} onChange={setMobileMapPane} />
           ) : null}
@@ -1216,78 +1154,6 @@ function ExperienceApplication() {
         </section>
       ) : null}
 
-      {experienceMode === "free-woods" && mode === "explore" && !isWalkingForest ? (
-        <section className="portal-dock" aria-label="Current clearing and next action" style={floatingUiStyle}>
-          <div className="portal-dock-header">
-            <div>
-              <p>Current memory</p>
-              <strong>{shortTitle(activeEntry?.title, 36)}</strong>
-            </div>
-            <span>{activeVisual?.orientation ?? "procedural"} visual</span>
-          </div>
-          <div className="portal-dock-list">
-            <div className="portal-dock-card is-entry is-visited" aria-live="polite">
-              <span className="portal-dock-shortcut">walk</span>
-              <span className="portal-dock-copy">
-                <small>{sceneProximity?.nearestEntryId === activeEntry?.id ? "clearing active" : "between clearings"}</small>
-                <strong>{sceneProximity?.nearestTitle ?? activeEntry?.title ?? "The wood"}</strong>
-                <em>Follow the golden thread or the visible clearing rings. The story wakes when you arrive physically.</em>
-              </span>
-            </div>
-          </div>
-        </section>
-      ) : null}
-
-      {experienceMode === "free-woods" && mode === "explore" && !isWalkingForest ? (
-        <section className="chapter-path" aria-label="Current chapter path" style={floatingUiStyle}>
-          <div className="chapter-path-header">
-            <span>{activeJourneyChapter?.title ?? activeEntry?.chapter ?? "Chapter"}</span>
-            <strong>{currentChapterProgress}/{currentChapterEntries.length}</strong>
-          </div>
-          <div className="chapter-path-nodes">
-            {currentChapterEntries.map((entry, index) => {
-              const isActive = entry.id === activeEntry?.id;
-              const isVisited = visitedSet.has(entry.id);
-              return (
-                <button
-                  key={entry.id}
-                  type="button"
-                  className={`${isActive ? "is-active" : ""}${isVisited ? " is-visited" : ""}`}
-                  onClick={() => (isVisited ? openRememberedEntry(entry.id, "explore") : requestGuidance(entry.id))}
-                  aria-label={isVisited ? `Return to ${entry.title}` : `Guide me to ${entry.title}`}
-                  title={`${index + 1}. ${entry.title}`}
-                >
-                  {index + 1}
-                </button>
-              );
-            })}
-          </div>
-        </section>
-      ) : null}
-
-      {experienceMode === "free-woods" && mode === "explore" && !isWalkingForest ? (
-        <section className="chapter-progress" aria-label="Chapter path" style={floatingUiStyle}>
-          {chapterProgress.map((chapter) => {
-            const percentage = chapter.total > 0 ? Math.round((chapter.visited / chapter.total) * 100) : 0;
-            return (
-              <div className="chapter-progress-row" key={chapter.id}>
-                <span>{chapter.chapter}</span>
-                <strong>{chapter.visited}/{chapter.total}</strong>
-                <i style={{ width: `${percentage}%` }} />
-              </div>
-            );
-          })}
-        </section>
-      ) : null}
-
-      {experienceMode === "free-woods" && mode === "explore" && !isWalkingForest && showCompass ? (
-        <section className="scene-compass" aria-label="Scene compass" style={softUiStyle}>
-          <span>{sceneLabel(activeEntry)}</span>
-          <strong>{controls === "walk" ? "walk mode" : controls === "orbit" ? "drag to look" : "focus locked"}</strong>
-          <em>{controls === "walk" ? "click the wood, then walk toward a nearby clearing" : "drag the forest, or choose a nearby clearing below"}</em>
-        </section>
-      ) : null}
-
       {hasDiagnosticsWarning ? (
         <section className="content-diagnostics" aria-label="Content diagnostics">
           <strong>Content check</strong>
@@ -1302,18 +1168,6 @@ function ExperienceApplication() {
           ) : null}
         </section>
       ) : null}
-
-      {experienceMode === "free-woods" && prologueResolved ? <div className="story-instructions" aria-hidden="true">
-        {mode === "explore"
-          ? controls === "walk"
-            ? mobileViewport.isMobile
-              ? `Move with the analogue pad and drag Look to turn. Follow the lantern thread. ${visitedCount}/${totalCount} remembered.`
-              : `Click the scene to give the wood your gaze. WASD / arrows move. Follow the lantern thread. F reads. ${visitedCount}/${totalCount} remembered.`
-            : `The forest is quiet in orbit mode. Choose Walk to cross physically, F to read, or M for the constellation. ${visitedCount}/${totalCount} remembered.`
-          : mode === "read"
-            ? "Focused fragment mode. Esc returns to the forest. M opens the constellation."
-            : "Constellation mode. Select a node, or Esc to return to the forest."}
-      </div> : null}
 
       {!dedicationAcknowledged ? (
         <GiftDedication

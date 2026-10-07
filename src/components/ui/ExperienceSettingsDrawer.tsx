@@ -274,9 +274,10 @@ export function ExperienceSettingsDrawer({ initialEntryId }: ExperienceSettingsD
     if (dialog.open) dialog.close();
     const previousFocus = previousFocusRef.current;
     previousFocusRef.current = null;
-    if (previousFocus?.isConnected) {
-      window.requestAnimationFrame(() => previousFocus.focus());
-    }
+    const previousInClosedMenu = previousFocus?.closest(".experience-menu:not([open])");
+    const returnTarget = previousFocus?.isConnected && !previousInClosedMenu ? previousFocus
+      : document.querySelector<HTMLElement>("[data-quiet-memories='true'] #experience-memories-trigger");
+    if (returnTarget?.isConnected) window.requestAnimationFrame(() => returnTarget.focus());
   }, [drawerOpen]);
 
   useEffect(() => {

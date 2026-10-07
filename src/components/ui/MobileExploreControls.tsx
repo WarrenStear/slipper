@@ -25,6 +25,7 @@ export type MobileJourneyHistoryItem = {
 export type MobileExploreControlsProps = {
   mode: MobileControlMode;
   freeWoods?: boolean;
+  quietShell?: boolean;
   contemplativeIdle?: boolean;
   controlSide?: MobileControlSide;
   lookSensitivity?: number;
@@ -93,6 +94,7 @@ function gentleHaptic(enabled: boolean, reducedEffects: boolean, duration = 6) {
 export default function MobileExploreControls({
   mode,
   freeWoods = false,
+  quietShell = false,
   contemplativeIdle = false,
   controlSide = "left",
   lookSensitivity = 1,
@@ -217,7 +219,7 @@ export default function MobileExploreControls({
         .join(" ")}
       aria-label="Mobile forest controls"
     >
-      {freeWoods ? <div className="mobile-control-header">
+      {freeWoods && !quietShell ? <div className="mobile-control-header">
         <div className="mobile-control-mode" role="group" aria-label="Mobile exploration style">
           <button
             type="button"
@@ -264,7 +266,7 @@ export default function MobileExploreControls({
         </div>
       </div> : null}
 
-      {mode === "guided" && !controlsCollapsed ? (
+      {!quietShell && mode === "guided" && !controlsCollapsed ? (
         <div className="mobile-guided-actions" aria-live="polite">
           <span>Lantern route</span>
           <strong>{guidedTargetTitle ?? "No valid guide target"}</strong>
@@ -383,13 +385,13 @@ export default function MobileExploreControls({
         </div>
       ) : null}
 
-      <div className="mobile-mode-actions">
+      {!quietShell ? <div className="mobile-mode-actions">
         <button type="button" onClick={() => runAction(onRead)}>Read</button>
         {freeWoods ? <button type="button" onClick={() => runAction(onMap)}>Map</button> : null}
         {!freeWoods ? <button type="button" onClick={() => runAction(onOpenSettings)}>Settings</button> : null}
-      </div>
+      </div> : null}
 
-      {freeWoods && menuOpen ? (
+      {freeWoods && !quietShell && menuOpen ? (
         <div
           id="mobile-forest-more-actions"
           className="mobile-more-sheet"

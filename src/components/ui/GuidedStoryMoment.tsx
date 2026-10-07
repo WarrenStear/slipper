@@ -1,4 +1,4 @@
-import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useId, useMemo, useRef, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import type { JourneySceneId } from "../../lib/storyJourneyState";
 import { resolveGuidedStory } from "../../storyEvents/guidedStory";
@@ -7,6 +7,8 @@ import { useStoryAftermath } from "../../hooks/useStoryAftermath";
 import { useStoryCaptionVisibility } from "../../hooks/useStoryCaptionVisibility";
 import { useJourneyStore } from "../../stores/useJourneyStore";
 import { useSettingsStore } from "../../stores/useSettingsStore";
+import { QuietGuidance } from "../../ui/QuietGuidance";
+import { resolveQuietGuidance } from "../../ui/quietGuidancePresentation";
 import "./GuidedStoryMoment.css";
 
 type Props = {
@@ -17,10 +19,16 @@ type Props = {
   canFollow?: boolean;
   onRead?: () => void;
   onFollow?: () => void;
+  idleMs?: number;
+  detailRequested?: boolean | null;
+  onDetailRequestedChange?: (requested: boolean) => void;
+  onQuietFocusRequest?: () => void;
 };
 
-/** One current intention. Aftermath captions describe the environment, never replace source prose. */
-export default function GuidedStoryMoment({ sceneId, active = true, inline = false, canRead = false, canFollow = false, onRead, onFollow }: Props) {
+/** Canonical beat/aftermath authority stays here; QuietGuidance owns disclosure only. */
+export default function GuidedStoryMoment({ sceneId, active = true, inline = false,
+  canRead = false, canFollow = false, onRead, onFollow, idleMs = 0,
+  detailRequested, onDetailRequestedChange, onQuietFocusRequest }: Props) {
   const state = useJourneyStore(useShallow(journey => ({
     sceneId: journey.sceneId, completedSceneIds: journey.completedSceneIds,
     completedStoryEventIds: journey.completedStoryEventIds, worldFlags: journey.worldFlags,
@@ -29,41 +37,48 @@ export default function GuidedStoryMoment({ sceneId, active = true, inline = fal
   })));
   const drawerOpen = useSettingsStore(settings => settings.drawerOpen);
   const reducedMotion = useSettingsStore(settings => settings.reducedMotion);
+  const assistanceEnabled = useSettingsStore(settings => settings.showContextualGuidance);
   const beat = useMemo(() => resolveGuidedStory(state), [state]);
   const [collapsed, setCollapsed] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
-  const [nextStepOpen, setNextStepOpen] = useState(false);
-  const [focusWithin, setFocusWithin] = useState(false);
   const nextStepId = useId();
   const toggleRef = useRef<HTMLButtonElement>(null);
-  const pendingFocus = useRef<"intention" | "toggle" | null>(null);
+  const [localDetails, setLocalDetails] = useState<boolean | null>(null);
+  const [nextStepOpen, setNextStepOpen] = useState(false);
+  const [focusWithin, setFocusWithin] = useState(false);
+  const pendingFocus = useRef<"intention" | "toggle" | "memories" | null>(null);
   const quiet = !inline && (beat.kind === "quiet" || beat.kind === "sequence");
   const available = active && !drawerOpen && !quiet && state.sceneId === sceneId;
   const { captionRef, inView } = useStoryCaptionVisibility(available && !collapsed, sceneId);
   const readable = canReadStoryAftermath({ available, collapsed, inView, focusWithin, nextStepOpen });
   const { current: response, held, setHeld, dismiss } = useStoryAftermath(sceneId, active && !quiet, readable);
-  const activity = useRef({ active, sceneId, available });
-  activity.current = { active, sceneId, available };
+  const projection = resolveQuietGuidance({ sceneId, kind: beat.kind, instruction: beat.instruction,
+    active: available, inline, idleMs, assistanceEnabled,
+    detailRequested: detailRequested === undefined ? localDetails : detailRequested,
+    consequenceLine: response?.line });
+  const activity = useRef({ available }); activity.current = { available };
 
-  useEffect(() => { setHelpOpen(false); setNextStepOpen(false); }, [sceneId]);
+  useLayoutEffect(() => {
+    if (detailRequested === true && available && !inline) captionRef.current?.focus({ preventScroll: true });
+  }, [detailRequested, available, inline, captionRef]);
+
+  useEffect(() => { setLocalDetails(null); setHelpOpen(false); setNextStepOpen(false); }, [sceneId]);
   useEffect(() => { setNextStepOpen(false); }, [response?.eventId]);
   useEffect(() => { if (!available || collapsed) setFocusWithin(false); }, [available, collapsed]);
-  // Only an explicit hide/show/dismiss request relocates focus. An automatic
-  // expiry cannot remove a button from under a keyboard user: focus pauses time.
   useLayoutEffect(() => {
-    const target = pendingFocus.current;
-    pendingFocus.current = null;
-    if (target === "intention") captionRef.current?.focus({ preventScroll: true });
-    if (target === "toggle") toggleRef.current?.focus({ preventScroll: true });
+    const requested = pendingFocus.current; pendingFocus.current = null;
+    if (requested === "intention" && captionRef.current) captionRef.current.focus({ preventScroll: true });
+    else if (requested === "toggle") toggleRef.current?.focus({ preventScroll: true });
+    else if (requested) onQuietFocusRequest?.();
   });
-
+  const act = (callback?: () => void) => {
+    if (activity.current.available && useJourneyStore.getState().sceneId === sceneId
+      && !useSettingsStore.getState().drawerOpen && !document.hidden && document.hasFocus()) callback?.();
+  };
   if (!available) return null;
   const currentResponse = response?.line ?? null;
   const nextStepVisible = Boolean(currentResponse && nextStepOpen);
   const canInspectStep = beat.kind !== "quiet" && beat.kind !== "sequence";
-  const act = (callback?: () => void) => {
-    if (activity.current.available && useJourneyStore.getState().sceneId === sceneId && !useSettingsStore.getState().drawerOpen && !document.hidden && document.hasFocus()) callback?.();
-  };
   const toggleGuide = () => act(() => {
     pendingFocus.current = "toggle";
     setCollapsed(value => !value);
@@ -74,6 +89,7 @@ export default function GuidedStoryMoment({ sceneId, active = true, inline = fal
     dismiss();
   });
 
+  if (inline) {
   return (
     <aside className={`guided-story${inline ? " guided-story--inline" : ""}${collapsed ? " is-collapsed" : ""}`}
       data-guided-story={sceneId} data-guided-beat={beat.kind} data-guided-event={beat.eventIds.join(" ")}
@@ -113,4 +129,25 @@ export default function GuidedStoryMoment({ sceneId, active = true, inline = fal
       </>}
     </aside>
   );
+  }
+  if (!projection.visible) return null;
+  return <QuietGuidance sceneId={sceneId} kind={beat.kind} eventIds={beat.eventIds}
+    line={projection.line} instruction={beat.instruction} hint={beat.hint}
+    detailsOpen={projection.detailsOpen} inline={inline} reducedMotion={reducedMotion}
+    captionRef={captionRef} readable={readable} onFocusWithinChange={setFocusWithin}
+    onNextStepOpenChange={setNextStepOpen}
+    onCloseDetails={() => act(() => {
+      // Move focus before removing the disclosure's focused controls.
+      onQuietFocusRequest?.(); setLocalDetails(false); onDetailRequestedChange?.(false);
+    })}
+    consequence={response ? {
+      eventId: response.eventId, line: response.line, held,
+      onHeldChange: value => act(() => setHeld(value)),
+      onDismiss: () => act(() => { pendingFocus.current = "intention"; setNextStepOpen(false); dismiss(); }),
+    } : null}
+    actions={<>
+      {canRead && onRead ? <button type="button" onClick={() => act(onRead)}>Read this memory</button> : null}
+      {beat.kind === "complete" && canFollow && onFollow ? <button type="button" onClick={() => act(onFollow)}>Follow the next path</button> : null}
+    </>}
+  />;
 }

@@ -58,7 +58,8 @@ export function useStoryNavigation(options: StoryNavigationOptions) {
       const result = config.host?.dispatchNavigation({ type: "navigate", entryId,
         expectedEntryId: state.activeEntryId, kind: "explicit", read: nextMode === "read" });
       if (!result?.accepted) { config.setGuidanceStatus(journeyEntryLockMessage(entryId)); return false; }
-      clearGuidance();
+      // Reading the current clearing preserves its selected walking destination.
+      if (entryId !== state.activeEntryId || nextMode !== "read") clearGuidance();
       if (entryId !== state.activeEntryId) config.setSceneResetNonce(value => value + 1);
       useWorldStore.getState().setMode(nextMode);
       if (nextMode === "read") config.requestReaderFocus();

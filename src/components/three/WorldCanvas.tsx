@@ -1,3 +1,4 @@
+import type { QuietGuidanceActivity } from "../../ui/quietGuidancePresentation";
 import { isCinematicProfileActive } from "../../cinematics/emotionalCinematography";
 import {
   memo,
@@ -33,6 +34,7 @@ type WorldCanvasProps = {
   storyWorldMemory?: WorldMemoryState;
   lockedEntryIds?: string[];
   navigationTargetEntryId?: string | null;
+  quietGuidanceActivity?: QuietGuidanceActivity;
   initialPlayerPosition?: Vector3Tuple | null;
   narrativeAudioSuppressed?: boolean;
   onFinalConstellationFormationComplete?: () => void;
@@ -170,6 +172,7 @@ export function WorldCanvas({
   storyWorldMemory,
   lockedEntryIds = [],
   navigationTargetEntryId = null,
+  quietGuidanceActivity,
   initialPlayerPosition = null,
   narrativeAudioSuppressed = false,
   onFinalConstellationFormationComplete,
@@ -273,6 +276,7 @@ export function WorldCanvas({
                 storyWorldMemory={storyWorldMemory}
                 lockedEntryIds={lockedEntryIds}
                 navigationTargetEntryId={navigationTargetEntryId}
+                quietGuidanceActivity={quietGuidanceActivity}
                 initialPlayerPosition={initialPlayerPosition}
                 narrativeAudioSuppressed={narrativeAudioSuppressed}
                 onFinalConstellationFormationComplete={

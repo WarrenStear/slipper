@@ -788,7 +788,13 @@ test("global shortcuts and focusable reading surfaces keep their accessibility g
   assert.match(navigation, /isExperienceSettingsOpen\(\)/);
   assert.match(appSource, /"--reader-text-min"/);
   assert.match(appSource, /role="document"\s+aria-labelledby="focused-reader-title"/);
-  assert.match(appSource, /id="story-navigation"[\s\S]*?tabIndex=\{-1\}/);
+  const menuSource = readFileSync(new URL("../src/ui/ExperienceMenu.tsx", import.meta.url), "utf8");
+  const menuStyles = readFileSync(new URL("../src/ui/ExperienceMenu.css", import.meta.url), "utf8");
+  assert.match(appSource, /href="#experience-memories-trigger"/);
+  assert.match(menuSource, /id="experience-memories-trigger"[\s\S]*?aria-haspopup="dialog"/);
+  assert.match(menuSource, /dialog.showModal\(\)/);
+  assert.match(menuSource, /restoreFocus.current && trigger.current\?\.isConnected/);
+  assert.match(menuStyles, /experience-menu__trigger:focus-visible[\s\S]*?outline:2px solid/);
   assert.match(
     archiveSource,
     /id="archive-fragments"\s+tabIndex=\{-1\}/,

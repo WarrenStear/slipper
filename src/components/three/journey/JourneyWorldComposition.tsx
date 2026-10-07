@@ -1,3 +1,4 @@
+import type { QuietGuidanceActivity } from "../../../ui/quietGuidancePresentation";
 import { memo } from "react";
 import { TactileDetailProvider } from "../storyEvents/TactileMaterial";
 import { openingEnclosed } from "../../../cinematics/openingPresentation";
@@ -19,6 +20,7 @@ export type JourneyWorldCompositionProps = {
   enabled?: boolean;
   openingResolved?: boolean;
   interactionsEnabled?: boolean;
+  quietGuidanceActivity?: QuietGuidanceActivity;
   onFinalConstellationFormationComplete?: () => void;
 };
 
@@ -39,6 +41,7 @@ function JourneyWorldCompositionComponent({
   enabled = true,
   openingResolved = true,
   interactionsEnabled = true,
+  quietGuidanceActivity,
   onFinalConstellationFormationComplete,
 }: JourneyWorldCompositionProps) {
   if (!enabled || !activeSceneId) return null;
@@ -55,6 +58,7 @@ function JourneyWorldCompositionComponent({
       renderAdjacent={renderAdjacent && !openingEnclosed(activeSceneId, openingResolved)}
       openingResolved={openingResolved}
       interactionsEnabled={interactionsEnabled}
+      quietGuidanceActivity={quietGuidanceActivity}
       onFinalConstellationFormationComplete={
         onFinalConstellationFormationComplete
       }

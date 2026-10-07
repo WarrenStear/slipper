@@ -1,3 +1,4 @@
+import type { QuietGuidanceActivity } from "../../ui/quietGuidancePresentation";
 import { CinematicFrameOverlay } from "./artDirection/LegacyFrameOverlay";
 import { useCompressedGLTF } from "../../lib/assets/gltfLoaders";
 import { cloneNpcPresentation, isPlaceholderNpcAsset } from "../../lib/assets/npcAssetPolicy";
@@ -91,6 +92,7 @@ export type StorySceneProps = {
   storyWorldMemory?: WorldMemoryState;
   lockedEntryIds?: string[];
   navigationTargetEntryId?: string | null;
+  quietGuidanceActivity?: QuietGuidanceActivity;
   initialPlayerPosition?: Vector3Tuple | null;
   narrativeAudioSuppressed?: boolean;
   onFinalConstellationFormationComplete?: () => void;
@@ -2460,6 +2462,7 @@ export function StoryScene({
   storyWorldMemory,
   lockedEntryIds = [],
   navigationTargetEntryId = null,
+  quietGuidanceActivity,
   initialPlayerPosition = null,
   narrativeAudioSuppressed = false,
   onFinalConstellationFormationComplete,
@@ -2787,6 +2790,7 @@ export function StoryScene({
         reducedMotion={reducedMotion}
         renderAdjacent={false}
         interactionsEnabled={mode === "explore"}
+        quietGuidanceActivity={quietGuidanceActivity}
         openingResolved={openingResolved}
         onFinalConstellationFormationComplete={
           onFinalConstellationFormationComplete

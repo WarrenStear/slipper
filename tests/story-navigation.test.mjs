@@ -91,22 +91,21 @@ const { StoryRuntimeProvider, useStoryRuntimeShell } = await actualOwner('../src
 const { useStoryNavigation } = await actualOwner('../src/experience/useStoryNavigation.ts');
 const appSource = readFileSync(new URL('../src/App.tsx', import.meta.url), 'utf8');
 const appAst = ts.createSourceFile('App.tsx', appSource, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
-let focusEffect, readerResetEffect, modeClick;
+let focusEffect, readerResetEffect, fragmentClick;
 function readerBindings(node) {
   if (ts.isCallExpression(node) && node.expression.getText(appAst) === 'useEffect') {
     const body = node.arguments[0]?.getText(appAst) ?? '';
     if (body.includes('const focusTimer') && body.includes('readerRef.current?.focus()')) focusEffect = node.getText(appAst);
     if (body.includes('setReaderProgress(0)')) readerResetEffect = node.getText(appAst);
   }
-  if (ts.isJsxAttribute(node) && node.name.getText(appAst) === 'onClick'
-    && node.initializer?.getText(appAst).includes('candidateMode === "read"')) modeClick = node.initializer.expression.getText(appAst);
+  if (ts.isJsxAttribute(node) && node.name.getText(appAst) === 'onFragment') fragmentClick = node.initializer.expression.getText(appAst);
   ts.forEachChild(node, readerBindings);
 }
-readerBindings(appAst); assert.ok(focusEffect); assert.ok(readerResetEffect); assert.ok(modeClick);
+readerBindings(appAst); assert.ok(focusEffect); assert.ok(readerResetEffect); assert.ok(fragmentClick);
 const readerExports = {};
 vm.runInNewContext(ts.transpileModule(`export function readerEffects(mode,reducedMotion,resolvedActiveEntryId,readerFocusNonce,readerRef,setReaderProgress) {
   ${readerResetEffect}; ${focusEffect};
-} export function modeButton(candidateMode,readActiveEntry,setMode) { return (${modeClick}); }`,
+} export function fragmentButton(useJourneyStore,navigateToEntry) { return (${fragmentClick}); }`,
   { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS } }).outputText,
 { exports: readerExports, useEffect: React.useEffect, window: windowTarget });
 const cloudFixtureSource = readFileSync(new URL('../e2e/story-first-experience.spec.ts', import.meta.url), 'utf8');
@@ -216,7 +215,7 @@ function mount(initial = {}) {
   render(el(React.StrictMode, null, el(StoryRuntimeProvider, null, el(Capture))));
   activeCpu = { get navigation() { return navigation; }, get host() { return host; }, get ui() { return ui; },
     reader, flushFocus() { const pending = [...focusTimers.values()]; focusTimers.clear(); for (const callback of pending) callback(); },
-    modeButton(mode) { reader.focused = false; return readerExports.modeButton(mode, navigation.readActiveEntry, useWorldStore.getState().setMode); },
+    modeButton(mode) { assert.equal(mode,"read"); reader.focused = false; return readerExports.fragmentButton(useJourneyStore,navigation.navigateToEntry); },
     act: callback => React.act(callback), configure: patch => React.act(() => setUi(current => ({ ...current, ...patch }))),
     unmount() { render(null); activeCpu = null; assert.equal(frames.size, 0); assert.equal(interactionFrames.size, 0); assert.equal(focusTimers.size, 0);
       assert.equal(windowTarget.count() + documentTarget.count(), listenerBaseline); } };

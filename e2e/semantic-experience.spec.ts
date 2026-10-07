@@ -1,3 +1,4 @@
+import { selectMemoryView } from "./quiet-memory-controls";
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import {
@@ -450,28 +451,14 @@ test.describe("semantic archive and reader", () => {
     test.slow();
     page.setDefaultTimeout(45_000);
     const root = await enterFreeWoods(page);
-    if (isMobileProject(testInfo)) {
-      const mobileControls = page.getByRole("region", {
-        name: "Mobile forest controls",
-      });
-      await mobileControls.getByRole("button", { name: "More", exact: true }).click();
-      await mobileControls.getByRole("button", { name: "Archive", exact: true }).click();
-    } else {
-      await page
-        .getByRole("region", { name: "Slipper in the Woods navigation" })
-        .getByRole("button", { name: "Archive", exact: true })
-        .click();
-    }
+    await selectMemoryView(page, "Archive");
     const currentArticle = page.locator("article[aria-current='location']");
     await currentArticle
       .getByRole("button", {
         name: /Open current remembered fragment in focused reading mode:/,
       })
       .click();
-    await page
-      .getByRole("group", { name: "Story modes" })
-      .getByRole("button", { name: "Fragment", exact: true })
-      .click();
+    await selectMemoryView(page, "Fragment");
 
     const reader = page.getByRole("region", {
       name: "Focused reading mode",
@@ -511,12 +498,7 @@ test.describe("semantic archive and reader", () => {
       page.getByRole("region", { name: "Story map workspace" }),
     ).toBeVisible();
 
-    const navigation = page.getByRole("region", {
-      name: "Slipper in the Woods navigation",
-    });
-    await navigation
-      .getByRole("button", { name: "Fragment", exact: true })
-      .click();
+    await selectMemoryView(page, "Fragment");
     await page
       .getByRole("region", { name: "Focused reading mode" })
       .getByRole("button", { name: "Open archive" })
@@ -530,10 +512,7 @@ test.describe("semantic archive and reader", () => {
         name: /Open current remembered fragment in focused reading mode:/,
       })
       .click();
-    await page
-      .getByRole("group", { name: "Story modes" })
-      .getByRole("button", { name: "Fragment", exact: true })
-      .click();
+    await selectMemoryView(page, "Fragment");
     await page
       .getByRole("region", { name: "Focused reading mode" })
       .getByRole("button", { name: "Return to forest" })
@@ -565,34 +544,19 @@ test("desktop exposes keyboard navigation and never mounts the mobile overlay", 
   await expect(
     page.getByRole("region", { name: "Mobile forest controls" }),
   ).toHaveCount(0);
-  await expect(
-    page.getByRole("region", {
-      name: "Slipper in the Woods navigation",
-    }),
-  ).toBeVisible();
-  const navigation = page.getByRole("region", {
-    name: "Slipper in the Woods navigation",
-  });
-  const skipLink = page.getByRole("link", {
-    name: "Skip to story navigation",
-  });
+  await expect(page.locator(".story-hud,.mini-map-hud,.scene-compass,.portal-dock")).toHaveCount(0);
+  const trigger = page.getByRole("button", { name: "Memories", exact: true });
+  const skipLink = page.getByRole("link", { name: "Skip to memories", exact: true });
   await skipLink.focus();
   await page.keyboard.press("Enter");
-  await expect(navigation).toBeFocused();
-
-  await navigation.evaluate((element) => {
-    const navigationElement = element as HTMLElement;
-    navigationElement.style.opacity = "0.06";
-    navigationElement.style.pointerEvents = "none";
-  });
-  const forestMode = navigation.getByRole("button", {
-    name: "Forest",
-    exact: true,
-  });
-  await forestMode.focus();
-  await expect(forestMode).toBeFocused();
-  await expect(navigation).toHaveCSS("opacity", "1");
-  await expect(navigation).toHaveCSS("pointer-events", "auto");
+  await expect(trigger).toBeFocused();
+  await trigger.press("Enter");
+  const memories = page.getByRole("dialog", { name: "Memories", exact: true });
+  await expect(memories).toBeVisible();
+  await expect(memories.getByRole("button", { name: "Close memories" })).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(memories).not.toBeVisible();
+  await expect(trigger).toBeFocused();
 
   await page.evaluate(() => {
     if (document.activeElement instanceof HTMLElement) {

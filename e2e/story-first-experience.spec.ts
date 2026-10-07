@@ -1,3 +1,4 @@
+import { selectMemoryView } from "./quiet-memory-controls";
 import { expect, test, type Page } from "@playwright/test";
 import { completeNextCinematicEvent } from "./cinematic-story-controls";
 import { JOURNEY_ENTRY_PROGRESS, getJourneyRitualBeat, journeyChapters, journeyScenes } from "../src/data/journeyBlueprint";
@@ -734,9 +735,9 @@ test.describe("story-first gift experience", () => {
       .click();
 
     await expect(root).toHaveAttribute("data-experience-mode", "free-woods");
-    const navigation = page.getByRole("region", {
-      name: "Slipper in the Woods navigation",
-    });
+    await expect(page.locator(".story-hud,.mini-map-hud,.scene-compass,.portal-dock")).toHaveCount(0);
+    await page.getByRole("button", { name: "Memories", exact: true }).click();
+    const navigation = page.getByRole("dialog", { name: "Memories", exact: true });
     await expect(
       navigation.getByRole("button", { name: "Archive", exact: true }),
     ).toBeVisible();

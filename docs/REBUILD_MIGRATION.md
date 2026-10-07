@@ -895,3 +895,75 @@ without writes while trusted touch gestures turn the real controller; durable
 story fields and physical position remain unchanged. No tree masking, guide
 placement or automatic camera change was justified or introduced. Both failed
 probe traces and accepted images remain in the First Wood sightline artifacts.
+
+### Phase D: quiet forest and deliberate Memories access
+
+The physical forest now keeps one Memories trigger. Fragment, the earned partial
+Constellation, Settings and completed-only Archive retain their canonical gates.
+Free Woods starts with the quiet forest; its route controls, chapter/breadcrumb
+paths, cloud sign-in, mini-map, compass and progress information remain inside a
+deliberate navigation disclosure. Accessible/title/archive entry keeps its own
+Settings access. The physical mobile Move and Look surfaces remain available.
+
+Memories is a native controlled dialog with keyboard wrap, Escape/backdrop
+dismissal and focus restoration. Opening it exits pointer lock, resets physical
+input and pauses through the existing shell policy; closing restores the prior
+pause state. Fragment uses fresh witness admission and the bounded explicit host
+port. Reading the same clearing preserves its selected walking destination;
+changing or recovering the clearing still clears the route. Follow/Refresh uses
+that current canonical target without relocating the player. The dialogue's
+keyboard wrap excludes controls with no layout inside collapsed paths.
+
+Default guidance is one authored line or the accepted consequence. Help and the
+existing stronger-assistance preference reveal details; explicit inline actions,
+aftermath hold/dismiss and next-step controls retain their current guards and
+lifetime. The opening starts without an instruction, then reveals Look down at
+28 seconds, its authored line at 44 seconds and the detailed physical action at
+64 seconds of real foreground idle. Veiled floor controls become visible on
+keyboard focus, preserving semantic access without replacing UV/raycast input.
+Held input, meaningful movement/look, hidden/focus gaps and overlays reset or
+suspend that presentation clock. Its stable activity prop preserves memoized
+world composition while the existing one-second clock owns disclosure only.
+
+The final complete check passed 1,201 unit cases and seven security cases, including
+source/lint/type/content/assets/world validation, production build and Pages
+Functions compilation. Focus/route repairs subsequently passed all 25 focused
+actual component/runtime/navigation cases and another production build. The
+strict E2E fixture repair uses canonical act/beat metadata and explicit empty
+legacy event fields; two comparisons prove unchanged hydrated story outcomes.
+Browser selectors now use the actual Memories controls instead of hidden HUD
+controls, retaining physical input, privacy, focus and no-teleport assertions.
+
+First native review retained two actual post-crossing arrival stalls: 1.227 s
+mobile-high and 6.612 s cinematic main-thread tasks. All four physical prefixes
+through the first committed target crossing satisfy the unchanged 1.2 s gap and
+speed limits. Arrival remains a separate responsiveness diagnostic; the route
+review now ends qualification at that exact committed crossing and retains the
+complete later recording. These findings do not establish a renderer leak or
+identify the cause of the arrival tasks. The failed initial shell review also
+retains its mistaken Continue label and the real collapsed-control focus issue.
+The final layout review passed eight native cases across portrait low/reduced,
+portrait high, desktop high and desktop cinematic: explicit opening Help,
+Memories keyboard wrap, Settings handoff/focus return and quiet completed woods.
+The portrait cases also capture the landscape menu. Requested Help now focuses
+inside its actual committed DOM owner; the former global zero-delay lookup could
+run before the opening's Html portal had mounted. Automatic idle disclosure never
+takes focus. Root inspected the native landscape and cinematic captures.
+
+The final low/reduced physical journey, real 28/44/64-second idle disclosure and
+cinematic physical journey passed. High desktop/mobile physical journeys passed
+the preceding stable-prop build with the same movement/input/reader/map path.
+All retained route recordings preserve their full arrival diagnostics. The
+targeted native production E2E run passed nine cases and six expected project
+skips; its trusted-touch case sampled an initial arrival camera pose. Its final
+native rerun passed after waiting for actual idle/action admission. Every displacement, terrain,
+vertical-range and look bound remains unchanged. The audio lifecycle review
+passed all twelve checkpoints, preserving the ten-buffer bank, paused/muted
+silence, shared-context reuse and zero connected nodes after text handoff.
+
+The test-only portability repair `8802a81` deployed successfully as production
+`63c481f4-8901-4caa-9df7-cf44e42a3e93`. The live custom domain reports that exact
+revision, correct active repository, main and a clean source build. Its hosted
+source/unit/security/build/Functions, asset delivery and all five browser projects
+passed in hosted run 37593294646. This certifies that deployed revision; the Phase
+D push needs its own hosted and served-revision receipts.

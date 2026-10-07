@@ -1,0 +1,13 @@
+/* The title/archive/accessibility shell keeps its Settings trigger. Only a live
+   physical shell with Memories removes the duplicate. No persisted-mode selector. */
+body:has([data-quiet-memories="true"]) .experience-settings-trigger { display:none; }
+.experience-menu__minimap { min-height:290px; position:relative; }
+.experience-menu__minimap > section { position:relative!important; inset:auto!important; width:100%!important; box-sizing:border-box; }
+.experience-menu .contextual-nav-prompt { position:relative; inset:auto; width:auto; }
+.experience-menu__paths p,.experience-menu__paths label { font:400 .8rem/1.65 system-ui,sans-serif; color:#c4cabf; }
+.experience-menu__paths label { display:flex; align-items:center; gap:.5rem; min-height:44px; }
+.story-object-onboarding[data-quiet-guidance] span { display:block; margin-top:.5rem; }
+@media(prefers-reduced-motion:reduce) { .quiet-guidance,.experience-menu { animation:none!important; transition:none!important; } }
+html[data-motion="reduced"] .quiet-guidance,html[data-motion="reduced"] .experience-menu { animation:none!important; transition:none!important; }
+
+.experience-menu .cloud-journey-card {position:relative;inset:auto;width:auto;max-width:100%;}

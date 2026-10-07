@@ -1,6 +1,7 @@
 import type { Page } from "@playwright/test";
 import {
   JOURNEY_ENTRY_CONTEXT,
+  JOURNEY_ENTRY_PROGRESS,
   JOURNEY_LANDMARK_IDS,
   JOURNEY_RECOVERED_KEY_IDS,
   JOURNEY_RITUAL_IDS,
@@ -30,16 +31,20 @@ export function incompleteStoryJourney(): StoryJourneyState {
   const openingScene = journeyScenes[0];
   if (!openingScene) throw new Error("The canonical journey has no opening scene.");
   const openingContext = JOURNEY_ENTRY_CONTEXT[openingScene.keystoneEntryId];
-  if (!openingContext) {
+  const openingProgress = JOURNEY_ENTRY_PROGRESS[openingScene.keystoneEntryId];
+  if (!openingContext || !openingProgress) {
     throw new Error("Missing journey context for the opening scene.");
   }
 
   return {
     schemaVersion: 2,
-    actId: openingContext.actId,
+    completedStoryEventIds: [],
+    storyObjectStates: {},
+    storyPlacementStates: {},
+    actId: openingProgress.actId,
     chapterId: openingContext.chapterId,
     sceneId: openingContext.sceneId,
-    beatId: openingContext.beatId,
+    beatId: openingProgress.beatId,
     activeEntryId: openingScene.keystoneEntryId,
     history: [],
     visitedEntryIds: [openingScene.keystoneEntryId],
@@ -74,7 +79,8 @@ export function completedStoryJourney(): StoryJourneyState {
   const finalScene = journeyScenes.at(-1);
   if (!finalScene) throw new Error("The canonical journey has no final scene.");
   const finalContext = JOURNEY_ENTRY_CONTEXT[finalScene.keystoneEntryId];
-  if (!finalContext) {
+  const finalProgress = JOURNEY_ENTRY_PROGRESS[finalScene.keystoneEntryId];
+  if (!finalContext || !finalProgress) {
     throw new Error(`Missing journey context for ${finalScene.keystoneEntryId}.`);
   }
 
@@ -82,10 +88,13 @@ export function completedStoryJourney(): StoryJourneyState {
 
   return {
     schemaVersion: 2,
-    actId: finalContext.actId,
+    completedStoryEventIds: [],
+    storyObjectStates: {},
+    storyPlacementStates: {},
+    actId: finalProgress.actId,
     chapterId: finalContext.chapterId,
     sceneId: finalContext.sceneId,
-    beatId: finalContext.beatId,
+    beatId: finalProgress.beatId,
     activeEntryId: finalScene.keystoneEntryId,
     history: allEntryIds.filter((entryId) => entryId !== finalScene.keystoneEntryId),
     visitedEntryIds: allEntryIds,
