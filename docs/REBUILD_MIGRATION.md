@@ -854,3 +854,17 @@ test waits for authored admission before reading. Acceptance artifacts are
 `phase-c-lantern-preparation/native-studio`, `native-carried` and
 `native-lifecycle-all-tier-warm`. These prove the bounded slice and render
 comparisons; they do not certify every later chapter or human route usability.
+
+### Deployment identity correction
+
+The production build receipt now names the active `WarrenStear/slipper`
+repository instead of the historical `warrenstear30-afk/sitw` location. Its existing
+three executable tests still prove clean/dirty source detection, Cloudflare/GitHub
+revision precedence and the `version.json` no-store policy. The Pages project was
+read through the authenticated Cloudflare API: it is connected to
+`WarrenStear/slipper`, production `main`, automatic push deployments enabled,
+`npm run build`, root directory empty and output `dist`. The custom domain is
+`slipperinthewoods.com`. Persistence bindings and email secrets remain absent as
+specified by the current deployment configuration; no functioning cloud save or
+magic-link service is inferred from the frontend deployment. The new push and
+served revision must be checked before claiming deployment alignment.

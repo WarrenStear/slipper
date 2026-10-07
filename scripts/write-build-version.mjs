@@ -16,7 +16,7 @@ export function buildVersion(directory, env = process.env, now = new Date()) {
     package: pkg.name,
     version: pkg.version,
     mode: "production",
-    repository: "https://github.com/warrenstear30-afk/sitw",
+    repository: "https://github.com/WarrenStear/slipper",
     revision,
     branch,
     builtAt: now.toISOString(),

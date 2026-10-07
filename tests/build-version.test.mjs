@@ -23,7 +23,7 @@ test("a local production build identifies its actual checkout and modified sourc
   assert.equal(version.revision, revision);
   assert.equal(version.branch, "main");
   assert.equal(version.builtAt, "2026-09-25T10:00:00.000Z");
-  assert.equal(version.repository, "https://github.com/warrenstear30-afk/sitw");
+  assert.equal(version.repository, "https://github.com/WarrenStear/slipper");
   assert.equal(version.dirty, false);
   mkdirSync(join(directory, "src/data"), { recursive: true });
   writeFileSync(join(directory, "src/data/worldState.json"), "{}");
@@ -40,12 +40,12 @@ test("Cloudflare and GitHub builds use their deployment revision and branch", t 
   const cloud = buildVersion(directory, { CF_PAGES_COMMIT_SHA: "a".repeat(40), CF_PAGES_BRANCH: "main", GITHUB_SHA: "b".repeat(40), GITHUB_REF_NAME: "ignored-github-branch" });
   assert.equal(cloud.revision, "a".repeat(40));
   assert.equal(cloud.branch, "main");
-  assert.equal(cloud.repository, "https://github.com/warrenstear30-afk/sitw");
+  assert.equal(cloud.repository, "https://github.com/WarrenStear/slipper");
   assert.equal(cloud.dirty, false);
   const github = buildVersion(directory, { GITHUB_SHA: "b".repeat(40), GITHUB_REF_NAME: "preview" });
   assert.equal(github.revision, "b".repeat(40));
   assert.equal(github.branch, "preview");
-  assert.equal(github.repository, "https://github.com/warrenstear30-afk/sitw");
+  assert.equal(github.repository, "https://github.com/WarrenStear/slipper");
   assert.equal(github.dirty, false);
   assert.throws(() => buildVersion(directory, { CF_PAGES_COMMIT_SHA: "main" }), /full Git commit SHA/);
 });
