@@ -1,4 +1,3 @@
-import { projectPlasterMetreUvs } from "../environmentArt/plasterGeometry.ts";
 import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { createWornTimberGeometry, createWeatheredPanelGeometry } from "../environmentArt/authoredGeometry.ts";
@@ -75,7 +74,7 @@ function constructionTimber(size: ArtVector, seed: number) {
 export function createConstructionGeometry(pieces: readonly ConstructionPiece[], plaster = false) {
   const geometries = pieces.slice(0, 256).map((piece, index) => {
     const geometry = plaster
-      ? projectPlasterMetreUvs(createWeatheredPanelGeometry(piece.size, index + 17))
+      ? createWeatheredPanelGeometry(piece.size, index + 17)
       : constructionTimber(piece.size, index + 17);
     const transform = new THREE.Matrix4().compose(
       new THREE.Vector3(...piece.position),

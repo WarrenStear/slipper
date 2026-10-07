@@ -135,7 +135,10 @@ test('materials keep texture, colour, memory and quality override behaviour', ()
   assert.match(code,/resolveSurfaceDefaults\(surface, roughness, metalness\)/);
   assert.match(code,/resolveMaterialMemory\(surface, finish\.roughness/);
   assert.match(code,/metalness=\{finish\.metalness\}/);
-  assert.match(code,/new THREE\.Color\(color\)/);assert.match(code,/mapsAllowed && !maps && compatibleMapping/);
+  assert.match(code,/new THREE\.Color\(color\)/);
+  assert.match(code,/const mapsAllowed = inherited === "relief" && resolved === "relief"/);
+  assert.match(code,/admitsProductionMaterialMaps\(surface, inherited, resolved,[\s\S]*?\{ constructionCoordinates, barkCoordinates, reviewedCoordinates \}, !!maps\)/);
+  assert.match(code,/useProductionMaterialMaps\(surface, productionEnabled\)/);
   assert.match(code,/memory \?\? \{ wetness:/);assert.match(code,/detail \?\? inherited/);
   assert.doesNotMatch(code,/useFrame|roughness = \.88|metalness = 0/);
 });

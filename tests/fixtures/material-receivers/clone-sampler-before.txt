@@ -1,0 +1,21 @@
+export function cloneReviewedMaterialMaps(sources: MaterialMaps, entry: ReviewedMaterialMaps): MaterialMaps {
+  if (!approvedMaterialMaps(entry)) throw new Error("Unreviewed material maps");
+  const channels = Object.keys(entry.channels) as MapChannel[];
+  for (const channel of channels) {
+    const source = sources[channel], image = source?.image;
+    if (!source?.isTexture || !image || !Number.isInteger(image.width) || !Number.isInteger(image.height) || image.width < 1 || image.height < 1 || image.width > entry.maxDimension || image.height > entry.maxDimension) throw new Error("Material exceeds reviewed texture budget or has invalid dimensions");
+  }
+  const maps: MaterialMaps = {};
+  try {
+    for (const channel of channels) {
+      const texture = sources[channel]!.clone(); maps[channel] = texture;
+      texture.colorSpace = channel === "map" ? SRGBColorSpace : NoColorSpace;
+      texture.channel = channel === "aoMap" ? entry.aoUvChannel! : 0;
+      texture.wrapS = texture.wrapT = RepeatWrapping;
+      texture.repeat.set(...entry.repeat); texture.offset.set(...(entry.offset ?? [0, 0]));
+      texture.center.set(.5, .5); texture.rotation = entry.rotation ?? 0;
+      texture.flipY = false; texture.updateMatrix(); texture.needsUpdate = true;
+    }
+    return maps;
+  } catch (error) { disposeMaterialMaps(maps); throw error; }
+}

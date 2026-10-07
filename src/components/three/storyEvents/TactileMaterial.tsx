@@ -1,3 +1,4 @@
+import { admitsProductionMaterialMaps } from "../materials/materialMapAdmission";
 import { useProductionMaterialMaps } from "../materials/useProductionMaterialMaps";
 import { createContext, memo, useCallback, useContext, useMemo, useRef, type ReactNode } from "react";
 import * as THREE from "three";
@@ -37,13 +38,15 @@ type TactileMaterialProps = {
   constructionCoordinates?: boolean;
   /** Only reviewed bark geometry opts in to the local bark set. */
   barkCoordinates?: boolean;
+  /** Opt-in after actual receiving-mesh UV review; it never approves an asset. */
+  reviewedCoordinates?: boolean;
   memory?: MaterialMemory;
   /** Borrowed maps, including KTX2 textures. The loading cache owns disposal. */
   maps?: Partial<Pick<THREE.MeshStandardMaterial, "map" | "normalMap" | "roughnessMap" | "aoMap">>;
 };
 
 /** Standard-lit surface finishes using the shared optional map delivery path. */
-export const TactileMaterial = memo(function TactileMaterial({ surface, detail, color, roughness, metalness, side = THREE.FrontSide, memory, maps, constructionCoordinates = false, barkCoordinates = false, ...appearance }: TactileMaterialProps) {
+export const TactileMaterial = memo(function TactileMaterial({ surface, detail, color, roughness, metalness, side = THREE.FrontSide, memory, maps, constructionCoordinates = false, barkCoordinates = false, reviewedCoordinates = false, ...appearance }: TactileMaterialProps) {
   const inherited = useContext(TactileDetailContext);
   const look = useSceneLook();
   const finish = resolveSurfaceDefaults(surface, roughness, metalness);
@@ -53,8 +56,9 @@ export const TactileMaterial = memo(function TactileMaterial({ surface, detail, 
   const mapsAllowed = inherited === "relief" && resolved === "relief";
   // Generated oak was reviewed on construction UVs. Unmapped legacy props keep
   // their complete procedural finish instead of stretching a board texture.
-  const compatibleMapping = surface === "bark" ? barkCoordinates : !["wood", "wet-wood"].includes(surface) || constructionCoordinates;
-  const productionMaps = useProductionMaterialMaps(surface, mapsAllowed && !maps && compatibleMapping);
+  const productionEnabled = admitsProductionMaterialMaps(surface, inherited, resolved,
+    { constructionCoordinates, barkCoordinates, reviewedCoordinates }, !!maps);
+  const productionMaps = useProductionMaterialMaps(surface, productionEnabled);
   const hasAuthoredAlbedo = !!productionMaps?.map && (barkCoordinates || constructionCoordinates && ["wood", "wet-wood"].includes(surface));
   // The oak image supplies its own base colour. Retain a restrained authored tint
   // and vertex variation instead of multiplying three dark albedos together.

@@ -1045,3 +1045,42 @@ fourteen focused cases pass on Node 24.15.0 and CI-major Node 22.23.3; the entir
 1,215-case unit suite passes on Node 22.23.3. Original failed hosted receipts
 remain in `phase-d-preparation/hosted-e4f283f-review`; the repaired commit still
 requires its own complete hosted result.
+
+### Material receivers and ash
+
+The material expansion first establishes explicit receiving-surface contracts.
+Oak and bark retain their reviewed delivery rules; other material families now
+require an explicit reviewed-coordinate opt-in in addition to asset approval,
+high/cinematic quality and non-reduced effects. Borrowed maps keep their existing
+owner. Approved sampler cloning retains every channel transform and disposes a
+partially configured private clone on failure.
+
+Plaster construction panels now use metre-scaled face UVs with separate projection
+seams. Expanded indexed positions, normals, colours, triangle order and bounds
+remain exact. All seven native map-off before/after geometry images are byte-
+identical; triangle and draw counts remain unchanged. The Fire boundary's existing
+ash disc uses its existing procedural ash finish. Eight canonical before/after
+Fire pairs preserve draws, triangles, lights, shadows, frame owners, textures and
+geometries. Pixel changes are confined to the ash disc, including both initial
+and resolved states. Its distinct finish adds one shader variant on low and two
+on higher tiers; exact repeated resource checks pass.
+
+The full Node 22 check passed 1,222 unit cases and seven security cases, including
+content, asset, production build and Pages Functions checks. The actual receiver
+review captured 156 gallery/geometry views across five material-memory states and
+seven quality/viewport/comfort variants. Oak and external plaster auditions pass
+three retained mount epochs with exact resource counts at matching sequence
+positions. Missing, malformed and offline assets retain fallback; delayed disable
+and unmount retire owned views after real streamed-body and decoder completion.
+Native evidence is retained outside the repository under
+`artifacts/rebuild-20261005/phase-e-native-*`. The review tool records failures,
+actual native allocations and sampler/private-depth bindings.
+
+The generated plaster albedo remains external and unreviewed at this checkpoint.
+No new map is registered or activated. Its canonical House audition and subsequent
+art approval are separate from these validated receiver/geometry changes.
+
+Hosted run 37598261403 certifies the prior `bcdb9bd` commit: source/build/security,
+decoder delivery and all five browser projects passed. Cloudflare production
+`780fd2f5-d063-4fd5-be69-d97f4a1f4c02` serves that exact clean main revision.
+The next pushed commit requires its own served-revision verification.

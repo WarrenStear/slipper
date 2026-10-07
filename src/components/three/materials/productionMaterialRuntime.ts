@@ -90,6 +90,26 @@ export function createMaterialMapCache<Renderer extends object>(acquireDecoders:
   };
 }
 
+/** An owned sampler view; this does not approve an asset or mutate its source.
+ * Reviewed delivery validates metadata/dimensions first; explicit external art
+ * auditions can share the sampler policy while retaining unreviewed provenance. */
+export function cloneMaterialMapSampler(
+  source: Texture,
+  channel: MapChannel,
+  metadata: Pick<ReviewedMaterialMaps, "repeat" | "offset" | "rotation" | "aoUvChannel">,
+): Texture {
+  const texture = source.clone();
+  try {
+    texture.colorSpace = channel === "map" ? SRGBColorSpace : NoColorSpace;
+    texture.channel = channel === "aoMap" ? metadata.aoUvChannel! : 0;
+    texture.wrapS = texture.wrapT = RepeatWrapping;
+    texture.repeat.set(...metadata.repeat); texture.offset.set(...(metadata.offset ?? [0, 0]));
+    texture.center.set(.5, .5); texture.rotation = metadata.rotation ?? 0;
+    texture.flipY = false; texture.updateMatrix(); texture.needsUpdate = true;
+    return texture;
+  } catch (error) { texture.dispose(); throw error; }
+}
+
 /** Validate decoded dimensions before cloning. Source transforms remain intact. */
 export function cloneReviewedMaterialMaps(sources: MaterialMaps, entry: ReviewedMaterialMaps): MaterialMaps {
   if (!approvedMaterialMaps(entry)) throw new Error("Unreviewed material maps");
@@ -101,13 +121,7 @@ export function cloneReviewedMaterialMaps(sources: MaterialMaps, entry: Reviewed
   const maps: MaterialMaps = {};
   try {
     for (const channel of channels) {
-      const texture = sources[channel]!.clone(); maps[channel] = texture;
-      texture.colorSpace = channel === "map" ? SRGBColorSpace : NoColorSpace;
-      texture.channel = channel === "aoMap" ? entry.aoUvChannel! : 0;
-      texture.wrapS = texture.wrapT = RepeatWrapping;
-      texture.repeat.set(...entry.repeat); texture.offset.set(...(entry.offset ?? [0, 0]));
-      texture.center.set(.5, .5); texture.rotation = entry.rotation ?? 0;
-      texture.flipY = false; texture.updateMatrix(); texture.needsUpdate = true;
+      maps[channel] = cloneMaterialMapSampler(sources[channel]!, channel, entry);
     }
     return maps;
   } catch (error) { disposeMaterialMaps(maps); throw error; }

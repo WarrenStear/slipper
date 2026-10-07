@@ -219,6 +219,7 @@ import ts from 'typescript';
 import * as THREE from 'three';
 import * as tactileShader from '../src/components/three/storyEvents/tactileShader.ts';
 import * as materialLibrary from '../src/components/three/materials/materialLibrary.ts';
+import * as materialMapAdmission from '../src/components/three/materials/materialMapAdmission.ts';
 
 test('the actual tactile component gates both automatic and override maps by chapter tier while preserving memory', () => {
   const code = ts.transpileModule(readFileSync(new URL('../src/components/three/storyEvents/TactileMaterial.tsx', import.meta.url), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX } }).outputText;
@@ -234,6 +235,7 @@ test('the actual tactile component gates both automatic and override maps by cha
     './tactileShader': tactileShader,
     '../artDirection/SceneLookContext': { useSceneLook: () => null },
     '../materials/materialLibrary': materialLibrary,
+    '../materials/materialMapAdmission': materialMapAdmission,
   };
   runInNewContext(code, { exports, require: id => { assert.ok(id in imports, id); return imports[id]; } });
   for (const quality of ['low', 'medium', 'high', 'cinematic']) for (const reduced of [false, true]) for (const override of [false, true]) {

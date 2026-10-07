@@ -193,7 +193,7 @@ function BoundaryFire({ resolved, reducedMotion }: { resolved: boolean; reducedM
     tongues.current.instanceMatrix.needsUpdate = true;
   });
   return <group name="contained-ash-and-timber-fire" position={FIRE_SOURCE_LOCAL_POSITION}>
-    <mesh geometry={ash} position={[0, .014, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow><TactileMaterial surface="earth" color="#3e3b32" roughness={1} /></mesh>
+    <mesh geometry={ash} position={[0, .014, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow><TactileMaterial surface="ash" color="#3e3b32" roughness={1} /></mesh>
     <TimberAssembly pieces={logs} color="#302823" surface="charred-wood" />
     {resolved ? null : <instancedMesh ref={tongues} geometry={geometry} args={[undefined, undefined, 7]} frustumCulled={false}><meshBasicMaterial vertexColors /></instancedMesh>}
   </group>;
