@@ -8,6 +8,7 @@ import React from 'react';
 import * as THREE from 'three';
 import ts from 'typescript';
 import { createUnderfloorGeometry } from '../src/world/opening/underfloorGeometry.ts';
+import { createTaperedBranchGeometry, mergeArtGeometries } from '../src/components/three/environmentArt/authoredGeometry.ts';
 import { createUnderfloorCaptureResources, captureUnderfloorFrame } from '../src/world/opening/underfloorCapture.ts';
 import { createWetFloorTextureView, createWetFloorMask, createWetFloorUniforms } from '../src/world/opening/wetFloorResources.ts';
 import { advanceWetFloorUniforms } from '../src/world/opening/wetFloorMotion.ts';
@@ -170,18 +171,42 @@ function createCpuRoot(strict = false) {
 }
 const disposed = object => { const record = { count: 0 }; object.addEventListener('dispose', () => record.count++); return record; };
 
+function immutableUnderfloorGeometry() {
+  const source = readFileSync(new URL('./fixtures/underfloor-before-extraction.txt', import.meta.url), 'utf8');
+  assert.equal(hash(source), 'af5e5d5e334fc422042d941f783e1029166dfd8416e55c238cdf0cdef687a67b', 'the exact 21ce695 source fixture is immutable');
+  const ast = ts.createSourceFile('UnderfloorForest.tsx', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  let constructor;
+  function visit(node) {
+    if (ts.isCallExpression(node) && node.expression.getText(ast) === 'useMemo'
+      && node.arguments[0]?.getText(ast).includes('const trunks: DressingForm[]')) constructor = node.arguments[0];
+    ts.forEachChild(node, visit);
+  }
+  visit(ast); assert.ok(constructor, 'execute the original actual constructor, not a re-created expected algorithm');
+  const compiled = ts.transpileModule(`export const createBaseline = ${constructor.getText(ast)};`,
+    { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText;
+  const exports = {};
+  runInNewContext(compiled, { exports, enabled: true, createTaperedBranchGeometry, mergeArtGeometries });
+  return exports.createBaseline();
+}
+
 test('extracted underfloor geometry is byte-equivalent to immutable 21ce695 seeded populations and six-limb buffers', () => {
   const forest = createUnderfloorGeometry();
+  // Math.sin's last bits differ between the native macOS and Linux runtimes.
+  // Execute the hash-pinned original source on the same backend and compare every
+  // actual value/byte exactly; no tolerance or platform-specific blessed output.
+  const baseline = immutableUnderfloorGeometry();
   assert.equal(forest.trunks.length, 34); assert.equal(forest.crowns.length, 30);
-  assert.equal(hash(JSON.stringify(forest.trunks)), BASELINE.trunks); assert.equal(hash(JSON.stringify(forest.crowns)), BASELINE.crowns);
+  assert.equal(JSON.stringify(forest.trunks), JSON.stringify(baseline.trunks));
+  assert.equal(JSON.stringify(forest.crowns), JSON.stringify(baseline.crowns));
   assert.deepEqual(Object.keys(forest.branches.attributes).sort(), Object.keys(BASELINE.attributes).sort());
   for (const [name, expected] of Object.entries(BASELINE.attributes)) {
     const attribute = forest.branches.getAttribute(name);
     assert.equal(attribute.itemSize, expected.itemSize); assert.equal(attribute.count, expected.count);
-    assert.equal(hash(arrayBytes(attribute.array)), expected.hash, `${name} bytes`);
+    assert.equal(hash(arrayBytes(attribute.array)), hash(arrayBytes(baseline.branches.getAttribute(name).array)), `${name} bytes`);
   }
   assert.equal(forest.branches.index.count, BASELINE.index.count); assert.equal(hash(arrayBytes(forest.branches.index.array)), BASELINE.index.hash);
-  assert.deepEqual(forest.branches.groups, []); forest.branches.dispose();
+  assert.equal(hash(arrayBytes(forest.branches.index.array)), hash(arrayBytes(baseline.branches.index.array)));
+  assert.deepEqual(forest.branches.groups, []); forest.branches.dispose(); baseline.branches.dispose();
 });
 
 test('actual floor shaders preserve all original RGB/projective/mask/stage code while alpha is supplied by the room', () => {

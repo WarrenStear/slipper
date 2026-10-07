@@ -868,3 +868,30 @@ read through the authenticated Cloudflare API: it is connected to
 specified by the current deployment configuration; no functioning cloud save or
 magic-link service is inferred from the frontend deployment. The new push and
 served revision must be checked before claiming deployment alignment.
+
+The deployed `4f60ee5` build passed two fresh native Chromium journeys on
+`https://slipperinthewoods.com`: high desktop and low/reduced portrait. Both used
+actual floor gestures, measured walking to 008, earned Fragment and witnessed-only
+Constellation, with no story seeding or camera setters. The live version returned
+200/no-store, the correct repository, full commit, `main` and `dirty: false`;
+the Cloudflare deployment API recorded successful production deployment
+`edf01816-7541-4070-b826-6a5976ef2dc6`. Evidence remains outside the repository in
+`cloudflare-4f60ee5-physical-slice`.
+
+Hosted C checks exposed a machine-dependent numeric fingerprint in the new
+underfloor test: its native Mac trunk JSON digest differs on Linux. The production
+constructor remains unchanged. The test now executes the hash-pinned actual
+21ce695 source fixture on the current runtime and compares every trunk/crown
+value and every geometry attribute/index byte exactly. Original counts, shader
+fingerprints and index fingerprint remain; there is no numeric tolerance or
+platform-specific blessed replacement. All twelve focused opening-domain cases
+pass locally. The new hosted check is required before calling CI green.
+
+Deliberate native guide looks passed high/full and low/reduced portrait. Root
+viewed the lantern through the actual trunks in both captures. An initial low
+probe mistakenly treated the 0.1-radian-cell UI yaw publication as a per-input
+camera receipt. The corrected external observer reads the actual quaternion
+without writes while trusted touch gestures turn the real controller; durable
+story fields and physical position remain unchanged. No tree masking, guide
+placement or automatic camera change was justified or introduced. Both failed
+probe traces and accepted images remain in the First Wood sightline artifacts.
