@@ -967,3 +967,30 @@ revision, correct active repository, main and a clean source build. Its hosted
 source/unit/security/build/Functions, asset delivery and all five browser projects
 passed in hosted run 37593294646. This certifies that deployed revision; the Phase
 D push needs its own hosted and served-revision receipts.
+
+The Phase D commit `8497517` deployed successfully as production deployment
+`03227847-a2a1-4f36-bfed-1153f08b1f28`. The custom domain reports its exact full
+revision, `WarrenStear/slipper`, `main` and `dirty: false` with 200/no-store.
+Six live native Chromium cases passed: fresh physical floor-to-first-memory
+journeys on high desktop and low/reduced portrait, explicit opening Help focus,
+and completed Memories keyboard/Settings handoff on both projects. The portrait
+menu also passes its landscape bounds check. The route tests use actual floor
+gestures and walking, with no seeded journey or camera setters; the completed
+menu tests use an explicit fixture solely for completed layout capabilities.
+Evidence is retained outside the repository in `cloudflare-8497517-native`.
+
+Cloudflare still matches the established production configuration: GitHub
+`WarrenStear/slipper`, production branch `main`, automatic Git deployments,
+`npm run build`, output `dist` and the existing custom domain. There are no
+production or preview KV bindings or magic-link secrets. The actual `/api/load`
+endpoint returns the expected 503 configuration response; this deployment does
+not certify functioning cloud save or sign-in. Browser-local saves remain under
+the existing tested store/schema authority.
+
+Hosted D smoke found a missed accessible-control selector in `scene-polish`:
+its pointer click targeted a veiled semantic floor button. Both semantic reveal
+steps now focus the actual control, assert focus and activate it with Enter.
+Physical jitter rejection, stage ordering, durable event/object checks and
+reload restoration remain unchanged. The original failed hosted logs remain
+in `phase-d-preparation/hosted-8497517-review`; subsequent verification must
+certify the repaired test commit rather than label the original run green.

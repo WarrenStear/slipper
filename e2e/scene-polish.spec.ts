@@ -45,14 +45,19 @@ test("surface coverage rejects jitter and preserves the two-stage accessible rev
   }
   expect((await readCinematicStory(page)).completedStoryEventIds).not.toContain("broken-floor.first-wipe");
   await expect(first).toBeVisible();
-  await first.click();
+  await first.focus();
+  await expect(first).toBeFocused();
+  await page.keyboard.press("Enter");
   await expect.poll(async () => (await readCinematicStory(page)).completedStoryEventIds.includes("broken-floor.first-wipe"), { timeout: 30_000 }).toBe(true);
   expect((await readCinematicStory(page)).completedStoryEventIds).not.toContain("broken-floor.forest-revealed");
   await expect(canvas).toHaveAttribute("data-opening-rendered-stage", "1", { timeout: 30_000 });
   const firstPath = testInfo.outputPath("first-reveal-stage.png");
   await page.screenshot({ path: firstPath, timeout: process.env.CI ? 60_000 : 30_000 });
   await testInfo.attach("first-reveal-stage", { path: firstPath, contentType: "image/png" });
-  await page.locator("button[data-story-event-id='broken-floor.forest-revealed']").click();
+  const second = page.locator("button[data-story-event-id='broken-floor.forest-revealed']");
+  await second.focus();
+  await expect(second).toBeFocused();
+  await page.keyboard.press("Enter");
   await expect(canvas).toHaveAttribute("data-opening-rendered-stage", "2", { timeout: 30_000 });
   const before = await readCinematicStory(page);
   expect(before.storyObjectStates["broken-floor.reflection"]).toBe("revealed");
