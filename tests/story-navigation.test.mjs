@@ -12,7 +12,7 @@ register('./canonical-node-loader.mjs', import.meta.url);
 const require = createRequire(import.meta.url), Reconciler = require('react-reconciler');
 const { ConcurrentRoot, DefaultEventPriority } = require('react-reconciler/constants');
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
-let activeCpu;
+let activeCpu, mountedReader;
 afterEach(() => activeCpu?.unmount());
 class RecordedTarget extends EventTarget {
   listeners = new Map();
@@ -89,25 +89,19 @@ async function actualOwner(relative, overrides = {}) {
 }
 const { StoryRuntimeProvider, useStoryRuntimeShell } = await actualOwner('../src/experience/StoryRuntimeContext.tsx');
 const { useStoryNavigation } = await actualOwner('../src/experience/useStoryNavigation.ts');
+const { FragmentReader } = await actualOwner('../src/ui/reader/FragmentReader.tsx');
 const appSource = readFileSync(new URL('../src/App.tsx', import.meta.url), 'utf8');
 const appAst = ts.createSourceFile('App.tsx', appSource, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
-let focusEffect, readerResetEffect, fragmentClick;
+let fragmentClick;
 function readerBindings(node) {
-  if (ts.isCallExpression(node) && node.expression.getText(appAst) === 'useEffect') {
-    const body = node.arguments[0]?.getText(appAst) ?? '';
-    if (body.includes('const focusTimer') && body.includes('readerRef.current?.focus()')) focusEffect = node.getText(appAst);
-    if (body.includes('setReaderProgress(0)')) readerResetEffect = node.getText(appAst);
-  }
   if (ts.isJsxAttribute(node) && node.name.getText(appAst) === 'onFragment') fragmentClick = node.initializer.expression.getText(appAst);
   ts.forEachChild(node, readerBindings);
 }
-readerBindings(appAst); assert.ok(focusEffect); assert.ok(readerResetEffect); assert.ok(fragmentClick);
+readerBindings(appAst); assert.ok(fragmentClick);
 const readerExports = {};
-vm.runInNewContext(ts.transpileModule(`export function readerEffects(mode,reducedMotion,resolvedActiveEntryId,readerFocusNonce,readerRef,setReaderProgress) {
-  ${readerResetEffect}; ${focusEffect};
-} export function fragmentButton(useJourneyStore,navigateToEntry) { return (${fragmentClick}); }`,
+vm.runInNewContext(ts.transpileModule(`export function fragmentButton(useJourneyStore,navigateToEntry) { return (${fragmentClick}); }`,
   { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS } }).outputText,
-{ exports: readerExports, useEffect: React.useEffect, window: windowTarget });
+{ exports: readerExports });
 const cloudFixtureSource = readFileSync(new URL('../e2e/story-first-experience.spec.ts', import.meta.url), 'utf8');
 const cloudFixtureAst = ts.createSourceFile('story-first-experience.spec.ts', cloudFixtureSource, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
 const cloudFixture = cloudFixtureAst.statements.find(node => ts.isFunctionDeclaration(node) && node.name?.text === 'restoredFirstWoodCloudJourney');
@@ -154,7 +148,7 @@ function seed(snapshot = fresh()) {
   assert.equal(frames.size, 0, 'Previous host scheduler cleaned up'); now = 0; focused = true; documentTarget.hidden = false;
   commandTrace.length = 0;
   interactionReports.length = 0; assert.equal(interactionFrames.size, 0);
-  assert.equal(focusTimers.size, 0);
+  assert.equal(focusTimers.size, 0); mountedReader = null;
   windowTarget.location.pathname = '/'; windowTarget.location.search = '';
   useSettingsStore.setState({ drawerOpen: false, reducedMotion: true, audioEnabled: false });
   useWorldStore.setState({ mode: 'explore', controls: 'walk', physicsPaused: false, sceneProximity: null });
@@ -166,14 +160,19 @@ const el = React.createElement;
 const renderer = Reconciler({
   supportsMutation: true, isPrimaryRenderer: false, supportsPersistence: false, supportsHydration: false,
   getRootHostContext: () => null, getChildHostContext: () => null, getPublicInstance: value => value,
-  createInstance: () => ({ children: [] }), createTextInstance: text => ({ text }),
+  createInstance(type,props) {
+    const instance={type,props,children:[],focused:false,focuses:0,scrolls:0,scrollTop:0,scrollHeight:1000,clientHeight:200,
+      focus(){this.focused=true;this.focuses++;},scrollTo({top}){this.scrollTop=top;this.scrolls++;}};
+    if(props.role==='document')mountedReader=instance;
+    return instance;
+  }, createTextInstance: text => ({ text }),
   appendInitialChild: (parent, child) => parent.children.push(child), appendChild: (parent, child) => parent.children.push(child),
   appendChildToContainer: (parent, child) => parent.children.push(child),
   removeChild: (parent, child) => { parent.children = parent.children.filter(item => item !== child); },
   removeChildFromContainer: (parent, child) => { parent.children = parent.children.filter(item => item !== child); },
   insertBefore() {}, insertInContainerBefore() {}, finalizeInitialChildren: () => false,
   prepareForCommit: () => null, resetAfterCommit() {}, preparePortalMount() {},
-  shouldSetTextContent: () => false, prepareUpdate: () => true, commitUpdate() {}, commitTextUpdate() {},
+  shouldSetTextContent: () => false, prepareUpdate: () => true, commitUpdate(instance,_payload,_type,_previous,next){instance.props=next;}, commitTextUpdate() {},
   hideInstance() {}, unhideInstance() {}, hideTextInstance() {}, unhideTextInstance() {},
   getCurrentEventPriority: () => DefaultEventPriority, beforeActiveInstanceBlur() {}, afterActiveInstanceBlur() {},
   detachDeletedInstance() {}, clearContainer: container => { container.children = []; },
@@ -186,10 +185,10 @@ function mount(initial = {}) {
     focus() { this.focused = true; this.focuses++; }, scrollTo() { this.scrolls++; } };
   function Capture() {
     const journey = useJourneyStore();
-    const mode = useWorldStore(state => state.mode), readerRef = React.useRef(reader);
+    const mode = useWorldStore(state => state.mode);
     [ui, setUi] = React.useState({ ready: true, experienceStarted: false, archiveOpen: false, prologueResolved: false,
       accessibleJourney: false, guidanceEntryId: null, guidanceStatus: '', sessionJourneyMode: null, sceneResetNonce: 0,
-      readerFocusNonce: 0, readerProgress: 0, allowActions: true, ...initial });
+      readerFocusNonce: 0, allowActions: true, ...initial });
     host = useStoryRuntimeShell({ ready: ui.ready, participating: ui.experienceStarted, overlayOpen: ui.archiveOpen, allowActions: ui.allowActions });
     const set = key => value => setUi(current => ({ ...current, [key]: typeof value === 'function' ? value(current[key]) : value }));
     navigation = useStoryNavigation({ host, accessibleJourney: ui.accessibleJourney, audioEnabled: false,
@@ -199,23 +198,31 @@ function mount(initial = {}) {
       setArchiveOpen: set('archiveOpen'), setExperienceStarted: set('experienceStarted'),
       setSessionJourneyMode: set('sessionJourneyMode'), setSceneResetNonce: set('sceneResetNonce'),
       requestReaderFocus: () => set('readerFocusNonce')(value => value + 1) });
-    readerExports.readerEffects(mode, false, journey.activeEntryId, ui.readerFocusNonce, readerRef, set('readerProgress'));
-    if (!ui.physicalController) return null;
+    const focusedDocument = mode === 'read' && canReadStoryEntry(journey.activeEntryId,journey)
+      ? el(FragmentReader,{entry:entries.find(entry=>entry.id===journey.activeEntryId),witnessedEntryIds:journey.witnessedEntryIds,
+        focusNonce:ui.readerFocusNonce,reducedMotion:false,showMetrics:true,kicker:'Current fragment',freeWoods:journey.storyCompleted,
+        constellationScope:journey.storyCompleted?'full':'witnessed-only',canContinue:true,bookmarked:false,backAvailable:true,nextAvailable:true,
+        onReturnToForest:()=>useWorldStore.getState().setMode('explore'),onFollow:()=>{},onSettings:()=>{},onConstellation:()=>{},
+        onBookmark:()=>{},onBack:()=>{},onNext:()=>{},onContinue:()=>{},onArchive:()=>{}}):null;
+    if (!ui.physicalController) return focusedDocument;
     const ids = [ui.controllerOriginId, ui.controllerTargetId], scope = { entryId: journey.activeEntryId, sceneId: journey.sceneId, revision: journey.sceneRelocationRevision };
     const observeThreshold = thresholdExports.threshold(host, blueprint.getJourneySceneForEntry(journey.activeEntryId),
       () => host.physicalBinding(scope), id => interactionReports.push({ id, queued: navigation.handlePortalSelect(id) }));
     const observeClearing = thresholdExports.clearing(host, blueprint.getJourneySceneForEntry(journey.activeEntryId),
       entries.find(entry => entry.id === journey.activeEntryId), journey.sceneRelocationRevision, NODE_ACTIVATION_RADIUS_SQ);
-    return el(InteractionController, { enabled: true, clearingRadius: 8.8,
+    return el(React.Fragment,null,focusedDocument,el(InteractionController, { enabled: true, clearingRadius: 8.8,
       targets: ids.map(id => ({ id, position: entryWorldPosition(entries.find(entry => entry.id === id), entries), active: id === journey.activeEntryId })),
-      onSample: observeClearing, onTargetEntered: observeThreshold });
+      onSample: observeClearing, onTargetEntered: observeThreshold }));
   }
   const root = renderer.createContainer({ children: [] }, ConcurrentRoot, null, true, null, '', error => { throw error; }, null);
   const render = child => React.act(() => renderer.flushSync(() => renderer.updateContainer(child, root, null, null)));
   render(el(React.StrictMode, null, el(StoryRuntimeProvider, null, el(Capture))));
   activeCpu = { get navigation() { return navigation; }, get host() { return host; }, get ui() { return ui; },
-    reader, flushFocus() { const pending = [...focusTimers.values()]; focusTimers.clear(); for (const callback of pending) callback(); },
-    modeButton(mode) { assert.equal(mode,"read"); reader.focused = false; return readerExports.fragmentButton(useJourneyStore,navigation.navigateToEntry); },
+    get reader(){return mountedReader??reader;},
+    get readerProgress(){return mountedReader?.children.find(child=>child.props?.role==='progressbar')?.props['aria-valuenow']??0;},
+    setReaderProgress(value){React.act(()=>{assert.ok(mountedReader);mountedReader.scrollTop=value/100*(mountedReader.scrollHeight-mountedReader.clientHeight);mountedReader.props.onScroll();});},
+    flushFocus() { const pending = [...focusTimers.values()]; focusTimers.clear(); for (const callback of pending) callback(); },
+    modeButton(mode) { assert.equal(mode,"read"); this.reader.focused = false; return readerExports.fragmentButton(useJourneyStore,navigation.navigateToEntry); },
     act: callback => React.act(callback), configure: patch => React.act(() => setUi(current => ({ ...current, ...patch }))),
     unmount() { render(null); activeCpu = null; assert.equal(frames.size, 0); assert.equal(interactionFrames.size, 0); assert.equal(focusTimers.size, 0);
       assert.equal(windowTarget.count() + documentTarget.count(), listenerBaseline); } };
@@ -408,12 +415,13 @@ test('actual Fragment button and repeated F refocus accepted current reading wit
   cpu.act(cpu.modeButton('read')); cpu.flushFocus();
   assert.equal(useWorldStore.getState().mode, 'read'); assert.equal(cpu.reader.focused, true);
   const initialLease = cpu.host.runtime.currentLease(), before = snapshot(), scrolls = cpu.reader.scrolls;
-  cpu.configure({ readerProgress: 72 });
+  cpu.setReaderProgress(72);
+  assert.equal(cpu.readerProgress,72,'Actual owned reader records its scroll progress');
   for (const activate of [() => cpu.modeButton('read')(), () => key('f')]) {
     const priorFocuses = cpu.reader.focuses, priorNonce = cpu.ui.readerFocusNonce;
     cpu.reader.focused = false; cpu.act(activate); cpu.flushFocus();
     assert.equal(cpu.reader.focused, true); assert.equal(cpu.reader.focuses, priorFocuses + 1);
-    assert.equal(cpu.ui.readerFocusNonce, priorNonce + 1); assert.equal(cpu.ui.readerProgress, 72);
+    assert.equal(cpu.ui.readerFocusNonce, priorNonce + 1); assert.equal(cpu.readerProgress, 72);
     assert.equal(cpu.reader.scrolls, scrolls, 'Repeated activation focuses the existing document without resetting its reading position');
     assert.deepEqual(snapshot(), before); assert.notEqual(cpu.host.runtime.currentLease(), initialLease);
   }

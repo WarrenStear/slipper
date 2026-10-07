@@ -294,7 +294,11 @@ test("the prologue, story roles, and guidance express authored progression", () 
   assert.match(scene, /const journeyRole = getJourneyEntryContext\(node\.entry\.id\)\?\.role \?\? "echo"/);
   assert.doesNotMatch(scene, /getJourneyBeatForEntry\(node\.entry\.id\)/);
   assert.match(app, /activeJourneyChapter\?\.title \?\? activeEntry\?\.chapter/);
-  assert.match(app, /contentDiagnostics\.visualCount\} visuals · \{journeyChapters\.length\} chapters/);
+  const rememberedPaths = read("src/ui/navigation/RememberedPaths.tsx");
+  assert.match(app, /const visitedCount = visitedEntryIds\.length;/);
+  assert.match(app, /const totalCount = entries\.length;/);
+  assert.match(app, /navigationDetails=\{<RememberedPaths[\s\S]*?counts=\{\{ visited: visitedCount, total: totalCount, visuals: contentDiagnostics\.visualCount, chapters: journeyChapters\.length \}\}/);
+  assert.match(rememberedPaths, /\{counts\.visited\}\/\{counts\.total\} seen · \{counts\.visuals\} visuals · \{counts\.chapters\} chapters/);
   assert.match(archiveIndex, /canonicalChapter\?\.title \?\? entry\.chapter/);
   assert.match(accessibleArchive, /journeyChapters\.map\(\(chapter, chapterIndex\)/);
   assert.match(constellation, /journeyChapters\.length\} chapters/);

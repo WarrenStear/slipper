@@ -994,3 +994,37 @@ Physical jitter rejection, stage ordering, durable event/object checks and
 reload restoration remain unchanged. The original failed hosted logs remain
 in `phase-d-preparation/hosted-8497517-review`; subsequent verification must
 certify the repaired test commit rather than label the original run green.
+
+### Composition shell: reader, map and remembered paths
+
+The validated App presentation is now owned by `FragmentReader`, `MapWorkspace`
+and `RememberedPaths`. App decreases from 1,192 to 892 lines while retaining
+runtime/provider composition, bootstrap/cloud lifecycle, canonical subscriptions,
+accepted navigation, physical callbacks, Memories admission and focus/view ports.
+The reader owns exact paragraph rendering, witness admission before private reads,
+local scroll progress and its cancellable DOM-focus timer. Repeated current
+Fragment activation focuses without resetting scroll. The map owner preserves
+the existing lazy Constellation boundary, controlled mobile tabs, Archive and
+named-panel relations. Remembered paths owns the deliberate navigation disclosure
+and delegates all commands/preferences to the existing shell. No prose, canonical
+IDs, save fields, schema, CSS, asset, world draw or progression authority changes.
+
+Fourteen new actual-owner/architecture cases cover all 66 paragraph arrays,
+unwitnessed getter denial, scroll/reset/focus cancellation, footer ports, directed
+map privacy, mobile keyboard tabs, anonymous unread routes and preference calls.
+Existing navigation/runtime cases now mount the real reader instead of extracting
+its old App effects. Source guards check canonical counts and admission at their
+new owners plus App's exact prop wiring. The full check passed 1,215 unit cases
+and seven security cases, including content/assets/world checks, production build
+and Pages Functions compilation. The initial full check's stale App metrics
+assertion and corrected stronger owner/wiring assertion are both retained in
+external `phase-11-composition-preparation` receipts.
+
+Ten native Chromium cases passed on the frozen composition build: four existing
+reader/bookmark/map/archive/return, desktop keyboard and portrait/landscape tab
+cases, plus six fresh physical opening/earned reader/partial map and Help/Memories
+focus cases across high desktop and low/reduced portrait. Two expected opposite-
+device test skips remain. Physical tests use real floor gestures and walking;
+completed menu/reader tests use explicitly labelled capability fixtures. Native
+evidence is in `phase-11-composition-preparation`. Later chapter, Constellation,
+material/audio/photo changes and obsolete-source cleanup remain separate phases.

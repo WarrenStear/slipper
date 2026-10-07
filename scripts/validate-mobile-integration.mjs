@@ -313,8 +313,16 @@ function validateIntegration() {
     ["mobile viewport state", /useMobileViewport\(/],
     ["shared navigation owner", /useStoryNavigation\(\{/],
     ["guided navigation state", /guidanceEntryId/],
-    ["reader progress", /readerProgress/],
+    ["focused reader owner", /<FragmentReader\b/],
+    ["explicit repeated-read focus handoff", /focusNonce=\{readerFocusNonce\}/],
     ["non-3D archive route", /<AccessibleArchive\b/],
+  ]);
+  requirePatterns("src/ui/reader/FragmentReader.tsx", [
+    ["canonical witnessed reading admission", /canReadStoryEntry\(entryId, \{ witnessedEntryIds \}\)/],
+    ["actual reading progress", /aria-valuenow=\{progress\}/],
+    ["bounded scroll progress", /Math\.max\(0, Math\.min\(100, Math\.round\(\(element\.scrollTop \/ maximum\) \* 100\)\)\)/],
+    ["reduced-motion scroll reset", /reducedMotion \? "auto" : "smooth"/],
+    ["owned scroll callback", /onScroll=\{updateProgress\}/],
   ]);
   requirePatterns("src/experience/useStoryNavigation.ts", [
     ["settings shortcut guard", /isExperienceSettingsOpen\(\)/],

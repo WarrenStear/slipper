@@ -2,16 +2,12 @@ import GuidedStoryMoment from "./components/ui/GuidedStoryMoment";
 import "./ui/MemoryReturn.css";
 import { ExperienceMenu } from "./ui/ExperienceMenu";
 import { useQuietActivity } from "./ui/useQuietActivity";
-import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { NarrativeWorldState, SceneProximityState, StorySceneControls, StorySceneMode } from "./components/three/StoryScene";
-import ArchiveIndex, {
-  MapWorkspaceTabs,
-  STORY_MAP_ARCHIVE_PANEL_ID,
-  STORY_MAP_ARCHIVE_TAB_ID,
-  STORY_MAP_CONSTELLATION_PANEL_ID,
-  STORY_MAP_CONSTELLATION_TAB_ID,
-  type StoryMapPane,
-} from "./components/ui/ArchiveIndex";
+import type { StoryMapPane } from "./components/ui/ArchiveIndex";
+import { FragmentReader } from "./ui/reader/FragmentReader";
+import { MapWorkspace } from "./ui/map/MapWorkspace";
+import { RememberedPaths } from "./ui/navigation/RememberedPaths";
 import AccessibleArchive from "./components/ui/AccessibleArchive";
 import AccessibleStoryJourney from "./components/ui/AccessibleStoryJourney";
 import MobileExploreControls from "./components/ui/MobileExploreControls";
@@ -27,15 +23,10 @@ import { contentDiagnostics, entries, visuals } from "./data/slipperContent";
 import type { Slipper3DEntry, Vector3Tuple } from "./data/slipper3dTypes";
 import { loadStoredJourney } from "./lib/journeyStorage";
 import { nextRequiredEntry } from "./lib/journeyProgression";
-import { MagicLinkSignIn } from "./components/auth/MagicLinkSignIn";
 import GiftDedication from "./components/ui/GiftDedication";
 import { useCloudJourneySync } from "./hooks/useCloudJourneySync";
 import { useMobileViewport } from "./hooks/useMobileViewport";
 import { requestExperienceSettingsOpen } from "./lib/experiencePreferences";
-import {
-  rotateXZByYaw,
-  trailStateLabel,
-} from "./lib/navigationPresentation";
 import { useJourneyStore } from "./stores/useJourneyStore";
 import { useSettingsStore } from "./stores/useSettingsStore";
 import { useWorldStore } from "./stores/useWorldStore";
@@ -73,175 +64,14 @@ import { requiresAccessibleJourney } from "./experience/ExperienceRouter";
 export { requiresAccessibleJourney } from "./experience/ExperienceRouter";
 
 const WorldCanvas = lazy(() => import("./components/three/WorldCanvas"));
-const ConstellationMap = lazy(
-  () => import("./components/ui/ConstellationMap"),
-);
 const FIRST_ENTRY_ID = entries[0]?.id ?? "";
 const VALID_ENTRY_IDS = entries.map((entry) => entry.id);
 
 type AppMode = StorySceneMode;
 
-function entryParagraphs(entry?: Slipper3DEntry) {
-  if (!entry) return [];
-  return entry.paragraphs?.length ? entry.paragraphs : [entry.body].filter(Boolean);
-}
-
-function shortTitle(title?: string, limit = 28) {
-  if (!title) return "Unknown";
-  return title.length > limit ? `${title.slice(0, limit - 1)}…` : title;
-}
-
 function sceneLabel(entry?: Slipper3DEntry) {
   if (!entry) return "Unknown clearing";
   return entry.engine3d.sceneKind ?? entry.engine3d.mood ?? "fragment";
-}
-
-const MINI_MAP_SIZE = 172;
-const MINI_MAP_CENTER = MINI_MAP_SIZE / 2;
-const MINI_MAP_RADIUS = 62;
-const MINI_MAP_WORLD_RADIUS = 32;
-
-function minimapVector(from?: Vector3Tuple | null, to?: Vector3Tuple | null, cameraYaw = 0) {
-  if (!from || !to) return { x: MINI_MAP_CENTER, y: MINI_MAP_CENTER, distance: 0, hasTarget: false };
-
-  const dx = to[0] - from[0];
-  const dz = to[2] - from[2];
-  const distance = Math.sqrt(dx * dx + dz * dz);
-  const scale = distance > MINI_MAP_WORLD_RADIUS ? MINI_MAP_WORLD_RADIUS / Math.max(distance, 0.0001) : 1;
-  const rotated = rotateXZByYaw(dx, dz, cameraYaw);
-
-  return {
-    x: MINI_MAP_CENTER + (rotated.x / MINI_MAP_WORLD_RADIUS) * MINI_MAP_RADIUS * scale,
-    y: MINI_MAP_CENTER - (rotated.z / MINI_MAP_WORLD_RADIUS) * MINI_MAP_RADIUS * scale,
-    distance,
-    hasTarget: true,
-  };
-}
-
-function miniMapShellStyle(): CSSProperties {
-  return {
-    position: "absolute",
-    right: 22,
-    bottom: 126,
-    zIndex: 22,
-    width: 218,
-    padding: "14px 14px 12px",
-    borderRadius: 22,
-    border: "1px solid rgba(255,245,206,0.18)",
-    background: "linear-gradient(180deg, rgba(9,10,12,0.78), rgba(5,6,8,0.58))",
-    boxShadow: "0 22px 70px rgba(0,0,0,0.38)",
-    backdropFilter: "blur(18px)",
-    WebkitBackdropFilter: "blur(18px)",
-    color: "#f6efe2",
-    pointerEvents: "none",
-  };
-}
-
-function MiniMapHUD({
-  entries,
-  activeEntryId,
-  sceneProximity,
-  witnessedEntryIds,
-}: {
-  entries: Slipper3DEntry[];
-  activeEntryId: string;
-  witnessedEntryIds: readonly string[];
-  sceneProximity: SceneProximityState | null;
-}) {
-  const activeEntry = entries.find((entry) => entry.id === activeEntryId);
-  const fallbackNearestEntryId = sceneProximity?.nearestEntryId && sceneProximity.nearestEntryId !== activeEntryId ? sceneProximity.nearestEntryId : null;
-  const approachingEntryId = sceneProximity?.navigationTargetId ?? sceneProximity?.approachingEntryId ?? fallbackNearestEntryId;
-  const approachingEntry = approachingEntryId && witnessedEntryIds.includes(approachingEntryId)
-    ? entries.find((entry) => entry.id === approachingEntryId) : undefined;
-  const playerPosition = sceneProximity?.playerPosition ?? sceneProximity?.activeWorldPosition ?? ([0, 0, 0] as Vector3Tuple);
-  const targetPosition = sceneProximity?.navigationTargetWorldPosition ?? sceneProximity?.approachingWorldPosition ?? sceneProximity?.nearestWorldPosition ?? null;
-  const blip = minimapVector(playerPosition, targetPosition, sceneProximity?.cameraYaw ?? 0);
-  const approachingDistance = sceneProximity?.navigationTargetDistance && sceneProximity.navigationTargetDistance < 999 ? sceneProximity.navigationTargetDistance : sceneProximity?.approachingDistance && sceneProximity.approachingDistance < 999 ? sceneProximity.approachingDistance : blip.distance;
-  const presence = Math.max(0.18, Math.min(1, sceneProximity?.uiPresence ?? 0.42));
-  const sweepOpacity = 0.24 + presence * 0.44;
-  const trailState = sceneProximity?.trailState ?? "on-trail";
-  const trailLabel = trailStateLabel(trailState);
-
-  return (
-    <section className="mini-map-hud" style={miniMapShellStyle()} aria-label="Live mini-map">
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, marginBottom: 10 }}>
-        <div>
-          <p style={{ margin: 0, fontSize: 10, letterSpacing: "0.16em", textTransform: "uppercase", color: "rgba(246,239,226,0.58)" }}>live path</p>
-          <strong style={{ display: "block", marginTop: 3, fontSize: 13, lineHeight: 1.2 }}>{shortTitle(activeEntry?.title, 24)}</strong>
-        </div>
-        <span style={{ fontSize: 11, color: "rgba(255,245,206,0.72)", border: "1px solid rgba(255,245,206,0.16)", borderRadius: 999, padding: "4px 7px" }}>
-          {trailLabel}
-        </span>
-      </div>
-
-      <svg width={MINI_MAP_SIZE} height={MINI_MAP_SIZE} viewBox={`0 0 ${MINI_MAP_SIZE} ${MINI_MAP_SIZE}`} role="img" aria-label="Player position and nearest clearing blip">
-        <defs>
-          <radialGradient id="mini-map-core" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#fff5ce" stopOpacity="0.34" />
-            <stop offset="56%" stopColor="#d8d0ba" stopOpacity="0.08" />
-            <stop offset="100%" stopColor="#050608" stopOpacity="0" />
-          </radialGradient>
-          <filter id="mini-map-glow" x="-80%" y="-80%" width="260%" height="260%">
-            <feGaussianBlur stdDeviation="4" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
-        <circle cx={MINI_MAP_CENTER} cy={MINI_MAP_CENTER} r={78} fill="url(#mini-map-core)" />
-        <path d={`M ${MINI_MAP_CENTER - 8} ${MINI_MAP_CENTER - 60} L ${MINI_MAP_CENTER} ${MINI_MAP_CENTER - 75} L ${MINI_MAP_CENTER + 8} ${MINI_MAP_CENTER - 60} Z`} fill="rgba(255,245,206,0.2)" />
-        <circle cx={MINI_MAP_CENTER} cy={MINI_MAP_CENTER} r={68} fill="none" stroke="rgba(255,245,206,0.16)" strokeWidth="1" />
-        <circle cx={MINI_MAP_CENTER} cy={MINI_MAP_CENTER} r={43} fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="1" strokeDasharray="3 6" />
-        <path
-          d={`M ${MINI_MAP_CENTER} ${MINI_MAP_CENTER} L ${MINI_MAP_CENTER + Math.cos(-Math.PI / 5) * 66} ${MINI_MAP_CENTER + Math.sin(-Math.PI / 5) * 66}`}
-          stroke="rgba(255,245,206,0.12)"
-          strokeWidth="1"
-        />
-        {blip.hasTarget ? (
-          <>
-            <line x1={MINI_MAP_CENTER} y1={MINI_MAP_CENTER} x2={blip.x} y2={blip.y} stroke="rgba(255,245,206,0.32)" strokeWidth="1.25" strokeDasharray="5 5" />
-            <circle cx={blip.x} cy={blip.y} r={10 + presence * 4} fill="rgba(216,208,186,0.08)" stroke="rgba(255,245,206,0.24)" />
-            <circle cx={blip.x} cy={blip.y} r={4.5} fill="#d8d0ba" filter="url(#mini-map-glow)" />
-          </>
-        ) : null}
-        <circle cx={MINI_MAP_CENTER} cy={MINI_MAP_CENTER} r={14 + presence * 6} fill="rgba(255,245,206,0.08)" stroke={`rgba(255,245,206,${sweepOpacity})`} />
-        <circle cx={MINI_MAP_CENTER} cy={MINI_MAP_CENTER} r={5.5} fill="#fff5ce" filter="url(#mini-map-glow)" />
-        <circle cx={MINI_MAP_CENTER} cy={MINI_MAP_CENTER} r={2} fill="#ffffff" />
-      </svg>
-
-      <div style={{ display: "grid", gap: 4, marginTop: 8 }}>
-        <span style={{ fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(246,239,226,0.46)" }}>guidance target</span>
-        <strong style={{ fontSize: 12, lineHeight: 1.2 }}>{shortTitle(approachingEntry?.title ?? sceneProximity?.approachingTitle ?? sceneProximity?.nearestTitle ?? "Listening for a clearing", 31)}</strong>
-        <em style={{ fontStyle: "normal", fontSize: 11, color: "rgba(246,239,226,0.56)" }}>
-          {approachingDistance > 0 ? `${Math.max(1, Math.round(approachingDistance))} units / ${trailLabel}` : "standing in the active clearing"}
-        </em>
-      </div>
-    </section>
-  );
-}
-
-function ContextualNavigationPrompt({ sceneProximity }: { sceneProximity: SceneProximityState | null }) {
-  const targetTitle = sceneProximity?.navigationTargetTitle ?? sceneProximity?.approachingTitle ?? sceneProximity?.nearestTitle ?? "The next clearing";
-  const distance = sceneProximity?.navigationTargetDistance ?? sceneProximity?.approachingDistance ?? 0;
-  const trailState = sceneProximity?.trailState ?? "on-trail";
-  const label = trailStateLabel(trailState);
-  const instruction =
-    trailState === "lost"
-      ? "Turn toward the bright mark and let the path reopen."
-      : trailState === "edge-of-trail"
-        ? "Ease back toward the centre of the trail."
-        : sceneProximity?.insideClearing
-          ? "This clearing is awake. Press F to read or follow the next signal."
-          : "Walk forward when the blip sits above the centre mark.";
-
-  return (
-    <section className={`contextual-nav-prompt is-${trailState}`} aria-label="Current navigation guidance">
-      <span>{label}</span>
-      <strong>{shortTitle(targetTitle, 42)}</strong>
-      <em>{distance > 0 && distance < 999 ? `${Math.max(1, Math.round(distance))} units away. ${instruction}` : instruction}</em>
-    </section>
-  );
 }
 
 function ExperienceApplication() {
@@ -257,7 +87,6 @@ function ExperienceApplication() {
   const { idleMs, noteActivity } = useQuietActivity(experienceStarted, archiveOpen || memoriesOpen || drawerOpen);
   const quietGuidanceActivity = useMemo(() => ({ idleMs, detailRequested }), [idleMs, detailRequested]);
   const priorMenuPhysics = useRef<boolean | null>(null);
-  const [readerProgress, setReaderProgress] = useState(0);
   const [readerFocusNonce, setReaderFocusNonce] = useState(0);
   const [guidanceEntryId, setGuidanceEntryId] = useState<string | null>(null);
   const [guidanceStatus, setGuidanceStatus] = useState("");
@@ -269,7 +98,6 @@ function ExperienceApplication() {
   const [storyTransitionPhase, setStoryTransitionPhase] = useState<StoryTransitionPhase>("idle");
   const [finalConstellationRevealed, setFinalConstellationRevealed] = useState(false);
   const previousPlayerPositionRef = useRef<Vector3Tuple | null>(null);
-  const readerRef = useRef<HTMLDivElement>(null);
   const forestRef = useRef<HTMLElement>(null);
   const mapWorkspaceRef = useRef<HTMLElement>(null);
   const constellationTriggerRef = useRef<HTMLButtonElement>(null);
@@ -730,21 +558,7 @@ function ExperienceApplication() {
   const visitedCount = visitedEntryIds.length;
   const totalCount = entries.length;
   const canReadActiveEntry = canReadStoryEntry(resolvedActiveEntryId, { witnessedEntryIds });
-  const paragraphs = canReadActiveEntry ? entryParagraphs(activeEntry) : [];
   const isBookmarked = bookmarkedEntryIds.includes(resolvedActiveEntryId);
-  useEffect(() => {
-    setReaderProgress(0);
-    readerRef.current?.scrollTo({ top: 0, behavior: reducedMotion ? "auto" : "smooth" });
-  }, [mode, reducedMotion, resolvedActiveEntryId]);
-
-  useEffect(() => {
-    if (mode === "read") {
-      const focusTimer = window.setTimeout(() => readerRef.current?.focus(), 0);
-      return () => window.clearTimeout(focusTimer);
-    }
-    return undefined;
-  }, [mode, reducedMotion, resolvedActiveEntryId, readerFocusNonce]);
-
   useEffect(() => {
     const previous = previousViewRef.current;
     previousViewRef.current = mode;
@@ -757,12 +571,6 @@ function ExperienceApplication() {
     return () => window.clearTimeout(timer);
   }, [mode, experienceStarted, archiveOpen, memoriesOpen, accessibleJourney]);
 
-  const updateReaderProgress = useCallback(() => {
-    const element = readerRef.current;
-    if (!element) return;
-    const maximum = Math.max(1, element.scrollHeight - element.clientHeight);
-    setReaderProgress(Math.max(0, Math.min(100, Math.round((element.scrollTop / maximum) * 100))));
-  }, []);
   const hasDiagnosticsWarning =
     contentDiagnostics.entriesMissingParagraphs.length > 0 ||
     contentDiagnostics.duplicateEntryIds.length > 0 ||
@@ -1017,143 +825,35 @@ function ExperienceApplication() {
           { id: "controls", label: controls === "walk" ? "Orbit" : "Walk", disabled: mobileViewport.isMobile, onSelect: toggleControls },
           { id: "threshold", label: "Threshold", onSelect: leaveForest },
         ]}
-        navigationDetails={<>
-          <MagicLinkSignIn />
-          <p>{visitedCount}/{totalCount} seen · {contentDiagnostics.visualCount} visuals · {journeyChapters.length} chapters</p>
-          <p>{mobileViewport.isMobile ? "Move with the analogue pad and drag Look to turn." : "WASD / arrows walk. F reads. M or I opens the constellation. B goes back."}</p>
-          <label><input type="checkbox" checked={showMiniMap} onChange={event => setSetting("showMiniMap", event.target.checked)} /> Mini-map in navigation details</label>
-          {showMiniMap && canReadActiveEntry ? <div className="experience-menu__minimap"><MiniMapHUD entries={entries} activeEntryId={resolvedActiveEntryId} sceneProximity={menuProximity} witnessedEntryIds={witnessedEntryIds} /></div> : null}
-          <label><input type="checkbox" checked={showCompass} onChange={event => setSetting("showCompass", event.target.checked)} /> Compass in navigation details</label>
-          {showCompass ? <p>{controls === "walk" ? "Walk" : "Drag to look"} · {canReadActiveEntry ? sceneLabel(activeEntry) : "A path still forming"}</p> : null}
-          {showContextualGuidance ? <ContextualNavigationPrompt sceneProximity={menuProximity} /> : null}
-          <label><input type="radio" name="mobile-mode" checked={mobileControlMode === "direct"} onChange={() => setSetting("mobileControlMode", "direct")} /> Direct mobile controls</label>
-          <label><input type="radio" name="mobile-mode" checked={mobileControlMode === "guided"} onChange={() => setSetting("mobileControlMode", "guided")} /> Guided mobile controls</label>
-          <nav aria-label="Recent remembered trail">{recentBreadcrumbs.filter(entry => witnessedEntryIds.includes(entry.id)).map(entry =>
-            <button key={entry.id} type="button" onClick={() => { if (navigateToEntry(entry.id, "explore")) changeMemories(false); }}>{entry.title}</button>)}</nav>
-          <nav aria-label="Current chapter path">{currentChapterEntries.map((entry, index) =>
-            <button key={entry.id} type="button" onClick={() => {
-              const accepted = witnessedEntryIds.includes(entry.id) ? navigateToEntry(entry.id, "explore") : requestGuidance(entry.id);
-              if (accepted) changeMemories(false);
-            }}>{witnessedEntryIds.includes(entry.id) ? entry.title : `Unread memory ${index + 1}`}</button>)}</nav>
-          <div aria-label="Chapter progress">{chapterProgress.map(chapter => <p key={chapter.id}>{chapter.revealed ? chapter.chapter : "A chapter still forming"} · {chapter.visited}/{chapter.total}</p>)}</div>
-        </>}
+        navigationDetails={<RememberedPaths entries={entries} activeEntryId={resolvedActiveEntryId}
+          witnessedEntryIds={witnessedEntryIds} sceneProximity={menuProximity}
+          recentEntries={recentBreadcrumbs} chapterEntries={currentChapterEntries} chapterProgress={chapterProgress}
+          counts={{ visited: visitedCount, total: totalCount, visuals: contentDiagnostics.visualCount, chapters: journeyChapters.length }}
+          mobile={mobileViewport.isMobile} controls={controls} showMiniMap={showMiniMap} showCompass={showCompass}
+          showContextualGuidance={showContextualGuidance} mobileControlMode={mobileControlMode}
+          onSettingChange={setSetting} onOpenEntry={entryId => navigateToEntry(entryId, "explore")}
+          onGuideEntry={requestGuidance} onDismiss={() => changeMemories(false)} />}
       />
 
-      {experienceCapabilities.allowConstellationView && mode === "map" ? (
-        <section ref={mapWorkspaceRef} tabIndex={-1} className={`map-workspace${experienceCapabilities.constellationScope === "witnessed-only" ? " is-partial-constellation" : ""}`} aria-label="Story map workspace" data-constellation-scope={experienceCapabilities.constellationScope}>
-          <button className="memory-return" type="button" onClick={() => setMode("explore")}>Return to forest</button>
-          {mobileViewport.isMobile && experienceCapabilities.allowFullArchive ? (
-            <MapWorkspaceTabs activePane={mobileMapPane} onChange={setMobileMapPane} />
-          ) : null}
+      {experienceCapabilities.allowConstellationView && mode === "map" ? <MapWorkspace
+        capabilities={experienceCapabilities} entries={entries} activeEntryId={resolvedActiveEntryId}
+        visitedEntryIds={visitedEntryIds} sceneProximity={sceneProximity} mobile={mobileViewport.isMobile}
+        activePane={mobileMapPane} onChangePane={setMobileMapPane} workspaceRef={mapWorkspaceRef}
+        onReturnToForest={() => setMode("explore")}
+        onOpenEntry={entryId => openRememberedEntry(entryId, "read")} onGuideEntry={requestGuidance} /> : null}
 
-          <Suspense
-            fallback={
-              <div className="forest-loader" role="status">
-                Charting the remembered clearings…
-              </div>
-            }
-          >
-            <ConstellationMap
-              scope={experienceCapabilities.constellationScope}
-              entries={entries}
-              activeEntryId={resolvedActiveEntryId}
-              visitedEntryIds={visitedEntryIds}
-              sceneProximity={sceneProximity}
-              onOpenEntry={experienceCapabilities.allowConstellationNavigation ? (entryId) => openRememberedEntry(entryId, "read") : undefined}
-              onGuideEntry={experienceCapabilities.allowConstellationNavigation ? requestGuidance : undefined}
-              panelId={
-                mobileViewport.isMobile && experienceCapabilities.allowFullArchive
-                  ? STORY_MAP_CONSTELLATION_PANEL_ID
-                  : undefined
-              }
-              labelledBy={
-                mobileViewport.isMobile && experienceCapabilities.allowFullArchive
-                  ? STORY_MAP_CONSTELLATION_TAB_ID
-                  : undefined
-              }
-              hidden={
-                mobileViewport.isMobile && experienceCapabilities.allowFullArchive &&
-                mobileMapPane !== "constellation"
-              }
-            />
-          </Suspense>
-
-          {experienceCapabilities.allowFullArchive ? <ArchiveIndex
-            entries={entries}
-            activeEntryId={resolvedActiveEntryId}
-            visitedEntryIds={visitedEntryIds}
-            onOpenEntry={(entryId) => openRememberedEntry(entryId, "read")}
-            onGuideEntry={requestGuidance}
-            panelId={mobileViewport.isMobile ? STORY_MAP_ARCHIVE_PANEL_ID : undefined}
-            labelledBy={mobileViewport.isMobile ? STORY_MAP_ARCHIVE_TAB_ID : undefined}
-            hidden={mobileViewport.isMobile && mobileMapPane !== "archive"}
-          /> : null}
-        </section>
-      ) : null}
-
-      {mode === "read" && canReadActiveEntry ? (
-        <section className="reader-panel" id="story-content" aria-label="Focused reading mode">
-          <div
-            className="reader-panel-inner"
-            ref={readerRef}
-            role="document"
-            aria-labelledby="focused-reader-title"
-            tabIndex={-1}
-            onScroll={updateReaderProgress}
-          >
-            {experienceCapabilities.showJourneyMetrics ? (
-              <div
-                className="reader-progress"
-                role="progressbar"
-                aria-label="Reading progress"
-                aria-valuemin={0}
-                aria-valuemax={100}
-                aria-valuenow={readerProgress}
-              >
-                <i style={{ width: `${readerProgress}%` }} />
-              </div>
-            ) : null}
-            <p className="reader-kicker">
-              {experienceCapabilities.showJourneyMetrics
-                ? `${activeJourneyChapter?.title ?? activeEntry?.chapter} / ${sceneLabel(activeEntry)} / ${currentChapterProgress || 1} of ${currentChapterEntries.length || 1}`
-                : activeNarrativeScene?.title ?? "A remembered fragment"}
-            </p>
-            <h1 id="focused-reader-title">{activeEntry?.title}</h1>
-            <div className="reader-body">
-              {paragraphs.map((paragraph, index) => (
-                <p key={`${activeEntry?.id}-reader-${index}`}>{paragraph}</p>
-              ))}
-            </div>
-            <div className="reader-footer">
-              <button type="button" onClick={() => setMode("explore")}>Return to forest</button>
-              {experienceMode !== "free-woods" && canContinueAuthoredStory ? (
-                <button type="button" onClick={() => requestGuidance(authoredJourneyTarget?.id)}>Follow the next path</button>
-              ) : null}
-              <button type="button" onClick={requestExperienceSettingsOpen}>Settings</button>
-              {experienceCapabilities.constellationScope === "witnessed-only" ? <button type="button" onClick={() => setMode("map")}>Constellation</button> : null}
-              {experienceMode === "free-woods" ? (
-                <>
-                  <button type="button" aria-pressed={isBookmarked} onClick={() => toggleBookmark(resolvedActiveEntryId)}>
-                    {isBookmarked ? "Remove bookmark" : "Bookmark location"}
-                  </button>
-                  <button type="button" onClick={moveToPrevious} disabled={history.length === 0 && !adjacency?.previous}>Back</button>
-                  <button type="button" onClick={continueToNext} disabled={!nextEntry}>Next fragment</button>
-                  <button
-                    type="button"
-                    onClick={continueAuthoredStory}
-                    disabled={!canContinueAuthoredStory}
-                  >
-                    Continue story
-                  </button>
-                  <button type="button" onClick={() => setMode("map")}>Open map</button>
-                  <button type="button" onClick={openArchive}>Open archive</button>
-                </>
-              ) : null}
-            </div>
-          </div>
-        </section>
-      ) : null}
-
+      {mode === "read" && canReadActiveEntry ? <FragmentReader entry={activeEntry} witnessedEntryIds={witnessedEntryIds}
+        focusNonce={readerFocusNonce} reducedMotion={reducedMotion} showMetrics={experienceCapabilities.showJourneyMetrics}
+        kicker={experienceCapabilities.showJourneyMetrics
+          ? `${activeJourneyChapter?.title ?? activeEntry?.chapter} / ${sceneLabel(activeEntry)} / ${currentChapterProgress || 1} of ${currentChapterEntries.length || 1}`
+          : activeNarrativeScene?.title ?? "A remembered fragment"}
+        freeWoods={experienceMode === "free-woods"} constellationScope={experienceCapabilities.constellationScope}
+        canContinue={canContinueAuthoredStory} bookmarked={isBookmarked}
+        backAvailable={history.length > 0 || Boolean(adjacency?.previous)} nextAvailable={Boolean(nextEntry)}
+        onReturnToForest={() => setMode("explore")} onFollow={() => requestGuidance(authoredJourneyTarget?.id)}
+        onSettings={requestExperienceSettingsOpen} onConstellation={() => setMode("map")}
+        onBookmark={() => toggleBookmark(resolvedActiveEntryId)} onBack={moveToPrevious} onNext={continueToNext}
+        onContinue={continueAuthoredStory} onArchive={openArchive} /> : null}
       {hasDiagnosticsWarning ? (
         <section className="content-diagnostics" aria-label="Content diagnostics">
           <strong>Content check</strong>

@@ -787,7 +787,9 @@ test("global shortcuts and focusable reading surfaces keep their accessibility g
   assert.match(navigation, /target\?\.isContentEditable/);
   assert.match(navigation, /isExperienceSettingsOpen\(\)/);
   assert.match(appSource, /"--reader-text-min"/);
-  assert.match(appSource, /role="document"\s+aria-labelledby="focused-reader-title"/);
+  const readerSource = readFileSync(new URL("../src/ui/reader/FragmentReader.tsx", import.meta.url), "utf8");
+  assert.match(appSource, /<FragmentReader[\s\S]*?focusNonce=\{readerFocusNonce\}/);
+  assert.match(readerSource, /role="document"\s+aria-labelledby="focused-reader-title"/);
   const menuSource = readFileSync(new URL("../src/ui/ExperienceMenu.tsx", import.meta.url), "utf8");
   const menuStyles = readFileSync(new URL("../src/ui/ExperienceMenu.css", import.meta.url), "utf8");
   assert.match(appSource, /href="#experience-memories-trigger"/);
@@ -863,8 +865,8 @@ test("threshold and archive defer the scene map, and the app avoids unused linke
   );
 
   assert.match(
-    appSource,
-    /const ConstellationMap = lazy\([\s\S]*?import\("\.\/components\/ui\/ConstellationMap"\)/,
+    readFileSync(new URL("../src/ui/map/MapWorkspace.tsx", import.meta.url), "utf8"),
+    /const ConstellationMap = lazy\([\s\S]*?import\("\.\.\/\.\.\/components\/ui\/ConstellationMap"\)/,
   );
   // Authored scenes load their own visible textures. The old app-level photo
   // preloader had no consumer in canonical scenes or the accessible journey.
@@ -873,8 +875,8 @@ test("threshold and archive defer the scene map, and the app avoids unused linke
     /new Image\(/,
   );
   assert.match(
-    appSource,
-    /from "\.\/lib\/navigationPresentation"/,
+    readFileSync(new URL("../src/ui/navigation/RememberedPaths.tsx", import.meta.url), "utf8"),
+    /from "\.\.\/\.\.\/lib\/navigationPresentation"/,
   );
   assert.doesNotMatch(
     appSource,
