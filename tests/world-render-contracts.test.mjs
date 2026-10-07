@@ -499,7 +499,6 @@ test("Heart, Womb, and Crowned Return stage saved choices as authored world obje
   for (const marker of [
     "kylie-self-owned-inner-home",
     "home-living-water-fountain",
-    "home-reflection-gallery",
     "home-books-reading-writing",
     "home-writing-desk",
     "home-velvet-reading-nook",
@@ -511,6 +510,7 @@ test("Heart, Womb, and Crowned Return stage saved choices as authored world obje
   ]) {
     assert.match(crowned, new RegExp(`name="${marker}"`));
   }
+  assert.doesNotMatch(crowned, /home-reflection-gallery|<ReflectivePanel/, "The noninteractive mirror gallery stays removed; the canonical sovereign mirror is checked below.");
   assert.match(crowned, /name="crowned-gate-recognises-accumulated-state"/);
   assert.match(crowned, /open=\{gateRecognisesJourney\}/);
   assert.match(crowned, /requiredJourneyState: "keys-heart-womb-lantern-surrender"/);

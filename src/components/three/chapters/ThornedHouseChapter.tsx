@@ -34,7 +34,6 @@ import {
   KeyProp,
   qualityStep,
   SceneGround,
-  StonePath,
   ThornBranches,
   type Vec3,
 } from "./ChapterPrimitives";
@@ -83,13 +82,13 @@ function ModularRooms({ stage, detail, reducedEffects }: { stage: HouseStage; de
     ROOM_MODULES.slice(0, count).forEach((room, index) => {
       const width = room.width - compression * index * .22, height = room.height - compression * index * .1;
       const depth = index === 0 ? 1.65 : 1.2;
-      for (const side of [-1, 1]) walls.push({ position: [room.offset * compression + side * width / 2, height / 2, room.z], size: [.26, height, depth], color: index % 2 ? "#89786b" : "#b3a18b" });
+      for (const side of [-1, 1]) walls.push({ position: [room.offset * compression + side * width / 2, height / 2, room.z], size: [.26, height, depth], color: index % 2 ? "#8b857b" : "#b2aa9c" });
       lintels.push({ position: [room.offset * compression, height, room.z], size: [width + .26, .22, depth] });
     });
     return { walls, lintels };
   }, [count, compression]);
   return <group name="thorned-house-modular-rooms">
-    <TimberAssembly pieces={pieces.walls} plaster color="#746251" />
+    <TimberAssembly pieces={pieces.walls} plaster color="#8c867a" />
     <TimberAssembly pieces={pieces.lintels} color="#493a30" />
   </group>;
 }
@@ -125,7 +124,7 @@ function RepeatingHall({ stage, detail, reducedEffects }: { stage: HouseStage; d
 function CompressionCeiling({ pressure, detail, reducedEffects }: { pressure: number; detail: number; reducedEffects: boolean }) {
   const pieces = useMemo(() => houseCeilingLayout(pressure, thornedHouseCorridorCount(detail, reducedEffects)), [pressure, detail, reducedEffects]);
   return <group name="house-occupied-overhead-space" userData={{ pressure, minimumHeadroom: 2.25 }}>
-    <TimberAssembly pieces={pieces} color="#8c7761" />
+    <TimberAssembly pieces={pieces} color="#655e52" />
   </group>;
 }
 
@@ -195,7 +194,7 @@ function RefilledSurfaces({
         </group>
       ))}
       <instancedMesh name="memory-storage-cases" ref={clutterRef} geometry={clutterGeometry.wood} args={[undefined, undefined, clutterCount]} castShadow={!reducedEffects} receiveShadow>
-        <TactileMaterial surface="wood" color="#a38d73" roughness={.86} vertexColors />
+        <TactileMaterial surface="wood" color="#867660" roughness={.86} vertexColors />
       </instancedMesh>
       <instancedMesh name="memory-storage-case-grips" ref={fittingsRef} geometry={clutterGeometry.fittings} args={[undefined, undefined, clutterCount]} receiveShadow>
         <TactileMaterial surface="metal" color="#7b7568" metalness={.42} roughness={.68} />
@@ -293,7 +292,7 @@ function ArchitecturalThorns({ stage, detail, reducedEffects }: { stage: HouseSt
   </group>;
 }
 
-function ExitThreshold({ stage, reducedEffects }: { stage: ExitStage; reducedEffects: boolean }) {
+function ExitThreshold({ stage }: { stage: ExitStage; reducedEffects: boolean }) {
   const openAmount = stage === "sealed" ? 0 : stage === "glimpsed" ? 0.24 : 1.12;
   const glow = stage === "open" ? "#eed6a7" : stage === "glimpsed" ? "#846c50" : "#17110f";
   return (
@@ -323,9 +322,6 @@ function ExitThreshold({ stage, reducedEffects }: { stage: ExitStage; reducedEff
       )}
       {stage === "open" ? (
         <>
-          <group position={[0, 0.02, 5.1]}>
-            <StonePath color="#756a59" count={reducedEffects ? 5 : 8} length={9.5} y={0.02} />
-          </group>
           <LegacyChapterLight><pointLight position={[0, 2.8, 1.5]} color="#cbd8d9" intensity={1.45} distance={15} /></LegacyChapterLight>
         </>
       ) : null}
@@ -364,15 +360,16 @@ function OldMemoryBedroom({ reducedEffects }: { reducedEffects: boolean }) {
 }
 
 function DarkeningWindows({ stage }: { stage: HouseStage }) {
+  const width = stage === "bedroom" ? 1 : 1.35, height = stage === "bedroom" ? 1.58 : 2.1;
   const color = stage === "garden" ? "#785d49" : stage === "bedroom" ? "#100d0c" : "#89908b";
   const emissiveIntensity = stage === "leaving" ? 0.28 : stage === "garden" ? 0.04 : 0;
   return (
     <group name="thorned-house-darkening-windows">
       {[-1, 1].map((side) => (
         <group key={side} position={[side * 5.65, 2.55, 1.1]} rotation={[0, side * -Math.PI / 2, 0]}>
-          <mesh><planeGeometry args={[1.35, 2.1]} /><meshStandardMaterial color={color} emissive={color} emissiveIntensity={emissiveIntensity} roughness={.72} side={THREE.DoubleSide} /></mesh>
-          <group rotation={[0, Math.PI, 0]}><WindowJoinery width={1.35} height={2.1} color="#584535" linenRail /></group>
-          <group rotation={[0, Math.PI, 0]}><WindowLinen width={1.35} height={2.1} color={stage === "leaving" ? "#b4ab93" : "#938675"} railInJoinery /></group>
+          <mesh><planeGeometry args={[width, height]} /><meshStandardMaterial color={color} emissive={color} emissiveIntensity={emissiveIntensity} roughness={.72} side={THREE.DoubleSide} /></mesh>
+          <group rotation={[0, Math.PI, 0]}><WindowJoinery width={width} height={height} color="#584535" linenRail /></group>
+          <group rotation={[0, Math.PI, 0]}><WindowLinen width={width} height={height} color={stage === "leaving" ? "#b4ab93" : "#938675"} railInJoinery /></group>
         </group>
       ))}
     </group>
@@ -464,7 +461,7 @@ function ThornedHouseChapterComponent({
       {isLeaving ? (
         <KeyProp
           position={[-1.15, exitCrossed ? 1.38 : 1.14, 5.95]}
-          color={exitCrossed ? "#e4bd68" : "#b48d51"}
+          color={exitCrossed ? "#b8a077" : "#9a825d"}
           scale={exitCrossed ? 1.24 : 1.1}
         />
       ) : null}
@@ -472,7 +469,7 @@ function ThornedHouseChapterComponent({
       <CandleField
         qualityProfile={qualityProfile}
         reducedEffects={reducedEffects}
-        count={stage === "garden" ? 13 : stage === "bedroom" ? 7 : 10}
+        count={stage === "garden" ? 5 : 3}
         radius={stage === "bedroom" ? 4.2 : 5.8}
         color="#e5aa68"
       />

@@ -8,8 +8,6 @@ import {
   HouseShell,
   KeyProp,
   SceneGround,
-  StonePath,
-  TreeGrove,
   qualityStep,
 } from "./ChapterPrimitives";
 import type { ChapterSceneProps } from "./types";
@@ -90,10 +88,10 @@ function UnsupportedWeight({ pressure, reducedEffects }: { pressure: number; red
   const { layers, sideX } = forms;
   return <group name="nest-occupied-domestic-edges" userData={{ pressure }}>
     <TimberAssembly pieces={forms.timber} color="#715940" />
-    <TimberAssembly pieces={forms.linen} color="#bcaa8d" surface="linen" />
+    <TimberAssembly pieces={forms.linen} color="#8c816c" surface="linen" />
     {[-1, 1].map(side => <RestingThrow key={side}
       position={[side * sideX, .99 + (layers - 1) * .16, side < 0 ? -.7 : .05]}
-      size={[1.08, 1.05]} maxDrop={.42} color={side < 0 ? "#c1ad94" : "#b7a18a"} />)}
+      size={[1.08, 1.05]} maxDrop={.42} color={side < 0 ? "#948775" : "#887e6c"} />)}
   </group>;
 }
 
@@ -140,22 +138,15 @@ function NestChapterComponent({
 
   return (
     <group>
-      <SceneGround radius={16} color="#493b2d" />
-      <TreeGrove
-        qualityProfile={qualityProfile}
-        reducedEffects={reducedEffects}
-        tint={isProtection ? "#64704b" : "#5a6242"}
-        trunk="#493525"
-        radius={16}
-      />
-      <StonePath color={isProtection ? "#aa9168" : "#927c61"} count={9} length={13} />
+      <SceneGround radius={16} color="#282e29" />
+
 
       <group name="nest-unwavering-domestic-shelter">
         <HouseShell
           position={[0, 0, 3]}
           size={[9.5, isProtection ? 5 : 4.6, 6.8]}
-          wallColor="#806747"
-          roofColor={isProtection ? "#3b3023" : "#332920"}
+          wallColor="#56564a"
+          roofColor={isProtection ? "#343b35" : "#2a302d"}
         />
       </group>
 
@@ -172,22 +163,22 @@ function NestChapterComponent({
         <KeyProp
           position={[0, protectionAcknowledged ? 1.62 : 1.42, 2.3]}
           scale={protectionAcknowledged ? 1.34 : 1.2}
-          color={protectionAcknowledged ? "#f1cd72" : "#d6ad5c"}
+          color={protectionAcknowledged ? "#c6b28a" : "#a88e63"}
         />
       ) : null}
-      <CandleField
+      <group name="nest-quiet-practical-light" position={[-1, 0, 3.5]}><CandleField
         qualityProfile={qualityProfile}
         reducedEffects={reducedEffects}
-        count={isProtection ? 14 : isCycle ? 5 : 9}
-        radius={isProtection ? 4.8 : 4.4}
-        color={isProtection ? "#ffd28a" : "#ffb56b"}
+        count={isProtection ? 3 : isCycle ? 1 : 2}
+        radius={1.8}
+        color="#e8c99a"
         y={0.04}
-      />
+      /></group>
       <FlickerLight
         position={[-1, 2.5, 3.5]}
         color={presentation?.look.lighting.color ?? "#e3d0ac"}
-        intensity={2.1}
-        distance={isProtection ? 18 : 15}
+        intensity={1.7}
+        distance={7.5}
         reducedMotion={reducedMotion}
       />
       <LegacyChapterLight><directionalLight

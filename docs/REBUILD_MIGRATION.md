@@ -1297,3 +1297,41 @@ remain outside production. Their reports are retained alongside the selected
 lighting, smooth-cloth and chapter-water variants in `phase4-*`. No render limit
 was weakened. The complete Node 22 release check passes 1,252 unit and seven
 security tests, TypeScript, content/assets, production build and Pages Functions.
+
+
+### Visual phase 5 — shelter, compression and an open home
+
+Nest concentrates its practical candles around the protected linen and keeps the
+surrounding ground quieter. Its duplicate chapter trees and stepping discs are
+removed; the canonical forest remains. Thorned House retains its authored
+ceiling pressure, inward furniture and narrow passages, with smaller bedroom
+windows, fewer candles and more restrained plaster and timber. Return widens
+its two actual rear windows, lightens the plaster and timber, and removes the
+decorative mirror gallery and route discs. The existing writing desk, reading
+chair, fountain and sovereign interaction mirror remain. No story, collision,
+controller, topology or persistence contract changes.
+
+Rendered comparisons cover all nine domestic subscenes, with distributed low,
+medium, high, cinematic, portrait, landscape and both reduced settings. The
+images retain the warm Nest centre, compressed House corridor and Return's
+quieter open wall. Strict Nest, House and inner-home checks preserve the original
+three-cycle and exact-remount limits. Home removes one draw, 3,436 triangles,
+two retained programs and one frame callback; no texture or light is added.
+These scene fixtures replay actual reducer history but do not establish earned
+physical progression or the final four-moment walkthrough.
+
+Two original failed comparisons remain retained: Nest's 92-to-94 program
+plateau and Crowned threshold's 44-to-45 paired count. Actual material-owner
+traces identify existing timber and bark compiling fallback variants while real
+map delivery is pending, then adopting decoded maps on the same material IDs.
+A separate bounded fixture holds real KTX2 completions through committed quality
+and two main-world frames. It changes neither production loading nor resource
+ceilings. Controlled Nest holds 101 before / 94 after programs, 55 / 52 geometries
+and 19 textures through all cycles/remount; Crowned threshold retains 46 / 45
+programs. The independent ordinary-loading observations and original failures
+remain separate evidence, rather than being relabeled as controlled passes.
+
+The complete Node 22 check passes 1,252 unit and seven security cases, type and
+content validation, asset validation, production build and Pages Functions.
+Native reports, direct causal traces, controlled confirmations and distributed
+profile images are retained externally under `artifacts/rebuild-20261005/phase5-*`.

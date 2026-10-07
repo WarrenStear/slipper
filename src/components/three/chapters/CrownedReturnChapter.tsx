@@ -7,9 +7,7 @@ import {
   Beam,
   CandleField,
   DoorFrame,
-  ReflectivePanel,
   SceneGround,
-  StonePath,
   WaterSurface,
 } from "./ChapterPrimitives";
 import { BotanicalBatch, BotanicalCluster } from "../environmentArt/EnvironmentArt";
@@ -54,7 +52,7 @@ function BooksReadingAndWriting({ reducedEffects }: { reducedEffects: boolean })
   ], []);
   return <group name="home-books-reading-writing" position={[4.9, .025, 8.85]} userData={{ practices: ["reading", "writing"] }}>
     <TimberAssembly color="#62503e" pieces={shelf} />
-    <ShelvedBooks count={reducedEffects ? 6 : 11} startY={.63} rowHeight={.88} />
+    <ShelvedBooks count={reducedEffects ? 4 : 8} startY={.63} rowHeight={.88} />
     <group name="home-writing-desk" position={[-.55, .78, -1.3]}>
       <WritingDesk />
       <group position={[.7, .13, .2]} rotation={[0, -.12, 0]} scale={.75}><ClothboundBook /></group>
@@ -123,8 +121,8 @@ function KylieProtectiveShell() {
     // Actual openings around the two windows let sky and grazing light enter.
     { position: [0, .75, 10.9], size: [14, 1.5, .34] },
     { position: [0, 3.7, 10.9], size: [14, .8, .34] },
-    { position: [0, 2.4, 10.9], size: [6.35, 1.8, .34] },
-    ...[-6.1125, 6.1125].map(x => ({ position: [x, 2.4, 10.9] as [number, number, number], size: [1.775, 1.8, .34] as [number, number, number] })),
+    { position: [0, 2.4, 10.9], size: [5.35, 1.8, .34] },
+    ...[-6.3625, 6.3625].map(x => ({ position: [x, 2.4, 10.9] as [number, number, number], size: [1.275, 1.8, .34] as [number, number, number] })),
     ...[-7, 7].map(x => ({ position: [x, 2.05, 6] as [number, number, number], size: [.34, 4.1, 10] as [number, number, number] })),
   ], []);
   const roof = useMemo<ConstructionPiece[]>(() => [
@@ -144,18 +142,18 @@ function KylieProtectiveShell() {
     return lengths.map((length,j) => { const piece: ConstructionPiece = { position: [-6.397+i*.752,-.017,start+length/2],size:[.74,.084,length-.012],color: ["#a59882","#b3a38a","#aa9d86"][(i+j)%3] };start+=length;return piece; });
   }).flat(), []);
   return <group name="home-open-front-architecture" userData={{ openFront: true, enclosure: "protective-not-confining" }}>
-    <TimberAssembly pieces={walls} plaster color="#a7987c" />
+    <TimberAssembly pieces={walls} plaster color="#b9ac92" />
     <mesh name="home-rear-gable-infill" geometry={gable} position={[0, 4.1, 10.73]} castShadow receiveShadow>
-      <TactileMaterial surface="plaster" color="#a7987c" roughness={.97} />
+      <TactileMaterial surface="plaster" color="#b9ac92" roughness={.97} />
     </mesh>
-    <TimberAssembly pieces={roof} color="#45433b" />
+    <TimberAssembly pieces={roof} color="#53534a" />
     <TimberAssembly pieces={joinery} color="#675543" />
-    <TimberAssembly pieces={floor} color="#8a795c" />
+    <TimberAssembly pieces={floor} color="#9b8f76" />
   </group>;
 }
 
 function KylieInnerHome({ qualityProfile, reducedEffects, arrivalHeading }: Pick<ChapterSceneProps, "qualityProfile" | "reducedEffects" | "reducedMotion"> & { sovereign: boolean; arrivalHeading: number }) {
-  const roseCount = reducedEffects ? 4 : ROSES.length;
+  const roseCount = reducedEffects ? 2 : 4;
   return (
     <group
       name="kylie-self-owned-inner-home"
@@ -172,15 +170,12 @@ function KylieInnerHome({ qualityProfile, reducedEffects, arrivalHeading }: Pick
       <group name="home-open-light-windows" userData={{ atmosphere: "open-light" }}>
         {[-4.2, 4.2].map((x) => (
           <group key={x} position={[x, 2.4, 10.67]}>
-            <mesh rotation={[0, Math.PI, 0]}><planeGeometry args={[2.05, 1.8]} /><meshStandardMaterial color="#c6d1cf" transparent opacity={.09} roughness={.18} depthWrite={false} side={2} /></mesh>
-            <WindowJoinery width={2.05} height={1.8} />
-            <WindowLinen width={2.05} height={1.8} />
+            <mesh rotation={[0, Math.PI, 0]}><planeGeometry args={[3.05, 1.8]} /><meshStandardMaterial color="#c6d1cf" transparent opacity={.045} roughness={.18} depthWrite={false} side={2} /></mesh>
+            <WindowJoinery width={3.05} height={1.8} />
+            <WindowLinen width={3.05} height={1.8} />
           </group>
         ))}
         <LegacyChapterLight><pointLight position={[0, 5.2, 4.6]} color="#ffe0a8" intensity={reducedEffects ? 0.62 : 1.04} distance={15} /></LegacyChapterLight>
-      </group>
-      <group name="home-reflection-gallery">
-        <ReflectivePanel position={[-.8, 2.2, 10.58]} rotation={[0, Math.PI, 0]} size={[2.1, 2.8]} cracked warm />
       </group>
       {/* The sovereign crown is painted only inside the interactive mirror in StoryObjectModel. */}
       <LivingWaterFountain reducedEffects={reducedEffects} />
@@ -191,7 +186,7 @@ function KylieInnerHome({ qualityProfile, reducedEffects, arrivalHeading }: Pick
       <group name="home-candles-and-roses">
         <group name="window-sill-candle" position={[-4.2, 1.49, 10.47]}><CandleField qualityProfile={qualityProfile} reducedEffects={reducedEffects} count={1} radius={0} color="#e8c696" /></group>
         <group name="writing-desk-candle" position={[3.33, .883, 7.82]}><CandleField qualityProfile={qualityProfile} reducedEffects={reducedEffects} count={1} radius={0} color="#e8c696" /></group>
-        <BotanicalBatch kind="rose" seed={41} placements={ROSES.slice(1, roseCount).map(rose => ({ position: [rose.x, .24, rose.z], scale: .8 }))} color="#c69398" />
+        <BotanicalBatch kind="rose" seed={41} placements={ROSES.filter((_, index) => index % 2 === 0).slice(1, roseCount).map(rose => ({ position: [rose.x, .24, rose.z], scale: .8 }))} color="#a78380" />
         <BotanicalCluster kind="rose" position={[-6.15, .24, 2.35]} scale={.8} seed={41} color="#b49391" />
         <TimberAssembly name="shallow-window-planters" color="#71634d" pieces={[-1,1].flatMap(side => [
           {position:[side*6.15,.13,2.9],size:[.74,.22,1.95]},
@@ -218,8 +213,7 @@ function CrownedReturnChapterComponent({ scene, qualityProfile, reducedEffects, 
 
   return (
     <group>
-      <SceneGround radius={24} color="#75694a" />
-      <StonePath color="#a49a7f" count={13} length={22} />
+      <SceneGround radius={24} color="#4b5141" />
       <LegacyChapterLight><directionalLight position={[-9, 13, -8]} color="#ffe1a9" intensity={reducedEffects ? 0.62 : 1.08} /></LegacyChapterLight>
       {atThreshold ? (
         <group
