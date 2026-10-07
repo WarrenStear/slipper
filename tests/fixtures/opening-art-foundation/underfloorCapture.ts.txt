@@ -3,7 +3,7 @@ import { Color, FogExp2, HalfFloatType, UnsignedByteType, Scene, WebGLRenderTarg
 
 /** One existing private scene/target; resolution is supplied by SceneLook. */
 export function createUnderfloorCaptureResources(resolution: number) {
-  const scene = new Scene(); scene.background = new Color('#101918'); scene.fog = new FogExp2('#24322e', .035);
+  const scene = new Scene(); scene.background = new Color('#081216'); scene.fog = new FogExp2('#101e23', .042);
   const target = new WebGLRenderTarget(resolution, resolution, { type: HalfFloatType, depthBuffer: true });
   target.texture.name = 'bounded-underfloor-world';
   return { scene, target };

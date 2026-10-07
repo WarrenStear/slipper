@@ -1,0 +1,25 @@
+{
+  "baseline": "49258ef plus exact frozen Phase 1 forest candidate; before native acceptance",
+  "sources": {
+    "src/world/opening/underfloorGeometry.ts": {
+      "fixture": "underfloorGeometry.ts.txt",
+      "sha256": "193258a12af1f4e112abbcff6daa12c4230f22e870d07e623fcce1de6f50db2d"
+    },
+    "src/world/opening/wetFloorShader.ts": {
+      "fixture": "wetFloorShader.ts.txt",
+      "sha256": "026b3a35a8babfe45ea42f499a506d8802861a0d78e0fa1addfd998803652f84"
+    },
+    "src/world/opening/UnderfloorForest.tsx": {
+      "fixture": "UnderfloorForest.tsx.txt",
+      "sha256": "bf87a9d0602652be8fd5a18cd3f989c27fc78c926b2285217c70f70ee49a009b"
+    },
+    "src/world/opening/underfloorCapture.ts": {
+      "fixture": "underfloorCapture.ts.txt",
+      "sha256": "947b14737963cebd1db414621ff4cf8eec26b2c5756e36fa28697a116c5040ba"
+    },
+    "src/scenes/broken-floor/BrokenFloorScene.tsx": {
+      "fixture": "BrokenFloorScene.tsx.txt",
+      "sha256": "eb4e71915f2c048b750daaa4eb30e0253b211641d186b345930c09eedb197478"
+    }
+  }
+}

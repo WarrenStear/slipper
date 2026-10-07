@@ -189,29 +189,34 @@ function immutableUnderfloorGeometry() {
   return exports.createBaseline();
 }
 
-test('extracted underfloor geometry is byte-equivalent to immutable 21ce695 seeded populations and six-limb buffers', () => {
+test('authored underfloor retains immutable population and six-limb allocation, UV and index topology', () => {
   const forest = createUnderfloorGeometry();
   // Math.sin's last bits differ between the native macOS and Linux runtimes.
-  // Execute the hash-pinned original source on the same backend and compare every
-  // actual value/byte exactly; no tolerance or platform-specific blessed output.
+  // Execute the hash-pinned original on this backend. Art positions/normals may
+  // change; population, allocations, UVs, indices and single draw group stay exact.
   const baseline = immutableUnderfloorGeometry();
   assert.equal(forest.trunks.length, 34); assert.equal(forest.crowns.length, 30);
-  assert.equal(JSON.stringify(forest.trunks), JSON.stringify(baseline.trunks));
-  assert.equal(JSON.stringify(forest.crowns), JSON.stringify(baseline.crowns));
+  assert.notEqual(JSON.stringify(forest.trunks), JSON.stringify(baseline.trunks));
+  assert.notEqual(JSON.stringify(forest.crowns), JSON.stringify(baseline.crowns));
   assert.deepEqual(Object.keys(forest.branches.attributes).sort(), Object.keys(BASELINE.attributes).sort());
   for (const [name, expected] of Object.entries(BASELINE.attributes)) {
     const attribute = forest.branches.getAttribute(name);
     assert.equal(attribute.itemSize, expected.itemSize); assert.equal(attribute.count, expected.count);
-    assert.equal(hash(arrayBytes(attribute.array)), hash(arrayBytes(baseline.branches.getAttribute(name).array)), `${name} bytes`);
+    if (name === 'uv') assert.equal(hash(arrayBytes(attribute.array)), hash(arrayBytes(baseline.branches.getAttribute(name).array)), `${name} bytes`);
+    else { assert.ok([...attribute.array].every(Number.isFinite)); assert.notEqual(hash(arrayBytes(attribute.array)), hash(arrayBytes(baseline.branches.getAttribute(name).array)), `${name} authored coordinates`); }
   }
   assert.equal(forest.branches.index.count, BASELINE.index.count); assert.equal(hash(arrayBytes(forest.branches.index.array)), BASELINE.index.hash);
   assert.equal(hash(arrayBytes(forest.branches.index.array)), hash(arrayBytes(baseline.branches.index.array)));
   assert.deepEqual(forest.branches.groups, []); forest.branches.dispose(); baseline.branches.dispose();
 });
 
-test('actual floor shaders preserve all original RGB/projective/mask/stage code while alpha is supplied by the room', () => {
+test('floor art changes preserve the original projective, accumulated-mask, stage, sampling and resource code', () => {
   assert.equal(shaderHash(vertexShader), BASELINE.vertexShader);
-  const originalAlpha = fragmentShader.replace('uniform float apertureOpacity;', '').replace('vec4(color,apertureOpacity)', 'vec4(color,.94)');
+  const originalAlpha = fragmentShader.replace('uniform float apertureOpacity;', '').replace('vec4(color,apertureOpacity)', 'vec4(color,.94)')
+    .replace(/vec2 dampDistance=[\s\S]*?float restored=.*?;/, 'float restored=(1.-smoothstep(.045,.17+second*.1,distance(vUv,vec2(.5,.56))))*first*(.6+second*.4);')
+    .replace('vec3(.152,.128,.101),vec3(.24,.208,.17)', 'vec3(.14,.125,.105),vec3(.22,.194,.158)')
+    .replace('room*=1.-damp*.24;', 'room*=1.-damp*.19;')
+    .replace('float edge=mask*(1.-mask);color=mix(color,room,edge*(.18-second*.1));', 'float edge=mask*(1.-mask);color+=sRGBTransferEOTF(vec4(.09,.12,.13,1.)).rgb*edge;');
   assert.equal(shaderHash(originalAlpha), BASELINE.fragmentShader);
   const forest = new THREE.Texture(), mask = createWetFloorMask(new Uint8Array(4096), 64);
   for (const stage of [0, 1, 2]) {
@@ -255,7 +260,7 @@ test('actual capture restores renderer state and original physical parent transf
     const gl = createGl(), camera = new THREE.PerspectiveCamera(), valid = { current: false };
     gl.fail = failure; gl.extensions.has = () => floatColor;
     assert.equal(resources.target.width, 128); assert.equal(resources.target.height, 128); assert.equal(resources.target.depthBuffer, true);
-    assert.equal(resources.scene.background.getHexString(), '081216'); assert.equal(resources.scene.fog.color.getHexString(), '101e23'); assert.equal(resources.scene.fog.density, .042);
+    assert.equal(resources.scene.background.getHexString(), '101918'); assert.equal(resources.scene.fog.color.getHexString(), '24322e'); assert.equal(resources.scene.fog.density, .035);
     if (failure) assert.throws(() => captureUnderfloorFrame(gl, camera, resources, root, surface, valid), /controlled capture/);
     else captureUnderfloorFrame(gl, camera, resources, root, surface, valid);
     assert.deepEqual(root.matrix.elements, parent.matrixWorld.elements); assert.equal(root.matrixWorldNeedsUpdate, true);

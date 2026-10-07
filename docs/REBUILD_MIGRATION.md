@@ -1213,3 +1213,47 @@ content/assets, TypeScript, build and Pages Functions. Evidence is under
 `artifacts/rebuild-20261005/phase2-heroes-*` and
 `artifacts/rebuild-20261005/phase2-integration-same-history-*`. Native scene
 fixtures assess appearance and ownership; they do not claim earned progression.
+
+### Visual phase 3 — the forest beneath the floor
+
+The existing underfloor volume now has seventeen rooted trees with attached
+forks, thirty crowns on their actual tips, and six attached boughs. Uneven depth
+banks frame the existing lantern farther below the room, resting at ground level.
+Neutral damp bark, quieter foliage and longer fog falloff replace the cyan poles.
+The wet timber is warmer and less uniform; its irregular damp boundary retains
+timber instead of emitting a rim. The original brush mask, stage progression,
+physical input, camera handoff and private capture owner are unchanged.
+
+The allocation remains 34 stem instances, 30 crowns, 516 bough vertices and 1,008
+bough triangles. No texture, light, frame owner, capture pass or target is added.
+Thirteen native before/after pairs cover all four high-quality opening states,
+the First Wood control, and the revealed state across low, medium, cinematic,
+portrait, landscape and both reduced settings. Every paired resource/rendering
+delta is zero. The fixed grazing review camera is useful for shader/resource
+comparisons, but does not establish the whole underfloor composition by itself.
+
+Four separate fresh physical runs pass on desktop and portrait at high quality
+and low/reduced settings. Trusted gestures reveal the actual depth volume and
+begin the inversion, then physical movement reaches the first memory. Normal
+Memories access opens the earned reader and the partial Constellation: only
+fragment-001 and fragment-008 are disclosed, with 64 anonymous future entries.
+Rendered physical images show the room and forest coexisting, attached branches,
+the small distant lantern and subsequent forest arrival. The original 1.2-second
+committed-pose continuity bound, browser-error and unread-privacy checks remain.
+These runs use ordinary loading, without the controlled fixture below.
+
+The first strict baseline review retained 34 programs initially and 35 after a
+quality cycle. Actual shader keys identify a fallback wet-wood variant whose
+presence depends on decode completion around shadow setup. Its failed receipt
+is retained. A separate fixture holds only real KTX2 completion delivery until
+the requested SceneLook quality commits and two main-world frames render. Real
+bytes, decoding, textures and errors are preserved. Matched initial/remount
+histories then retain exactly 35 programs, 17 geometries and 11 textures through
+all three cycles and remount; First Wood also passes its original strict bounds.
+Fifteen CPU negative/ownership controls validate this bounded fixture. It is not
+a production delivery change or an uncontrolled-loading stability claim.
+
+The full Node 22 release check passes 1,249 unit and seven security cases,
+TypeScript, content/assets, production build and Pages Functions. Raw images,
+normal physical receipts, the original failure and controlled comparisons are
+retained under `artifacts/rebuild-20261005/phase3-*` outside this checkout.
