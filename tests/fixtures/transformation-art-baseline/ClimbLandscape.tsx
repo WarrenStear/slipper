@@ -12,21 +12,19 @@ export const ClimbLandscape = memo(function ClimbLandscape({ kind, released }: {
     if (kind === "mind") {
       for (let i = 0; i < 12; i++) for (const side of [-1, 1]) {
         if (released && i < 5) continue;
-        const height = (3.2 + i * .31 + Math.sin(i * 1.8) * .42) * (released ? .7 : 1);
-        stones.push({ position: [side * (5.7 - Math.min(i, 6) * .12 + Math.max(0, i - 6) * .29 + (released ? 1.4 + (i - 5) * .34 : 0)), height / 2, -6 + i * 2.8], scale: [.55 + i % 3 * .13, height, 1.08 + i % 2 * .23], rotation: [.012 * side, side * .08 + Math.sin(i) * .04, side * -.026] });
+        const height = 3.2 + i * .31 + Math.sin(i * 1.8) * .42;
+        stones.push({ position: [side * (5.7 - Math.min(i, 6) * .12 + Math.max(0, i - 6) * .29), height / 2, -6 + i * 2.8], scale: [.55 + i % 3 * .13, height, 1.08 + i % 2 * .23], rotation: [.012 * side, side * .08 + Math.sin(i) * .04, side * -.026] });
       }
     } else if (kind === "heart") {
       for (let i = 0; i < 17; i++) {
-        const angle = .12 + i / 16 * Math.PI * .9;
-        const x = Math.cos(angle) * (7.1 + Math.sin(i * 2.1) * .55), z = 4.8 + Math.sin(angle) * 5.3;
-        const height = .65 + Math.sin(i / 16 * Math.PI) * 1.1 + (i % 3) * .14;
-        stones.push({ position: [x, height * .43, z], scale: [1.45 + Math.sin(i) * .3, height, 1.3], rotation: [.05, angle, -.04] });
-        if (i % 3 !== 1) planting.push({ position: [x * 1.035, .24, z + .65], scale: [.6, .3 + i % 4 * .1, .65], rotation: [0, angle, 0] });
+        const angle = .1 + i / 16 * Math.PI * .94;
+        const x = Math.cos(angle) * (6.9 + Math.sin(i * 2.1) * .5), z = 4.1 + Math.sin(angle) * 5.5;
+        stones.push({ position: [x, .4, z], scale: [1.45 + Math.sin(i) * .3, .55 + (i % 3) * .18, 1.3], rotation: [.05, angle, -.04] });
+        if (kind === "heart") planting.push({ position: [x, .35, z + .5], scale: [.75 + i % 3 * .19, .5 + i % 4 * .13, .8], rotation: [0, angle, 0] });
       }
     }
-    if (kind === "womb") for (let i = 0; i < 3; i++) {
-      const a = [.28, 1.86, 2.73][i];
-      planting.push({ position: [Math.cos(a) * 12.1, .24, 3 + Math.sin(a) * 10], scale: [.5, .2 + i * .035, .5], rotation: [0, a, 0] });
+    if (kind === "womb") for (let i=0;i<9;i++) {
+      const a=.12+i*.31; planting.push({position:[Math.cos(a)*(10+i%3),.28,3+Math.sin(a)*9],scale:[.65,.23+i%3*.07,.65],rotation:[0,a,0]});
     }
     return { stones, planting };
   }, [kind, released]);
@@ -47,7 +45,7 @@ export const ClimbLandscape = memo(function ClimbLandscape({ kind, released }: {
   useEffect(()=>()=>bowl?.dispose(),[bowl]);
   return <group name={`climb-${kind}-spatial-grammar`} userData={{ language: kind === "mind" ? "repetition-into-space" : kind === "heart" ? "curved-intimate-shelter" : "open-protected-earth" }}>
     <Forms forms={layout.stones} name="climb-authored-boundary" kind={kind === "mind" ? "box" : "stone"} surface="stone" color={kind === "womb" ? "#71664f" : "#65706a"} />
-    {bowl ? <mesh name="creation-soft-protected-earth" geometry={bowl} receiveShadow><TactileMaterial surface="earth" color="#787564" roughness={.96} /></mesh> : null}
+    {bowl ? <mesh name="creation-soft-protected-earth" geometry={bowl} receiveShadow><TactileMaterial surface="earth" color="#847a61" roughness={.96} /></mesh> : null}
     {kind !== "mind" ? <BotanicalBatch kind="reeds" placements={layout.planting} mergeFoliage /> : null}
   </group>;
 });

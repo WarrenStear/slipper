@@ -1335,3 +1335,45 @@ The complete Node 22 check passes 1,252 unit and seven security cases, type and
 content validation, asset validation, production build and Pages Functions.
 Native reports, direct causal traces, controlled confirmations and distributed
 profile images are retained externally under `artifacts/rebuild-20261005/phase5-*`.
+
+
+### Visual phase 6 — coexistence, release and open climbs
+
+Integration removes its duplicate mirror, decorative moon, candle rows, stepping
+discs and symbolic ring. The canonical Wolf, Swan and Seer remain. Convergence
+regroups its existing fifteen stones and ten reeds at uneven banks instead of
+crossing the centre. Fork quiets the path colours and gathers planting into
+irregular pockets; legacy chapter illustrations yield to the canonical objects.
+The canonical erasable mark remains an interaction target, with its natural
+presentation reserved for the final restraint pass.
+
+The Climbs lose decorative arrows and stepping discs. Mind's surviving columns
+recede and spread after the existing release event. Heart raises the existing
+seventeen stones into a curved shelter and reduces peripheral planting. Womb
+keeps its exact earth topology, three distant plant pockets and a quieter soil
+colour, removing duplicate miniature domestic illustrations. Active Fire and its
+contracts are unchanged; the inactive fire restraint landed in phase 4. No story,
+controller, collision, topology, event, save or accessibility owner changes.
+
+Eighteen matched native pairs retain thirty-six images across the transformation
+scenes, distributed over desktop, portrait, landscape, all four detail tiers and
+both reduced settings. Four original owner lifetimes pass their three-cycle and
+remount bounds. The original Integration, Heart and Womb fixture angles did not
+show their changed owners, so those images establish resources only. Separate
+inspection cameras derive from actual mounted transforms and terrain clearance;
+they show Integration's separated subjects, Heart's shelter and Womb's empty
+bowl. These are explicitly composition inspections, not earned player arrivals.
+
+The properly framed convergence lifetime removes fourteen draws, 4,482 triangles,
+eight retained programs, two frame owners, one texture and fourteen geometries.
+It preserves all original cycle/remount bounds. Its first attempt stopped with
+an execution-context disappearance after the baseline image. That failed report
+is retained. An otherwise identical diagnostic adds read-only navigation/crash
+logging and passes on both roots, recording only the two initial navigations and
+no crash. The initial interruption is not attributed to a production fix.
+
+The unchanged source patch passes the complete Node 22 check: 1,264 unit cases,
+seven security cases, type/content/asset validation, production build and Pages
+Functions. Native fixtures replay canonical reducer history; the earned complete
+journey and final four-moment art review remain phase 10 work. Reports and the
+supplemental framing audit are retained under `artifacts/rebuild-20261005/phase6-*`.

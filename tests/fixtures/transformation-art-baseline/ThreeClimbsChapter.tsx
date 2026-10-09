@@ -12,6 +12,7 @@ import {
   KeyProp,
   MoonDisc,
   SceneGround,
+  StonePath,
   WaterSurface,
 } from "./ChapterPrimitives";
 import type { ChapterSceneProps } from "./types";
@@ -28,9 +29,9 @@ const NO_SCENIC_BOULDERS: readonly number[] = [];
 function GroundedOutcrops() {
   const geometry = useMemo(() => mergeArtGeometries(SCENIC_BOULDER_INDICES.map(index => {
     const rock = createWeatheredBoulderGeometry(13 + index * 3);
-    rock.scale(1.3 + index % 2 * .3, .85 + index % 3 * .19, 1.3 + index % 3 * .16);
+    rock.scale(1.3 + index % 2 * .3, 1.5 + index % 3 * .28, 1.3 + index % 3 * .16);
     rock.rotateY(index * .93);
-    rock.translate((index % 2 === 0 ? -1 : 1) * (6.2 + index % 3), -.12, -6 + index * 2.6);
+    rock.translate((index % 2 === 0 ? -1 : 1) * (4.8 + index % 3), 0, -6 + index * 2.6);
     return rock;
   })), []);
   useEffect(() => () => geometry.dispose(), [geometry]);
@@ -246,7 +247,6 @@ function ThreeClimbsChapterComponent({
   reducedEffects,
   reducedMotion,
 }: ChapterSceneProps) {
-  const storyActorsActive = useJourneyStore(journey => journey.worldFlags["story-events.started"] === true);
   const isArrival = scene.id === "climbs.arrival";
   const isMind = scene.id === "climb.mind";
   const isHeart = scene.id === "climb.heart";
@@ -284,8 +284,19 @@ function ThreeClimbsChapterComponent({
   return (
     <group>
       {isMind || isHeart || isWomb ? <group rotation={[0, arrivalHeading, 0]}><ClimbLandscape kind={isMind ? "mind" : isHeart ? "heart" : "womb"} released={questionsReleased} /></group> : null}
-      <SceneGround radius={19} color={isWomb ? "#615c4d" : "#373936"} />
+      <SceneGround radius={19} color={isWomb ? "#64583f" : "#373936"} />
+      {isWomb ? null : <group rotation={[-0.16, 0, 0]} position={[0, 0.3, 0]}>
+        <StonePath color={isHeart ? "#777e81" : "#66645d"} count={12} length={19} />
+      </group>}
       {scenicBoulderIndices.length ? <group position={[0, 0, isArrival ? -5 : 0]}><GroundedOutcrops /></group> : null}
+
+      {isArrival ? (
+        <group position={[0, 0.3, 4]}>
+          <Beam from={[0, 0, 0]} to={[-5.5, 5.5, 5]} radius={0.22} color="#5d5d58" />
+          <Beam from={[0, 0, 0]} to={[0, 7.2, 6.2]} radius={0.22} color="#77746c" />
+          <Beam from={[0, 0, 0]} to={[5.5, 9, 5]} radius={0.22} color="#8b7856" />
+        </group>
+      ) : null}
 
       {isMind ? (
         <group>
@@ -300,7 +311,6 @@ function ThreeClimbsChapterComponent({
           userData={{ choiceCount: 3, selected: heartMemoryChosen, stagedTowardArrival: true }}
         >
           <WaterSurface reducedMotion={reducedMotion} reducedEffects={reducedEffects} position={[0, 0.02, 5]} size={[12, 7]} color="#1e3543" opacity={0.84} />
-          {!storyActorsActive ? <>
           <MoonDisc
             position={[0, 9, 13]}
             radius={3.3}
@@ -311,7 +321,6 @@ function ThreeClimbsChapterComponent({
           <HeartRoseMemory selected={tendernessSelected} reducedEffects={reducedEffects} />
           <HeartSwanFeatherMemory selected={beautySelected} reducedEffects={reducedEffects} />
           <HeartBlueMoonMemory selected={selfhoodSelected} reducedEffects={reducedEffects} />
-          </> : null}
           <LegacyChapterLight><hemisphereLight args={["#a9c1ce", "#241b1d", reducedEffects ? 0.48 : 0.72]} /></LegacyChapterLight>
         </group>
       ) : null}
@@ -322,14 +331,12 @@ function ThreeClimbsChapterComponent({
           rotation={[0, arrivalHeading, 0]}
           userData={{ choiceCount: 3, selected: creationChosen, stagedTowardArrival: true }}
         >
-          {!storyActorsActive ? <>
           <ProtectedCreationSpace reducedEffects={reducedEffects} reducedMotion={reducedMotion} chosen={creationChosen} />
           <FutureRestSymbol selected={restSelected} reducedEffects={reducedEffects} reducedMotion={reducedMotion} />
           <FutureHomeSymbol selected={homeSelected} reducedEffects={reducedEffects} />
           <FutureVoiceSymbol selected={voiceSelected} reducedEffects={reducedEffects} />
           <Upholstery position={[.22,.055,3]} size={[1.06,.05,.64]} surface="linen" color="#aaa291" />
           <KeyProp position={[0, .1, 3]} scale={0.52} color={creationChosen ? "#f1cb73" : "#d0ad63"} />
-          </> : null}
           <LegacyChapterLight><directionalLight position={[8, 12, -8]} color="#ffd89f" intensity={creationChosen ? 1.24 : 0.95} /></LegacyChapterLight>
           <LegacyChapterLight><hemisphereLight args={["#ead5ad", "#2f271d", reducedEffects ? 0.44 : 0.66]} /></LegacyChapterLight>
         </group>

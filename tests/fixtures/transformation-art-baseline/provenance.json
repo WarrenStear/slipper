@@ -1,0 +1,35 @@
+{
+  "source": "Actual production snapshot including Phase 1 forest and first-Wood program enqueue; no historical F source substituted.",
+  "files": [
+    {
+      "path": "src/components/three/chapters/IntegrationChapter.tsx",
+      "fixture": "IntegrationChapter.tsx",
+      "sha256": "9220646deaf5f2cd5b829f7d9f851b85d0ee83f4ab16fc34a2a7538ecd745cc8"
+    },
+    {
+      "path": "src/components/three/chapters/ForkChapter.tsx",
+      "fixture": "ForkChapter.tsx",
+      "sha256": "d495d8b9858c668bc4a2eb76775da609b8d3f90675bbaf51275ff0d8a7da8212"
+    },
+    {
+      "path": "src/components/three/chapters/ThreeClimbsChapter.tsx",
+      "fixture": "ThreeClimbsChapter.tsx",
+      "sha256": "32c6bb8c9f6852d535620c1319ceb81e688cca2185c5fba97bbf8e8a11f2d8ba"
+    },
+    {
+      "path": "src/components/three/environment/ForkLandscape.tsx",
+      "fixture": "ForkLandscape.tsx",
+      "sha256": "31892befc458419643cd62992185bea19f8a411a187fe3a114efc2525cdf1d72"
+    },
+    {
+      "path": "src/components/three/environment/forkLandscapeGeometry.ts",
+      "fixture": "forkLandscapeGeometry.ts",
+      "sha256": "7c71ca3317d759187d2122f3a05c9d5d240af6020e8abbaaafdd41de6b3ca562"
+    },
+    {
+      "path": "src/components/three/environment/ClimbLandscape.tsx",
+      "fixture": "ClimbLandscape.tsx",
+      "sha256": "c2706b3fbd36691ec1e38717ca71f004290475312aa523918db73523ad5b9820"
+    }
+  ]
+}

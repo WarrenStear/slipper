@@ -6,7 +6,7 @@ const SIDES = [-1, -.7, 0, .7, 1];
 
 /** Worn earth merges into the clearing at its margins, with no decal or glow.
  * The authored centreline and walkable height are unchanged. */
-export function createForkPath(future: boolean, color = future ? "#3b4130" : "#514534") {
+export function createForkPath(future: boolean, color = future ? "#525b4d" : "#74634c") {
   const curve = new CatmullRomCurve3((future ? FUTURE : PAST).map(p => new Vector3(...p)));
   const positions: number[] = [], uv: number[] = [], indices: number[] = [], colors: number[] = [];
   const earth = new Color("#26241b"), worn = new Color(color), tint = new Color();
@@ -17,7 +17,7 @@ export function createForkPath(future: boolean, color = future ? "#3b4130" : "#5
       const side = SIDES[j];
       positions.push(p.x + tangent.z * width * side, .017, p.z - tangent.x * width * side);
       uv.push((side + 1) / 2, t * 16);
-      const wear = Math.abs(side) === 1 ? 0 : (.34 + Math.sin(i * .81 + side) * .09 + Math.sin(i * .23) * .05) * (future ? 1 - t * .72 : 1);
+      const wear = Math.abs(side) === 1 ? 0 : (.78 + Math.sin(i * .81 + side) * .08) * (future ? 1 - t * .64 : 1);
       tint.copy(earth).lerp(worn, wear).toArray(colors, colors.length);
       if (i < 48 && j < SIDES.length - 1) {
         const k = i * SIDES.length + j;

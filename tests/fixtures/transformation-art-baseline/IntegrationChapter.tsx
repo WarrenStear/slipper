@@ -3,8 +3,11 @@ import { BotanicalBatch } from "../environmentArt/EnvironmentArt";
 import { AuthoredNpcSilhouette } from "../environmentArt/AuthoredNpc";
 import { memo } from "react";
 import {
+  CandleField,
+  MoonDisc,
   ReflectivePanel,
   SceneGround,
+  StonePath,
   TreeGrove,
   WaterSurface,
 } from "./ChapterPrimitives";
@@ -39,18 +42,35 @@ function IntegrationChapterComponent({
       <SceneGround radius={20} color="#26231d" />
       <TreeGrove qualityProfile={qualityProfile} reducedEffects={reducedEffects} tint="#323c32" radius={27} />
       <WaterSurface reducedMotion={reducedMotion} reducedEffects={reducedEffects} position={[6, 0.015, 1]} size={[8.5, 10]} color="#20343e" opacity={0.82} circle />
-      {storyActorsActive ? null : <group name="seer-high-ground" position={[0, 0, 0]}>
+      <group name="integration-moon">
+        <MoonDisc
+          position={[8, 9, -12]}
+          radius={2.5}
+          qualityProfile={qualityProfile}
+          reducedEffects={reducedEffects}
+          reducedMotion={reducedMotion}
+        />
+      </group>
+      <group position={[-6, 0, 0]}>
+        <StonePath color="#5d4a37" count={7} length={11} fork={-0.42} />
+        <CandleField qualityProfile={qualityProfile} reducedEffects={reducedEffects} count={8} radius={3.2} color="#db824c" />
+      </group>
+      <group position={[6, 0, 0]}>
+        <StonePath color="#747a78" count={7} length={11} fork={0.42} />
+      </group>
+      <group name="seer-high-ground" position={[0, 0, 0]}>
         <ReflectivePanel position={[0, 3.2, 6.1]} size={[4.5, 5.8]} cracked />
-      </group>}
+
+      </group>
       {storyActorsActive ? null : <WolfStone witnessed={wolfWitnessed} />}
       {storyActorsActive ? null : <SwanStone witnessed={swanWitnessed} />}
       {isConvergenceScene ? (
         <group>
           <group name="integration-shared-shoreline">
-            <Forms name="wood-water-stone-passage" kind="stone" surface="stone" color="#64736a" forms={Array.from({ length: 15 }, (_, i) => ({ position: [(i < 7 ? -6.4 : 6.9) + Math.sin(i * 2.17) * 1.45, -.035, (i < 7 ? 4.6 : 2.4) + Math.cos(i * 1.31) * 2.3], scale: [.62 + (i % 3) * .16, .12 + (i % 4) * .035, .51 + (i % 2) * .23], rotation: [.04 * Math.sin(i), i * 1.7, .035 * Math.cos(i)] }))} />
-            <BotanicalBatch kind="reeds" mergeFoliage placements={Array.from({ length: 10 }, (_, i) => ({ position: [(i < 4 ? -6.9 : 7.3) + Math.sin(i * 2.4) * 1.15, .02, (i < 4 ? 6.2 : 4.5) + Math.cos(i * 1.7) * 1.4], scale: .48 + (i % 3) * .13, rotation: [0, i * 2.1, 0] }))} />
+            <Forms name="wood-water-stone-passage" kind="stone" surface="stone" color="#64736a" forms={Array.from({ length: 15 }, (_, i) => ({ position: [-8 + i * 1.12, .04, 3.2 + Math.sin(i * .45) * 1.4], scale: [.9, .11, .65], rotation: [0, i * 1.7, 0] }))} />
+            <BotanicalBatch kind="reeds" mergeFoliage placements={Array.from({ length: 10 }, (_, i) => ({ position: [-6 + i * 1.35, .02, 5.3 + Math.sin(i * .8)], scale: .8, rotation: [0, i, 0] }))} />
           </group>
-          {storyActorsActive ? null : ["swan", "wolf", "seer"].map((symbol, index) => {
+          {["swan", "wolf", "seer"].map((symbol, index) => {
             const x = -2.2 + index * 2.2;
             return (
               <mesh key={symbol} name={`integrated-${symbol}-node`} position={[x, .08, 3.6]} scale={[1, .14, .7]} userData={{ integrated: converged }} receiveShadow>
@@ -60,7 +80,12 @@ function IntegrationChapterComponent({
             );
           })}
         </group>
-      ) : null}
+      ) : (
+        <mesh position={[0, 0.25, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <ringGeometry args={[1.2, 2.8, 48, 1, 0.25, Math.PI * 1.5]} />
+          <meshStandardMaterial color="#51483e" roughness={0.9} />
+        </mesh>
+      )}
     </group>
   );
 }

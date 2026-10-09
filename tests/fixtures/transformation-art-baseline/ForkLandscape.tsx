@@ -8,8 +8,8 @@ import { TactileMaterial } from "../storyEvents/TactileMaterial";
 
 export const ForkLandscape = memo(function ForkLandscape({ overgrown, established, reducedEffects }: { overgrown: boolean; established: boolean; reducedEffects: boolean }) {
   const paths = useMemo(() => [
-    createForkPath(false, overgrown ? "#363b2b" : "#514534"),
-    createForkPath(true, established ? "#484c39" : "#3b4130"),
+    createForkPath(false, overgrown ? "#52533f" : "#74634c"),
+    createForkPath(true, established ? "#616858" : "#525b4d"),
   ], [overgrown, established]);
   useEffect(() => () => paths.forEach(path => path.dispose()), [paths]);
   const layout = useMemo(() => {
@@ -27,16 +27,14 @@ export const ForkLandscape = memo(function ForkLandscape({ overgrown, establishe
       }
     }
     for (let i = 0; i < 16; i++) {
-      const pocket = i % 3;
-      const x = [-5.1, -9.6, -12.2][pocket], z = [1.7, 7.4, 1.1][pocket];
-      undergrowth.push({ position: [x + Math.sin(i * 2.31) * .95, .02, z + Math.cos(i * 1.77) * 1.45], scale: .45 + (i % 3) * .12, rotation: [0, i * 2.4, 0] });
+      undergrowth.push({ position: [-4 - i % 4 * 1.7, .02, -2 + Math.floor(i / 4) * 2.7], scale: .7 + (i % 3) * .14, rotation: [0, i * 2.4, 0] });
 
     }
     // Uneven swathes keep the future legible as exposed ground, not a planted grid.
     const grassCount = reducedEffects ? 12 : 30;
     for (let i = 0; i < grassCount; i++) {
-      const pocket = i % 4, t = [.08, .32, .62, .87][pocket], side = pocket % 2 ? 1 : -1;
-      grass.push({ position: [3.5 + t * 11 + side * (3.2 + Math.sin(i * 2.1) * .75), .02, -2 + t * 34 + Math.cos(i * 2.7) * 2.2], scale: [.65, .3 + (i % 4) * .1, .65], rotation: [0, i * 2.4, -.09] });
+      const t = i / grassCount, side = i % 2 ? 1 : -1;
+      grass.push({ position: [3.5 + t * 11 + side * (2.5 + Math.sin(i * 2.1) * 1.2), .02, -2 + t * 34 + Math.cos(i * 2.7)], scale: [.8, .5 + (i % 4) * .13, .8], rotation: [0, i * 2.4, -.09] });
     }
     return { trunks, crowns, undergrowth, grass, boughs: mergeArtGeometries(boughs) };
   }, [reducedEffects]);

@@ -77,11 +77,10 @@ function ForkChapterComponent({
         >
           <group name="fork-verb-let-go-moving-water">
             <WaterSurface reducedMotion={reducedMotion} reducedEffects={reducedEffects} position={[-5.2, 0.03, -4]} size={[4.8, 4.8]} color="#243c43" opacity={0.8} circle />
-            {!storyActorsActive && !letGo ? (
+            {!letGo ? (
               <group position={[-5.2, .12, -4]} rotation={[0, -.3, 0]} scale={.8}><StoryLinen /><group position={[.04,.06,0]} scale={.72}><ClothboundBook /></group></group>
             ) : null}
           </group>
-          {!storyActorsActive ? <>
           <group name="fork-verb-decline-familiar-door">
             <DoorFrame position={[5.3, 0, -3.8]} width={2.5} height={3.7} depth={0.4} color="#4b3b2f" open={!declined} />
           </group>
@@ -105,13 +104,12 @@ function ForkChapterComponent({
               {position:[.03,.8,0],size:[.8,.22,.095]},
             ]} />
           </group>
-          </> : null}
         </group>
       ) : null}
 
       {rememberOwnership ? (
         <group name="fork-lantern-ownership-memory" userData={{ oldHopeRelinquished, lanternOwned }}>
-          {!storyActorsActive && !oldHopeRelinquished && !lanternOwned ? (
+          {!oldHopeRelinquished && !lanternOwned ? (
             <FabricVeil position={[0, 1.85, 3.35]} size={[1.35, 2.5]} color="#c5b7a2" opacity={0.42} reducedMotion={reducedMotion} />
           ) : null}
           {!storyActorsActive ? <>
