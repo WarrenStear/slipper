@@ -15,6 +15,7 @@ const report = {
   limitations: [
     'Visibility uses a test-only document property/event fixture to exercise the real visibility handler synchronously; it does not certify native OS backgrounding or browser suspension policy.',
     'Live source and connection counts are instrumented Web Audio state, not a heap or device-performance measurement. The review intentionally retains node references for inspection.',
+    'Focus and visibility use test-only document properties/events to exercise real handlers; native OS backgrounding remains a separate acceptance check.',
     'This is lifecycle and resource evidence, not a listening test or acoustic-quality certification. The requested ANGLE backend and actual renderer are recorded separately; mounting the production world is not a device-performance certification.',
   ],
   audioParamTiming: {
@@ -141,6 +142,16 @@ function installAudioProbe() {
         contexts: [...contexts.values()].map(value => ({ id: value.id, state: value.context.state, sampleRate: value.context.sampleRate, closeCalls: value.closeCalls })),
         activations: [...activations], resumes: [...resumes], visibility: [...visibility],
       };
+    },
+    setFocusFixture(focused) {
+      const previousAutomationSequence = automationSequence;
+      Object.defineProperty(document, 'hasFocus', { configurable: true, value: () => focused });
+      window.dispatchEvent(new FocusEvent(focused ? 'focus' : 'blur'));
+      return { ...this.snapshot(), previousAutomationSequence };
+    },
+    descendantFocusFixture() {
+      document.querySelector('button')?.dispatchEvent(new FocusEvent('blur'));
+      return this.snapshot();
     },
     setVisibilityFixture(hidden) {
       const previousAutomationSequence = automationSequence;
@@ -312,6 +323,17 @@ try {
   await loops(10);
   sameBank(await checkpoint('visibility-fixture-restored'));
 
+  const descendant = await page.evaluate(() => window.__audioLifecycleReview.descendantFocusFixture());
+  sameBank(await checkpoint('descendant-button-blur-does-not-pause', descendant));
+  assert.equal(descendant.liveLoops, 10);
+  const blurred = await page.evaluate(() => window.__audioLifecycleReview.setFocusFixture(false));
+  sameBank(await checkpoint('window-blur-fixture-synchronous', blurred));
+  assert.equal(blurred.liveLoops, 0, 'window blur must stop voices without an animation frame');
+  assert.ok(blurred.connectedNodes.every(node => node.type !== 'source'));
+  await exactMasterZero();
+  await page.evaluate(() => window.__audioLifecycleReview.setFocusFixture(true));
+  await loops(10);
+  sameBank(await checkpoint('window-focus-fixture-restored'));
   await openSettings();
   await dialog().getByRole('button', { name: 'Continue with text journey' }).click();
   await expect(page.locator('[data-accessible-journey="true"]')).toBeVisible();

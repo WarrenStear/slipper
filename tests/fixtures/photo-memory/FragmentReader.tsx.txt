@@ -1,5 +1,3 @@
-import { FragmentTrace } from "./FragmentTrace";
-import type { JourneySceneId } from "../../lib/storyJourneyState";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Slipper3DEntry } from "../../data/slipper3dTypes";
 import type { SlipperConstellationScope } from "../../lib/experienceMode";
@@ -10,11 +8,6 @@ export type FragmentReaderProps = {
   witnessedEntryIds: string[];
   focusNonce: number;
   reducedMotion: boolean;
-  sceneId: JourneySceneId;
-  reducedEffects: boolean;
-  highContrast: boolean;
-  mobile: boolean;
-  readerTheme: "ambient" | "clean";
   showMetrics: boolean;
   kicker: string;
   freeWoods: boolean;
@@ -36,7 +29,6 @@ export type FragmentReaderProps = {
 
 /** Owns the admitted document and its local scroll/focus lifecycle. Commands stay in the shell. */
 export function FragmentReader({ entry, witnessedEntryIds, focusNonce, reducedMotion,
-  sceneId, reducedEffects, highContrast, mobile, readerTheme,
   showMetrics, kicker, freeWoods, constellationScope, canContinue, bookmarked,
   backAvailable, nextAvailable, onReturnToForest, onFollow, onSettings,
   onConstellation, onBookmark, onBack, onNext, onContinue, onArchive }: FragmentReaderProps) {
@@ -64,11 +56,8 @@ export function FragmentReader({ entry, witnessedEntryIds, focusNonce, reducedMo
   if (!admitted || !entry) return null;
   const paragraphs = entry.paragraphs?.length ? entry.paragraphs : [entry.body].filter(Boolean);
   return <section className="reader-panel" id="story-content" aria-label="Focused reading mode">
-    <div className="reader-panel-inner" data-fragment-surface="true" ref={readerRef} role="document"
+    <div className="reader-panel-inner" ref={readerRef} role="document"
       aria-labelledby="focused-reader-title" tabIndex={-1} onScroll={updateProgress}>
-      <FragmentTrace entryId={entryId} sceneId={sceneId} witnessedEntryIds={witnessedEntryIds}
-        reducedMotion={reducedMotion} reducedEffects={reducedEffects} highContrast={highContrast}
-        mobile={mobile} readerTheme={readerTheme} />
       {showMetrics ? <div className="reader-progress" role="progressbar" aria-label="Reading progress"
         aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress}>
         <i style={{ width: `${progress}%` }} />

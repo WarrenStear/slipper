@@ -9,7 +9,7 @@ import { getCurrentCinematicProfile } from "../../../cinematics/emotionalCinemat
 import { getJourneyScene } from "../../../data/journeyBlueprint";
 import { useSceneLook } from "../artDirection/SceneLookContext";
 import { useStoryEventAudio } from "./useStoryEventAudio";
-import { setNarrativeStemPan, createNarrativePlaybackGate, createNarrativeStemVoice, disposeNarrativeAudioNodes, getNarrativeStemBuffers, observeNarrativeAudioContext, pauseNarrativeAudioNodes, replaceNarrativeStemBuffer, type OwnedNarrativeStem } from "./narrativeAudioRuntime";
+import { createNarrativePlaybackGate, createNarrativeStemVoice, disposeNarrativeAudioNodes, getNarrativeStemBuffers, observeNarrativeAudioContext, pauseNarrativeAudioNodes, replaceNarrativeStemBuffer, type OwnedNarrativeStem } from "./narrativeAudioRuntime";
 import { createProductionAudioLoader } from "./productionAudioLoader";
 import type { RenderQualityProfile } from "../renderQuality";
 import {
@@ -19,16 +19,13 @@ import {
   type NarrativeAudioStemId,
 } from "./narrativeAudioProfiles";
 
-import { audioDocumentIsForeground, observeAudioForeground } from "./audioForeground";
-import { applyAudioApproachMix, resolveAudioApproachMix, type AudioApproachTarget } from "./audioApproach";
-
 type StemRuntime = OwnedNarrativeStem & {
   id: NarrativeAudioStemId;
 };
 type AudioRuntime = { listener: THREE.AudioListener; stems: StemRuntime[]; started: boolean; sync: () => void; production: ReturnType<typeof createProductionAudioLoader> | null };
-export type NarrativeAudioDirectorProps = { qualityProfile: RenderQualityProfile; enabled?: boolean; approachTarget?: AudioApproachTarget | null };
+type NarrativeAudioDirectorProps = { qualityProfile: RenderQualityProfile; enabled?: boolean };
 
-export function NarrativeAudioDirector({ qualityProfile, enabled = true, approachTarget = null }: NarrativeAudioDirectorProps) {
+export function NarrativeAudioDirector({ qualityProfile, enabled = true }: NarrativeAudioDirectorProps) {
   const { camera } = useThree();
   const presentation = useSceneLook();
   const audioEnabled = useSettingsStore((state) => state.audioEnabled);
@@ -46,10 +43,6 @@ export function NarrativeAudioDirector({ qualityProfile, enabled = true, approac
   const [runtime, setRuntime] = useState<AudioRuntime | null>(null);
   const runtimeRef = useRef<AudioRuntime | null>(null);
   const targetRef = useRef({ volume: 0, lowpassHz: 600 });
-  const approachRef = useRef({ addition: 0, pan: 0, lowpassHz: 600 });
-  const forward = useMemo(() => new THREE.Vector3(), []);
-  const approachFacts = useMemo(() => ({ distance: Infinity, rightBearing: 0, currentSceneId: "", sharedStillness: 0,
-    spatialEnabled: true, film: { audioPressure: 1, silenceBias: 0, lowpassHz: 18000 } }), []);
   const sceneId = presentation?.look.sceneId ?? journeySceneId;
   const sceneChapterId = getJourneyScene(sceneId)?.chapterId ?? chapterId;
   // SceneLook owns the completed Surrender fade. Do not jump the profile master to zero.
@@ -74,10 +67,9 @@ export function NarrativeAudioDirector({ qualityProfile, enabled = true, approac
       id, ...createNarrativeStemVoice(listener, bank.get(id)!), volume: 0,
     }));
     const current: AudioRuntime = { listener, stems, started: false, sync: () => {}, production: null };
-    let foreground = audioDocumentIsForeground(document);
     const allowed = () => {
       const settings = useSettingsStore.getState();
-      return enabledRef.current && settings.audioEnabled && settings.audioVolume > 0 && !settings.drawerOpen && foreground && audioDocumentIsForeground(document);
+      return enabledRef.current && settings.audioEnabled && settings.audioVolume > 0 && !settings.drawerOpen && !document.hidden;
     };
     const production = createProductionAudioLoader({
       context: listener.context,
@@ -119,17 +111,14 @@ export function NarrativeAudioDirector({ qualityProfile, enabled = true, approac
     window.addEventListener("pointerdown", handleGesture, { passive: true });
     window.addEventListener("keydown", handleGesture, { passive: true });
     window.addEventListener(NARRATIVE_AUDIO_ACTIVATION_EVENT, current.sync);
-    const unobserveForeground = observeAudioForeground(window, document, value => {
-      foreground = value;
-      current.sync();
-    });
+    document.addEventListener("visibilitychange", current.sync);
     return () => {
       unsubscribe();
       unobserveContext();
       window.removeEventListener("pointerdown", handleGesture);
       window.removeEventListener("keydown", handleGesture);
       window.removeEventListener(NARRATIVE_AUDIO_ACTIVATION_EVENT, current.sync);
-      unobserveForeground();
+      document.removeEventListener("visibilitychange", current.sync);
       gate.dispose();
       camera.remove(listener);
       if (runtimeRef.current === current) runtimeRef.current = null;
@@ -142,32 +131,11 @@ export function NarrativeAudioDirector({ qualityProfile, enabled = true, approac
     const current = runtimeRef.current;
     if (!current) return;
     const film = getCurrentCinematicProfile();
-    const audible = enabled && audioEnabled && !drawerOpen && audioDocumentIsForeground(document) && current.started;
+    const audible = enabled && audioEnabled && !drawerOpen && !document.hidden && current.started;
     const qualityScale = qualityProfile.quality === "low" ? .56 : qualityProfile.quality === "medium" ? .78 : 1;
     const blend = 1 - Math.exp(-Math.max(0, Math.min(delta, .08)) * 1.8);
-    let approachDistance = Infinity, rightBearing = 0;
-    if (approachTarget) {
-      const dx = approachTarget.position[0] - camera.position.x;
-      const dz = approachTarget.position[2] - camera.position.z;
-      approachDistance = Math.hypot(dx, dz);
-      camera.getWorldDirection(forward);
-      const facingLength = Math.hypot(forward.x, forward.z);
-      if (approachDistance > .001 && facingLength > .001) rightBearing = (-forward.z * dx + forward.x * dz) / (approachDistance * facingLength);
-    }
-    approachFacts.distance = approachDistance;
-    approachFacts.rightBearing = rightBearing;
-    approachFacts.currentSceneId = sceneId;
-    approachFacts.sharedStillness = presentation?.stillness ?? 0;
-    approachFacts.spatialEnabled = !reducedEffects && !reducedMotion;
-    approachFacts.film = film;
     for (const stem of current.stems) {
       const target = resolveNarrativeStemTarget(targetRef.current, stem.id, profile, presentation?.look ?? null, presentation?.stillness ?? 0, film);
-      const approach = resolveAudioApproachMix(approachRef.current, stem.id, approachTarget, approachFacts);
-      applyAudioApproachMix(target, approach);
-      const pan = target.volume > 0 ? approach.pan * approach.addition / target.volume : 0;
-      const spatial = audible && !reducedEffects && !reducedMotion && approach.addition > .00001;
-      setNarrativeStemPan(stem, pan, spatial);
-      if (stem.retiring) setNarrativeStemPan(stem.retiring, pan, spatial);
       const volume = resolveAudioTargetVolume(target.volume * qualityScale * (reducedEffects ? .65 : 1), audioVolume, audible);
       // No requests before trusted playback, while muted/hidden, or for unused scene layers.
       if (volume > .00001) current.production?.request(stem.id);

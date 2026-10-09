@@ -1464,3 +1464,72 @@ and state galleries, all fourteen pairs and twenty-eight images pass their
 original resource bounds. Root inspected the affected receiver images; this is
 not a claim that isolated chapter fixtures reproduce the complete walking world.
 Evidence is retained under `artifacts/rebuild-20261005/phase8-*`.
+
+
+### Visual phase 9 — quiet audio, deliberate photographs and readable fragments
+
+Ten authored recording slots retain null URLs and their existing procedural
+fallbacks. Valid current navigation supplies bounded distance/bearing changes
+to the existing water, wood, fire and cloth stems; no new loop bank or narrative
+owner is introduced. Dry procedural buffer generation stays unchanged.
+
+All sixty-six generated photograph associations remain dormant. A photograph
+requires an explicit authored mapping, deliberate inspection intent, live story
+participation and the existing quality/accessibility admission gates before any
+image request. The single-source pool bounds fetch/decode work, cancels an
+unowned download and disposes late decoded images. None of the thirty-four
+existing photographs is newly approved or assigned to a canonical memory.
+
+The reader uses twelve static, faint material traces behind an opaque surface.
+Clean, reduced and high-contrast settings omit decorative traces; forced colors
+uses system surfaces. Clean/high-contrast text and footer controls remain dark
+on opaque ivory with visible focus, preserving exact prose, reading order,
+bookmarks and command ownership.
+
+Native photo capability passes thirty-seven technical cases, including all
+denials, three source/remount cycles, invalid response/image recovery, actual
+fetch cancellation and late decode cleanup. Nineteen images include explicitly
+cloned review mappings only. The corrected reader run passes forty-six normal
+cases and three forced-color views across desktop, portrait and landscape.
+Measured clean-mode minima are 17.93:1 for prose and 12.38:1 for enabled controls.
+An ambiguous implicit/explicit document selector and a measurement during the
+existing 160 ms CSS transition initially failed; preserved diagnostic runs led to
+an exact accessible-name selector, scoped remaining queries and a bounded wait
+for actual transition completion. No contrast threshold or production transition
+was weakened.
+
+The real App audio lifecycle passes trusted enable/Begin, Settings pause,
+mute/unmount, unmute with bank reuse, zero volume, visibility/focus fixtures and
+text-mode handoff. It retains ten buffers and one context, returns to zero
+connected nodes on unmount and fetches no dormant recording or photograph. The
+visibility and window-focus checks are explicitly instrumented fixtures.
+
+The release check passes 1,342 unit cases, seven security cases, type, content
+and asset validation, production build and Pages Functions. Runtime, asset,
+E2E and test bytes match the frozen after-source; the served app build is sealed
+separately. Evidence is retained under `artifacts/rebuild-20261005/phase9-*`.
+
+Two explicitly seeded source-owner sound fixtures captured the actual procedural
+master mix: water/timber 22.38 seconds (540,703 WebM bytes) and fire/Surrender
+18.66 seconds (403,603 WebM bytes), within the 30-second/2 MiB capture limits.
+Both passed trusted context suspension, frozen-clock exact-zero automation,
+ended-track/tap cleanup, resume with the same ten-buffer bank and final return
+to the single fixture Driver; Fire also passed WebGL-loss capture cleanup.
+The completed run reports no browser errors or asset requests. These are
+technical capture and lifecycle results from seeded fixtures, not an earned
+journey or physical background-tab test. The clips remain unheard by a reviewer;
+nonzero RMS and zero clipped samples do not establish timbre, comfort or aesthetic
+acceptance, and no authored recording is approved. Reports and clips are retained
+in `artifacts/rebuild-20261005/phase9-final-ui-owner-ready-sound-native`; prior
+failed runs and their completed water clip remain preserved.
+
+Two native master-output clips capture the unchanged procedural bank with trusted
+camera input in explicitly seeded approach fixtures: water/timber (22.38 seconds,
+540,703 encoded bytes) and Fire/Surrender (18.66 seconds, 403,603 encoded bytes).
+Both remain below the 30-second/2 MiB recording caps and pass suspend, resume,
+source cleanup and exact final frame-owner checks. The capture branch also cleans
+up on WebGL context loss. Suspended-context evidence records zero live sources
+and exact zero-gain automation at the frozen audio clock; the browser's stale
+suspended gain getter is retained in the report. Original background-focus,
+readiness and getter failures are preserved. These are technical capture results,
+not an earned route or a listening approval; no authored recording is activated.

@@ -1,7 +1,7 @@
 import { NARRATIVE_AUDIO_STEM_IDS, type NarrativeAudioStemId } from "./narrativeAudioProfiles.ts";
 import { Audio, type AudioListener } from "three";
 
-type OwnedVoice = { sound: Audio; filter: BiquadFilterNode; fade?: GainNode; pan?: StereoPannerNode; spatialConnected?: boolean };
+type OwnedVoice = { sound: Audio; filter: BiquadFilterNode; fade?: GainNode };
 export type OwnedNarrativeStem = OwnedVoice & { volume: number; retiring?: OwnedVoice };
 export const PRODUCTION_STEM_CROSSFADE_SECONDS = .35;
 
@@ -30,19 +30,8 @@ function disposeVoice(voice: OwnedVoice) {
   if (voice.sound.source) voice.sound.source.onended = null;
   voice.sound.disconnect();
   voice.filter.disconnect();
-  voice.pan?.disconnect();
   voice.sound.getOutput().disconnect();
   voice.fade?.disconnect();
-}
-
-/** Supported Three filter routing leaves the gain→crossfade→listener chain untouched. */
-export function setNarrativeStemPan(voice: OwnedVoice, value: number, active: boolean) {
-  const pan = Number.isFinite(value) ? Math.max(-.6, Math.min(.6, value)) : 0;
-  if (active && !voice.pan) voice.pan = voice.sound.context.createStereoPanner();
-  if (voice.pan) voice.pan.pan.value = active ? pan : 0;
-  if (Boolean(voice.spatialConnected) === active) return;
-  voice.sound.setFilters(active ? [voice.filter, voice.pan!] : [voice.filter]);
-  voice.spatialConnected = active;
 }
 
 function attachFade(listener: AudioListener, voice: OwnedVoice, value: number) {
@@ -62,9 +51,8 @@ function attachFade(listener: AudioListener, voice: OwnedVoice, value: number) {
 export function replaceNarrativeStemBuffer(listener: AudioListener, stem: OwnedNarrativeStem, buffer: AudioBuffer) {
   if (stem.sound.buffer === buffer) return false;
   if (stem.retiring) { disposeVoice(stem.retiring); stem.retiring = undefined; }
-  const previous: OwnedVoice = { sound: stem.sound, filter: stem.filter, fade: stem.fade, pan: stem.pan, spatialConnected: stem.spatialConnected };
+  const previous: OwnedVoice = { sound: stem.sound, filter: stem.filter, fade: stem.fade };
   const next = createNarrativeStemVoice(listener, buffer, previous.filter.frequency.value);
-  setNarrativeStemPan(next, previous.pan?.pan.value ?? 0, Boolean(previous.spatialConnected));
   const previousSource = previous.sound.source;
   if (previous.sound.isPlaying && previousSource) {
     const now = listener.context.currentTime;
@@ -93,8 +81,6 @@ export function replaceNarrativeStemBuffer(listener: AudioListener, stem: OwnedN
   stem.sound = next.sound;
   stem.filter = next.filter;
   stem.fade = next.fade;
-  stem.pan = next.pan;
-  stem.spatialConnected = next.spatialConnected;
   return true;
 }
 
@@ -106,7 +92,6 @@ export function pauseNarrativeAudioNodes(listener: AudioListener, stems: readonl
     if (stem.sound.isPlaying) stem.sound.pause();
     // Three.pause stops a source but does not detach its filter connection.
     stem.sound.disconnect();
-    setNarrativeStemPan(stem, 0, false);
     stem.sound.setVolume(0);
     stem.volume = 0;
     if (stem.fade) {

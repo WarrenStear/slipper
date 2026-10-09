@@ -6,8 +6,6 @@ import { getGestureActivatedNarrativeAudioContext } from "../../../lib/narrative
 import { MAX_CACHED_EVENT_BUFFERS, MAX_STORY_EVENT_VOICES, eventSilenceGain, materialSoundSamples, resolveStoryEventAudioCue } from "./storyEventAudio";
 import { observeNarrativeAudioContext } from "./narrativeAudioRuntime";
 
-import { audioDocumentIsForeground, observeAudioForeground } from "./audioForeground";
-
 type Voice = { source: AudioBufferSourceNode; filter: BiquadFilterNode; gain: GainNode; pan: StereoPannerNode; requestedGain: number; stop: () => void };
 type Silence = { start: number; hold: number; floor: number };
 
@@ -20,7 +18,6 @@ export function useStoryEventAudio({ listener, enabled, audioVolume, reducedEffe
   const buffers = useRef(new Map<string, AudioBuffer>());
   const silence = useRef<Silence | null>(null);
   const ambientGain = useRef(1);
-  const foreground = useRef(audioDocumentIsForeground(document));
   const config = useRef({ enabled, audioVolume, reducedEffects, reducedMotion, sceneLookOwnsSurrender });
   config.current = { enabled, audioVolume, reducedEffects, reducedMotion, sceneLookOwnsSurrender };
 
@@ -32,13 +29,14 @@ export function useStoryEventAudio({ listener, enabled, audioVolume, reducedEffe
   }, [enabled, audioVolume]);
 
   useEffect(() => {
-    return observeAudioForeground(window, document, value => {
-      foreground.current = value;
-      if (value) return;
+    const pauseHidden = () => {
+      if (!document.hidden) return;
       for (const voice of [...voices.current]) voice.stop();
       silence.current = null;
       ambientGain.current = 1;
-    });
+    };
+    document.addEventListener("visibilitychange", pauseHidden);
+    return () => document.removeEventListener("visibilitychange", pauseHidden);
   }, []);
 
   useEffect(() => {
@@ -54,7 +52,7 @@ export function useStoryEventAudio({ listener, enabled, audioVolume, reducedEffe
     // Hydration never publishes: a restored grief/recognition beat stays silent.
     const additions = eventIds.slice(-3);
     const context = getGestureActivatedNarrativeAudioContext();
-    if (!config.current.enabled || !foreground.current || !audioDocumentIsForeground(document) || !listener || !context || context !== listener.context || context.state !== "running") return;
+    if (!config.current.enabled || document.hidden || !listener || !context || context !== listener.context || context.state !== "running") return;
     for (const eventId of additions) {
       // Shared SceneLook stillness owns the gradual Surrender and its return.
       // The legacy 140 ms event duck would otherwise cut across that same transition.

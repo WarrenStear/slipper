@@ -1,0 +1,15 @@
+{
+  "commit": "05e34a17d7ec311f5cd1957b89f44f70a839fe76",
+  "files": {
+    "src/components/three/audio/NarrativeAudioDirector.tsx": "83ab9a35e972155d2b6f765a0224d84348d81278ededc09916c822ff37786b09",
+    "src/components/three/audio/narrativeAudioProfiles.ts": "35944e70a7e34cb149c3c4c3218085be36f017c099e56e2664ac715203d9b63c",
+    "src/components/three/audio/narrativeAudioRuntime.ts": "575a10aa5c489715002a8a804f540896cfa5d9cb0b55eef39a044e3dd3b97a86",
+    "src/components/three/audio/productionAudioLoader.ts": "2fab0c6739eeebec5786622962c21f269f73d259c3e2d88706905f9b786e8d7b",
+    "src/components/three/audio/productionAudioRegistry.ts": "548bc87064c300d548f2c6b5ececeb24d3fcc886980002e10bba78ce7038d69f",
+    "src/components/three/audio/useStoryEventAudio.ts": "c0db618328d3244fafa04e655e9858612e6ea3f0de61b62dd382fc86c549850b",
+    "src/components/three/audio/storyEventAudio.ts": "85a2aab0b6e3d47e51fb023669aff0929dd750ce24224d6881b7224fe4ec311c",
+    "src/lib/narrativeAudioActivation.ts": "642090717c7126582828fbfc1973f67f6226e965ff09ecb06350f66bf868963e",
+    "src/lib/audioVolume.ts": "fac814baf98e72a1114c8cbe84fbe88470709ba8f30935a7b9c49b28d92d3a1f",
+    "src/components/three/NarrativeAudioEngine.tsx": "fb39f54fe6012b3724ae912b35fcc0563ee2d9e741b08f5ffaf88beeb2c6ebe5"
+  }
+}

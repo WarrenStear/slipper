@@ -9,6 +9,7 @@ import * as jsxRuntime from 'react/jsx-runtime';
 import ts from 'typescript';
 
 register('./canonical-node-loader.mjs', import.meta.url);
+register('./quiet-tsx-loader.mjs', import.meta.url);
 const require = createRequire(import.meta.url), Reconciler = require('react-reconciler');
 const { ConcurrentRoot, DefaultEventPriority } = require('react-reconciler/constants');
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
@@ -77,7 +78,11 @@ async function actualOwner(relative, overrides = {}) {
   for (const node of ast.statements) if (ts.isImportDeclaration(node) && !node.importClause?.isTypeOnly) {
     const name = node.moduleSpecifier.text;
     if (name in modules) continue;
-    modules[name] = await import(new URL(/\.[a-z]+$/i.test(name) ? name : `${name}.ts`, url));
+    try { modules[name] = await import(new URL(/\.[a-z]+$/i.test(name) ? name : `${name}.ts`, url)); }
+    catch (error) {
+      if (error.code !== 'ERR_MODULE_NOT_FOUND' || /\.[a-z]+$/i.test(name)) throw error;
+      modules[name] = await import(new URL(`${name}.tsx`, url));
+    }
   }
   const exports = {};
   vm.runInNewContext(ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022,

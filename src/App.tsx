@@ -385,8 +385,9 @@ function ExperienceApplication() {
     }));
   }, [visitedEntryIds, witnessedEntryIds]);
   const activeVisual = useMemo(
-    () => visuals.find((visual) => visual.id === activeEntry?.engine3d.linkedVisualId),
-    [activeEntry],
+    () => canReadStoryEntry(resolvedActiveEntryId, { witnessedEntryIds })
+      ? visuals.find((visual) => visual.id === activeEntry?.engine3d.linkedVisualId) : undefined,
+    [activeEntry, resolvedActiveEntryId, witnessedEntryIds],
   );
   const storyWorldMemory = useMemo<WorldMemoryState>(
     () => ({
@@ -836,6 +837,8 @@ function ExperienceApplication() {
 
       {mode === "read" && canReadActiveEntry ? <FragmentReader entry={activeEntry} witnessedEntryIds={witnessedEntryIds}
         focusNonce={readerFocusNonce} reducedMotion={reducedMotion} showMetrics={experienceCapabilities.showJourneyMetrics}
+        sceneId={storySceneId} reducedEffects={reducedEffects} highContrast={highContrast}
+        mobile={mobileViewport.isMobile} readerTheme={readerTheme}
         kicker={experienceCapabilities.showJourneyMetrics
           ? `${activeJourneyChapter?.title ?? activeEntry?.chapter} / ${sceneLabel(activeEntry)} / ${currentChapterProgress || 1} of ${currentChapterEntries.length || 1}`
           : activeNarrativeScene?.title ?? "A remembered fragment"}

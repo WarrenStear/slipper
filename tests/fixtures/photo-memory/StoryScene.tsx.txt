@@ -1,4 +1,3 @@
-import { MemoryShrine } from "../../photos/PhotoMemory";
 import type { QuietGuidanceActivity } from "../../ui/quietGuidancePresentation";
 import { CinematicFrameOverlay } from "./artDirection/LegacyFrameOverlay";
 import { useCompressedGLTF } from "../../lib/assets/gltfLoaders";
@@ -12,7 +11,7 @@ import { openingEnclosed } from "../../cinematics/openingPresentation";
 import { SceneLookDirector } from "./artDirection/SceneLookDirector";
 import { SpatialProseDirector } from "./storyText/SpatialProseDirector";
 import { Component, memo, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ErrorInfo, type ReactNode } from "react";
-import { Float, Html } from "@react-three/drei";
+import { Float, Html, useTexture } from "@react-three/drei";
 import { BallCollider, InstancedRigidBodies } from "@react-three/rapier";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
@@ -23,7 +22,6 @@ import type { EulerTuple, Slipper3DEntry, Slipper3DVisual, Vector3Tuple } from "
 import { getJourneyChapterForEntry, getJourneyEntryContext, getJourneySceneForEntry } from "../../data/journeyNarrative";
 import { getJourneySceneLayout, getJourneyEntryWorldPosition } from "../../data/journeyWorldLayout";
 import NarrativeAudioDirector from "./audio/NarrativeAudioDirector";
-import { createAudioApproachTarget } from "./audio/audioApproach";
 import EnvironmentalThreshold from "./journey/EnvironmentalThreshold";
 import JourneyWorldComposition from "./journey/JourneyWorldComposition";
 import WorldMemoryDirector, { type WorldMemoryState } from "./worldMemory/WorldMemoryDirector";
@@ -165,6 +163,57 @@ function applyGroupOpacity(group: THREE.Group, opacityScale: number) {
       materialWithOpacity.opacity = userData.slipperBaseOpacity * opacityScale;
     }
   });
+}
+
+function MemoryShrine({ visual, entry }: { visual: Slipper3DVisual; entry: Slipper3DEntry }) {
+  const texture = useTexture(visual.src);
+  const isSquare = visual.orientation === "square";
+  const width = isSquare ? 2.45 : 1.72;
+  const height = isSquare ? 2.45 : 2.75;
+  const z = entry.engine3d.sceneKind === "archive" ? -6.7 : -6.15;
+  const color = entry.engine3d.environmentGradient?.[2] ?? "#d8d0ba";
+
+  useEffect(() => {
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.wrapS = THREE.ClampToEdgeWrapping;
+    texture.wrapT = THREE.ClampToEdgeWrapping;
+    texture.needsUpdate = true;
+  }, [texture]);
+
+  return (
+    <group position={[0, 0.42, z]}>
+      <mesh position={[0, 0, -0.055]}>
+        <planeGeometry args={[width + 0.58, height + 0.58]} />
+        <meshBasicMaterial color="#050506" transparent opacity={0.7} />
+      </mesh>
+      <mesh position={[0, 0, -0.034]}>
+        <planeGeometry args={[width + 0.28, height + 0.28]} />
+        <meshBasicMaterial color={color} transparent opacity={0.18} />
+      </mesh>
+      <mesh position={[-width * 0.68, 0.05, -0.02]} rotation={[0, 0, -0.08]}>
+        <planeGeometry args={[0.28, height * 0.86]} />
+        <meshBasicMaterial color={color} transparent opacity={0.085} side={THREE.DoubleSide} />
+      </mesh>
+      <mesh position={[width * 0.68, -0.04, -0.02]} rotation={[0, 0, 0.08]}>
+        <planeGeometry args={[0.28, height * 0.86]} />
+        <meshBasicMaterial color={color} transparent opacity={0.085} side={THREE.DoubleSide} />
+      </mesh>
+      <mesh>
+        <planeGeometry args={[width, height]} />
+        <meshBasicMaterial map={texture} toneMapped={false} transparent opacity={0.94} />
+      </mesh>
+      <mesh position={[0, -height * 0.58, 0.02]} rotation={[Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[0.72, 1.22, 96]} />
+        <meshBasicMaterial color={color} transparent opacity={0.1} side={THREE.DoubleSide} />
+      </mesh>
+      <Html transform center position={[0, -height * 0.66, 0.04]} distanceFactor={1.28} zIndexRange={[8, 0]}>
+        <div className="slipper-visual-plaque">
+          <span>{visual.orientation}</span>
+          <strong>{visual.alt ?? entry.title}</strong>
+        </div>
+      </Html>
+    </group>
+  );
 }
 
 function WaterMirrorShrine({ entry, visitedCount }: { entry: Slipper3DEntry; visitedCount: number }) {
@@ -2685,6 +2734,15 @@ export function StoryScene({
     terrainMorph,
   ]);
 
+  const visualByEntryId = useMemo(() => {
+    const visualMap = new Map<string, Slipper3DVisual>();
+    for (const candidateEntry of entries) {
+      const candidateVisual = visuals.find((candidate) => candidate.id === candidateEntry.engine3d.linkedVisualId);
+      if (candidateVisual) visualMap.set(candidateEntry.id, candidateVisual);
+    }
+    return visualMap;
+  }, [entries, visuals]);
+
   if (!entry || !visualState) {
     return (
       <Html center>
@@ -2744,12 +2802,7 @@ export function StoryScene({
       </> : null}
       {/* MasterPlayerLantern is mounted by StorySceneWithMasterLantern and is the sole carried lantern. */}
       {audioEnabled && !narrativeAudioSuppressed && mode === "explore" ? (
-        <NarrativeAudioDirector qualityProfile={qualityProfile} approachTarget={
-          navigationTargetNode ? createAudioApproachTarget(
-            narrativeScene?.id ?? "", navigationTargetNode.entry.id, navigationTargetNode.position,
-            useJourneyStore.getState(),
-          ) : null
-        } />
+        <NarrativeAudioDirector qualityProfile={qualityProfile} />
       ) : null}
       <GuidanceController
         nodes={spatialNodes}
@@ -2826,8 +2879,7 @@ export function StoryScene({
             <WorldStoryNode
               key={node.entry.id}
               node={node}
-              visual={node.isActive && !getJourneySceneForEntry(node.entry.id) && witnessedEntryIds.includes(node.entry.id)
-                ? visuals.find(visual => visual.id === node.entry.engine3d.linkedVisualId) : undefined}
+              visual={visualByEntryId.get(node.entry.id)}
               activeEntry={entry}
               narrativeWorldState={narrativeWorldState}
               mode={mode}

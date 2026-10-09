@@ -13,6 +13,8 @@ on:
       - 'src/components/three/storyEvents/StoryEventDirector.tsx'
       - 'scripts/review-guided-presentation.mjs'
       - 'src/components/three/audio/**'
+      - 'src/photos/**'
+      - 'src/ui/reader/**'
       - 'src/App.tsx'
       - 'src/stores/useJourneyStore.ts'
       - 'tests/guided-story.test.mjs'
