@@ -10,7 +10,6 @@ import {
   FloatingMotes,
   LanternProp,
   SceneGround,
-  WaterSurface,
 } from "../../components/three/chapters/ChapterPrimitives";
 import { ForestDepth } from "../../components/three/environment/EnvironmentDressing";
 import { MeadowFlowers } from "../../components/three/environment/WoodlandDetails";
@@ -55,10 +54,7 @@ function FirstWoodSceneComponent({
       </RigidBody> : null}
 
       {isMeadow ? (
-        <>
-          <WaterSurface reducedMotion={reducedMotion} reducedEffects={reducedEffects} position={[-4.8, 0.02, 1.4]} size={[5.5, 5.5]} color="#263d43" opacity={0.82} circle />
-          <MeadowFlowers reducedEffects={reducedEffects} />
-        </>
+        <MeadowFlowers reducedEffects={reducedEffects} />
       ) : !eventDriven ? (
         <CandleField qualityProfile={qualityProfile} reducedEffects={reducedEffects} count={10} radius={4.8} />
       ) : null}

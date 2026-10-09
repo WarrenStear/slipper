@@ -3,7 +3,6 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import type { StoryObjectKind } from "../../../storyEvents/storyEventTypes";
 import { TimberAssembly } from "../chapters/ChapterArt";
-import type { ConstructionPiece } from "../chapters/chapterArtGeometry";
 import { DoorFrame, KeyProp, LanternProp } from "../chapters/ChapterPrimitives";
 import { ClothboundBook, DomesticChair, FoldedPaperBird, MemoryFeather, MemoryRose, StoryLinen, StoryPaper } from "./StoryHeroProps";
 import { TactileMaterial } from "./TactileMaterial";
@@ -51,21 +50,8 @@ function SovereignMirrorImage() {
   </group>;
 }
 
-// The canonical wipe pose and the existing ground-contact offset stay fixed.
-// Low, differently rolled fragments break the long square top into split wood.
-// These static inputs reuse the same three body and two split-grain pieces.
-const FORK_FALLEN_WOOD = [
-  { position: [-.03, -.3, 0], size: [.88, .18, .23], rotation: [.22, .04, -.085] },
-  { position: [-.36, -.33, .035], size: [.5, .095, .16], rotation: [-.19, -.4, .14] },
-  { position: [.34, -.382, .05], size: [.5, .08, .12], rotation: [.31, .48, -.16] },
-] satisfies ConstructionPiece[];
-const FORK_SPLIT_GRAIN = [
-  { position: [-.172142, -.300918, -.112311], size: [.19, .008, .004], rotation: [.22, .04, -.055] },
-  { position: [.122687, -.252359, -.113543], size: [.15, .006, .004], rotation: [.22, .04, -.155] },
-] satisfies ConstructionPiece[];
-
 /** Same object identities and world/hand interface; richer presentation only. */
-export const StoryObjectModel = memo(function StoryObjectModel({ objectId, kind, state = "idle", reducedMotion = false }: { objectId?: string; kind: StoryObjectKind; state?: string; reducedMotion?: boolean }) {
+export const StoryObjectModel = memo(function StoryObjectModel({ kind, state = "idle", reducedMotion = false }: { kind: StoryObjectKind; state?: string; reducedMotion?: boolean }) {
   const burnt = state === "burned" || state === "ash";
   const cream = burnt ? "#28221e" : "#d5cdbd";
   if (kind === "lantern") return <LanternProp position={[0, 0, 0]} scale={0.65} reducedMotion={reducedMotion} />;
@@ -94,11 +80,6 @@ export const StoryObjectModel = memo(function StoryObjectModel({ objectId, kind,
   if (kind === "candle") return <AuthoredCandle lit={state === "lit" || state === "awakened"} color={cream} />;
   if (kind === "basket" || kind === "nest") return <WovenNest />;
   if (kind === "seed") return <StorySeed grown={state === "planted" || state === "grown"} />;
-  if (kind === "marker" && objectId === "fork.mark") return <group name="worn-fallen-timber-mark" position={[0, -.14, 0]} rotation={[0, .12, 0]}>
-    <TimberAssembly name="fork-fallen-timber-body" color={state === "erased" ? "#635947" : "#554b3b"} pieces={FORK_FALLEN_WOOD} />
-    <TimberAssembly name="fork-fallen-timber-splits" color="#393429" pieces={FORK_SPLIT_GRAIN} />
-    {state === "erased" ? null : <TimberPiece position={[-.019196, -.269979, -.11269]} rotation={[.22, .04, -.085]} size={[.34, .033, .006]} color="#b0a48e" seed={19} />}
-  </group>;
   if (kind === "marker") return <group name="scraped-timber-path-marker" rotation={[0,.08,-.055]}>
     <TimberAssembly color={state === "erased" ? "#635947" : "#554b3b"} pieces={[
       {position:[0,.29,.032],size:[.065,.7,.08]},

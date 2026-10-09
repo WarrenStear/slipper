@@ -1523,13 +1523,146 @@ acceptance, and no authored recording is approved. Reports and clips are retaine
 in `artifacts/rebuild-20261005/phase9-final-ui-owner-ready-sound-native`; prior
 failed runs and their completed water clip remain preserved.
 
-Two native master-output clips capture the unchanged procedural bank with trusted
-camera input in explicitly seeded approach fixtures: water/timber (22.38 seconds,
-540,703 encoded bytes) and Fire/Surrender (18.66 seconds, 403,603 encoded bytes).
-Both remain below the 30-second/2 MiB recording caps and pass suspend, resume,
-source cleanup and exact final frame-owner checks. The capture branch also cleans
-up on WebGL context loss. Suspended-context evidence records zero live sources
-and exact zero-gain automation at the frozen audio clock; the browser's stale
-suspended gain getter is retained in the report. Original background-focus,
-readiness and getter failures are preserved. These are technical capture results,
-not an earned route or a listening approval; no authored recording is activated.
+### Visual phase 10 — restraint, grounded remnants and the final walk
+
+The quiet mobile shell keeps its original touch surfaces and handlers while
+reducing broad control backgrounds to a small Look cue. Explicit high contrast
+retains full labels and control surfaces, including idle presentation. Accepted
+Meadow rest warms the existing incident-light tint without increasing intensity,
+and accepted Surrender reduces later ambient rates by sixteen percent through
+the existing scene look owner. Existing trees and fallen timber gain a bounded,
+more architectural rhythm along the Seer-to-House approach; paths, populations,
+colliders and world topology stay unchanged.
+
+The Fork's required mark becomes low, broken timber touching the actual ground.
+It keeps its object ID, wipe prerequisite, canonical interaction position/radius
+and removal of abrasion after the accepted event. Close, ordinary discovery, low
+portrait and reduced-motion comparisons retain the doorway as the dominant
+landmark. A matched-camera lifecycle pair passes unchanged exact resource limits.
+The original unmatched-camera remount and later settle timeout remain preserved;
+a fresh unchanged run passed, without establishing the timeout's external cause.
+
+Far woodland now excludes trunks whose transformed roots would extend beyond
+the existing terrain boundary. Every surviving matrix and tint stays exact. The
+Crowned Return comparisons pass on high desktop, low portrait and reduced motion,
+removing visibly unsupported distant trees without extending the world or adding
+instances. The optional alpha-leaf experiment remains excluded: its review stopped
+on the unchanged baseline's remount comparison before after-source images were
+captured. That is incomplete qualification, not an established candidate defect.
+
+The pre-walk source check passes 1,364 unit cases, seven security cases, type,
+content and asset validation, the production build and Pages Functions. Its first
+attempt caught a new test helper's dynamic-code API; the helper now reads the
+actual owner's closed equality expression through the TypeScript AST. All four
+existing Meadow test bodies and the global lint rule remain unchanged. The
+metadata-only world compiler output is restored after semantic equality checks.
+
+The earned walk exposed a premature Blue Moon flock: thirty-six paper forms at
+high quality were suspended over the sanctuary before the existing origami
+awakening. The visual flock now mounts only after that accepted outcome. The
+single folded Paper Swan target, its rose-placement prerequisite, Swan actor,
+post-awakening tier counts and the River release remain unchanged. An actual-owner
+render test covers the before, awakened and restored-earlier states; the complete
+release check was repeated after this final restraint change.
+
+The physical review also exposed a large decorative Meadow pond and a plain tan
+woodland hillside beside the mapped forest floor. The Meadow-only pond is removed;
+its resting interaction, flowers, Swan and ground remain. The three woodland
+landscapes reuse the existing ground albedo through disposable private transform
+clones, with their original untextured fallback. Other biome materials and all
+terrain buffers, colliders and topology remain unchanged. Six paired native
+comparisons cover high portrait, low portrait and reduced effects. Original
+resource non-increase limits pass; Meadow loses one water frame owner.
+
+Actual worker populations showed that the first House silhouette field reached
+no surviving trees across 168 sampled windows. Its bounded rise and lateral
+falloff now reach a small minority of existing flank trees, preserving varied
+families, coordinate identities and populations. Five paired high/low inspections
+show the upright silhouette; two separate close pairs qualify the subtle fallen
+timber alignment. These are seeded inspections, including a deliberately backward
+late view, and do not establish physical arrival or House traversal.
+
+The retained v4 earned run completed eleven scenes before an external camera
+observer rejected a Seer departure transform. It reported no application browser
+or console errors. Source reproduction shows that the reflector can leave the
+Three.js dirty flag set on a coherent matrix; conversely, a changed local pose can
+leave that flag clear while its matrix is stale. The review observer therefore
+checks numeric local and ancestor transform coherence. Production camera,
+reflection, story and movement code are unchanged by this diagnostic correction.
+
+After these corrections, the complete release check passes 1,367 unit cases,
+seven security cases, type/content/assets, the production build and Pages
+Functions. One obsolete visual test still required the retired pond; only that
+expectation was removed, retaining its narrative landmark/completion checks.
+The House population test reads its actual worker configuration through a closed
+TypeScript AST grammar, with explicit rejection controls for executable syntax.
+
+The final native review uses a separate source-pinned package, actual trusted
+movement/interaction and a prose-hidden copy of the same renderer. Its external
+receipts record route coverage, four-moment captures, source/build identity and
+any driver corrections. Seeded material and composition fixtures remain labeled
+separately from the earned physical journey. Art decisions, original failures and
+native receipts are retained under `artifacts/rebuild-20261005/phase10-*`.
+
+The retained v6 walk exposed a physical rewind after the Swan volume accepted.
+That outcome changes the existing terrain morph, including a sub-micrometre
+height change at the saved position. Rapier treats a changed declarative position
+as a complete transform update, so the live body returned to the old saved X/Z.
+PlayerController now clones its spawn position once per mount and uses that same
+position for its initial body and spawn effect. Its movement frame, camera owner,
+capsule, colliders, event acceptance and persistence schema remain unchanged.
+Explicit restoration and relocation still create a fresh world mount through the
+existing relocation revision/reset key. Two actual-owner regressions exercise the
+installed Rapier option effect and real physics body: accepting the recorded Swan
+state must preserve travelled position, while a fresh mount must honor its new
+spawn. Both regressions fail against the original source and pass with the fix.
+The complete release check after this correction passes 1,369 unit cases, seven
+security cases, type/content/assets, the production build and Pages Functions.
+
+The final physical coverage reaches all thirty-two canonical scenes across three
+earned native sessions: v8 supplies scenes 1–22, v12 supplies scenes 23–26, and
+v13 supplies scenes 27–32. The two resumptions use exact persisted states recovered
+from the preceding native traces and the ordinary Continue control. They do not
+replay a reducer or manufacture progression. Saved-position boundaries are
+explicit; this is not an uninterrupted thirty-two-scene run. Original movement,
+crossing, reach, accepted-event and witness checks remain in force. Source-backed
+driver corrections handle destination-owned Echo clearings, arrival pauses,
+nearest-clearing presence and an already eligible focused interaction.
+
+The final native state contains all thirty-two completed scene IDs, 113 accepted
+events and `storyCompleted: true`. Independent checks against that recorded state
+confirm preserved Fire memory, the Womb home, the Lantern in the window, and the
+reverse-light completion before the constellation event. The final raw rendered
+image agrees with those scene/event IDs. No application browser or console errors
+were recorded in the three contributing sessions. The wrappers retain their
+original failed status: v13 reached completion and saved its final raw image,
+then failed when its extra authored-Look capture required a control no longer
+admitted while the ending dedication modal made its siblings inert. Its final
+in-test aggregate assertions were not reached;
+the separate trace-based qualification is recorded explicitly. Failed captures
+and driver attempts have not been relabeled as passing tests.
+
+Raw walking views and deliberate Look companions are reviewed separately. Some
+close timber, reflective surfaces and downward views obscure the larger
+composition, and the cage supplement does not establish a clearly reflected
+bird. The clearest Home arrival shows the room's furniture, window and linen;
+the Epilogue shows the remembered route in the dark sky. These observations do
+not certify every frame's emotional legibility, audio quality or frame rate.
+Four additional desktop profiles (medium, cinematic, reduced effects and reduced
+motion) each qualify only the first two earned scenes; the wider earlier phase
+reviews retain their own source, profile and seeded-fixture scopes.
+
+The final Fire cleanup removes the decorative EmberAndAsh owner after eight
+matched native pairs across high/low portrait and reduced effects/motion. The
+visible square sprites disappear while the flame, logs, rose, shoots, static ash
+and framing remain. Active views lose two draw calls and geometries; resolved
+views lose one of each, and every pair loses one frame owner. These are bounded
+visual/resource comparisons, not an FPS or lifecycle claim. The earned journey
+above uses source tree `c35372e01b35a4eb1a6371cb17294b16b96e2fef64d19d39add66e4033c64770`;
+this separately reviewed Fire deletion and the final documentation are subsequent
+changes. The complete release check after the deletion again passes 1,369 unit
+cases, seven security cases, source/type/content/assets, production build and
+Pages Functions. Compiler-only world metadata is restored only after exact
+common-payload equality. Detailed original evidence, image reviews, final-state
+qualification and publication receipts remain in the external phase 10 artifact
+directory.

@@ -1,0 +1,17 @@
+{
+  "basis": "Exact final accepted-UI Phase9 plus sequential Phase10 mobile, motion/House and Meadow source immediately before grounded Fork candidate.",
+  "files": [
+    {
+      "path": "src/components/three/storyEvents/StoryObjectModel.tsx",
+      "fixture": "StoryObjectModel.tsx",
+      "sha256": "b0b25840f4e2cae143b856cbf3c6041a84248f70642f48c9a447f15252770065"
+    },
+    {
+      "path": "src/components/three/storyEvents/StoryEventDirector.tsx",
+      "fixture": "StoryEventDirector.tsx",
+      "sha256": "800b93db336bf4569d2ed7669ac0ad9e16c532c2575bb13c845e128835df957b"
+    }
+  ],
+  "originalBasisHead": "3b057749a07e554a83fd463d0174e4738b31917f",
+  "basisTreeSha256": "150fc69dcfd81a8004f0184adc387bb552c3643f9bf2a8ecfde40b61f65e5e72"
+}

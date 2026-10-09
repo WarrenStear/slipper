@@ -1,0 +1,110 @@
+{
+  "scope": "Saved CPU regression state immediately before the actual Swan volume-enter acceptance; coordinates are a recorded safe position, not a live body observation.",
+  "state": {
+    "schemaVersion": 2,
+    "completedStoryEventIds": [
+      "broken-floor.confession.enter",
+      "broken-floor.first-wipe",
+      "broken-floor.forest-revealed",
+      "broken-floor.inversion",
+      "enchanted.rabbit-hole.enter",
+      "enchanted.follow-light",
+      "enchanted.friendship-meadow.enter",
+      "enchanted.meadow-warmth",
+      "enchanted.masked-hearth.enter",
+      "enchanted.hearth-unease",
+      "blue-moon.sanctuary.enter",
+      "blue-moon.candle-chain",
+      "blue-moon.water-reveal",
+      "blue-moon.intimacy.enter"
+    ],
+    "storyObjectStates": {
+      "broken-floor.reflection": "inverted",
+      "enchanted.guide": "followed",
+      "enchanted.rest": "witnessed",
+      "enchanted.hearth": "leaning-away",
+      "blue-moon.candle": "lit",
+      "blue-moon.water": "rippled"
+    },
+    "storyPlacementStates": {},
+    "actId": "mirror-clearing",
+    "chapterId": "blue-moon-sanctuary",
+    "sceneId": "blue-moon.intimacy",
+    "beatId": "mirror-clearing.keystone.fragment-063",
+    "activeEntryId": "fragment-063",
+    "history": [
+      "fragment-001",
+      "fragment-008",
+      "fragment-010",
+      "fragment-006",
+      "fragment-060"
+    ],
+    "visitedEntryIds": [
+      "fragment-001",
+      "fragment-008",
+      "fragment-010",
+      "fragment-006",
+      "fragment-060",
+      "fragment-063"
+    ],
+    "witnessedEntryIds": [
+      "fragment-001",
+      "fragment-008",
+      "fragment-010",
+      "fragment-006",
+      "fragment-060",
+      "fragment-063"
+    ],
+    "completedRitualIds": [
+      "ritual.accept-lantern"
+    ],
+    "worldFlags": {
+      "story-events.started": true,
+      "path.first-wood-readable": true,
+      "guidance.fireflies-awake": true,
+      "blue-moon.candles-lit": true,
+      "blue-moon.water-touched": true
+    },
+    "landmarkStates": {
+      "landmark.first-wood-lantern": "transformed"
+    },
+    "resonances": {
+      "wolf": 0,
+      "swan": 0,
+      "seer": 6
+    },
+    "inventory": {
+      "lantern": false,
+      "recoveredKeys": [],
+      "symbolicObjects": []
+    },
+    "releasedWords": [],
+    "completedActs": [
+      "first-wood"
+    ],
+    "completedChapterIds": [
+      "broken-floor",
+      "enchanted-wood"
+    ],
+    "completedSceneIds": [
+      "broken-floor.confession",
+      "enchanted.rabbit-hole",
+      "enchanted.friendship-meadow",
+      "enchanted.masked-hearth",
+      "blue-moon.sanctuary"
+    ],
+    "storyStarted": true,
+    "storyCompleted": false,
+    "storyStartedAt": "2026-10-09T08:58:38.423Z",
+    "storyCompletedAt": "null",
+    "updatedAt": "2026-10-09T09:01:56.248Z",
+    "hasLocalJourney": true,
+    "bookmarkedEntryIds": [],
+    "lastSafeEntryId": "fragment-063",
+    "playerPosition": [
+      3.164438235980924,
+      0.7362055406240943,
+      -253.14832741592545
+    ]
+  }
+}

@@ -212,6 +212,7 @@ export default function MobileExploreControls({
         "mobile-explore-controls",
         `is-${mode}`,
         `controls-${controlSide}`,
+        quietShell ? "is-quiet-shell" : "",
         contemplativeIdle ? "is-contemplative-idle" : "",
         controlsCollapsed ? "is-collapsed" : "",
       ]

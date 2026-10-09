@@ -57,6 +57,7 @@ function SceneLookOwner({ sceneId, quality, reducedEffects, reducedMotion, origi
     mindReleased: objects["mind.questions"] === "behind", creationComplete: Boolean(objects["womb.creation"]),
     nestHandsOccupied: Number(objects["nest.protected-linen"] === "carried") + Number(objects["nest.responsibility"] === "carried"),
     nestBurdenResting: objects["nest.responsibility"] === "placed",
+    meadowRested: objects["enchanted.rest"] === "witnessed",
     mirrorStill: measuredStillness || assisted,
     openingReveal: objects["broken-floor.reflection"] === "inverted" || objects["broken-floor.reflection"] === "revealed" ? 1 : objects["broken-floor.reflection"] === "clearing" ? .5 : 0,
     openingInverted: objects["broken-floor.reflection"] === "inverted",

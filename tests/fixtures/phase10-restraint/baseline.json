@@ -1,0 +1,14 @@
+{
+  "SceneLookRegistry.ts.txt": {
+    "source": "src/components/three/artDirection/SceneLookRegistry.ts",
+    "sha256": "93a3dda992a61af309c59347f9f37c315556017e1ecc4ceb88e96e70926214d9"
+  },
+  "forestInstancePresentation.ts.txt": {
+    "source": "src/world/forest/forestInstancePresentation.ts",
+    "sha256": "fd65360b08124551325d430b88023809eea80a68b186a9cb37251c721c94b680"
+  },
+  "pathUnderstoryHabitat.ts.txt": {
+    "source": "src/world/guidance/pathUnderstoryHabitat.ts",
+    "sha256": "2043dce1c9642e81e0cfc5ac3e7f779105f773a88b3dd2a5f590645f95e92036"
+  }
+}

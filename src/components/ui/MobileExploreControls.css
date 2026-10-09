@@ -399,3 +399,78 @@ html[data-mobile="true"] .mobile-explore-controls.is-contemplative-idle:active {
     animation-duration: 0.001ms !important;
   }
 }
+
+/* Keep the full independent touch surfaces while clearing their idle chrome. */
+.mobile-explore-controls.is-quiet-shell .mobile-joystick,
+.mobile-explore-controls.is-quiet-shell .mobile-look-pad {
+  background: transparent;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.mobile-explore-controls.is-quiet-shell .mobile-look-pad {
+  border-color: transparent;
+  align-content: end;
+  justify-items: end;
+  padding: 10px;
+}
+
+.mobile-explore-controls.is-quiet-shell .mobile-look-pad > span,
+.mobile-explore-controls.is-quiet-shell .mobile-look-pad > small {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.mobile-explore-controls.is-quiet-shell .mobile-look-pad > strong {
+  display: grid;
+  min-width: 44px;
+  min-height: 44px;
+  padding-inline: 10px;
+  place-items: center;
+  border: 1px solid rgba(255, 245, 206, 0.3);
+  border-radius: 999px;
+  background: rgba(7, 8, 10, 0.45);
+}
+
+.mobile-explore-controls.is-quiet-shell .mobile-look-pad:active > strong {
+  border-color: rgba(255, 245, 206, 0.65);
+  background: rgba(7, 8, 10, 0.8);
+}
+
+/* The explicit contrast preference retains the complete control affordance. */
+html[data-mobile="true"] .is-high-contrast .mobile-explore-controls.is-quiet-shell {
+  opacity: 1;
+}
+
+.is-high-contrast .mobile-explore-controls.is-quiet-shell .mobile-joystick,
+.is-high-contrast .mobile-explore-controls.is-quiet-shell .mobile-look-pad {
+  border-color: #fff5ce;
+  background: rgba(7, 8, 10, 0.94);
+}
+
+.is-high-contrast .mobile-explore-controls.is-quiet-shell .mobile-look-pad {
+  place-content: center;
+  justify-items: center;
+  padding: 0;
+}
+
+.is-high-contrast .mobile-explore-controls.is-quiet-shell .mobile-look-pad > span,
+.is-high-contrast .mobile-explore-controls.is-quiet-shell .mobile-look-pad > small {
+  position: static;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  clip-path: none;
+  white-space: normal;
+}
+
+.is-high-contrast .mobile-explore-controls.is-quiet-shell .mobile-look-pad > strong {
+  border-color: transparent;
+  background: transparent;
+}

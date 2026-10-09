@@ -48,18 +48,21 @@ const nodes = (tree, type) => elements(tree).filter(node => node.type === type);
 const plain = value => JSON.parse(JSON.stringify(value));
 const variants = () => ['low','medium','high','cinematic'].flatMap(quality => [false,true].flatMap(reducedEffects => [false,true].flatMap(reducedMotion => [false,true].map(eventDriven => ({ quality,reducedEffects,reducedMotion,eventDriven })))));
 
-function withoutPathDiscs(value) {
-  if(Array.isArray(value))return value.filter(item=>item!==null&&item!==false&&item?.type!=='StonePath').map(withoutPathDiscs);
-  if(value&&typeof value==='object')return Object.fromEntries(Object.entries(value).map(([key,item])=>[key,withoutPathDiscs(item)]));
+function withoutRetiredDecorativeSurfaces(value) {
+  // Historical fixtures include the retired path discs and the Meadow-only pond.
+  // Normalize exactly those visual deltas; keep every other owner/prop comparison.
+  if(Array.isArray(value))return value.filter(item=>item!==null&&item!==false&&item?.type!=='StonePath'&&!(item?.type==='WaterSurface'&&JSON.stringify(item.props.position)==='[-4.8,0.02,1.4]'&&JSON.stringify(item.props.size)==='[5.5,5.5]'&&item.props.circle===true)).map(withoutRetiredDecorativeSurfaces);
+  if(value?.type==='fragment'){const children=withoutRetiredDecorativeSurfaces(value.props.children);if(Array.isArray(children)&&children.length===1)return children[0];return children;}
+  if(value&&typeof value==='object')return Object.fromEntries(Object.entries(value).map(([key,item])=>[key,withoutRetiredDecorativeSurfaces(item)]));
   return value;
 }
 
-test('FirstWood retains exact meadow/hearth presentation except removed competing path discs across every gate', () => {
+test('FirstWood retains exact meadow/hearth presentation except retired path discs and Meadow pond across every gate', () => {
   for (const sceneId of ['enchanted.friendship-meadow','enchanted.masked-hearth']) for (const v of variants()) {
     const before = renderScene(former,sceneId,v.eventDriven,v.quality,v.reducedEffects,v.reducedMotion);
     const after = renderScene(current,sceneId,v.eventDriven,v.quality,v.reducedEffects,v.reducedMotion);
     assert.equal(nodes(after.tree,'StonePath').length,0); assert.equal(nodes(before.tree,'StonePath').length,1);
-    assert.deepEqual(withoutPathDiscs(plain(after.tree)), withoutPathDiscs(plain(before.tree)), `${sceneId} ${JSON.stringify(v)}`);
+    assert.deepEqual(withoutRetiredDecorativeSurfaces(plain(after.tree)), withoutRetiredDecorativeSurfaces(plain(before.tree)), `${sceneId} ${JSON.stringify(v)}`);
     assert.equal(after.exports.FirstWoodScene, after.exports.EnchantedWoodChapter);
     assert.equal(after.exports.default, after.exports.FirstWoodScene);
   }
@@ -107,7 +110,7 @@ test('historic chapter import resolves the one substantive scene owner and canon
   assert.match(director,/"enchanted-wood": EnchantedWoodChapter/);
 });
 
-function renderActors(sceneId,lanternOwned=false,lanternPlaced=false) {
+function renderActors(sceneId,lanternOwned=false,lanternPlaced=false,origamiAwakened=false) {
   const source=ts.createSourceFile('StoryActorDirector.tsx',read('src/components/three/storyEvents/StoryActorDirector.tsx'),ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX);
   const owner=source.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text==='StoryActorDirector');
   assert.ok(owner);
@@ -115,8 +118,24 @@ function renderActors(sceneId,lanternOwned=false,lanternPlaced=false) {
   const exports={};
   runInNewContext(compile(`${declaration}\nexport {StoryActorDirector};`),{exports,ORIGIN:[0,0,0],NO_CUES:[],CINEMATIC_ACTOR_CUES,
     AuthoredActor:marker('AuthoredActor'),InstancedStoryFlock:marker('InstancedStoryFlock'),require:id=>{assert.equal(id,'react/jsx-runtime');return{jsx:el,jsxs:el};}});
-  return exports.StoryActorDirector({sceneId,lanternOwned,lanternPlaced,qualityProfile:RENDER_QUALITY_PROFILES.high,reducedEffects:false,reducedMotion:false});
+  return exports.StoryActorDirector({sceneId,lanternOwned,lanternPlaced,origamiAwakened,qualityProfile:RENDER_QUALITY_PROFILES.high,reducedEffects:false,reducedMotion:false});
 }
+
+test('the actual Blue Moon actor owner reveals the flock only after the existing origami outcome',()=>{
+  for(const sceneId of ['blue-moon.sanctuary','blue-moon.intimacy']) {
+    assert.equal(nodes(renderActors(sceneId,false,false,false),'InstancedStoryFlock').length,0);
+    const flock=nodes(renderActors(sceneId,false,false,true),'InstancedStoryFlock');
+    assert.equal(flock.length,1);assert.equal(flock[0].props.origami,true);assert.equal(flock[0].props.awakened,true);
+    assert.equal(flock[0].props.released,false);
+    assert.equal(nodes(renderActors(sceneId,false,false,false),'InstancedStoryFlock').length,0,'Restoring an earlier outcome removes the visual flock');
+  }
+  assert.equal(nodes(renderActors('river.release-surrender'),'InstancedStoryFlock').length,1,'The authored River release remains');
+  const target=getStoryObject('blue-moon.origami');
+  assert.deepEqual(plain(target.sceneIds),['blue-moon.intimacy']);assert.deepEqual(plain(target.localPosition),[2,1.2,2]);assert.equal(target.radius,2.2);
+  const event=eventsForScene('blue-moon.intimacy').find(event=>event.id==='blue-moon.origami-awakened');
+  assert.equal(event.objectId,target.id);assert.equal(event.trigger,'touch');
+  assert.deepEqual(plain(event.requires),[{type:'event',id:'blue-moon.roses-placed'}]);
+});
 
 test('actual actor owner suppresses only Rabbit lantern duplicate while preserving every other scene cue and owned/placed carrying gates',()=>{
   assert.ok(CINEMATIC_ACTOR_CUES['enchanted.rabbit-hole'].some(cue=>cue.actor==='lantern'),'The registry cue remains unmodified');
@@ -127,13 +146,13 @@ test('actual actor owner suppresses only Rabbit lantern duplicate while preservi
   }
 });
 
-test('all three current First Wood bodies remove only StonePath, preserving every collider, landmark and gate',()=>{
+test('all three current First Wood bodies preserve all non-retired surfaces, every collider, landmark and gate',()=>{
   const baseline=read('tests/fixtures/forest-art-foundation/FirstWoodScene.txt');
   assert.equal(createHash('sha256').update(baseline).digest('hex'),'2b56c633067bc177b2b024ef42e1170981ed4919deffb53c0686cec74f5a68dc');
   for(const id of ['enchanted.rabbit-hole','enchanted.friendship-meadow','enchanted.masked-hearth'])for(const v of variants()){
     const before=renderScene(baseline,id,v.eventDriven,v.quality,v.reducedEffects,v.reducedMotion).tree;
     const after=renderScene(current,id,v.eventDriven,v.quality,v.reducedEffects,v.reducedMotion).tree;
-    assert.deepEqual(withoutPathDiscs(plain(after)),withoutPathDiscs(plain(before)));
+    assert.deepEqual(withoutRetiredDecorativeSurfaces(plain(after)),withoutRetiredDecorativeSurfaces(plain(before)));
     assert.equal(nodes(after,'StonePath').length,0);
   }
 });

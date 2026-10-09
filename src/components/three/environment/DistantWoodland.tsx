@@ -1,5 +1,6 @@
 import { memo, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
+import { distantTrunkFitsTerrain } from "./distantWoodlandBounds";
 import { createOrganicCrownGeometry } from "./forestGeometry";
 
 import { distantWoodlandLayout, distantWoodlandUnit as unit } from "./distantWoodlandLayout";
@@ -17,18 +18,25 @@ export const DistantWoodland = memo(function DistantWoodland({ origin, quality, 
   useLayoutEffect(() => {
     if (!trunks.current || !crowns.current) return;
     const dummy = new THREE.Object3D(), tint = new THREE.Color();
+    let instance = 0;
     layout.forEach((tree, i) => {
       const x = origin[0] + tree.x, z = origin[2] + tree.z, ground = sampleGroundY(x, z);
       dummy.position.set(x, ground + tree.height * .5, z);
       dummy.rotation.set(.035 * Math.sin(i * 2.7), tree.yaw, .025 * Math.cos(i * 1.7));
       dummy.scale.set(tree.width, tree.height, tree.width); dummy.updateMatrix();
-      trunks.current!.setMatrixAt(i, dummy.matrix);
+      // The analytic height sampler continues beyond the finite rendered ground.
+      // Keep only complete root footprints on that ground; retain each tree's
+      // original index for tilt, crown variation and tint when packing survivors.
+      if (!distantTrunkFitsTerrain(trunks.current!.geometry, dummy.matrix)) return;
+      trunks.current!.setMatrixAt(instance, dummy.matrix);
       dummy.position.set(x + .2, ground + tree.height * .86, z);
       dummy.scale.set(tree.crown, tree.crown * (.65 + unit(i + 51) * .7), tree.crown * .86); dummy.updateMatrix();
-      crowns.current!.setMatrixAt(i, dummy.matrix);
-      tint.setHSL(.31 + unit(i + 41) * .03, .12, .5 + unit(i + 53) * .2); crowns.current!.setColorAt(i, tint);
+      crowns.current!.setMatrixAt(instance, dummy.matrix);
+      tint.setHSL(.31 + unit(i + 41) * .03, .12, .5 + unit(i + 53) * .2); crowns.current!.setColorAt(instance, tint);
+      instance++;
     });
     for (const mesh of [trunks.current, crowns.current]) {
+      mesh.count = instance;
       mesh.instanceMatrix.needsUpdate = true;
       if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
       mesh.computeBoundingBox(); mesh.computeBoundingSphere();

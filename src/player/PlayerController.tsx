@@ -27,6 +27,9 @@ export function PlayerController({ enabled, movementEnabled, cameraReadyRef, ini
   const colliderRef = useRef<RapierCollider>(null);
   const controllerRef = useRef<KinematicCharacterController | null>(null);
   const hasSpawnedRef = useRef(false);
+  // Spawn belongs to this mount; live terrain and saved-position updates must not
+  // reapply Rapier's declarative transform to an already walking body.
+  const spawnPosition = useRef<Vector3Tuple>([...initialPosition]).current;
   const keysRef = usePlayerControls(enabled && movementEnabled);
   const horizontalVelocityRef = useRef(new Vector3());
   const targetVelocityRef = useRef(new Vector3());
@@ -34,7 +37,7 @@ export function PlayerController({ enabled, movementEnabled, cameraReadyRef, ini
   const forwardRef = useRef(new Vector3());
   const rightRef = useRef(new Vector3());
   const verticalVelocityRef = useRef(0);
-  const groundProbeRef = useRef({ x: Number.NaN, z: Number.NaN, y: initialPosition[1] - PLAYER_FOOT_OFFSET - PLAYER_GROUND_CLEARANCE });
+  const groundProbeRef = useRef({ x: Number.NaN, z: Number.NaN, y: spawnPosition[1] - PLAYER_FOOT_OFFSET - PLAYER_GROUND_CLEARANCE });
   const groundProbeTimerRef = useRef(0);
 
   useEffect(() => {
@@ -51,7 +54,7 @@ export function PlayerController({ enabled, movementEnabled, cameraReadyRef, ini
   useEffect(() => {
     const body = bodyRef.current;
     if (!body || hasSpawnedRef.current) return;
-    const spawn = { x: initialPosition[0], y: initialPosition[1], z: initialPosition[2] };
+    const spawn = { x: spawnPosition[0], y: spawnPosition[1], z: spawnPosition[2] };
     body.setTranslation(spawn, true);
     body.setNextKinematicTranslation(spawn);
     Object.assign(pose.current.position, spawn);
@@ -60,7 +63,7 @@ export function PlayerController({ enabled, movementEnabled, cameraReadyRef, ini
     groundProbeRef.current = { x: spawn.x, z: spawn.z, y: spawn.y - PLAYER_FOOT_OFFSET - PLAYER_GROUND_CLEARANCE };
     groundProbeTimerRef.current = 0;
     hasSpawnedRef.current = true;
-  }, [initialPosition, pose]);
+  }, [spawnPosition, pose]);
 
   useEffect(() => {
     if (!enabled || !movementEnabled) {
@@ -133,7 +136,7 @@ export function PlayerController({ enabled, movementEnabled, cameraReadyRef, ini
     output.speedRatio = Math.max(0, Math.min(1, horizontalVelocity.length() / PLAYER_SPEED));
   }, -2);
 
-  return <RigidBody ref={bodyRef} type="kinematicPosition" position={initialPosition} colliders={false} lockRotations canSleep={false}>
+  return <RigidBody ref={bodyRef} type="kinematicPosition" position={spawnPosition} colliders={false} lockRotations canSleep={false}>
     <CapsuleCollider ref={colliderRef} args={[PLAYER_HALF_HEIGHT, PLAYER_RADIUS]} position={[0, 0, 0]} friction={0} restitution={0} />
   </RigidBody>;
 }

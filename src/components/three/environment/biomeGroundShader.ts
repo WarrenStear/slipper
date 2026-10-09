@@ -2,7 +2,7 @@ type SurfaceShader = { vertexShader: string; fragmentShader: string };
 
 /** Broad soil/moss/rock transitions use metre coordinates. No texture uploads,
  * additional passes, displacement, or change to the terrain/collider buffers. */
-export function applyBiomeGroundShader(shader: SurfaceShader, relief: boolean) {
+export function applyBiomeGroundShader(shader: SurfaceShader, relief: boolean, mapped = false) {
   shader.vertexShader = shader.vertexShader
     .replace("#include <common>", "#include <common>\nvarying vec3 vBiomePosition,vBiomeNormal;")
     .replace("#include <begin_vertex>", "#include <begin_vertex>\nvBiomePosition=position;vBiomeNormal=normal;");
@@ -44,5 +44,15 @@ export function applyBiomeGroundShader(shader: SurfaceShader, relief: boolean) {
       vec3 biomeR1=cross(biomeDy,normal),biomeR2=cross(normal,biomeDx);
       float biomeDet=dot(biomeDx,biomeR1);
       normal=normalize(max(abs(biomeDet),.00000001)*normal-sign(biomeDet)*(biomeDerivative.x*biomeR1+biomeDerivative.y*biomeR2));`);
+  if (mapped) shader.fragmentShader = shader.fragmentShader.replace(
+    "diffuseColor.rgb=mix(diffuseColor.rgb,biomeMoss,biomeMossCover*.8);\n      diffuseColor.rgb=mix(diffuseColor.rgb,biomeRock,biomeRockCover);",
+    `#ifdef USE_MAP
+      diffuseColor.rgb=mix(diffuseColor.rgb,biomeMoss*sampledDiffuseColor.rgb,biomeMossCover*.8);
+      diffuseColor.rgb=mix(diffuseColor.rgb,biomeRock*sampledDiffuseColor.rgb,biomeRockCover);
+      #else
+      diffuseColor.rgb=mix(diffuseColor.rgb,biomeMoss,biomeMossCover*.8);
+      diffuseColor.rgb=mix(diffuseColor.rgb,biomeRock,biomeRockCover);
+      #endif`,
+  );
   return shader;
 }

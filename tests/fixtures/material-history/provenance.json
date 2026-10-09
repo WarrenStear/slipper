@@ -1,7 +1,10 @@
 {
-  "method": "Actual current lane source copied immediately before Phase8 memory; hash pinned for exact non-material presentation comparison",
+  "method": "Actual immediate pre-memory registry with the subsequent common Phase10 ambient-motion-only hunks applied identically; material behavior remains the original before-memory baseline.",
   "source": "src/components/three/artDirection/SceneLookRegistry.ts",
-  "sha256": "f131bbb91b396276b8251a4e4b8f8294b1415bff0abd9b404ac4cf5bf0c9cf49",
+  "sha256": "a7053392e6d912515cc4f8f7f2c2f4b17260a459fc1edbc026eb8c450c89dfdc",
   "lane": "Final accepted Phase7 layout, restrained constellation art and mobile tabs; accepted Phase8 memory scope; Phase9 clean-reader correction; receiver and linen excluded",
-  "inputTreeSha256": "16533f7640f94812d04b50263082332828f2b2becfb6f796b596537640fb4d22"
+  "inputTreeSha256": "16533f7640f94812d04b50263082332828f2b2becfb6f796b596537640fb4d22",
+  "preCommonMotionSha256": "f131bbb91b396276b8251a4e4b8f8294b1415bff0abd9b404ac4cf5bf0c9cf49",
+  "commonLaterChange": "Phase10 source-operations.json: the exact two SceneLookRegistry motion-only hunks; no assertion change",
+  "commonMeadowChange": "Same exact Meadow witnessed-lighting hunk applied to pre-material-history presentation fixture; common motion hunk preserved."
 }

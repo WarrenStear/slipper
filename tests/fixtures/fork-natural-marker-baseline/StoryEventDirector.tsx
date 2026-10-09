@@ -330,7 +330,7 @@ export function StoryEventDirector({ sceneId, reducedMotion, enabled = true, qui
       const preservedAt = state === "preserved" ? object.targets?.[0]?.localPosition : undefined;
       const location: [number, number, number] = preservedAt ? [preservedAt[0] + .8, preservedAt[1] + .2, preservedAt[2]] : placement?.localPosition ?? object.localPosition;
       return <StoryObjectPose key={object.id} object={object} state={state} position={location} placementId={placements[object.id]} reducedMotion={reducedMotion}>
-        {chapterOwnsVisual ? null : <StoryObjectModel objectId={object.id} kind={object.kind} state={state ?? (object.id === "fork.door" ? "open" : undefined)} reducedMotion={reducedMotion} />}
+        {chapterOwnsVisual ? null : <StoryObjectModel kind={object.kind} state={state ?? (object.id === "fork.door" ? "open" : undefined)} reducedMotion={reducedMotion} />}
         {object.id === "home.crown-mirror" ? <TimberAssembly name="crown-mirror-grounded-stand" color="#66503d" pieces={CROWN_MIRROR_STAND} /> : null}
         {object.id === "home.water" ? <group name="home-water-basin-support"><StoneBasin position={[0, -.16, 0]} radius={1.12} height={.34} color="#827b69" /></group> : null}
       </StoryObjectPose>;

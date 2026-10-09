@@ -63,10 +63,8 @@ export function patchPathHabitat(habitat: PathHabitat, seed: number, index: numb
 export function createPathUnderstoryInstances(segment: MazePathSegment, quality: string, morph: MazeMorphOptions,
   sampleGroundY: (x: number, z: number) => number): PathUnderstoryInstance[] {
   const count = pathUnderstoryCount(quality), seed = hashString(`${segment.key}:moonlit-understory`);
-  const sourceScene = getJourneySceneForEntry(segment.sourceEntry.id)?.id ?? "";
-  const targetScene = getJourneySceneForEntry(segment.targetEntry.id)?.id ?? "";
-  const source = pathHabitatForScene(sourceScene), target = pathHabitatForScene(targetScene);
-  const houseApproach = segment.role === "backbone" && sourceScene === "sunset.stillness" && targetScene === "thorned.locked-garden";
+  const source = pathHabitatForScene(getJourneySceneForEntry(segment.sourceEntry.id)?.id ?? "");
+  const target = pathHabitatForScene(getJourneySceneForEntry(segment.targetEntry.id)?.id ?? "");
   return Array.from({ length: count }, (_, index) => {
     // Four unequal growth pockets leave long unplanted intervals. Each pocket
     // exists even on low; richer tiers add companions within those same banks.
@@ -84,20 +82,13 @@ export function createPathUnderstoryInstances(segment: MazePathSegment, quality:
     const x = point.x - tangent.y / length * offset * side, z = point.y + tangent.x / length * offset * side;
     const scale = .56 + seededUnit(seed, pocket + 457) * .18 + seededUnit(seed, index + 53) * .36;
     const spread = .84 + seededUnit(seed, index + 89) * .32;
-    const warmth = seededUnit(seed, index + 97), rhythm = houseApproach ? smooth((t - .18) / .7) : 0;
-    // Existing fallen limbs begin to share the coming room's grain. Unequal
-    // pockets and occasional crosspieces keep this a forest, never a fence.
-    const heading = Math.atan2(tangent.x, tangent.y) + (seededUnit(seed, index + 79) - .5) * 1.18 * (1 - rhythm * .88)
-      + rhythm * (-Math.PI / 2 - .35 + (pocket % 3 === 1 ? Math.PI / 2 : 0));
-    const blended = blendPathHabitats(source, target, t);
-    const structured = rhythm > 0 ? { ...blended, weights: blended.weights.map((weight, form) =>
-      form === 4 ? Math.max(weight, .98 * rhythm) : form < 2 ? weight * (1 - rhythm * .68) : weight) as Weights } : blended;
+    const warmth = seededUnit(seed, index + 97), heading = Math.atan2(tangent.x, tangent.y) + (seededUnit(seed, index + 79) - .5) * 1.18;
     const step = .35, y = sampleGroundY(x, z);
     const slopeX = (sampleGroundY(x + step, z) - sampleGroundY(x - step, z)) / (step * 2);
     const slopeZ = (sampleGroundY(x, z + step) - sampleGroundY(x, z - step)) / (step * 2);
     return { position: [x, y + .018, z], rotation: terrainScatterRotation(slopeX, slopeZ, heading),
-      scale: [scale * spread * (1 + rhythm * .12), scale * (.88 + warmth * .16), scale * (1.08 - (spread - .86) * .24) * (1 - rhythm * .12)], t, offset,
-      habitat: patchPathHabitat(structured, seed, index, t) };
+      scale: [scale * spread, scale * (.88 + warmth * .16), scale * (1.08 - (spread - .86) * .24)], t, offset,
+      habitat: patchPathHabitat(blendPathHabitats(source, target, t), seed, index, t) };
   });
 }
 

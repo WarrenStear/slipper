@@ -13,7 +13,6 @@ import {
   Beam,
   FlickerLight,
   StonePath,
-  qualityStep,
 } from "./ChapterPrimitives";
 
 const FIRE_RECOVERY_SHOOTS = [
@@ -33,86 +32,6 @@ type FirePathProps = {
   resolved: boolean;
   surrendered: boolean;
 };
-
-function EmberAndAsh({
-  qualityProfile,
-  reducedEffects,
-  reducedMotion,
-  active,
-  resolved,
-}: Pick<FirePathProps, "qualityProfile" | "reducedEffects" | "reducedMotion" | "active" | "resolved">) {
-  const presentation = useSceneLook();
-  const emberRef = useRef<THREE.Points>(null);
-  const ashRef = useRef<THREE.Points>(null);
-  const count = reducedEffects ? 8 : 16 + qualityStep(qualityProfile) * 10;
-  const emberCount = active ? count : Math.max(6, Math.floor(count * 0.38));
-
-  const emberPositions = useMemo(() => {
-    const positions = new Float32Array(emberCount * 3);
-    for (let index = 0; index < emberCount; index += 1) {
-      const angle = index * 2.399963;
-      const radius = 0.35 + ((index * 31) % 100) / 100 * 2.45;
-      positions[index * 3] = Math.cos(angle) * radius;
-      positions[index * 3 + 1] = 0.4 + ((index * 47) % 100) / 100 * 4.2;
-      positions[index * 3 + 2] = Math.sin(angle) * radius;
-    }
-    return positions;
-  }, [emberCount]);
-
-  const ashPositions = useMemo(() => {
-    const positions = new Float32Array(count * 3);
-    for (let index = 0; index < count; index += 1) {
-      const angle = index * 1.618 + 0.6;
-      const radius = 1.1 + ((index * 19) % 100) / 100 * 4.6;
-      positions[index * 3] = Math.cos(angle) * radius;
-      positions[index * 3 + 1] = 0.25 + ((index * 61) % 100) / 100 * 3.8;
-      positions[index * 3 + 2] = Math.sin(angle) * radius;
-    }
-    return positions;
-  }, [count]);
-
-  useFrame(({ clock }) => {
-    const activity = presentation ? Math.min(1, presentation.motion.particles * 4) : 1;
-    const time = presentation?.time.particles ?? clock.elapsedTime;
-    if (emberRef.current) (emberRef.current.material as THREE.PointsMaterial).opacity = (active ? .65 : .35) * activity;
-    if (ashRef.current) (ashRef.current.material as THREE.PointsMaterial).opacity = .24 * activity;
-    if (reducedMotion) return;
-    if (emberRef.current) {
-      emberRef.current.rotation.y = time * (active ? 0.22 : 0.08);
-      emberRef.current.position.y = Math.sin(time * 0.8) * 0.08;
-    }
-    if (ashRef.current) {
-      ashRef.current.rotation.y = -time * 0.035;
-      ashRef.current.position.y = Math.sin(time * 0.24 + 1.2) * 0.12;
-    }
-  });
-
-  return (
-    <group position={FIRE_SOURCE_LOCAL_POSITION}>
-      {resolved ? null : (
-        <points ref={emberRef}>
-          <bufferGeometry>
-            <bufferAttribute attach="attributes-position" args={[emberPositions, 3]} />
-          </bufferGeometry>
-          <pointsMaterial
-            color={active ? "#ff873f" : "#b35432"}
-            size={active ? 0.105 : 0.07}
-            transparent
-            opacity={active ? 0.92 : 0.5}
-            depthWrite={false}
-            toneMapped={false}
-          />
-        </points>
-      )}
-      <points ref={ashRef}>
-        <bufferGeometry>
-          <bufferAttribute attach="attributes-position" args={[ashPositions, 3]} />
-        </bufferGeometry>
-        <pointsMaterial color="#6a625d" size={0.075} transparent opacity={0.34} depthWrite={false} />
-      </points>
-    </group>
-  );
-}
 
 function CharredThreshold({ active }: { active: boolean }) {
   const branches = [
@@ -200,8 +119,6 @@ function BoundaryFire({ resolved, reducedMotion, active }: { resolved: boolean; 
 }
 
 function FirePathComponent({
-  qualityProfile,
-  reducedEffects,
   reducedMotion,
   active,
   resolved,
@@ -221,13 +138,6 @@ function FirePathComponent({
       {active ? <StonePath color={resolved ? "#53514a" : active ? "#5d3a2b" : "#49382f"} count={10} length={17} fork={-0.28} /> : null}
       <BoundaryFire resolved={resolved} reducedMotion={reducedMotion || !active} active={active} />
       <CharredThreshold active={active && !resolved} />
-      {active ? <EmberAndAsh
-        qualityProfile={qualityProfile}
-        reducedEffects={reducedEffects}
-        reducedMotion={reducedMotion}
-        active={active}
-        resolved={resolved}
-      /> : null}
       {resolved ? (
         <group name="fire-path-new-growth" position={FIRE_SOURCE_LOCAL_POSITION}>
           {FIRE_RECOVERY_SHOOTS.map(([x, y, z, rotation]) => (

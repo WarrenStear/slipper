@@ -1,24 +1,5 @@
 import * as THREE from "three";
-import { getJourneySceneLayout } from "../../data/journeyWorldLayout.ts";
 import { FOREST_ARCHETYPES, FOREST_REFERENCE_CROWN_HEIGHT, FOREST_REFERENCE_CROWN_SCALE, FOREST_REFERENCE_TRUNK_SCALE } from "./forestGeometry.ts";
-
-const houseApproachStart = getJourneySceneLayout("sunset.stillness").anchor.position;
-const houseApproachEnd = getJourneySceneLayout("thorned.locked-garden").anchor.position;
-const smoothUnit = (value: number) => { const t = Math.max(0, Math.min(1, value)); return t * t * (3 - 2 * t); };
-
-/** Presentation only: existing trunks increasingly read as upright timber on
- * the authored Seer-to-House axis. Population, placement and colliders remain
- * worker-owned; both clearing and continuous instances use this same field. */
-export function houseApproachRhythmAtWorldPosition(x: number, z: number) {
-  const dx = houseApproachEnd[0] - houseApproachStart[0], dz = houseApproachEnd[2] - houseApproachStart[2];
-  const lengthSq = dx * dx + dz * dz;
-  const t = ((x - houseApproachStart[0]) * dx + (z - houseApproachStart[2]) * dz) / lengthSq;
-  if (t <= 0 || t >= 1.35) return 0;
-  const lateral = Math.abs((x - houseApproachStart[0]) * dz - (z - houseApproachStart[2]) * dx) / Math.sqrt(lengthSq);
-  // The continuous forest survives along the clearing flanks. Reach that band
-  // before the overlapping Seer/House clearings remove the later trunks.
-  return smoothUnit(t / .45) * (1 - smoothUnit(lateral / 28)) * (1 - smoothUnit((t - 1) / .35));
-}
 
 type MorphImage = { data: Float32Array; width: number; height: number };
 
@@ -30,12 +11,7 @@ export function forestArchetypeAtWorldPosition(x: number, z: number) {
   hash ^= hash >>> 15;
   hash = Math.imul(hash, 0x2c1b3c6d);
   hash ^= hash >>> 12;
-  const identity = hash >>> 0;
-  const houseRhythm = houseApproachRhythmAtWorldPosition(qx / 16, qz / 16);
-  // Reuse the existing narrow-reaching family, retaining irregular companions.
-  // Quantized coordinates preserve float-worker/double-local identity.
-  if (identity / 0x100000000 < houseRhythm * .82) return 1;
-  return identity % FOREST_ARCHETYPES.length;
+  return (hash >>> 0) % FOREST_ARCHETYPES.length;
 }
 
 /** Allocate against constructor capacity, never the active count. Native

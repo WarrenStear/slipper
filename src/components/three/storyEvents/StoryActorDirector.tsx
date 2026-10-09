@@ -123,7 +123,7 @@ export function StoryActorDirector({ sceneId, position = ORIGIN, qualityProfile,
   return <group position={position} name="StoryActorDirector">
     {cues.filter((definition) => !(chapterOwnsSeer && definition.actor === "seer") && (definition.actor !== "lantern" || (!chapterOwnsGuideLantern && !lanternOwned && !lanternPlaced))).map((definition) => <AuthoredActor key={`${sceneId}:${definition.actor}`} definition={definition} reducedMotion={reducedMotion} />)}
     {sceneId === "river.release-surrender" ? <InstancedStoryFlock qualityProfile={qualityProfile} reducedEffects={reducedEffects} reducedMotion={reducedMotion} released={birdsReleased} /> : null}
-    {sceneId === "blue-moon.intimacy" || sceneId === "blue-moon.sanctuary" ? <InstancedStoryFlock origami awakened={origamiAwakened} qualityProfile={qualityProfile} reducedEffects={reducedEffects} reducedMotion={reducedMotion} released={false} /> : null}
+    {origamiAwakened && (sceneId === "blue-moon.intimacy" || sceneId === "blue-moon.sanctuary") ? <InstancedStoryFlock origami awakened={origamiAwakened} qualityProfile={qualityProfile} reducedEffects={reducedEffects} reducedMotion={reducedMotion} released={false} /> : null}
   </group>;
 }
 export default StoryActorDirector;
