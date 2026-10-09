@@ -16,6 +16,13 @@ function sceneLabel(entry?: Slipper3DEntry) {
   return entry.engine3d.sceneKind ?? entry.engine3d.mood ?? "fragment";
 }
 
+function rememberedRouteTitle(entries: Slipper3DEntry[], witnessedEntryIds: readonly string[], entryId?: string | null,
+  fallback = "The next clearing") {
+  if (!entryId) return fallback;
+  if (!witnessedEntryIds.includes(entryId)) return "Unread memory";
+  return entries.find(entry => entry.id === entryId)?.title ?? "A remembered clearing";
+}
+
 const MINI_MAP_SIZE = 172;
 const MINI_MAP_CENTER = MINI_MAP_SIZE / 2;
 const MINI_MAP_RADIUS = 62;
@@ -68,11 +75,9 @@ function MiniMapHUD({
   witnessedEntryIds: string[];
   sceneProximity: SceneProximityState | null;
 }) {
-  const activeEntry = entries.find((entry) => entry.id === activeEntryId);
-  const fallbackNearestEntryId = sceneProximity?.nearestEntryId && sceneProximity.nearestEntryId !== activeEntryId ? sceneProximity.nearestEntryId : null;
-  const approachingEntryId = sceneProximity?.navigationTargetId ?? sceneProximity?.approachingEntryId ?? fallbackNearestEntryId;
-  const approachingEntry = approachingEntryId && witnessedEntryIds.includes(approachingEntryId)
-    ? entries.find((entry) => entry.id === approachingEntryId) : undefined;
+  const activeEntry = witnessedEntryIds.includes(activeEntryId) ? entries.find((entry) => entry.id === activeEntryId) : undefined;
+  const titleEntryId = sceneProximity?.navigationTargetId ?? sceneProximity?.approachingEntryId ?? sceneProximity?.nearestEntryId;
+  const targetTitle = rememberedRouteTitle(entries, witnessedEntryIds, titleEntryId, "Listening for a clearing");
   const playerPosition = sceneProximity?.playerPosition ?? sceneProximity?.activeWorldPosition ?? ([0, 0, 0] as Vector3Tuple);
   const targetPosition = sceneProximity?.navigationTargetWorldPosition ?? sceneProximity?.approachingWorldPosition ?? sceneProximity?.nearestWorldPosition ?? null;
   const blip = minimapVector(playerPosition, targetPosition, sceneProximity?.cameraYaw ?? 0);
@@ -132,7 +137,7 @@ function MiniMapHUD({
 
       <div style={{ display: "grid", gap: 4, marginTop: 8 }}>
         <span style={{ fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(246,239,226,0.46)" }}>guidance target</span>
-        <strong style={{ fontSize: 12, lineHeight: 1.2 }}>{shortTitle(approachingEntry?.title ?? sceneProximity?.approachingTitle ?? sceneProximity?.nearestTitle ?? "Listening for a clearing", 31)}</strong>
+        <strong style={{ fontSize: 12, lineHeight: 1.2 }}>{shortTitle(targetTitle, 31)}</strong>
         <em style={{ fontStyle: "normal", fontSize: 11, color: "rgba(246,239,226,0.56)" }}>
           {approachingDistance > 0 ? `${Math.max(1, Math.round(approachingDistance))} units / ${trailLabel}` : "standing in the active clearing"}
         </em>
@@ -141,8 +146,11 @@ function MiniMapHUD({
   );
 }
 
-function ContextualNavigationPrompt({ sceneProximity }: { sceneProximity: SceneProximityState | null }) {
-  const targetTitle = sceneProximity?.navigationTargetTitle ?? sceneProximity?.approachingTitle ?? sceneProximity?.nearestTitle ?? "The next clearing";
+function ContextualNavigationPrompt({ sceneProximity, entries, witnessedEntryIds }: {
+  sceneProximity: SceneProximityState | null; entries: Slipper3DEntry[]; witnessedEntryIds: readonly string[];
+}) {
+  const titleEntryId = sceneProximity?.navigationTargetId ?? sceneProximity?.approachingEntryId ?? sceneProximity?.nearestEntryId;
+  const targetTitle = rememberedRouteTitle(entries, witnessedEntryIds, titleEntryId);
   const distance = sceneProximity?.navigationTargetDistance ?? sceneProximity?.approachingDistance ?? 0;
   const trailState = sceneProximity?.trailState ?? "on-trail";
   const label = trailStateLabel(trailState);
@@ -205,7 +213,7 @@ export function RememberedPaths({ entries, activeEntryId, witnessedEntryIds, sce
       activeEntryId={activeEntryId} sceneProximity={sceneProximity} witnessedEntryIds={witnessedEntryIds} /></div> : null}
     <label><input type="checkbox" checked={showCompass} onChange={event => onSettingChange("showCompass", event.target.checked)} /> Compass in navigation details</label>
     {showCompass ? <p>{controls === "walk" ? "Walk" : "Drag to look"} · {readable ? sceneLabel(activeEntry) : "A path still forming"}</p> : null}
-    {showContextualGuidance ? <ContextualNavigationPrompt sceneProximity={sceneProximity} /> : null}
+    {showContextualGuidance ? <ContextualNavigationPrompt sceneProximity={sceneProximity} entries={entries} witnessedEntryIds={witnessedEntryIds} /> : null}
     <label><input type="radio" name="mobile-mode" checked={mobileControlMode === "direct"} onChange={() => onSettingChange("mobileControlMode", "direct")} /> Direct mobile controls</label>
     <label><input type="radio" name="mobile-mode" checked={mobileControlMode === "guided"} onChange={() => onSettingChange("mobileControlMode", "guided")} /> Guided mobile controls</label>
     <nav aria-label="Recent remembered trail">{recentEntries.filter(entry => witnessedEntryIds.includes(entry.id)).map(entry =>

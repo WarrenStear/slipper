@@ -267,9 +267,13 @@
 }
 
 .constellation-label.is-visible {
-  fill: rgba(255, 255, 255, 0.92);
-  opacity: 1;
-  font-weight: 760;
+  fill: #e4dfd0;
+  opacity: 0;
+  font-weight: 500;
+  paint-order: stroke;
+  stroke: #080b0d;
+  stroke-width: 3px;
+  stroke-linejoin: round;
 }
 
 .constellation-legend {
@@ -640,17 +644,17 @@
 }
 
 .constellation-region path {
-  fill: var(--region-tint, rgba(216, 208, 186, 0.16));
-  stroke: rgba(255, 255, 255, 0.08);
-  stroke-width: 0.9;
+  fill: var(--region-tint, rgba(178, 173, 151, 0.035));
+  stroke: rgba(206, 205, 191, 0.025);
+  stroke-width: 0.6;
 }
 
 .constellation-guidance-line {
   fill: none;
-  stroke: rgba(216, 208, 186, 0.72);
-  stroke-width: 1.4;
-  stroke-dasharray: 4 4;
-  filter: drop-shadow(0 0 5px rgba(216, 208, 186, 0.42));
+  stroke: rgba(211, 206, 186, 0.26);
+  stroke-width: 0.75;
+  stroke-dasharray: 1 6;
+  filter: none;
 }
 
 [role="tabpanel"].constellation-panel:focus-visible {
@@ -690,37 +694,37 @@
 
 .constellation-region.is-complete path {
   opacity: 0.9;
-  stroke: rgba(255, 245, 206, 0.16);
+  stroke: rgba(215, 207, 183, 0.04);
 }
 
 .constellation-region.is-protected-nest.is-protected > path:first-of-type {
-  fill: rgba(177, 132, 105, 0.16);
-  stroke: rgba(230, 196, 165, 0.38);
+  fill: rgba(176, 153, 132, 0.045);
+  stroke: rgba(209, 190, 163, 0.08);
 }
 
 .constellation-nest-protection-ring {
   fill: none !important;
-  stroke: rgba(242, 216, 185, 0.7) !important;
-  stroke-width: 2.4 !important;
-  stroke-dasharray: 1.5 4;
-  filter: drop-shadow(0 0 5px rgba(202, 161, 125, 0.3));
+  stroke: rgba(209, 190, 163, 0.2) !important;
+  stroke-width: 0.65 !important;
+  stroke-dasharray: 2 5;
+  filter: none;
 }
 
 .constellation-link.is-story-scene {
-  stroke: rgba(184, 200, 216, 0.24);
-  stroke-width: 0.9;
+  stroke: rgba(158, 180, 182, 0.14);
+  stroke-width: 0.6;
 }
 
 .constellation-link.is-story-chapter {
-  stroke: rgba(216, 208, 186, 0.4);
-  stroke-width: 1.25;
-  stroke-dasharray: 2 4;
+  stroke: rgba(190, 184, 159, 0.2);
+  stroke-width: 0.65;
+  stroke-dasharray: 1 5;
 }
 
 .constellation-link.is-story-travel {
-  stroke: rgba(255, 245, 206, 0.72);
-  stroke-width: 1.85;
-  filter: drop-shadow(0 0 4px rgba(216, 208, 186, 0.28));
+  stroke: rgba(210, 199, 168, 0.3);
+  stroke-width: 0.8;
+  filter: none;
 }
 
 .constellation-node {
@@ -752,10 +756,10 @@
 }
 
 .constellation-resonance-thread {
-  fill: rgba(202, 219, 223, 0.025);
-  stroke: rgba(206, 220, 220, 0.2);
-  stroke-width: 0.9;
-  stroke-dasharray: 2 4;
+  fill: none;
+  stroke: rgba(172, 185, 181, 0.12);
+  stroke-width: 0.55;
+  stroke-dasharray: 1 5;
   pointer-events: none;
 }
 
@@ -765,13 +769,13 @@
 }
 
 .constellation-resonance-halo {
-  fill: rgba(255, 255, 255, 0.025);
-  stroke-width: 1.2;
-  stroke-dasharray: 2 3;
+  fill: none;
+  stroke-width: 0.6;
+  opacity: 0.32;
 }
 
 .constellation-resonance-core {
-  filter: url(#constellation-node-glow);
+  filter: none;
 }
 
 .constellation-resonance-node.is-wolf .constellation-resonance-halo {
@@ -779,7 +783,7 @@
 }
 
 .constellation-resonance-node.is-wolf .constellation-resonance-core {
-  fill: #c77742;
+  fill: #b6a38b;
 }
 
 .constellation-resonance-node.is-swan .constellation-resonance-halo {
@@ -787,7 +791,7 @@
 }
 
 .constellation-resonance-node.is-swan .constellation-resonance-core {
-  fill: #dce9ed;
+  fill: #b9c8c8;
 }
 
 .constellation-resonance-node.is-seer .constellation-resonance-halo {
@@ -795,7 +799,7 @@
 }
 
 .constellation-resonance-node.is-seer .constellation-resonance-core {
-  fill: #b79acb;
+  fill: #9caeb4;
 }
 
 .constellation-resonance-label,
@@ -922,4 +926,173 @@
     width: 100%;
     max-width: 100%;
   }
+}
+
+/* Growth comes only from admitted canonical memories; no animation timer earns
+   a node, path or relationship. The same physical projection anchors all stages. */
+.constellation-panel[data-constellation-growth] .constellation-map {
+  background: radial-gradient(ellipse at 50% 48%, rgba(127, 151, 142, .035), transparent 66%), #05070a;
+}
+.constellation-panel[data-constellation-growth="dark"] .constellation-map,
+.constellation-panel[data-constellation-growth="spark"] .constellation-map {
+  background: #030509;
+}
+.constellation-panel[data-constellation-growth="clusters"] .constellation-map,
+.constellation-panel[data-constellation-growth="whole"] .constellation-map {
+  background: radial-gradient(ellipse at 50% 48%, rgba(143, 163, 146, .075), transparent 68%), #05070a;
+}
+.constellation-panel[data-constellation-growth] .constellation-unwitnessed-dot {
+  opacity: .12;
+  pointer-events: none;
+}
+.constellation-panel[data-constellation-growth] .constellation-link {
+  opacity: .6;
+  stroke-linecap: round;
+}
+.constellation-panel[data-constellation-growth] .constellation-link.is-story-travel {
+  stroke: rgba(205, 197, 170, .3);
+}
+.constellation-panel[data-constellation-growth] .constellation-node.is-ritual-complete .constellation-node-core,
+.constellation-panel[data-constellation-growth] .constellation-node.is-chapter-complete .constellation-node-core {
+  fill: #c9c1aa;
+}
+.constellation-panel[data-constellation-growth] .constellation-node.is-water .constellation-node-core {
+  fill: #adbec0;
+}
+.constellation-panel[data-constellation-growth] .constellation-node.is-memory .constellation-node-core {
+  fill: #b6c0bd;
+}
+/* Light remains distinct from its unchanged 44-unit interaction target. */
+.constellation-panel[data-constellation-growth] .constellation-node-core {
+  filter: none;
+}
+.constellation-panel[data-constellation-growth] .constellation-node-ring {
+  opacity: 0;
+  stroke-width: 0.7;
+}
+.constellation-panel[data-constellation-growth] .constellation-node.is-active .constellation-node-ring {
+  opacity: 0.42;
+}
+.constellation-panel[data-constellation-growth] .constellation-node.is-target .constellation-node-ring {
+  opacity: 0.25;
+}
+.constellation-panel[data-constellation-growth] .constellation-node:focus-visible .constellation-node-ring {
+  opacity: 1;
+  stroke: #f1e7d2;
+  stroke-width: 1.6;
+}
+.constellation-node-button:hover .constellation-label,
+.constellation-node-button:focus-visible .constellation-label,
+.constellation-guidance-point:hover .constellation-label,
+.constellation-guidance-point:focus-visible .constellation-label {
+  opacity: 1;
+}
+.constellation-resonance-label,
+.constellation-released-word text {
+  display: none;
+}
+.constellation-player-marker {
+  opacity: 0.38;
+  pointer-events: none;
+}
+.constellation-guidance-point {
+  cursor: pointer;
+}
+.constellation-guidance-point:focus-visible {
+  outline: none;
+  stroke: #f1e7d2;
+  stroke-width: 2;
+}
+.constellation-memory-details {
+  color: rgba(229, 225, 211, .68);
+  font-size: .75rem;
+  margin-block: .7rem;
+}
+.constellation-memory-details summary {
+  cursor: pointer;
+  padding: .45rem .15rem;
+}
+.constellation-memory-details summary:focus-visible {
+  outline: 2px solid #d6caa9;
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+.constellation-panel[data-constellation-motion="reduced"] *,
+html[data-motion="reduced"] .constellation-panel[data-constellation-growth] * {
+  animation: none !important;
+  transition: none !important;
+}
+
+
+/* The return control is a header, not a third content panel. Use the actual
+   workspace mode so touch landscape and partial maps retain their own rows. */
+.map-workspace[data-map-layout] {
+  grid-template-columns: minmax(0, 1fr) !important;
+  grid-template-rows: auto minmax(0, 1fr) !important;
+  min-height: 0;
+}
+.map-workspace[data-map-layout="columns"] {
+  grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr) !important;
+}
+.map-workspace[data-map-layout="tabs"] {
+  grid-template-rows: auto auto minmax(0, 1fr) !important;
+}
+.map-workspace[data-map-layout] > .memory-return {
+  grid-column: 1 / -1;
+  justify-self: start;
+  align-self: start;
+  min-height: 44px;
+  pointer-events: auto;
+}
+.map-workspace[data-map-layout] > .map-workspace-tabs {
+  grid-column: 1 / -1;
+}
+.map-workspace[data-map-layout] > .forest-loader {
+  grid-column: 1;
+  grid-row: 2;
+  min-width: 0;
+  min-height: 0;
+}
+.map-workspace[data-map-layout="tabs"] > .forest-loader {
+  grid-row: 3;
+}
+.map-workspace[data-map-layout] > .constellation-panel,
+.map-workspace[data-map-layout] > .archive-index {
+  min-width: 0;
+  min-height: 0 !important;
+  box-sizing: border-box;
+}
+.map-workspace[data-map-layout] > .constellation-panel {
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+.map-workspace[data-map-layout] .constellation-header,
+.map-workspace[data-map-layout] .constellation-memory-details,
+.map-workspace[data-map-layout] .constellation-route-panel,
+.map-workspace[data-map-layout] .constellation-list {
+  flex: 0 0 auto;
+}
+.map-workspace[data-map-layout] .constellation-map {
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: auto;
+  min-height: min-content;
+  box-sizing: border-box;
+}
+.map-workspace[data-map-layout] .constellation-spatial-svg {
+  flex: 0 0 auto;
+  width: min(100%, clamp(12rem, 42vh, 32rem));
+  height: auto;
+  aspect-ratio: 1;
+}
+.map-workspace[data-map-layout] .constellation-map > .constellation-memory-details {
+  align-self: stretch;
+}
+/* Keep hidden mobile panels out of both grid and flex layout. */
+.map-workspace[data-map-layout] > [role="tabpanel"][hidden] {
+  display: none !important;
 }

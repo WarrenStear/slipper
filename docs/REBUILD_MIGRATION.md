@@ -1377,3 +1377,49 @@ seven security cases, type/content/asset validation, production build and Pages
 Functions. Native fixtures replay canonical reducer history; the earned complete
 journey and final four-moment art review remain phase 10 work. Reports and the
 supplemental framing audit are retained under `artifacts/rebuild-20261005/phase6-*`.
+
+
+### Visual phase 7 — witnessed constellations and remembered geography
+
+Constellation now builds its visible geography and relationships from witnessed
+canonical memories. Unread Guide actions remain anonymous in the map, Archive,
+Memories details and live guidance status. Previously completed visits alone do
+not expose private titles or prose. All sixty-six remembered entries retain
+actual accessible reading actions, exact paragraphs, focus restoration and
+unchanged saved progress. The partial directed view remains read-only.
+
+The presentation uses varied small warm/cool lights, faint relationship threads
+and quiet chapter washes. Ordinary large rings and persistent overlapping labels
+are removed; generous hit circles, keyboard focus rings and all accessible names
+remain. Details stay behind deliberate disclosure. Return has a separate compact
+header; the map keeps a usable square inside a scrollable panel. Touch tabs use
+three explicit rows so the legacy mobile override cannot compress their targets.
+
+The Epilogue keeps its existing three geometry buffers, formation callback,
+completion timing, reverse playback, material owners and final sky transform.
+The same witnessed route rises from the forest floor into the sky rather than
+scaling into place. Unwitnessed gaps break the connecting thread. Reduced motion
+retains immediate stable presentation, with no new animation owner or pass.
+
+The restrained map passes all twenty-eight original browser cases across seven
+profiles. A separate final mobile correction passes both the original all-memory
+case and real touch-tab switching in portrait and landscape. Measured targets are
+at least 48 CSS pixels high, clear of clipping and hit-test obstruction; trusted
+taps switch the actual panels without changing progress. Original layout failures,
+the passed-but-clipped earlier tab images, and a wrapper's invalid project-name
+selection remain retained. No browser assertion was weakened.
+
+Epilogue reviews retain twenty-two images in eleven matched pairs, including
+all detail tiers, portrait, landscape and both reduced settings. Three strict
+owner histories pass unchanged cycles/remount counts; the changed formation adds
+zero calls, triangles, lights, shadows, textures, geometries, programs or frame
+owners. Original endpoint pictures were identical by design and the camera
+clipped most stars. Separate labeled composition views include the actual three
+draw owners and at least 95% of their projected vertices, showing the in-progress
+route against the forest and the preserved final sky. These are rendered fixtures,
+not a replacement for the final earned physical walk.
+
+The final Node 22 release check passes 1,293 unit and seven security cases, type,
+content and asset validation, the production build and Pages Functions. Native
+reports, source seals and corrected layout/framing evidence are retained under
+`artifacts/rebuild-20261005/phase7-*`.

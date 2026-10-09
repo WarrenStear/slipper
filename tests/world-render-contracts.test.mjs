@@ -530,7 +530,9 @@ test("the epilogue composes the travelled world from the current journey history
   assert.match(epilogue, /<IntegratedFinalTableau/);
   assert.doesNotMatch(epilogue, /<ConstellationField/);
   assert.match(tableau, /useJourneyStore\(\(state\) => state\.witnessedEntryIds\)/);
-  assert.match(tableau, /model\.routeEntryIds[\s\S]*\.map\(memoryStarPosition\)/);
+  assert.match(tableau, /for \(const entryId of model\.routeEntryIds\)/);
+  assert.match(tableau, /if \(!witnessed\.has\(entryId\)\) \{ segment = null; continue; \}/);
+  assert.match(tableau, /segment\.push\(memoryStarPosition\(entryId\)\)/);
   assert.match(tableau, /source: "journey-store-history"/);
   assert.match(tableau, /name="witnessed-memory-constellation"/);
   assert.match(tableau, /name="constellation-actual-walked-route"/);

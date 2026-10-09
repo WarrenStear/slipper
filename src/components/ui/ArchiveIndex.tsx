@@ -30,7 +30,9 @@ export type MapWorkspaceTabsProps = {
 export type ArchiveIndexProps = {
   entries: Slipper3DEntry[];
   activeEntryId: string;
+  /** Compatibility telemetry only; visiting never admits private writing. */
   visitedEntryIds: string[];
+  witnessedEntryIds?: string[];
   /** Opens a remembered fragment in focused reading mode. */
   onOpenEntry?: (entryId: string) => void;
   /** Starts guidance for an unread fragment without changing the active entry. */
@@ -125,7 +127,7 @@ export function MapWorkspaceTabs({
 export function ArchiveIndex({
   entries,
   activeEntryId,
-  visitedEntryIds,
+  witnessedEntryIds = [],
   onOpenEntry,
   onGuideEntry,
   onSelectEntry,
@@ -135,15 +137,17 @@ export function ArchiveIndex({
 }: ArchiveIndexProps) {
   const [query, setQuery] = useState("");
   const [chapter, setChapter] = useState("all");
-  const visitedSet = useMemo(() => new Set(visitedEntryIds), [visitedEntryIds]);
+  const witnessedSet = useMemo(() => new Set(witnessedEntryIds.filter(id => getJourneyChapterForEntry(id))), [witnessedEntryIds]);
+  const witnessedRef = useRef(witnessedSet);
+  witnessedRef.current = witnessedSet;
   const openRememberedEntry = onOpenEntry ?? onSelectEntry;
 
   const chapters = useMemo(() => {
     const availableEntryIds = new Set(entries.map((entry) => entry.id));
     return journeyChapters.filter((candidate) =>
-      candidate.entryIds.some((entryId) => availableEntryIds.has(entryId)),
+      candidate.entryIds.some((entryId) => availableEntryIds.has(entryId) && witnessedSet.has(entryId)),
     );
-  }, [entries]);
+  }, [entries, witnessedSet]);
 
   const filteredEntries = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -155,21 +159,15 @@ export function ArchiveIndex({
 
       if (!normalizedQuery) return true;
 
-      const searchableProse = visitedSet.has(entry.id)
-        ? [entry.body, ...entry.paragraphs]
-        : [];
-      const haystack = [
-        entry.title,
-        canonicalChapter?.title ?? entry.chapter,
-        ...entry.tags,
-        ...searchableProse,
-      ]
+      const haystack = (witnessedSet.has(entry.id)
+        ? [entry.title, canonicalChapter?.title ?? entry.chapter, ...entry.tags, entry.body, ...entry.paragraphs]
+        : ["unread memory", String(entry.sequence ?? "")])
         .join(" ")
         .toLowerCase();
 
       return haystack.includes(normalizedQuery);
     });
-  }, [entries, chapter, query, visitedSet]);
+  }, [entries, chapter, query, witnessedSet]);
 
   return (
     <aside
@@ -217,31 +215,35 @@ export function ArchiveIndex({
             No fragments match this search. Unread prose is intentionally excluded from search.
           </p>
         ) : null}
-        {filteredEntries.map((entry) => {
+        {filteredEntries.map((entry, index) => {
           const canonicalChapter = getJourneyChapterForEntry(entry.id);
           const isActive = entry.id === activeEntryId;
-          const isVisited = visitedSet.has(entry.id);
-          const action = isVisited ? openRememberedEntry : onGuideEntry;
+          const isWitnessed = witnessedSet.has(entry.id);
+          const action = isWitnessed ? openRememberedEntry : onGuideEntry;
           const actionAvailable = Boolean(action);
-          const stateLabel = isVisited
+          const stateLabel = isWitnessed
             ? isActive
               ? "Remembered · current clearing"
               : "Remembered · read again"
             : actionAvailable
-              ? "Unvisited · guide available"
-              : "Unvisited · guidance unavailable";
-          const actionLabel = isVisited
+              ? "Unread · guide available"
+              : "Unread · guidance unavailable";
+          const actionLabel = isWitnessed
             ? isActive
               ? `Read current remembered fragment: ${entry.title}`
               : `Return to remembered fragment: ${entry.title}`
-            : `Guide through the forest to unread fragment: ${entry.title}`;
+            : `Guide through the forest to an unread memory ${entry.sequence ?? index + 1}`;
 
           return (
             <button
               key={entry.id}
               type="button"
-              className={`archive-index-card${isActive ? " is-active" : ""}${isVisited ? " is-visited" : " is-unvisited"}`}
-              onClick={() => action?.(entry.id)}
+              className={`archive-index-card${isActive ? " is-active" : ""}${isWitnessed ? " is-visited" : " is-unvisited"}`}
+              onClick={() => {
+                // A retained remembered control cannot turn into anonymous guidance after restore.
+                if (witnessedRef.current.has(entry.id) !== isWitnessed) return;
+                action?.(entry.id);
+              }}
               disabled={!actionAvailable}
               aria-current={isActive ? "location" : undefined}
               aria-label={actionLabel}
@@ -249,10 +251,10 @@ export function ArchiveIndex({
               <span className="archive-index-sequence">{entry.sequence ?? "—"}</span>
               <span className="archive-index-copy">
                 <span className="archive-index-state">{stateLabel}</span>
-                <strong>{entry.title}</strong>
-                <small>{canonicalChapter?.title ?? entry.chapter} / {entry.engine3d.mood ?? "fragment"}</small>
+                <strong>{isWitnessed ? entry.title : `Unread memory ${entry.sequence ?? index + 1}`}</strong>
+                <small>{isWitnessed ? `${canonicalChapter?.title ?? entry.chapter} / ${entry.engine3d.mood ?? "fragment"}` : "A memory still forming"}</small>
                 <em>
-                  {isVisited
+                  {isWitnessed
                     ? entryPreview(entry)
                     : "This writing remains unread. Select it to ask the lantern for a route."}
                 </em>

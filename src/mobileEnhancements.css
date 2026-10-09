@@ -349,6 +349,27 @@ html.sidtw-high-contrast .mobile-explore-controls :is(button, [role="group"]):fo
     overflow: hidden !important;
   }
 
+  /* Touch maps have three real rows: return control, tabs, and one panel.
+     Match the mobile override's specificity so the tab strip cannot consume
+     the flexible panel row and collapse behind the content. */
+  html[data-mobile="true"] .map-workspace[data-map-layout="tabs"] {
+    grid-template-rows: auto max-content minmax(0, 1fr) !important;
+  }
+
+  html[data-mobile="true"] .map-workspace[data-map-layout="tabs"] > .memory-return {
+    grid-row: 1;
+  }
+
+  html[data-mobile="true"] .map-workspace[data-map-layout="tabs"] > .map-workspace-tabs {
+    grid-row: 2;
+  }
+
+  html[data-mobile="true"] .map-workspace[data-map-layout="tabs"] > [role="tabpanel"],
+  html[data-mobile="true"] .map-workspace[data-map-layout="tabs"] > .forest-loader {
+    grid-row: 3;
+    grid-column: 1;
+  }
+
   html[data-mobile="true"] .map-workspace > [role="tabpanel"] {
     width: 100%;
     min-width: 0;

@@ -547,14 +547,6 @@ function ExperienceApplication() {
     requestReaderFocus: () => setReaderFocusNonce(value => value + 1),
   });
 
-  const menuProximity = useMemo(() => {
-    if (!sceneProximity) return null;
-    const title = (id?: string | null) => id && witnessedEntryIds.includes(id)
-      ? getEntryById(entries, id)?.title ?? "A remembered clearing" : "Unread memory";
-    return { ...sceneProximity, nearestTitle: title(sceneProximity.nearestEntryId),
-      approachingTitle: title(sceneProximity.approachingEntryId),
-      navigationTargetTitle: title(sceneProximity.navigationTargetId) };
-  }, [sceneProximity, witnessedEntryIds]);
   const visitedCount = visitedEntryIds.length;
   const totalCount = entries.length;
   const canReadActiveEntry = canReadStoryEntry(resolvedActiveEntryId, { witnessedEntryIds });
@@ -826,7 +818,7 @@ function ExperienceApplication() {
           { id: "threshold", label: "Threshold", onSelect: leaveForest },
         ]}
         navigationDetails={<RememberedPaths entries={entries} activeEntryId={resolvedActiveEntryId}
-          witnessedEntryIds={witnessedEntryIds} sceneProximity={menuProximity}
+          witnessedEntryIds={witnessedEntryIds} sceneProximity={sceneProximity}
           recentEntries={recentBreadcrumbs} chapterEntries={currentChapterEntries} chapterProgress={chapterProgress}
           counts={{ visited: visitedCount, total: totalCount, visuals: contentDiagnostics.visualCount, chapters: journeyChapters.length }}
           mobile={mobileViewport.isMobile} controls={controls} showMiniMap={showMiniMap} showCompass={showCompass}
@@ -837,7 +829,7 @@ function ExperienceApplication() {
 
       {experienceCapabilities.allowConstellationView && mode === "map" ? <MapWorkspace
         capabilities={experienceCapabilities} entries={entries} activeEntryId={resolvedActiveEntryId}
-        visitedEntryIds={visitedEntryIds} sceneProximity={sceneProximity} mobile={mobileViewport.isMobile}
+        visitedEntryIds={visitedEntryIds} witnessedEntryIds={witnessedEntryIds} sceneProximity={sceneProximity} mobile={mobileViewport.isMobile}
         activePane={mobileMapPane} onChangePane={setMobileMapPane} workspaceRef={mapWorkspaceRef}
         onReturnToForest={() => setMode("explore")}
         onOpenEntry={entryId => openRememberedEntry(entryId, "read")} onGuideEntry={requestGuidance} /> : null}

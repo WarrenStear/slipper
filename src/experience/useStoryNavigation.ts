@@ -95,8 +95,9 @@ export function useStoryNavigation(options: StoryNavigationOptions) {
       }
       if (config.accessibleJourney && !navigateToEntry(target.id, "read")) return false;
       config.setGuidanceEntryId(target.id);
-      config.setGuidanceStatus(config.accessibleJourney ? `${target.title} is ready to witness in the text journey.`
-        : `Lantern guidance active: ${target.title}`);
+      const targetTitle = useJourneyStore.getState().witnessedEntryIds.includes(target.id) ? target.title : "An unread memory";
+      config.setGuidanceStatus(config.accessibleJourney ? `${targetTitle} is ready to witness in the text journey.`
+        : `Lantern guidance active: ${targetTitle}`);
       config.setArchiveOpen(false); config.setExperienceStarted(true);
       const world = useWorldStore.getState(); world.setMode(config.accessibleJourney ? "read" : "explore"); world.setControls("walk");
       openRoot(); return true;
@@ -117,7 +118,10 @@ export function useStoryNavigation(options: StoryNavigationOptions) {
           useJourneyStore.getState().setSafePosition({ entryId, position: [...position] });
           const completedGuidance = entryId === current.guidanceEntryId;
           current.setGuidanceEntryId(null); useWorldStore.getState().setMode("explore");
-          if (completedGuidance) current.setGuidanceStatus(`Arrived at ${target.title}.`);
+          if (completedGuidance) {
+            const targetTitle = useJourneyStore.getState().witnessedEntryIds.includes(target.id) ? target.title : "an unread memory";
+            current.setGuidanceStatus(`Arrived at ${targetTitle}.`);
+          }
         },
       }) ?? false;
     }
@@ -129,7 +133,9 @@ export function useStoryNavigation(options: StoryNavigationOptions) {
       const config = optionsRef.current, state = useJourneyStore.getState();
       const target = getEntryById(entries, state.lastSafeEntryId)?.id ?? state.activeEntryId;
       if (!navigateToEntry(target, "explore")) return;
-      config.setGuidanceStatus(`Returned safely to ${getEntryById(entries, target)?.title ?? "the current clearing"}.`);
+      const targetTitle = useJourneyStore.getState().witnessedEntryIds.includes(target)
+        ? getEntryById(entries, target)?.title ?? "the current clearing" : "the current clearing";
+      config.setGuidanceStatus(`Returned safely to ${targetTitle}.`);
       useWorldStore.getState().setControls("walk");
       if (target === state.activeEntryId) config.setSceneResetNonce(value => value + 1);
     }

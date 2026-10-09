@@ -273,10 +273,10 @@ test("directed journey capabilities gate every software-like App entry point", (
   assert.match(menu, /capabilities.allowFullArchive \? <button/);
   const rememberedPaths = source("src/ui/navigation/RememberedPaths.tsx");
   const reader = source("src/ui/reader/FragmentReader.tsx");
-  assert.match(app, /navigationDetails=\{<RememberedPaths[\s\S]*?sceneProximity=\{menuProximity\}/);
+  assert.match(app, /navigationDetails=\{<RememberedPaths[\s\S]*?sceneProximity=\{sceneProximity\}/);
   assert.match(rememberedPaths, /<MagicLinkSignIn \/>/);
   assert.match(rememberedPaths, /showMiniMap && readable \? <div[\s\S]*?<MiniMapHUD[\s\S]*?witnessedEntryIds=\{witnessedEntryIds\}/);
-  assert.match(rememberedPaths, /showContextualGuidance \? <ContextualNavigationPrompt sceneProximity=\{sceneProximity\}/);
+  assert.match(rememberedPaths, /showContextualGuidance \? <ContextualNavigationPrompt sceneProximity=\{sceneProximity\} entries=\{entries\} witnessedEntryIds=\{witnessedEntryIds\}/);
   assert.match(reader, /freeWoods \? <>[\s\S]*?<button type="button" onClick=\{onArchive\}>Open archive<\/button>/);
   assert.match(app, /onArchive=\{openArchive\}/);
   assert.match(app, /<AccessibleStoryJourney[\s\S]{0,240}experienceMode=\{experienceMode\}/);

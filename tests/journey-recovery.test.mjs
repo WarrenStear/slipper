@@ -848,7 +848,9 @@ test("the SVG map limits keyboard landmarks without removing pointer activation"
     mapSource,
     /aria-hidden=\{isKeyboardLandmark \? undefined : true\}/,
   );
-  assert.match(mapSource, /onClick=\{\(\) => activateEntry\(storyNode\.entryId\)\}/);
+  assert.match(mapSource, /useJourneyStore\.getState\(\)\.witnessedEntryIds/);
+  assert.match(mapSource, /if \(!action \|\| action !== expected\) return/);
+  assert.match(mapSource, /onClick=\{\(\) => activateEntry\(storyNode\.entryId, "open"\)\}/);
 });
 
 test("threshold and archive defer the scene map, and the app avoids unused linked-photo preloads", () => {

@@ -13,6 +13,7 @@ export type MapWorkspaceProps = {
   entries: Slipper3DEntry[];
   activeEntryId: string;
   visitedEntryIds: string[];
+  witnessedEntryIds: string[];
   sceneProximity: SceneProximityState | null;
   mobile: boolean;
   activePane: StoryMapPane;
@@ -24,13 +25,14 @@ export type MapWorkspaceProps = {
 };
 
 /** The shell owns view changes; this owner composes lazy map panels and their accessible tab relations. */
-export function MapWorkspace({ capabilities, entries, activeEntryId, visitedEntryIds, sceneProximity,
+export function MapWorkspace({ capabilities, entries, activeEntryId, visitedEntryIds, witnessedEntryIds, sceneProximity,
   mobile, activePane, onChangePane, workspaceRef, onReturnToForest, onOpenEntry, onGuideEntry }: MapWorkspaceProps) {
   if (!capabilities.allowConstellationView) return null;
   const tabs = mobile && capabilities.allowFullArchive;
   return <section ref={workspaceRef} tabIndex={-1}
     className={`map-workspace${capabilities.constellationScope === "witnessed-only" ? " is-partial-constellation" : ""}`}
-    aria-label="Story map workspace" data-constellation-scope={capabilities.constellationScope}>
+    aria-label="Story map workspace" data-constellation-scope={capabilities.constellationScope}
+    data-map-layout={tabs ? "tabs" : capabilities.allowFullArchive ? "columns" : "single"}>
     <button className="memory-return" type="button" onClick={onReturnToForest}>Return to forest</button>
     {tabs ? <MapWorkspaceTabs activePane={activePane} onChange={onChangePane} /> : null}
     <Suspense fallback={<div className="forest-loader" role="status">Charting the remembered clearings…</div>}>
@@ -43,7 +45,7 @@ export function MapWorkspace({ capabilities, entries, activeEntryId, visitedEntr
         hidden={tabs && activePane !== "constellation"} />
     </Suspense>
     {capabilities.allowFullArchive ? <ArchiveIndex entries={entries} activeEntryId={activeEntryId}
-      visitedEntryIds={visitedEntryIds} onOpenEntry={onOpenEntry} onGuideEntry={onGuideEntry}
+      visitedEntryIds={visitedEntryIds} witnessedEntryIds={witnessedEntryIds} onOpenEntry={onOpenEntry} onGuideEntry={onGuideEntry}
       panelId={mobile ? STORY_MAP_ARCHIVE_PANEL_ID : undefined}
       labelledBy={mobile ? STORY_MAP_ARCHIVE_TAB_ID : undefined}
       hidden={mobile && activePane !== "archive"} /> : null}

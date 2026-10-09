@@ -54,9 +54,9 @@ function pointsGeometry(points: readonly Vec3[]) {
   return geometry;
 }
 
-function lineGeometry(points: readonly Vec3[]) {
+function lineGeometry(segments: readonly (readonly Vec3[])[]) {
   const coordinates: number[] = [];
-  for (let index = 1; index < points.length; index += 1) {
+  for (const points of segments) for (let index = 1; index < points.length; index += 1) {
     coordinates.push(...points[index - 1], ...points[index]);
   }
   const geometry = new THREE.BufferGeometry();
@@ -104,13 +104,21 @@ const WitnessedMemoryConstellation = memo(function WitnessedMemoryConstellation(
       .map((node) => memoryStarPosition(node.entryId)),
     [witnessedNodes],
   );
-  const routePoints = useMemo(
-    () => model.routeEntryIds.filter((entryId) => CANONICAL_ENTRY_ID_SET.has(entryId)).map(memoryStarPosition),
-    [model.routeEntryIds],
-  );
+  const routeSegments = useMemo(() => {
+    const witnessed = new Set(witnessedNodes.map(node => node.entryId));
+    const segments: Vec3[][] = [];
+    let segment: Vec3[] | null = null;
+    for (const entryId of model.routeEntryIds) {
+      if (!witnessed.has(entryId)) { segment = null; continue; }
+      if (!segment) { segment = []; segments.push(segment); }
+      segment.push(memoryStarPosition(entryId));
+    }
+    return segments;
+  }, [model.routeEntryIds, witnessedNodes]);
+  const routeStepCount = routeSegments.reduce((count, points) => count + Math.max(0, points.length - 1), 0);
   const historyGeometry = useMemo(() => pointsGeometry(historyPoints), [historyPoints]);
   const keystoneGeometry = useMemo(() => pointsGeometry(keystonePoints), [keystonePoints]);
-  const threadGeometry = useMemo(() => lineGeometry(routePoints), [routePoints]);
+  const threadGeometry = useMemo(() => lineGeometry(routeSegments), [routeSegments]);
   useEffect(() => () => historyGeometry.dispose(), [historyGeometry]);
   useEffect(() => () => keystoneGeometry.dispose(), [keystoneGeometry]);
   useEffect(() => () => threadGeometry.dispose(), [threadGeometry]);
@@ -130,9 +138,11 @@ const WitnessedMemoryConstellation = memo(function WitnessedMemoryConstellation(
     formationProgressRef.current = progress;
     const eased = THREE.MathUtils.smootherstep(progress, 0, 1);
     formation.visible = eased > 0.003;
-    formation.scale.setScalar(0.02 + eased * 0.98);
-    formation.position.y = CONSTELLATION_FORMATION_CENTER[1] - (1 - eased) * 0.7;
-    formation.rotation.z = (1 - eased) * 0.06;
+    // The same remembered geography rises from the forest floor into its sky
+    // position. Final transform is exactly the original rotated 1.55 sky map.
+    formation.scale.set(1 + eased * .55, 1.2 + eased * .35, 1 + eased * .55);
+    formation.position.set(0, .35 + eased * (CONSTELLATION_FORMATION_CENTER[1] - .35), -16 - eased * 4);
+    formation.rotation.set(-(1 - eased) * Math.PI / 2, 0, -eased * .5);
     formation.userData.formationProgress = Number(eased.toFixed(3));
     const formationComplete =
       formationReady &&
@@ -156,15 +166,16 @@ const WitnessedMemoryConstellation = memo(function WitnessedMemoryConstellation(
         completedChapterCount: model.progress.completedChapters,
         completedRitualCount: model.progress.completedRituals,
         transformedLandmarkCount: model.landmarkMemory.transformedCount + model.landmarkMemory.releasedCount,
-        routeStepCount: model.progress.routeSteps,
+        routeStepCount,
         source: "journey-store-history",
       }}
     >
       <group
         ref={formationRef}
         name="constellation-formation-reveal"
-        position={CONSTELLATION_FORMATION_CENTER}
-        scale={reducedMotion && formationReady ? 1 : 0.02}
+        position={reducedMotion && formationReady ? CONSTELLATION_FORMATION_CENTER : [0, .35, -16]}
+        rotation={reducedMotion && formationReady ? [0, 0, -.5] : [-Math.PI / 2, 0, 0]}
+        scale={reducedMotion && formationReady ? 1.55 : [1, 1.2, 1]}
         visible={formationReady}
         userData={{
           formationReady,
@@ -174,7 +185,7 @@ const WitnessedMemoryConstellation = memo(function WitnessedMemoryConstellation(
         }}
       >
         {/* Compose the unaltered route in the sky without stretching its geography. */}
-        <group name="constellation-sky-presentation" rotation={[0, 0, -0.5]} scale={1.55}>
+        <group name="constellation-sky-presentation">
           <group position={[-CONSTELLATION_FORMATION_CENTER[0], -CONSTELLATION_FORMATION_CENTER[1], -CONSTELLATION_FORMATION_CENTER[2]]}>
             <points geometry={historyGeometry}>
               <pointsMaterial
@@ -198,7 +209,7 @@ const WitnessedMemoryConstellation = memo(function WitnessedMemoryConstellation(
                 toneMapped={false}
               />
             </points>
-            {routePoints.length > 1 ? (
+            {routeStepCount > 0 ? (
               <lineSegments name="constellation-actual-walked-route" geometry={threadGeometry}>
                 <lineBasicMaterial
                   color="#8ca7b7"

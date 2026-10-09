@@ -615,3 +615,34 @@ test('actual031/048 default and saved-inside arrivals remain stationary/private 
     assert.equal(interactionFrames.size, 1); cpu.unmount();
   }
 });
+
+test('actual anonymous full Guide status remains private until canonical witness while retaining the exact route and current-read continuity',()=>{
+  seed(completed());const cpu=mount({prologueResolved:true});enter(cpu);
+  const target=entries.find(entry=>entry.id==='fragment-012');assert.ok(target);
+  const before=snapshot(),commands=commandTrace.length;
+  cpu.act(()=>assert.equal(cpu.navigation.requestGuidance(target.id),true));
+  assert.equal(cpu.ui.guidanceEntryId,target.id);assert.equal(cpu.ui.guidanceStatus,'Lantern guidance active: An unread memory');
+  assert.equal(cpu.ui.guidanceStatus.includes(target.title),false);assert.deepEqual(snapshot(),before);assert.equal(commandTrace.length,commands);
+  cpu.act(()=>useJourneyStore.setState({witnessedEntryIds:[...state().witnessedEntryIds,target.id]}));
+  const earned=snapshot();cpu.act(()=>assert.equal(cpu.navigation.requestGuidance(target.id),true));
+  assert.equal(cpu.ui.guidanceStatus,`Lantern guidance active: ${target.title}`);assert.deepEqual(snapshot(),earned);
+  cpu.unmount();
+});
+
+
+test('actual anonymous guidance, accepted crossing and safe return never read an unwitnessed target title getter',()=>{
+  seed(completed());const cpu=mount({prologueResolved:true});enter(cpu);
+  const target=entries.find(entry=>entry.id==='fragment-012'),center=entryWorldPosition(target,entries);
+  const descriptor=Object.getOwnPropertyDescriptor(target,'title');
+  Object.defineProperty(target,'title',{configurable:true,get(){throw Error('Unwitnessed navigation title was read');}});
+  try {
+    const before=snapshot();cpu.act(()=>assert.equal(cpu.navigation.requestGuidance(target.id),true));
+    assert.equal(cpu.ui.guidanceStatus,'Lantern guidance active: An unread memory');assert.deepEqual(snapshot(),before);
+    armOutside(cpu,target,center,0);pose(cpu,center,250);pose(cpu,center,300);
+    cpu.act(()=>assert.equal(cpu.navigation.handlePortalSelect(target.id),true));assert.deepEqual(snapshot(),before);
+    tick(310);assert.equal(state().activeEntryId,target.id);assert.deepEqual(state().playerPosition,center);
+    assert.deepEqual(state().witnessedEntryIds,before.witnessedEntryIds);assert.equal(cpu.ui.guidanceStatus,'Arrived at an unread memory.');
+    const crossed=snapshot();cpu.act(()=>cpu.navigation.returnToLastClearing());
+    assert.equal(cpu.ui.guidanceStatus,'Returned safely to the current clearing.');assert.deepEqual(snapshot(),crossed);
+  } finally { Object.defineProperty(target,'title',descriptor);cpu.unmount(); }
+});

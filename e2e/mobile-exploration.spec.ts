@@ -442,12 +442,12 @@ test.describe("mobile navigation surfaces", () => {
     const unreadTarget = page
       .locator(".constellation-spatial-svg")
       .getByRole("button", {
-        name: /Guide through the forest to unread fragment:/,
+        name: /Guide through the forest to an unread memory/,
       })
       .first();
     await expect(unreadTarget).toBeVisible();
     await expect(unreadTarget).toHaveAccessibleName(
-      /Guide through the forest to unread fragment:/,
+      /Guide through the forest to an unread memory/,
     );
     await unreadTarget.focus();
     await page.keyboard.press("Enter");

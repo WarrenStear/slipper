@@ -1085,6 +1085,7 @@ test.describe("canonical reconstructed story journey", () => {
     ).toHaveCount(66);
     await expect(constellation.locator(".constellation-region")).toHaveCount(12);
     expect(await constellation.locator(".constellation-link").count()).toBeGreaterThanOrEqual(65);
+    await constellation.locator("details").filter({ has: page.locator("summary", { hasText: /^Memory state$/ }) }).locator("summary").click();
     await expect(constellation.locator(".constellation-story-summary")).toContainText(
       `${JOURNEY_RITUAL_IDS.length} story moments`,
     );

@@ -73,7 +73,7 @@ test('reader footer keeps directed and completed capabilities and delegates ever
  for(const label of ['Remove bookmark','Open map','Open archive'])cpu.act(()=>cpu.button(label).props.onClick());assert.deepEqual(calls.slice(-3),['onBookmark','onConstellation','onArchive']);assert.deepEqual(snapshot(),before);
 });
 
-const mapProps={capabilities:getSlipperExperienceCapabilities('first-journey'),entries,activeEntryId:a.id,visitedEntryIds:entries.map(entry=>entry.id),sceneProximity:null,mobile:true,activePane:'constellation',onChangePane:noop,workspaceRef:{current:null},onReturnToForest:noop,onOpenEntry:noop,onGuideEntry:noop};
+const mapProps={capabilities:getSlipperExperienceCapabilities('first-journey'),entries,activeEntryId:a.id,visitedEntryIds:entries.map(entry=>entry.id),witnessedEntryIds:[a.id],sceneProximity:null,mobile:true,activePane:'constellation',onChangePane:noop,workspaceRef:{current:null},onReturnToForest:noop,onOpenEntry:noop,onGuideEntry:noop};
 async function waitForLazyMapOwner(){
  const mounted=()=>cpu.elements().some(element=>element.type==='aside'&&element.props?.className?.startsWith('constellation-panel'))
   && !cpu.elements().some(element=>element.props?.className==='forest-loader');

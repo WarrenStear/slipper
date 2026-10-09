@@ -60,12 +60,15 @@ export function resolveNavigationTarget({
   visitedEntryIds,
   playerPosition,
   cameraYaw,
+  includeTitle = true,
 }: {
   nodes: SpatialStoryNode[];
   activeEntryId: string;
   visitedEntryIds: string[];
   playerPosition: Vector3Tuple;
   cameraYaw: number;
+  /** Geometry-only consumers can resolve a route without reading private prose. */
+  includeTitle?: boolean;
 }): NavigationTarget | null {
   if (nodes.length === 0) return null;
 
@@ -108,7 +111,7 @@ export function resolveNavigationTarget({
 
     const candidate: NavigationTarget = {
       entryId: node.entry.id,
-      title: node.entry.title,
+      title: includeTitle ? node.entry.title : "",
       position: node.position,
       distance,
       score,

@@ -4,7 +4,7 @@ import test from "node:test";
 import { runInNewContext } from "node:vm";
 import ts from "typescript";
 import * as THREE from "three";
-import { memoryStarPosition } from "../src/lib/journeyMemoryProjection.ts";
+import { memoryStarPosition, memoryGroundPosition } from "../src/lib/journeyMemoryProjection.ts";
 import {
   JOURNEY_ENTRY_CONTEXT,
   JOURNEY_RITUAL_IDS,
@@ -227,7 +227,11 @@ test("the UI consumes the authored story model and does not classify archive key
     new URL("../src/components/three/chapters/IntegratedFinalTableau.tsx", import.meta.url),
     "utf8",
   );
-  assert.match(source, /buildStoryConstellationModel/);
+  const memorySource = readFileSync(new URL("../src/components/ui/ConstellationMap.tsx", import.meta.url), "utf8");
+  assert.match(source, /deriveConstellationMemory\(\{ \.\.\.journeyState, activeEntryId \}\)/);
+  assert.match(memorySource, /const canonical = buildStoryConstellationModel\(state\)/);
+  assert.match(memorySource, /canonical\.nodes\.filter\(node => witnessed\.has\(node\.entryId\)\)/);
+  assert.match(memorySource, /canonical\.edges\.filter\(edge => witnessed\.has\(edge\.sourceEntryId\) && witnessed\.has\(edge\.targetEntryId\)\)/);
   assert.match(source, /storyModel\.nodes\.map\(renderStoryNode\)/);
   assert.match(source, /storyModel\.edges\.map/);
   assert.match(source, /state\.witnessedEntryIds/);
@@ -247,7 +251,9 @@ test("the UI consumes the authored story model and does not classify archive key
   // The archive retains detailed symbolic history; the in-world sky uses only
   // real witnessed locations and route edges, without extra symbolic satellites.
   assert.match(finalTableau, /witnessedNodes\.map\(\(node\) => memoryStarPosition\(node\.entryId\)\)/);
-  assert.match(finalTableau, /model\.routeEntryIds[\s\S]*\.map\(memoryStarPosition\)/);
+  assert.match(finalTableau, /for \(const entryId of model\.routeEntryIds\)/);
+  assert.match(finalTableau, /if \(!witnessed\.has\(entryId\)\) \{ segment = null; continue; \}/);
+  assert.match(finalTableau, /segment\.push\(memoryStarPosition\(entryId\)\)/);
   assert.doesNotMatch(finalTableau, /RESONANCE_SKY_OFFSETS|ConstellationProtectedNest|ReleasedWordConstellation/);
   assert.match(finalTableau, /name="constellation-formation-reveal"/);
   assert.match(finalTableau, /const formationReady = \(lanternPlaced && \(!eventDriven \|\| reverseComplete\)\) \|\| storyCompleted/);
@@ -439,5 +445,46 @@ test("the actual sky hierarchy composes the unchanged route visibly on desktop a
     assert.ok(xSpan / ySpan > .5 && xSpan / ySpan < .7, "the actual narrow map reads as a diagonal sky route, not a vertical strip");
     assert.ok(xSpan > height * .17 && ySpan > height * .29, "the sky route occupies the freed focal space");
   }
+  fixture.cleanups.forEach(cleanup => cleanup());
+});
+
+test("the actual finale route never bridges an unwitnessed memory between earned places", () => {
+  const ids = journeyChapters.flatMap(chapter => chapter.entryIds);
+  const history = [ids[0], ids[1], ids[2], ids[3], ids[4], ids[0]];
+  const fixture = finaleFixture({ activeEntryId: ids[0], history, witnessedEntryIds: [ids[0], ids[2], ids[3]] });
+  const owner = constellationElement(fixture.tree), sky = owner.type(owner.props);
+  const elements = sceneElements(sky), points = elements.filter(element => element.type === "points");
+  const line = elements.find(element => element.type === "lineSegments");
+  assert.equal(points[0].props.geometry.getAttribute("position").count, 3);
+  assert.deepEqual(line.props.geometry.getAttribute("position").array, new Float32Array([
+    ...memoryStarPosition(ids[2]), ...memoryStarPosition(ids[3]),
+  ]));
+  assert.equal(elements.find(element => element.props?.name === "witnessed-memory-constellation").props.userData.routeStepCount, 1);
+  fixture.cleanups.forEach(cleanup => cleanup());
+});
+
+test("the same actual sky buffers begin on the remembered forest geography and rise with the existing clock", () => {
+  const fixture = finaleFixture({ storyObjectStates: { "epilogue.reverse-light": "complete" } });
+  const owner = constellationElement(fixture.tree), sky = owner.type(owner.props), elements = sceneElements(sky);
+  const formation = elements.find(element => element.props?.name === "constellation-formation-reveal");
+  const points = elements.find(element => element.type === "points");
+  const array = points.props.geometry.getAttribute("position"), original = Array.from(array.array);
+  const group = new THREE.Group();formation.props.ref.current = group;
+  const center = new THREE.Vector3(0, 9.6, -20), advance = fixture.frames[0];
+  advance({}, 0);group.updateMatrix();
+  for(const node of owner.props.model.nodes.filter(node => node.witnessed)) {
+    const skyPoint = new THREE.Vector3(...memoryStarPosition(node.entryId));
+    const ground = new THREE.Vector3(...memoryGroundPosition(node.entryId));
+    const presented = skyPoint.clone().sub(center).applyMatrix4(group.matrix);
+    assert.ok(Math.abs(presented.x-ground.x)<1e-10);
+    assert.ok(Math.abs(presented.z-ground.z)<1e-10);
+    assert.ok(Math.abs(presented.y-(.35+skyPoint.z+20))<1e-10,"authored altitude remains a small local depth variation");
+  }
+  const firstHeight=group.position.y;
+  for(let i=0;i<54;i++)advance({},1/60);
+  assert.ok(group.position.y>firstHeight&&group.position.y<9.6);
+  assert.ok(group.rotation.x<0&&group.rotation.x>-Math.PI/2);
+  assert.deepEqual(Array.from(array.array),original,"the reveal updates the existing group, not point-buffer uploads");
+  assert.equal(array.version,0);assert.equal(fixture.frames.length,1);
   fixture.cleanups.forEach(cleanup => cleanup());
 });
