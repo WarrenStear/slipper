@@ -1,5 +1,4 @@
 import { resolveCinematicProfile, type CinematicStoryState } from "../../../cinematics/emotionalProfiles.ts";
-import type { MaterialHistory } from "../materials/materialLibrary.ts";
 import type { JourneySceneId } from "../../../lib/storyJourneyState.ts";
 
 export type LookQuality = "low" | "medium" | "high" | "cinematic";
@@ -114,7 +113,7 @@ export function sceneRenderBudget(quality: LookQuality, reducedEffects = false) 
   };
 }
 
-export function resolveSceneLook(sceneId: JourneySceneId, quality: LookQuality = "medium", reducedEffects = false, state: CinematicStoryState & { mirrorStill?: boolean; openingReveal?: number; openingInverted?: boolean; materialHistory?: MaterialHistory } = {}) {
+export function resolveSceneLook(sceneId: JourneySceneId, quality: LookQuality = "medium", reducedEffects = false, state: CinematicStoryState & { mirrorStill?: boolean; openingReveal?: number; openingInverted?: boolean } = {}) {
   const authored = SCENE_LOOKS[sceneId];
   const emotional = resolveCinematicProfile(sceneId, sceneId === "thorned.self-owned-world" ? { ...state, compression: 0 } : state);
   const quiet = (sceneId === "river.release-surrender" && state.surrenderComplete) || (sceneId === "sunset.stillness" && state.mirrorStill);
@@ -130,7 +129,7 @@ export function resolveSceneLook(sceneId: JourneySceneId, quality: LookQuality =
     lighting: { source: authored.source, color: authored.keyColor, groundColor: sceneId.startsWith("enchanted.") ? "#766e52" : sceneId.startsWith("blue-moon.") ? "#41565a" : authored.ground, position: authored.keyPosition, intensity: authored.keyIntensity, fill: emotional.fillIntensity, fillFloor: fillFloor(sceneId), shadowProfile: quality === "cinematic" && !reducedEffects },
     atmosphere: { sky: authored.sky, horizon: authored.horizon, fog: authored.fog, density: Math.min(.025, emotional.fogDensity * Math.min(1.3, 90 / emotional.visibility)), visibility: emotional.visibility },
     grade: { exposure: emotional.exposure, contrast: 1 + (emotional.contrast - 1) * .16, saturation: authored.saturation, warmth: emotional.warmth, vignette: reducedEffects ? 0 : .09, grain: reducedEffects ? 0 : .0012 },
-    materials: { damage: sceneId.startsWith("crowned.") && state.surrenderComplete ? .18 : 0, reintegrated: sceneId.startsWith("crowned.") && state.materialHistory?.integrated === true, wetness: authored.wetness, roughnessBias: quiet ? .03 : 0, environmentalWear: authored.wear, history: state.materialHistory, rememberedScene: sceneId.startsWith("crowned.") || sceneId === "epilogue.constellation" },
+    materials: { damage: sceneId.startsWith("crowned.") && state.surrenderComplete ? .18 : 0, reintegrated: sceneId.startsWith("crowned."), wetness: authored.wetness, roughnessBias: quiet ? .03 : 0, environmentalWear: authored.wear },
     composition: authored.composition,
     particles: sceneParticleProfile(sceneId),
     palette: { ground: authored.ground, leaf: authored.leaf },

@@ -39,17 +39,50 @@ export function resolveSurfaceDefaults(surface: StorySurface, roughness?: number
   };
 }
 
-export type MaterialMemory = { wetness?: number; wear?: number; damage?: number; reintegrated?: boolean };
+/** Presentation-only projection of accepted, persisted canonical outcomes. */
+export function resolveMaterialHistory(objects: Readonly<Record<string, string>>, flags: Readonly<Record<string, boolean>>) {
+  const fireTouched = flags["fire.boundary-burned"] === true ||
+    ["fire.false-promise", "fire.old-marker", "fire.empty-frame", "fire.broken-key", "fire.dead-flower", "fire.letter"].some(id => objects[id] === "burned") || objects["fire.true-memory"] === "preserved";
+  const washed = flags["river.grief-washed"] === true && objects["river.soot"] === "washed";
+  return {
+    fireTouched,
+    soot: fireTouched ? washed ? .12 : objects["river.soot"] === "loosening" ? .28 : .48 : 0,
+    washed,
+    mirrorScarred: flags["mirror.reflections-truthful"] === true && objects["sunset.truth"] === "synchronised",
+    integrated: flags["integration.three-aspects-held"] === true && objects["integration.meeting"] === "aligned" || objects["home.crown-mirror"] === "integrated",
+  };
+}
+export type MaterialHistory = ReturnType<typeof resolveMaterialHistory>;
+export type MaterialMemory = { wetness?: number; wear?: number; damage?: number; reintegrated?: boolean;
+  /** Existing fire remains opt in by surface; later mirror frames opt in explicitly. */
+  history?: MaterialHistory; receiver?: "remembered-frame"; rememberedScene?: boolean };
+
 const unit = (value = 0) => Number.isFinite(value) ? Math.min(1, Math.max(0, value)) : 0;
 const WETTABLE = new Set<StorySurface>(["wood", "wet-wood", "bark", "stone", "earth", "moss", "painted-wood"]);
 
 export function resolveMaterialMemory(surface: StorySurface, roughness: number, memory: MaterialMemory = {}) {
-  const wetness = WETTABLE.has(surface) ? unit(memory.wetness) : 0;
-  const wear = unit(memory.wear), damage = unit(memory.damage);
+  let wetness = WETTABLE.has(surface) ? unit(memory.wetness) : 0;
+  const wear = unit(memory.wear);
+  let damage = unit(memory.damage), soot = 0;
+  const history = memory.history;
+  const remnant = surface === "charred-wood" || surface === "ash";
+  const rememberedFrame = surface === "wood" && memory.receiver === "remembered-frame" && memory.rememberedScene === true;
+  if (history && (remnant || rememberedFrame)) {
+    // These are already burned receivers, or the explicitly remembered frame.
+    // Unrelated floors, foliage, paper, linen and brass keep authored weathering.
+    if (history.fireTouched === true) {
+      soot = unit(history.soot) * (remnant ? 1 : .35);
+      damage = Math.max(damage, remnant ? .32 : .24);
+    }
+    if (rememberedFrame && history.mirrorScarred === true) damage = Math.max(damage, .38);
+    if (history.washed === true && (rememberedFrame || history.fireTouched === true)) {
+      wetness = Math.max(wetness, remnant ? .3 : .22);
+    }
+  }
   return {
-    // Reintegrated objects retain their scars; they are not replaced with pristine props.
+    // Washing lifts soot, not scars. Reintegration never substitutes a new prop.
     surface, wetness, wear, damage,
-    roughness: Math.max(.28, Math.min(1, unit(roughness) - wetness * .18 + damage * .04)),
-    brightness: 1 - wetness * .12 - damage * .1 + (memory.reintegrated ? .015 : 0),
+    roughness: Math.max(.28, Math.min(1, unit(roughness) - wetness * .18 + damage * .04 + soot * .035)),
+    brightness: 1 - wetness * .12 - damage * .1 - soot * .12 + (memory.reintegrated ? .015 : 0),
   };
 }

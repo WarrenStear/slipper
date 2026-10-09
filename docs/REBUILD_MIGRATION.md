@@ -1423,3 +1423,44 @@ The final Node 22 release check passes 1,293 unit and seven security cases, type
 content and asset validation, the production build and Pages Functions. Native
 reports, source seals and corrected layout/framing evidence are retained under
 `artifacts/rebuild-20261005/phase7-*`.
+
+
+### Visual phase 8 — restrained material memory
+
+Existing burned remains and explicitly remembered mirror frames now project
+accepted Fire, River, mirror and integration outcomes through the shared material
+owner. Washing lifts soot and changes wet roughness while damage remains;
+reintegration does not replace the surface with a pristine object. Floors,
+foliage, paper, linen and brass retain their authored local weathering. There is
+no new persisted flag, event, texture, geometry, material owner or frame callback.
+
+Three strict matched arrival histories pass with identical calls, triangles,
+lights, shadows, shader programs, textures, geometry and frame-owner counts. Each
+retains the original quality warmup, three stable cycles and equal-history
+unmount/remount checks. The first run lost its page execution context before any
+image; it is preserved. A separate diagnostic run passed with exactly the six
+expected navigations and no crash, without changing any assertions or timing
+rules. That does not establish the first interruption's cause.
+
+Arrival alone was insufficient for appearance: Fire has no burned outcome yet,
+and the River camera clips its actual affected ash. Five explicitly labeled
+composition pairs inspect the real ash, joined logs and mirror frame, including
+River before/after washing and Crown before/after recognition. Actual receiver
+vertices and material values are recorded. The visible change is intentionally
+subtle; these fixtures do not establish an earned physical journey.
+
+Additional receiver-coordinate and linen-map auditions were rejected. The former
+had little visible benefit for extra shader variants; the latter added about
+638 KB and little benefit in the passed discovery pair, while a separate close
+readiness case failed. Neither candidate is activated or described as a completed
+material review. Existing approved maps and authored procedural finishes remain.
+
+The final release check passes 1,300 unit cases, seven security cases, type,
+content and asset validation, production build and Pages Functions.
+
+Six further matched composition pairs cover medium/cinematic desktop, low mobile
+portrait/landscape and both reduced settings. Together with the strict histories
+and state galleries, all fourteen pairs and twenty-eight images pass their
+original resource bounds. Root inspected the affected receiver images; this is
+not a claim that isolated chapter fixtures reproduce the complete walking world.
+Evidence is retained under `artifacts/rebuild-20261005/phase8-*`.

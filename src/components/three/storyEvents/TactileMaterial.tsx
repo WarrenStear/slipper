@@ -41,16 +41,17 @@ type TactileMaterialProps = {
   /** Opt-in after actual receiving-mesh UV review; it never approves an asset. */
   reviewedCoordinates?: boolean;
   memory?: MaterialMemory;
+  memoryReceiver?: "remembered-frame";
   /** Borrowed maps, including KTX2 textures. The loading cache owns disposal. */
   maps?: Partial<Pick<THREE.MeshStandardMaterial, "map" | "normalMap" | "roughnessMap" | "aoMap">>;
 };
 
 /** Standard-lit surface finishes using the shared optional map delivery path. */
-export const TactileMaterial = memo(function TactileMaterial({ surface, detail, color, roughness, metalness, side = THREE.FrontSide, memory, maps, constructionCoordinates = false, barkCoordinates = false, reviewedCoordinates = false, ...appearance }: TactileMaterialProps) {
+export const TactileMaterial = memo(function TactileMaterial({ surface, detail, color, roughness, metalness, side = THREE.FrontSide, memory, memoryReceiver, maps, constructionCoordinates = false, barkCoordinates = false, reviewedCoordinates = false, ...appearance }: TactileMaterialProps) {
   const inherited = useContext(TactileDetailContext);
   const look = useSceneLook();
   const finish = resolveSurfaceDefaults(surface, roughness, metalness);
-  const state = resolveMaterialMemory(surface, finish.roughness, memory ?? { wetness: look?.look.materials.wetness, wear: look?.look.materials.environmentalWear, damage: look?.look.materials.damage, reintegrated: look?.look.materials.reintegrated });
+  const state = resolveMaterialMemory(surface, finish.roughness, { ...(memory ?? { wetness: look?.look.materials.wetness, wear: look?.look.materials.environmentalWear, damage: look?.look.materials.damage, reintegrated: look?.look.materials.reintegrated }), history: look?.look.materials.history, receiver: memoryReceiver, rememberedScene: look?.look.materials.rememberedScene });
   const resolved = detail ?? inherited;
   // A local shader-detail override must not bypass the chapter's delivery tier.
   const mapsAllowed = inherited === "relief" && resolved === "relief";

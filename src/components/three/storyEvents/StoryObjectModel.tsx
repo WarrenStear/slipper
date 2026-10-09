@@ -67,7 +67,7 @@ export const StoryObjectModel = memo(function StoryObjectModel({ kind, state = "
   if (kind === "birds") return <PerchedStoryBird />;
   if (kind === "swan") return <group scale={.3}><AuthoredNpcSilhouette kind="swan" /></group>;
   if (kind === "mirror" || kind === "frame") return <group>
-    <mesh position={[0, .72, 0]}><boxGeometry args={[1.1, 1.5, .13]} /><TactileMaterial surface="wood" color="#66503d" roughness={.82} /></mesh>
+    <mesh position={[0, .72, 0]}><boxGeometry args={[1.1, 1.5, .13]} /><TactileMaterial surface="wood" color="#66503d" roughness={.82} memoryReceiver={kind === "mirror" ? "remembered-frame" : undefined} /></mesh>
     <mesh position={[0, .72, -.08]}><planeGeometry args={[.85, 1.24]} /><meshStandardMaterial color={kind === "mirror" ? "#77949d" : "#2b2926"} metalness={kind === "mirror" ? .8 : 0} roughness={kind === "mirror" ? .15 : .9} side={2} /></mesh>
     {[-.44, .44].map(x => <mesh key={x} position={[x, .72, -.084]}><boxGeometry args={[.012, 1.27, .008]} /><meshStandardMaterial color="#a08b65" metalness={.55} roughness={.65} /></mesh>)}
     {[.085, 1.355].map(y => <mesh key={y} position={[0, y, -.084]}><boxGeometry args={[.892, .012, .008]} /><meshStandardMaterial color="#a08b65" metalness={.55} roughness={.65} /></mesh>)}

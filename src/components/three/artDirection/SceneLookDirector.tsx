@@ -18,6 +18,7 @@ import { ASSISTED_STILLNESS_EVENT } from "../rituals/RitualInteraction";
 import { advanceSceneMotion } from "./sceneMotion";
 import { SceneParticles } from "../../../world/atmosphere/SceneParticles";
 import { scenePresentationActive } from "../../../world/presentationActivity";
+import { resolveMaterialHistory } from "../materials/materialLibrary";
 import { RENDER_QUALITY_PROFILES } from "../renderQuality";
 
 export type SceneLookDirectorProps = {
@@ -59,6 +60,7 @@ function SceneLookOwner({ sceneId, quality, reducedEffects, reducedMotion, origi
     mirrorStill: measuredStillness || assisted,
     openingReveal: objects["broken-floor.reflection"] === "inverted" || objects["broken-floor.reflection"] === "revealed" ? 1 : objects["broken-floor.reflection"] === "clearing" ? .5 : 0,
     openingInverted: objects["broken-floor.reflection"] === "inverted",
+    materialHistory: resolveMaterialHistory(objects, flags),
   }), [manifest, quality, reducedEffects, flags, objects, measuredStillness, assisted]);
   const presentation = useRef<ScenePresentation>({ look: target, reducedMotion, reducedEffects, stillness: Number(target.stillness), motion: { ...target.motion }, time: { vegetation: 0, cloth: 0, water: 0, particles: 0, flame: 0 } });
   const context = useMemo<ScenePresentation>(() => ({ look: target, reducedMotion, reducedEffects, origin, heading, stillness: presentation.current.stillness, motion: presentation.current.motion, time: presentation.current.time }), [target, reducedMotion, reducedEffects, origin, heading]);
