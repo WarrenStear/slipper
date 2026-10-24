@@ -16,7 +16,7 @@ function read(relativePath) {
 }
 
 test("semantic Rapier sensors keep exactly one instanced-mesh child", () => {
-  const source = read("src/components/three/StoryScene.tsx");
+  const source = read("src/world/ecology/SemanticObjectPathing.tsx");
   const lines = source.split(/\r?\n/);
   const themes = ["water", "threshold", "thorns", "celestial"];
 

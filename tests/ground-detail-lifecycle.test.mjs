@@ -29,7 +29,7 @@ globalThis.__slipperGroundDetailCpu = {
 };
 
 const repo = resolve(fileURLToPath(new URL('../', import.meta.url)));
-const source = readFileSync(new URL('../src/components/three/StoryScene.tsx', import.meta.url), 'utf8');
+const source = readFileSync(new URL('../src/world/ecology/NarrativeGroundDetails.tsx', import.meta.url), 'utf8');
 const ast = ts.createSourceFile('StoryScene.tsx', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
 const ownerNode = ast.statements.find(node => ts.isFunctionDeclaration(node) && node.name?.text === 'NarrativeGroundDetailField');
 assert.ok(ownerNode);
@@ -43,7 +43,7 @@ const constants = ['GROUND_DETAIL_CELL_SIZE', 'GROUND_DETAIL_CELL_RADIUS', 'GROU
 const dependencies = ast.statements.filter(node => ts.isFunctionDeclaration(node) && functions.includes(node.name?.text)
   || ts.isVariableStatement(node) && node.declarationList.declarations.some(declaration => constants.includes(declaration.name.getText(ast))))
   .map(node => node.getText(ast)).join('\n');
-const currentOwner = ownerNode.getText(ast);
+const currentOwner = ownerNode.getText(ast).replace(/^export /, "");
 const formerOwner = currentOwner.replace(initializer.getText(ast), oldInitializer);
 // This negative control reproduces the retained-layout bug in a layout-only fix.
 const assignment = initializer.expression.arguments[0].body.statements.find(node => ts.isExpressionStatement(node)
