@@ -7,9 +7,9 @@ import { useSettingsStore } from "../../../stores/useSettingsStore";
 import { useWorldStore } from "../../../stores/useWorldStore";
 
 /** The authored outcome is durable; the journey back to that pose is not. */
-export function StoryObjectPose({ object, state, position, placementId, reducedMotion, children }: {
+export function StoryObjectPose({ object, state, position, placementId, reducedMotion, children, interactiveIdentity = true }: {
   object: StoryObjectDefinition; state?: string; position: [number, number, number];
-  placementId?: string; reducedMotion: boolean; children: ReactNode;
+  placementId?: string; reducedMotion: boolean; children: ReactNode; interactiveIdentity?: boolean;
 }) {
   const root = useRef<THREE.Group>(null);
   const initial = useRef<[number, number, number]>([...position]);
@@ -42,7 +42,7 @@ export function StoryObjectPose({ object, state, position, placementId, reducedM
   });
 
   return <>
-    <group ref={root} name={`story-object:${object.id}`} position={initial.current} userData={{ objectId: object.id, state: state ?? "untouched" }}>
+    <group ref={root} name={`${interactiveIdentity ? "story-object" : "scenery-object"}:${object.id}`} position={initial.current} userData={{ objectId: object.id, state: state ?? "untouched", interactiveIdentity }}>
       {children}
       <StoryObjectIdentity objectId={object.id} />
     </group>

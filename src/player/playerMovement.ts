@@ -29,7 +29,9 @@ export function groundedBodyHeight({ bodyY, groundY, verticalVelocity, grounded,
 }) {
   const minimumBodyY = groundY + PLAYER_FOOT_OFFSET + PLAYER_GROUND_CLEARANCE;
   const groundDelta = bodyY - minimumBodyY;
-  const isFallingOrGrounded = verticalVelocity <= 0 || grounded;
-  const snap = groundDelta < -0.012 || (isFallingOrGrounded && groundDelta < PLAYER_GROUND_SNAP && moving);
+  // A grounded Rapier capsule may be standing on a bridge or stair above
+  // the landscape. The fallback must not pull it down through that support.
+  const isFallingWithoutSupport = verticalVelocity <= 0 && !grounded;
+  const snap = groundDelta < -0.012 || (isFallingWithoutSupport && groundDelta < PLAYER_GROUND_SNAP && moving);
   return { bodyY: snap ? minimumBodyY : bodyY, snap };
 }

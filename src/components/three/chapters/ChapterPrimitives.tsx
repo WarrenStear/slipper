@@ -1,3 +1,4 @@
+import { useActiveScenePresence } from "../../../world/core/ScenePresence";
 import { ChapterGroundMaterial } from "../environment/ChapterGroundMaterial";
 import { HeroAssetSlot } from "../actors/HeroAssetSlot";
 import { createKeyGeometry, createLanternHousingGeometry, createLanternGlassGeometry, createMirrorFrameGeometry } from "../environmentArt/heroGeometry";
@@ -191,6 +192,7 @@ export const MoonDisc = memo(function MoonDisc({
   reducedMotion?: boolean;
 }) {
   const presentation = useSceneLook();
+  const activeScene = useActiveScenePresence();
   const texture = useTexture(CHAPTER_MOON_ALBEDO_PATH);
   const groupRef = useRef<THREE.Group>(null);
   const haloMaterialRef = useRef<THREE.ShaderMaterial>(null);
@@ -260,6 +262,7 @@ export const MoonDisc = memo(function MoonDisc({
     }
   });
 
+  if (!activeScene) return null;
   return (
     <group
       ref={groupRef}
@@ -514,6 +517,7 @@ export const FlickerLight = memo(function FlickerLight({
   reducedMotion: boolean;
 }) {
   const presentation = useSceneLook();
+  const activeScene = useActiveScenePresence();
   const light = useRef<THREE.PointLight>(null);
   useFrame(({ clock }) => {
     if (!light.current) return;
@@ -521,6 +525,7 @@ export const FlickerLight = memo(function FlickerLight({
       ? intensity
       : intensity * (1 + (Math.sin((presentation?.time.flame ?? clock.elapsedTime) * 5.7) * .035 + Math.sin((presentation?.time.flame ?? clock.elapsedTime) * 13.1) * .018) * (presentation ? Math.min(1, presentation.motion.flame * 4) : 1));
   });
+  if (!activeScene) return null;
   return <pointLight ref={light} position={position} color={color} intensity={intensity} distance={distance} decay={2} />;
 });
 

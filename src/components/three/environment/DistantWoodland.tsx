@@ -1,4 +1,5 @@
 import { memo, useEffect, useLayoutEffect, useMemo, useRef } from "react";
+import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { distantTrunkFitsTerrain } from "./distantWoodlandBounds";
 import { createOrganicCrownGeometry } from "./forestGeometry";
@@ -9,6 +10,8 @@ export const DistantWoodland = memo(function DistantWoodland({ origin, quality, 
   origin: [number, number, number]; quality: string; sampleGroundY: (x: number, z: number) => number; quiet?: boolean;
 }) {
   const trunks = useRef<THREE.InstancedMesh>(null), crowns = useRef<THREE.InstancedMesh>(null);
+  const residents = useRef<{ x: number; z: number; trunk: THREE.Matrix4; crown: THREE.Matrix4; tint: THREE.Color }[]>([]);
+  const cameraCell = useRef("");
   const count = quiet ? 16 : quality === "low" ? 40 : quality === "medium" ? 64 : 96;
   const layout = useMemo(() => distantWoodlandLayout(count), [count]);
   // Far woodland keeps open grouped silhouettes; fine individual leaf detail
@@ -18,6 +21,7 @@ export const DistantWoodland = memo(function DistantWoodland({ origin, quality, 
   useLayoutEffect(() => {
     if (!trunks.current || !crowns.current) return;
     const dummy = new THREE.Object3D(), tint = new THREE.Color();
+    residents.current = []; cameraCell.current = "";
     let instance = 0;
     layout.forEach((tree, i) => {
       const x = origin[0] + tree.x, z = origin[2] + tree.z, ground = sampleGroundY(x, z);
@@ -29,10 +33,12 @@ export const DistantWoodland = memo(function DistantWoodland({ origin, quality, 
       // original index for tilt, crown variation and tint when packing survivors.
       if (!distantTrunkFitsTerrain(trunks.current!.geometry, dummy.matrix)) return;
       trunks.current!.setMatrixAt(instance, dummy.matrix);
+      const trunkMatrix = dummy.matrix.clone();
       dummy.position.set(x + .2, ground + tree.height * .86, z);
       dummy.scale.set(tree.crown, tree.crown * (.65 + unit(i + 51) * .7), tree.crown * .86); dummy.updateMatrix();
       crowns.current!.setMatrixAt(instance, dummy.matrix);
       tint.setHSL(.31 + unit(i + 41) * .03, .12, .5 + unit(i + 53) * .2); crowns.current!.setColorAt(instance, tint);
+      residents.current.push({ x, z, trunk: trunkMatrix, crown: dummy.matrix.clone(), tint: tint.clone() });
       instance++;
     });
     for (const mesh of [trunks.current, crowns.current]) {
@@ -42,6 +48,27 @@ export const DistantWoodland = memo(function DistantWoodland({ origin, quality, 
       mesh.computeBoundingBox(); mesh.computeBoundingSphere();
     }
   }, [layout, origin, sampleGroundY, crown]);
+  // A player can now walk into what used to be an unreachable backdrop.
+  // Let the detailed continuous forest own the near field instead of exposing
+  // distant five-sided silhouettes at arm's length. Repack only on cell changes.
+  useFrame(({ camera }) => {
+    if (!trunks.current || !crowns.current) return;
+    const cell = `${Math.floor(camera.position.x / 8)}:${Math.floor(camera.position.z / 8)}`;
+    if (cell === cameraCell.current) return;
+    cameraCell.current = cell;
+    let count = 0;
+    for (const tree of residents.current) {
+      const distance = Math.hypot(tree.x - camera.position.x, tree.z - camera.position.z);
+      if (distance < 45 || distance > 165) continue;
+      trunks.current.setMatrixAt(count, tree.trunk); crowns.current.setMatrixAt(count, tree.crown);
+      crowns.current.setColorAt(count, tree.tint); count++;
+    }
+    for (const mesh of [trunks.current, crowns.current]) {
+      mesh.count = count; mesh.instanceMatrix.needsUpdate = true;
+      if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+      mesh.computeBoundingBox(); mesh.computeBoundingSphere();
+    }
+  });
   return <group name="world-anchored-distant-woodland" userData={{ drawCallBudget: 2, distantOnly: true }}>
     <instancedMesh ref={trunks} args={[undefined, undefined, count]}>
       <cylinderGeometry args={[.35, 1, 1, 5, 1]} />

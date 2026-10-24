@@ -205,6 +205,8 @@ The core principles are:
 
 ## Architecture
 
+Read [the continuous-world implementation and qualification notes](docs/CONTINUOUS_WORLD_REBUILD.md) and [the approved source-to-world map](docs/CONTINUOUS_WORLD_SOURCE_MAP.md) for spatial scene streaming, the optional willow refuge, shared terrain, and remaining production-art work.
+
 Read `docs/ARCHITECTURE.md` for state ownership, mobile input flow, rendering
 boundaries, archive privacy, and validation layers.
 

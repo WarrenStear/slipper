@@ -120,26 +120,25 @@ test('quality budgets are bounded, monotonic, and reduced effects chooses the lo
   }
   assert.deepEqual(landscapeBudget('unknown'),landscapeBudget('low'));
 });
-test('landscape mounts only in the active chapter transform and preserves story and adjacent wiring',()=>{
+test('authored landscape and chapters share independently grounded streamed transforms',()=>{
   const code=source('journey/JourneySceneDirector.tsx');
   assert.equal((code.match(/<OutdoorLandscape /g)||[]).length,1);
-  assert.match(code,/const activeManifest = getSceneManifest\(activeSceneId\)/);
-  assert.match(code,/const activeScene = activeManifest\.layout/);
-  assert.match(code,/const ActiveChapter = CHAPTER_COMPONENTS\[activeManifest\.chapterId\]/);
-  assert.match(code,/const manifest = getSceneManifest\(entry\.sceneId\)/);
-  assert.match(code,/const scene = manifest\.layout/);
-  assert.match(code,/const position = mutablePoint\(scene\.anchor\.position\)/);
-  const active=code.slice(code.indexOf('if (entry.mode === "active")'),code.indexOf('if (!renderAdjacent)'));
-  assert.match(active,/<OutdoorLandscape sceneId=\{manifest\.sceneId\}/);assert.match(active,/collidable=\{interactionsEnabled\}/);
-  assert.match(active,/position=\{position\}/);assert.match(active,/rotation=\{\[0, scene\.anchor\.headingRadians, 0\]\}/);
-  assert.match(active,/userData=\{\{ environmentId: manifest\.environmentId \}\}/);
-  for(const component of ['StoryEventDirector','ActiveStoryActors','EnvironmentalChoreography','ActiveChapter'])assert.match(active,new RegExp(`<${component}`));
+  assert.match(code,/const manifest = getSceneManifest\(sceneId\)/);
+  assert.match(code,/sceneWorldOrigin\(sceneId, sampleGroundY\)/);
+  assert.match(code,/position=\{position\}/);assert.match(code,/rotation=\{\[0, scene\.anchor\.headingRadians, 0\]\}/);
+  assert.match(code,/interactionsEnabled \? <group[\s\S]*<StoryEventDirector sceneId=\{activeSceneId\}/);
+  assert.equal((code.match(/<StoryEventDirector /g)||[]).length,1);
+  assert.match(code,/active && interactionsEnabled \? <ActiveStoryActors/);
+  assert.match(code,/interactiveIdentity=\{false\}/);
+  assert.match(code,/const detail = active \? qualityProfile : RENDER_QUALITY_PROFILES.low/);
+  assert.doesNotMatch(code,/AdjacentSceneProxy/);
 });
+
 test('terrain collision uses the exact visible arrays and stays independent of quality',()=>{
   const code=source('environment/OutdoorLandscape.tsx');
   assert.match(code,/colliderArgs: \[vertices, indices\]/);assert.match(code,/args=\{land\.colliderArgs\}/);
   assert.match(code,/new THREE\.BufferAttribute\(vertices, 3\)/);assert.match(code,/new THREE\.BufferAttribute\(indices, 1\)/);
-  assert.match(code,/createLandscapeTerrain\(spec\), \[spec\]/);
+  assert.match(code,/createLandscapeTerrain\(spec, sampleGroundY\), \[spec, sampleGroundY\]/);
   assert.match(code,/<RigidBody type="fixed" colliders=\{false\}/);
 });
 test('new water reuses the existing material and scene clock without new reflection or lighting passes',()=>{

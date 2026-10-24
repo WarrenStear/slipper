@@ -140,7 +140,7 @@ test('water keeps stable uniforms, first-frame initialization and its standalone
 test('landscape keeps terrain/collision topology, resource disposal and rendering budgets', () => {
   const code = read('OutdoorLandscape.tsx');
   assert.match(code, /colliderArgs: \[vertices, indices\]/);
-  assert.match(code, /args=\{land.colliderArgs\}/); assert.match(code, /createLandscapeTerrain\(spec\), \[spec\]/);
+  assert.match(code, /args=\{land.colliderArgs\}/); assert.match(code, /createLandscapeTerrain\(spec, sampleGroundY\), \[spec, sampleGroundY\]/);
   assert.match(code, /drawCallBudget: \(river \? 7 : 6\) \+ extraDraws/); assert.match(code, /expandByScalar\(\.4\)/);
   assert.match(code, /args=\{\[undefined, undefined, capacity\]\}/);
   assert.doesNotMatch(code, /useFrame|pointLight|spotLight|new WebGLRenderTarget|dispatchStoryEvent/);

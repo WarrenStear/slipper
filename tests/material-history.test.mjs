@@ -128,7 +128,7 @@ test('actual R3F material updates shared memory in place and preserves private-d
  }finally{await act(async()=>root.render(null));_roots.delete(canvas);if(previousAct===undefined)delete globalThis.IS_REACT_ACT_ENVIRONMENT;else globalThis.IS_REACT_ACT_ENVIRONMENT=previousAct;}
 });
 
-test('all32 scene lighting/atmosphere/reflection/motion/quality budgets remain exact against the hash-pinned current owner',async()=>{
+test('all32 look fields retain the pinned baseline except the explicitly reviewed woodland palette',async()=>{
  const {createHash}=await import('node:crypto'),profiles=await import('../src/cinematics/emotionalProfiles.ts');
  const baseline=readFileSync(new URL('./fixtures/material-history/SceneLookRegistry.ts',import.meta.url),'utf8');
  const provenance=JSON.parse(readFileSync(new URL('./fixtures/material-history/provenance.json',import.meta.url),'utf8'));
@@ -138,6 +138,12 @@ test('all32 scene lighting/atmosphere/reflection/motion/quality budgets remain e
  for(const scene of api.journeyScenes)for(const quality of ['low','medium','high','cinematic'])for(const reduced of [false,true]){
   const state={surrenderComplete:true,mirrorStill:true,materialHistory:history(snapshots.get('river.ash-washed'))};
   const before=exports.resolveSceneLook(scene.id,quality,reduced,state),after=resolveSceneLook(scene.id,quality,reduced,state);
+  // Reviewed woodland readability change; all other fields retain the pinned baseline.
+  if (scene.id.startsWith('enchanted.')) {
+    before.lighting.fillFloor = .5;
+    if (scene.id === 'enchanted.rabbit-hole') before.lighting.intensity = 2.1;
+    Object.assign(before.atmosphere, {sky:'#3b5259',horizon:'#a4b4a3',fog:'#596f67'});
+  }
   delete before.materials;delete after.materials;
   assert.deepEqual(JSON.parse(JSON.stringify(after)),JSON.parse(JSON.stringify(before)),scene.id+'/'+quality+'/'+reduced);
  }

@@ -1,43 +1,32 @@
-import { resolveQuietGuidance, type QuietGuidanceActivity } from "../../../ui/quietGuidancePresentation";
-import { OpeningGuidance } from "../../../ui/OpeningGuidance";
-import { resolveGuidedStory } from "../../../storyEvents/guidedStory";
 import { Html } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
-import { observeInteractionTarget } from "../../../player/interactionFacts";
+import { useStoryRuntime, useStoryRuntimeHost } from "../../../experience/StoryRuntimeContext";
 import type { JourneySceneId } from "../../../lib/storyJourneyState";
-import { objectsForScene, eventsForScene, getAvailableStoryEvents, getCarriedStoryObjects } from "../../../storyEvents/storyEventRegistry";
+import type { StoryLease } from "../../../narrative/StoryIntents";
+import { observeInteractionTarget } from "../../../player/interactionFacts";
+import { useJourneyStore } from "../../../stores/useJourneyStore";
+import { useSettingsStore } from "../../../stores/useSettingsStore";
+import { useWorldStore } from "../../../stores/useWorldStore";
+import { subscribeAcceptedStoryEvents } from "../../../storyEvents/acceptedStoryEvents";
+import { resolveGuidedStory } from "../../../storyEvents/guidedStory";
+import { eventsForScene, getAvailableStoryEvents, getCarriedStoryObjects, objectsForScene } from "../../../storyEvents/storyEventRegistry";
 import {
   beginStoryPointerGesture, cancelStoryPointerGesture, createStoryPointerGesture,
   finishStoryPointerGesture, ownsStoryPointerGesture,
 } from "../../../storyEvents/storyEventRuntime";
 import type { StoryEventDefinition, StoryObjectDefinition } from "../../../storyEvents/storyEventTypes";
-import { useStoryRuntime, useStoryRuntimeHost } from "../../../experience/StoryRuntimeContext";
-import type { StoryLease } from "../../../narrative/StoryIntents";
-import { subscribeAcceptedStoryEvents } from "../../../storyEvents/acceptedStoryEvents";
-import { useJourneyStore } from "../../../stores/useJourneyStore";
-import { useSettingsStore } from "../../../stores/useSettingsStore";
-import { useWorldStore } from "../../../stores/useWorldStore";
-import { StoryObjectModel } from "./StoryObjectModel";
+import { OpeningGuidance } from "../../../ui/OpeningGuidance";
+import { resolveQuietGuidance, type QuietGuidanceActivity } from "../../../ui/quietGuidancePresentation";
 import { beginFloorStroke, breakFloorStroke, brushFloor, cancelFloorStroke, floorStrokeReady } from "./storyInteractionRuntime";
-import { StoryObjectIdentity, StoryObjectPose } from "./StoryObjectPose";
-import { StoneBasin, TimberAssembly } from "../chapters/ChapterArt";
-import type { ConstructionPiece } from "../chapters/chapterArtGeometry";
+import { StoryObjectModel } from "./StoryObjectModel";
+import { StoryObjectIdentity } from "./StoryObjectPose";
+import { StoryObjectPresentation } from "./StoryObjectPresentation";
 import "./StoryObjects.css";
 
 const AUTOMATIC = new Set([ "volume-enter", "volume-exit", "gaze", "stillness", "scene-complete", "sequence-complete"]);
 const VERBS: Record<string, string> = { pickup: "Take", touch: "Touch", wipe: "Wipe", place: "Place", light: "Light", open: "Open", close: "Close", burn: "Place in fire", wash: "Wash", release: "Release", plant: "Plant", inspect: "Look closely", extinguish: "Extinguish" };
-// Stable construction data avoids rebuilding this merged mesh as focus changes.
-// The semantic mirror stays at its authored height; joined feet reach Y=0.
-const CROWN_MIRROR_STAND: readonly ConstructionPiece[] = [
-  ...[-.61, .61].flatMap(x => [
-    { position: [x, -.38, 0] as [number, number, number], size: [.12, 2.44, .16] as [number, number, number] },
-    { position: [x, -1.55, 0] as [number, number, number], size: [.25, .1, .9] as [number, number, number] },
-  ]),
-  { position: [0, -.92, 0], size: [1.22, .12, .13] },
-];
-
 function eventLocation(event: StoryEventDefinition, objects: readonly StoryObjectDefinition[]) {
   const object = objects.find(item => item.id === event.objectId);
   const target = object?.targets?.find(item => item.id === event.targetId)
@@ -46,7 +35,7 @@ function eventLocation(event: StoryEventDefinition, objects: readonly StoryObjec
 }
 
 /** Physical inputs and semantic controls share one authored reducer. No frame enters durable state. */
-export function StoryEventDirector({ sceneId, reducedMotion, enabled = true, quietGuidanceActivity }: { sceneId: JourneySceneId; reducedMotion: boolean; enabled?: boolean; quietGuidanceActivity?: QuietGuidanceActivity }) {
+export function StoryEventDirector({ sceneId, reducedMotion, enabled = true, renderWorldObjects = true, quietGuidanceActivity }: { sceneId: JourneySceneId; reducedMotion: boolean; enabled?: boolean; renderWorldObjects?: boolean; quietGuidanceActivity?: QuietGuidanceActivity }) {
   const { camera, gl, scene: renderedScene } = useThree();
   const runtime = useStoryRuntime();
   const host = useStoryRuntimeHost();
@@ -85,14 +74,6 @@ export function StoryEventDirector({ sceneId, reducedMotion, enabled = true, qui
   const entered = useRef(new Set<string>());
   const raycaster = useRef(new THREE.Raycaster());
   const pointer = useRef(new THREE.Vector2());
-  const surfaces = useMemo(() => {
-    const targetIds = new Set(eventsForScene(sceneId).flatMap(event => event.targetId ? [event.targetId] : []));
-    const uniqueTargets = new Map<string, NonNullable<StoryObjectDefinition["targets"]>[number]>();
-    for (const object of objects) for (const target of object.targets ?? []) {
-      if (targetIds.has(target.id) && !objects.some(item => item.id === target.id)) uniqueTargets.set(target.id, target);
-    }
-    return [...uniqueTargets.values()];
-  }, [sceneId, objects]);
   const gesture = useRef(createStoryPointerGesture<StoryEventDefinition>());
 
   function suspendInput() {
@@ -308,36 +289,7 @@ export function StoryEventDirector({ sceneId, reducedMotion, enabled = true, qui
   const surrenderQuiet = sceneId === "river.release-surrender" && pending.some(event => event.trigger === "stillness");
   const visible = focused && !surrenderQuiet;
   return <group ref={group} name="lived-story-objects" userData={{ sceneId }}>
-    {objects.map(object => {
-      const state = objectStates[object.id];
-      if (object.id === "broken-floor.reflection" || object.kind === "path" || ["carried", "burned", "released"].includes(state ?? "")) return null;
-      // The actor/player lantern owns guidance and carrying. Only the chosen
-      // placed light is rendered by the object system.
-      if (object.kind === "lantern" && !(object.id === "lantern.master" && state === "placed")) return null;
-      if (object.id === "thorn-house.threshold") return null;
-      // Keep semantic poses for input while the chapter/actor owns the image.
-      // A second miniature Swan at its destination competes with the real bird
-      // and overlaps it when reduced motion parks the actor at that location.
-      // SanctuaryWater also owns the touch surface; a metallic object disk
-      // floats above it and obscures the moon reflection.
-      const chapterOwnsVisual = (sceneId.startsWith("sunset.") && object.kind === "mirror")
-        || (sceneId === "blue-moon.intimacy" && object.kind === "swan")
-        || (sceneId === "blue-moon.sanctuary" && object.id === "blue-moon.water")
-        || (sceneId === "river.wash" && object.id === "river.water")
-        || (sceneId === "fire.boundary" && object.id === "fire.flame")
-        || (sceneId === "fork.weighing" && object.id === "fork.weighing-stone");
-      const placement = state === "reset" || state === "resting" ? undefined : object.targets?.find(item => item.id === placements[object.id]);
-      const preservedAt = state === "preserved" ? object.targets?.[0]?.localPosition : undefined;
-      const location: [number, number, number] = preservedAt ? [preservedAt[0] + .8, preservedAt[1] + .2, preservedAt[2]] : placement?.localPosition ?? object.localPosition;
-      return <StoryObjectPose key={object.id} object={object} state={state} position={location} placementId={placements[object.id]} reducedMotion={reducedMotion}>
-        {chapterOwnsVisual ? null : <StoryObjectModel objectId={object.id} kind={object.kind} state={state ?? (object.id === "fork.door" ? "open" : undefined)} reducedMotion={reducedMotion} />}
-        {object.id === "home.crown-mirror" ? <TimberAssembly name="crown-mirror-grounded-stand" color="#66503d" pieces={CROWN_MIRROR_STAND} /> : null}
-        {object.id === "home.water" ? <group name="home-water-basin-support"><StoneBasin position={[0, -.16, 0]} radius={1.12} height={.34} color="#827b69" /></group> : null}
-      </StoryObjectPose>;
-    })}
-    {surfaces.map(surface => <group key={surface.id} name={`story-placement:${surface.id}`} position={surface.localPosition} userData={{ targetId: surface.id }}>
-      <mesh position={[0, -.07, 0]} receiveShadow><boxGeometry args={[.95, .1, .7]} /><meshStandardMaterial color="#635648" roughness={.96} /></mesh>
-    </group>)}
+    {renderWorldObjects ? <StoryObjectPresentation sceneId={sceneId} reducedMotion={reducedMotion} /> : null}
     <group ref={carriedGroup} name="first-person-story-carry">
       {carried.map((object, index) => <group key={object.id} position={[index * .36, 0, 0]} scale={.36} name={`carried:${object.id}`}><StoryObjectModel kind={object.kind} state="carried" reducedMotion={reducedMotion} /><StoryObjectIdentity objectId={object.id} /></group>)}
     </group>

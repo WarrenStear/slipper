@@ -58,10 +58,18 @@ test("frozen originals identify the two changed visual owners", () => {
   for (const row of receipt.files) assert.equal(createHash("sha256").update(source(row.fixture, true)).digest("hex"), row.sha256);
 });
 
-test("only the world model gains the existing object identity; pose, carry, focus and input remain exact", () => {
+test("object projection retains identity while focus, attention and input effects remain exact", () => {
   const oldSource = source("StoryEventDirector.tsx", true), next = source("StoryEventDirector.tsx");
-  assert.equal(next.replace("<StoryObjectModel objectId={object.id} kind={object.kind}", "<StoryObjectModel kind={object.kind}"), oldSource);
-  assert.equal((next.match(/objectId=\{object.id\} kind=/g) ?? []).length, 1);
+  const hooks = text => {
+    const ast = ts.createSourceFile('owner.tsx', text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX), result = [];
+    const visit = node => { if (ts.isCallExpression(node) && ['useEffect', 'useFrame'].includes(node.expression.getText(ast))) result.push(node.getText(ast)); ts.forEachChild(node, visit); };
+    visit(ast); return result;
+  };
+  assert.deepEqual(hooks(next), hooks(oldSource));
+  const presentation = readFileSync(join(root, 'src/components/three/storyEvents/StoryObjectPresentation.tsx'), 'utf8');
+  assert.equal((presentation.match(/objectId=\{object.id\} kind=/g) ?? []).length, 1);
+  assert.match(next, /<StoryObjectPresentation sceneId=\{sceneId\}/);
+  assert.doesNotMatch(presentation, /dispatchStory|addEventListener|useFrame|getCarriedStoryObjects/);
 });
 
 test("Fire and every non-Fork model retain their complete rendered tree", () => {

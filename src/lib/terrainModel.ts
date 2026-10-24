@@ -1,3 +1,5 @@
+import { explorationDepressionAtPoint } from "../world/terrain/explorationLayout.ts";
+
 export type TerrainClearingSeed = {
   id: string;
   chapter: string;
@@ -544,7 +546,7 @@ function terrainElevationWithInfluence(
     );
   }
 
-  return elevation;
+  return elevation + explorationDepressionAtPoint(x, z, config.clearings);
 }
 
 /**
