@@ -18,7 +18,7 @@ test('the active material fire sits on the fixed story fire footprint while inac
 });
 
 test('the boundary chapter owns one fire image and retains the generic semantic object pose', () => {
-  const director = readFileSync(new URL('../src/components/three/storyEvents/StoryEventDirector.tsx', import.meta.url), 'utf8');
+  const director = readFileSync(new URL('../src/components/three/storyEvents/StoryObjectPresentation.tsx', import.meta.url), 'utf8');
   assert.match(director, /sceneId === "fire\.boundary" && object\.id === "fire\.flame"/);
   assert.match(director, /<StoryObjectPose[^>]+object=\{object\}[^>]+position=\{location\}/);
   assert.match(director, /chapterOwnsVisual \? null : <StoryObjectModel/);

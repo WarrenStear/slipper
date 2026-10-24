@@ -1,3 +1,4 @@
+import { LocalStoryLight } from "../../../world/core/LocalStoryLight";
 import { ClothboundBook, StoryLinen } from "../storyEvents/StoryHeroProps";
 import { TimberAssembly } from "./ChapterArt";
 import { ForkLandscape } from "../environment/ForkLandscape";
@@ -116,7 +117,7 @@ function ForkChapterComponent({
           ) : null}
           {!storyActorsActive ? <>
             <LanternProp position={[0, lanternOwned ? 1.32 : 1.1, 3.2]} scale={lanternOwned ? 1.24 : 1.1} reducedMotion={reducedMotion} />
-            {lanternOwned ? <pointLight position={[0, 2.05, 3.2]} color="#ffd88f" intensity={1.35} distance={10} /> : null}
+            {lanternOwned ? <LocalStoryLight position={[0, 2.05, 3.2]} color="#ffd88f" intensity={1.35} distance={10} /> : null}
           </> : null}
         </group>
       ) : null}

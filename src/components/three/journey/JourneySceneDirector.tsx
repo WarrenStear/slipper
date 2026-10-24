@@ -1,24 +1,21 @@
-import type { QuietGuidanceActivity } from "../../../ui/quietGuidancePresentation";
-import { OutdoorLandscape } from "../environment/OutdoorLandscape";
-import { EnvironmentalChoreography } from "../storyEvents/EnvironmentalChoreography";
-import { StoryEventDirector } from "../storyEvents/StoryEventDirector";
-import { StoryActorDirector } from "../storyEvents/StoryActorDirector";
-import { useJourneyStore } from "../../../stores/useJourneyStore";
-import { getSceneManifest } from "../../../narrative/StoryManifest.ts";
+import { TactileDetailProvider } from "../storyEvents/TactileMaterial";
 import { memo, useMemo, type ElementType } from "react";
 import {
   resolveJourneyRenderWindow,
   type JourneySceneId,
-  type JourneySceneLayout,
   type NarrativeChapterId,
-  type WorldPoint3,
+  type WorldPoint3
 } from "../../../data/journeyWorldLayout.ts";
+import { getSceneManifest } from "../../../narrative/StoryManifest.ts";
+import { useJourneyStore } from "../../../stores/useJourneyStore";
+import type { QuietGuidanceActivity } from "../../../ui/quietGuidancePresentation";
+import { ScenePresence } from "../../../world/core/ScenePresence";
+import { sceneWorldOrigin } from "../../../world/core/sceneStreaming";
+import { useSpatialSceneWindow } from "../../../world/core/useSpatialSceneWindow";
 import { BlueMoonSanctuaryChapter } from "../chapters/BlueMoonSanctuaryChapter";
 import { BrokenFloorChapter } from "../chapters/BrokenFloorChapter";
 import {
-  CHAPTER_PALETTES,
-  SceneGround,
-  type Vec3,
+  type Vec3
 } from "../chapters/ChapterPrimitives";
 import { CrownedReturnChapter } from "../chapters/CrownedReturnChapter";
 import { EnchantedWoodChapter } from "../chapters/EnchantedWoodChapter";
@@ -31,7 +28,13 @@ import { SunsetSeerChapter } from "../chapters/SunsetSeerChapter";
 import { ThornedHouseChapter } from "../chapters/ThornedHouseChapter";
 import { ThreeClimbsChapter } from "../chapters/ThreeClimbsChapter";
 import type { ChapterSceneProps } from "../chapters/types";
+import { OutdoorLandscape } from "../environment/OutdoorLandscape";
 import type { RenderQualityProfile } from "../renderQuality";
+import { RENDER_QUALITY_PROFILES } from "../renderQuality";
+import { EnvironmentalChoreography } from "../storyEvents/EnvironmentalChoreography";
+import { StoryActorDirector } from "../storyEvents/StoryActorDirector";
+import { StoryEventDirector } from "../storyEvents/StoryEventDirector";
+import { StoryObjectPresentation } from "../storyEvents/StoryObjectPresentation";
 
 const CHAPTER_COMPONENTS: Record<NarrativeChapterId, ElementType<ChapterSceneProps>> = {
   "broken-floor": BrokenFloorChapter,
@@ -58,6 +61,7 @@ export type JourneySceneDirectorProps = {
    * Omit this once player navigation uses journeyWorldLayout coordinates.
    */
   activeOrigin?: WorldPoint3;
+  sampleGroundY?: (x: number, z: number) => number;
   renderAdjacent?: boolean;
   openingResolved?: boolean;
   interactionsEnabled?: boolean;
@@ -79,47 +83,13 @@ export function ActiveStoryActors({ sceneId, qualityProfile, reducedEffects, red
   return <StoryActorDirector sceneId={sceneId} qualityProfile={qualityProfile} reducedEffects={reducedEffects} reducedMotion={reducedMotion} lanternOwned={lanternOwned} lanternPlaced={lanternPlaced} birdsReleased={birdsReleased} origamiAwakened={origamiAwakened} />;
 }
 
-function AdjacentSceneProxy({
-  scene,
-  reducedEffects,
-}: {
-  scene: JourneySceneLayout;
-  reducedEffects: boolean;
-}) {
-  const palette = CHAPTER_PALETTES[scene.chapterId];
-  const architectural = scene.role === "architectural" || scene.role === "finale";
-  const reflective = scene.role === "reflection" || scene.biome === "mirror" || scene.biome === "archive";
-
-  return (
-    <group>
-      <SceneGround radius={reducedEffects ? 4.5 : 6.2} color={palette.ground} y={-0.24} />
-      <mesh position={[0, architectural ? 2.15 : 1.2, 0]} scale={architectural ? [2.7, 4.3, 1.5] : [2.4, 1.6, 2.4]}>
-        {architectural ? <boxGeometry args={[1, 1, 1]} /> : <dodecahedronGeometry args={[1, 0]} />}
-        <meshStandardMaterial
-          color={palette.mid}
-          emissive={palette.deep}
-          emissiveIntensity={0.15}
-          roughness={reflective ? 0.32 : 0.96}
-          metalness={reflective ? 0.28 : 0}
-          transparent
-          opacity={reducedEffects ? 0.3 : 0.42}
-          depthWrite={false}
-        />
-      </mesh>
-      <mesh position={[0, architectural ? 5.1 : 2.75, 0]}>
-        <sphereGeometry args={[0.17, 9, 7]} />
-        <meshBasicMaterial color={palette.accent} transparent opacity={0.72} depthWrite={false} toneMapped={false} />
-      </mesh>
-    </group>
-  );
-}
-
 function JourneySceneDirectorComponent({
   activeSceneId,
   qualityProfile,
   reducedEffects = false,
   reducedMotion = false,
   activeOrigin,
+  sampleGroundY,
   renderAdjacent = true,
   openingResolved = true,
   interactionsEnabled = true,
@@ -129,58 +99,45 @@ function JourneySceneDirectorComponent({
   const activeManifest = getSceneManifest(activeSceneId);
   const activeScene = activeManifest.layout;
   const renderWindow = useMemo(() => resolveJourneyRenderWindow(activeSceneId), [activeSceneId]);
-  const worldOffset: Vec3 = activeOrigin
+  const spatialIds = useSpatialSceneWindow(activeSceneId, qualityProfile.quality, reducedEffects, Boolean(sampleGroundY && renderAdjacent));
+  const sceneIds = sampleGroundY ? spatialIds : renderWindow.entries.filter(entry => entry.mode === "active" || renderAdjacent).map(entry => entry.sceneId);
+  const worldOffset: Vec3 = activeOrigin && !sampleGroundY
     ? [
         activeOrigin[0] - activeScene.anchor.position[0],
         activeOrigin[1] - activeScene.anchor.position[1],
         activeOrigin[2] - activeScene.anchor.position[2],
       ]
     : [0, 0, 0];
-  const ActiveChapter = CHAPTER_COMPONENTS[activeManifest.chapterId];
-
   return (
-    <group name="authored-journey-scene-window" position={worldOffset}>
-      {renderWindow.entries.map((entry) => {
-        const manifest = getSceneManifest(entry.sceneId);
+    <group name="authored-journey-scene-window" position={worldOffset} userData={{ streaming: Boolean(sampleGroundY), sceneCount: sceneIds.length }}>
+      {/* One input owner and carried-object presentation survives scenery eviction. */}
+      {interactionsEnabled ? <group position={mutablePoint(sampleGroundY ? sceneWorldOrigin(activeSceneId, sampleGroundY) : activeScene.anchor.position)} rotation={[0, activeScene.anchor.headingRadians, 0]}>
+        <StoryEventDirector sceneId={activeSceneId} reducedMotion={reducedMotion} renderWorldObjects={sceneIds.includes(activeSceneId)} quietGuidanceActivity={quietGuidanceActivity} />
+      </group> : null}
+      {sceneIds.map(sceneId => {
+        const manifest = getSceneManifest(sceneId);
         const scene = manifest.layout;
-        const position = mutablePoint(scene.anchor.position);
-        if (entry.mode === "active") {
-          return (
-            <group
-              key={entry.sceneId}
-              name={`journey-scene:${entry.sceneId}`}
-              userData={{ environmentId: manifest.environmentId }}
-              position={position}
-              rotation={[0, scene.anchor.headingRadians, 0]}
-            >
-              {interactionsEnabled ? <StoryEventDirector sceneId={entry.sceneId} reducedMotion={reducedMotion} quietGuidanceActivity={quietGuidanceActivity} /> : null}
-              {interactionsEnabled ? <ActiveStoryActors sceneId={entry.sceneId} qualityProfile={qualityProfile} reducedEffects={reducedEffects} reducedMotion={reducedMotion} /> : null}
-              <EnvironmentalChoreography sceneId={entry.sceneId} qualityProfile={qualityProfile} reducedEffects={reducedEffects} reducedMotion={reducedMotion} />
-              <OutdoorLandscape sceneId={manifest.sceneId} quality={qualityProfile.quality} reducedEffects={reducedEffects} reducedMotion={reducedMotion} collidable={interactionsEnabled} />
-              <ActiveChapter
-                scene={scene}
-                qualityProfile={qualityProfile}
-                reducedEffects={reducedEffects}
-                reducedMotion={reducedMotion}
-                openingResolved={openingResolved}
-                onFinalConstellationFormationComplete={
-                  onFinalConstellationFormationComplete
-                }
-              />
-            </group>
-          );
-        }
-        if (!renderAdjacent) return null;
-        return (
-          <group
-            key={entry.sceneId}
-            name={`journey-proxy:${entry.sceneId}`}
-            position={position}
-            rotation={[0, scene.anchor.headingRadians, 0]}
-          >
-            <AdjacentSceneProxy scene={scene} reducedEffects={reducedEffects} />
+        const active = sceneId === activeSceneId;
+        const position = mutablePoint(sampleGroundY ? sceneWorldOrigin(sceneId, sampleGroundY) : scene.anchor.position);
+        const Chapter = CHAPTER_COMPONENTS[manifest.chapterId];
+        // Nearby scenery uses the same authored assets, with no secondary views,
+        // authored actor choreography, prose, inputs or carried-object copies.
+        const detail = active ? qualityProfile : RENDER_QUALITY_PROFILES.low;
+        const reduced = active ? reducedEffects : true;
+        return <ScenePresence.Provider key={sceneId} value={active}>
+          <TactileDetailProvider quality={detail.quality} reducedEffects={reduced}>
+          <group name={`journey-scene:${sceneId}`} userData={{ environmentId: manifest.environmentId, active, sceneryOnly: !active }}
+            position={position} rotation={[0, scene.anchor.headingRadians, 0]}>
+            {active && interactionsEnabled ? <ActiveStoryActors sceneId={sceneId} qualityProfile={qualityProfile} reducedEffects={reducedEffects} reducedMotion={reducedMotion} /> : null}
+            {!active && scene.chapterId !== "broken-floor" && scene.chapterId !== "lantern-epilogue" ?
+              <StoryObjectPresentation sceneId={sceneId} activeSceneId={activeSceneId} reducedMotion interactiveIdentity={false} /> : null}
+            <EnvironmentalChoreography sceneId={sceneId} qualityProfile={detail} reducedEffects={reduced} reducedMotion={reducedMotion || !active} />
+            <OutdoorLandscape sceneId={sceneId} quality={detail.quality} reducedEffects={reduced} reducedMotion={reducedMotion || !active} collidable={interactionsEnabled} sampleWorldGroundY={sampleGroundY} worldOrigin={position} headingRadians={scene.anchor.headingRadians} />
+            <Chapter scene={scene} qualityProfile={detail} reducedEffects={reduced} reducedMotion={reducedMotion || !active}
+              openingResolved={openingResolved} onFinalConstellationFormationComplete={active ? onFinalConstellationFormationComplete : undefined} />
           </group>
-        );
+        </TactileDetailProvider>
+        </ScenePresence.Provider>;
       })}
     </group>
   );

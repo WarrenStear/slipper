@@ -39,9 +39,15 @@ for(const scene of story.journeyScenes){
 const raised=snapshots.findIndex(s=>s.storyObjectStates['river.white-fabric']==='raised');assert.ok(raised>0);
 const projected=s=>({surrenderComplete:s.storyObjectStates['river.white-fabric']==='raised'});
 const later=id=>/^(fork\.|climb\.|climbs\.|crowned\.|epilogue\.)/.test(id);
-test('actual accepted Surrender outcome modestly restrains only later ambient rates and preserves every other look field',()=>{
+test('actual accepted Surrender outcome modestly restrains only later ambient rates and preserves all other look fields after the reviewed woodland palette',()=>{
  for(const scene of story.journeyScenes)for(const quality of ['low','medium','high','cinematic'])for(const reduced of [false,true])for(const s of [snapshots[raised-1],snapshots[raised]]){
   const state=projected(s),before=plain(oldLook.resolveSceneLook(scene.id,quality,reduced,state)),after=plain(resolveSceneLook(scene.id,quality,reduced,state));
+  // Reviewed woodland readability change; all other fields retain the pinned baseline.
+  if (scene.id.startsWith('enchanted.')) {
+    before.lighting.fillFloor = .5;
+    if (scene.id === 'enchanted.rabbit-hole') before.lighting.intensity = 2.1;
+    Object.assign(before.atmosphere, {sky:'#3b5259',horizon:'#a4b4a3',fog:'#596f67'});
+  }
   const factor=state.surrenderComplete&&later(scene.id)?.84:1;
   for(const channel of SCENE_MOTION_CHANNELS)assert.equal(after.motion[channel],before.motion[channel]*factor,scene.id+'/'+channel);
   delete before.motion;delete after.motion;assert.deepEqual(after,before,'No audio/camera/lighting/reflection/material/budget change');

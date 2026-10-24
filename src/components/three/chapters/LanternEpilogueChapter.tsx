@@ -1,3 +1,6 @@
+import { useActiveScenePresence } from "../../../world/core/ScenePresence";
+import { useJourneyStore } from "../../../stores/useJourneyStore";
+import { SceneGround } from "./ChapterPrimitives";
 import { memo } from "react";
 import { IntegratedFinalTableau } from "./IntegratedFinalTableau";
 import type { ChapterSceneProps } from "./types";
@@ -8,6 +11,9 @@ function LanternEpilogueChapterComponent({
   reducedMotion,
   onFinalConstellationFormationComplete,
 }: ChapterSceneProps) {
+  const active = useActiveScenePresence();
+  const completed = useJourneyStore(state => state.storyCompleted);
+  if (!active && !completed) return <SceneGround radius={16} color="#6e7155" />;
   return (
     <group name="lantern-epilogue-integrated-composition">
       <IntegratedFinalTableau

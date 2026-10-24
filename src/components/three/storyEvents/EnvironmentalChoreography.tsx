@@ -1,3 +1,4 @@
+import { LocalStoryLight } from "../../../world/core/LocalStoryLight";
 import { TimberAssembly, WritingDesk } from "../chapters/ChapterArt";
 import { useSceneLook } from "../artDirection/SceneLookContext";
 import { memo, useEffect, useLayoutEffect, useMemo, useRef } from "react";
@@ -63,7 +64,7 @@ function CandleChain({ lit, reducedMotion, count }: { lit: boolean; reducedMotio
   return <group name="candle-chain-response" userData={{ lit }}>
     <instancedMesh ref={wax} geometry={geometry.wax} args={[undefined, undefined, count]}><TactileMaterial surface="wax" color="#cec2a7" roughness={0.82} /></instancedMesh>
     <instancedMesh ref={flames} geometry={geometry.flame} args={[undefined, undefined, count]}><meshBasicMaterial color={flameColor} /></instancedMesh>
-    <pointLight ref={light} position={[-3.1, 0.9, 2]} color="#e4bd83" intensity={lit ? 1.5 : 0} distance={11} decay={2} />
+    <LocalStoryLight ref={light} position={[-3.1, 0.9, 2]} color="#e4bd83" intensity={lit ? 1.5 : 0} distance={11} decay={2} />
   </group>;
 }
 
@@ -144,9 +145,9 @@ function DomesticResponse({ state, house, reducedMotion }: { state: Environmenta
   // animated boxes/walls here would duplicate furniture and cross its colliders.
   return <group name={house ? "house-refill-compression" : "nest-time-and-weight"} userData={{ handsOccupied: state.handsOccupied, compressed: state.daysCompressed, compression: state.houseCompression }}>
     {house ? null : <>
-      <pointLight ref={windowLight} position={[0, 4, 4]} color="#d7c5a0" intensity={1} distance={13} decay={2} />
+      <LocalStoryLight ref={windowLight} position={[0, 4, 4]} color="#d7c5a0" intensity={1} distance={13} decay={2} />
       <group name="child-space-remains-protected" position={[-1, 0, 3.5]}>
-        <pointLight position={[0, 1.4, 0]} color="#f0d2a5" intensity={1.2} distance={5} decay={2} />
+        <LocalStoryLight position={[0, 1.4, 0]} color="#f0d2a5" intensity={1.2} distance={5} decay={2} />
         <mesh position={[0, .25, 0]}><cylinderGeometry args={[.9, 1, .5, 24]} /><TactileMaterial surface="linen" color="#ad937a" roughness={1} /></mesh>
         <group position={[0, .54, 0]} scale={1.5}><StoryObjectModel kind="fabric" reducedMotion={reducedMotion} /></group>
       </group>
@@ -202,7 +203,7 @@ function ChosenContinuity({ memory, creation, atHome, reducedMotion }: { memory:
       {creation === "rest" ? <><TimberAssembly name="created-rest-supported-frame" color="#8f7c64" pieces={[
         {position:[0,.5,0],size:[2.4,.25,1.2]},
         ...[-1,1].flatMap(x=>[-1,1].map(z=>({position:[x*.98,.19,z*.43] as [number,number,number],size:[.14,.38,.14] as [number,number,number]}))),
-      ]} /><group position={[0, 0.67, 0]} scale={[2.2, 1, 2]}><StoryObjectModel kind="fabric" reducedMotion={reducedMotion} /></group></> : creation === "home" ? <><DoorFrame width={2.8} height={3.6} depth={0.3} color="#998b70" /><TimberAssembly name="created-home-practical-bracket" color="#75634c" pieces={[{position:[.9,.52,0],size:[.35,.1,.35]},{position:[.9,.23,0],size:[.12,.5,.12]}]} /><group position={[0.9, 0.6, 0]}><StoryObjectModel kind="candle" state="lit" /></group><pointLight position={[0.9, 1, 0]} intensity={1.2} distance={7} color="#dfcba5" /></> : <><group position={[0,.85,0]}><WritingDesk width={2.2} depth={1.1} height={.85} color="#8c7963" /></group><group position={[0, 0.95, 0]}><StoryObjectModel kind="page" /></group><group position={[0, 0, 0.9]}><StoryObjectModel kind="chair" /></group></>}
+      ]} /><group position={[0, 0.67, 0]} scale={[2.2, 1, 2]}><StoryObjectModel kind="fabric" reducedMotion={reducedMotion} /></group></> : creation === "home" ? <><DoorFrame width={2.8} height={3.6} depth={0.3} color="#998b70" /><TimberAssembly name="created-home-practical-bracket" color="#75634c" pieces={[{position:[.9,.52,0],size:[.35,.1,.35]},{position:[.9,.23,0],size:[.12,.5,.12]}]} /><group position={[0.9, 0.6, 0]}><StoryObjectModel kind="candle" state="lit" /></group><LocalStoryLight position={[0.9, 1, 0]} intensity={1.2} distance={7} color="#dfcba5" /></> : <><group position={[0,.85,0]}><WritingDesk width={2.2} depth={1.1} height={.85} color="#8c7963" /></group><group position={[0, 0.95, 0]}><StoryObjectModel kind="page" /></group><group position={[0, 0, 0.9]}><StoryObjectModel kind="chair" /></group></>}
     </group> : null}
   </group>;
 }
@@ -218,7 +219,7 @@ export const EnvironmentalChoreography = memo(function EnvironmentalChoreography
     {sceneId.startsWith("nest.") || house ? <DomesticResponse state={state} house={house} reducedMotion={reducedMotion} reducedEffects={reducedEffects} /> : null}
     {sceneId === "river.wash" ? <WaterResponse cue="river" position={[0, 0.09, 3]} active={state.sootLoosening || state.sootWashed} washed={state.sootWashed} includeSoot reducedMotion={reducedMotion} /> : null}
     {sceneId === "river.release-surrender" ? <WhiteFabric raised={state.surrendered} reducedMotion={reducedMotion} /> : null}
-    {sceneId.startsWith("fork.") ? <group position={[-5.5, 0, 2]} name="past-motifs-remain-behind"><pointLight position={[0, 2, 0]} color="#d9ad77" intensity={state.pastQuiet ? 0.08 : state.pastReturned ? 1.7 : 0.9} distance={9} decay={2} /><DoorFrame width={2} height={3.2} color="#65503f" /><WaterSurface position={[0, 0.02, -1.2]} size={[2, 2]} color="#3e5360" /><FabricVeil position={[-0.8, 1.6, 0]} size={[0.8, 2.6]} opacity={state.pastQuiet ? 0.22 : 0.65} reducedMotion={reducedMotion} />{state.pastReturned ? <DoorFrame position={[-1.4, 0, -2]} width={1.8} height={2.8} color="#574537" /> : null}</group> : null}
+    {sceneId.startsWith("fork.") ? <group position={[-5.5, 0, 2]} name="past-motifs-remain-behind"><LocalStoryLight position={[0, 2, 0]} color="#d9ad77" intensity={state.pastQuiet ? 0.08 : state.pastReturned ? 1.7 : 0.9} distance={9} decay={2} /><DoorFrame width={2} height={3.2} color="#65503f" /><WaterSurface position={[0, 0.02, -1.2]} size={[2, 2]} color="#3e5360" /><FabricVeil position={[-0.8, 1.6, 0]} size={[0.8, 2.6]} opacity={state.pastQuiet ? 0.22 : 0.65} reducedMotion={reducedMotion} />{state.pastReturned ? <DoorFrame position={[-1.4, 0, -2]} width={1.8} height={2.8} color="#574537" /> : null}</group> : null}
     {sceneId === "climb.womb" || home ? <ChosenContinuity memory={state.heartMemory} creation={state.creation} atHome={home} reducedMotion={reducedMotion} /> : null}
     {home ? <WaterResponse cue="home" position={[-2, .355, 2]} active={objectStates["home.water"] === "rippled"} reducedMotion={reducedMotion} /> : null}
   </group>;

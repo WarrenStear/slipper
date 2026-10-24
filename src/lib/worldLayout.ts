@@ -1,3 +1,4 @@
+import { explorationClearings, explorationPaths, hasCanonicalGeography } from "../world/terrain/explorationLayout.ts";
 import * as THREE from "three";
 import type { Slipper3DEntry, Vector3Tuple, EulerTuple } from "../data/slipper3dTypes";
 import {
@@ -543,14 +544,14 @@ function resolveWorldLayoutTerrainSampler(
     crownedRampWidth: CROWNED_RETURN_RAMP_WIDTH,
     explorationDepth,
     memoryPressure,
-    clearings: entries.map((entry) => ({
+    clearings: [...entries.map((entry) => ({
       id: entry.id,
       chapter: entry.chapter,
       position: entryWorldPosition(entry, entries),
       radius: getJourneyEntryClearingRadius(entry.id),
       elevated: getJourneyEntryWorldPlacement(entry.id)?.elevated,
-    })),
-    paths: segments.map((segment) => {
+    })), ...(hasCanonicalGeography(entries) ? explorationClearings() : [])],
+    paths: [...segments.map((segment): TerrainSamplerConfig["paths"][number] => {
       const source = entryWorldPosition(segment.sourceEntry, entries);
       const target = entryWorldPosition(segment.targetEntry, entries);
       return {
@@ -570,7 +571,7 @@ function resolveWorldLayoutTerrainSampler(
         minZ: segment.minZ,
         maxZ: segment.maxZ,
       };
-    }),
+    }), ...(hasCanonicalGeography(entries) ? explorationPaths() : [])],
   };
   const sample = createTerrainSurfaceSampler(
     config,

@@ -75,7 +75,7 @@ test('airborne matter and fill follow scene intent with bounded quality gates', 
   for (const id of JOURNEY_SCENE_IDS) {
     const look = resolveSceneLook(id, 'cinematic');
     assert.ok(look.particles.count <= 56 && look.particles.count >= 0);
-    assert.ok(look.lighting.fillFloor >= 0 && look.lighting.fillFloor <= .32);
+    assert.ok(look.lighting.fillFloor >= 0 && look.lighting.fillFloor <= (id.startsWith("enchanted.") ? .5 : .32));
   }
   assert.equal(resolveSceneLook('thorned.old-memory-bedroom').particles.count, 0);
   assert.equal(resolveSceneLook('epilogue.constellation').particles.count, 0);

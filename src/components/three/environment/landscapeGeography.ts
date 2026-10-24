@@ -88,7 +88,7 @@ function accumulateNormals(data: LandscapeBuffers) {
   }
 }
 /** One combined land mesh, with both sides outside the authored clearing. */
-export function createLandscapeTerrain(spec: LandscapeSpec): LandscapeBuffers {
+export function createLandscapeTerrain(spec: LandscapeSpec, sampleGroundY?: (x: number, z: number) => number): LandscapeBuffers {
   const data = blank(), { across, along } = LANDSCAPE_GRID;
   for (const side of [-1, 1]) {
     const base = data.positions.length / 3;
@@ -99,7 +99,7 @@ export function createLandscapeTerrain(spec: LandscapeSpec): LandscapeBuffers {
         let r = mix(spec.inner, spec.outer, col / across);
         if (side === spec.riverSide) r = col <= 10 ? mix(spec.inner, c - w, col / 10)
           : col <= 14 ? mix(c - w, c + w, (col - 10) / 4) : mix(c + w, spec.outer, (col - 14) / 10);
-        const x = side * r, y = landscapeHeight(spec, x, z);
+        const x = side * r, y = sampleGroundY ? sampleGroundY(x, z) : landscapeHeight(spec, x, z);
         data.positions.push(x, y, z); data.uvs.push(r * .12, z * .12);
         const damp = side === spec.riverSide ? 1 - smooth(w, w + 1.2, Math.abs(r - c)) : 0;
         const stone = smooth(spec.height * .44, spec.height * .92, y);

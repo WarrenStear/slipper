@@ -14,11 +14,11 @@ const { getJourneyEntryWorldPosition } = await import('../src/data/journeyWorldL
 
 // Exercise the actual layout effect and JSX geometry on the CPU. Only React's
 // scheduling is replaced; instance matrices and active counts come from source.
-const require = createRequire(import.meta.url), effects = [];
+const require = createRequire(import.meta.url), effects = [], frames = [];
 const hookKey = '__distantWoodlandBoundaryHooks';
 globalThis[hookKey] = {
   memo: fn => fn, useRef: () => ({ current: null }), useMemo: fn => fn(),
-  useEffect: () => {}, useLayoutEffect: fn => effects.push(fn),
+  useEffect: () => {}, useLayoutEffect: fn => effects.push(fn), useFrame: fn => frames.push(fn),
 };
 const sourceURL = new URL('../src/components/three/environment/DistantWoodland.tsx', import.meta.url);
 const source = readFileSync(sourceURL, 'utf8');
@@ -26,6 +26,7 @@ let compiled = ts.transpileModule(source, { compilerOptions: {
   jsx: ts.JsxEmit.ReactJSX, module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022,
 } }).outputText;
 compiled = compiled.replace(/import \{[^}]+\} from "react";/, `const {memo,useEffect,useLayoutEffect,useMemo,useRef}=globalThis.${hookKey};`);
+compiled = compiled.replace(/import \{ useFrame \} from "@react-three\/fiber";/, `const {useFrame}=globalThis.${hookKey};`);
 compiled = compiled.replace(/from "([^"]+)"/g, (_, specifier) => {
   let url;
   if (specifier.startsWith('.')) { url = new URL(specifier, sourceURL); if (!existsSync(url)) url = new URL(specifier + '.ts', sourceURL); }
@@ -36,7 +37,7 @@ const { DistantWoodland } = await import('data:text/javascript;base64,' + Buffer
 delete globalThis[hookKey];
 
 function render(origin, quality = 'high', quiet = false) {
-  effects.length = 0;
+  effects.length = 0; frames.length = 0;
   const group = DistantWoodland({ origin, quality, quiet, sampleGroundY: () => 11 });
   const meshes = group.props.children.map(element => {
     const children = [element.props.children].flat();
@@ -47,7 +48,8 @@ function render(origin, quality = 'high', quiet = false) {
     return mesh;
   });
   effects.forEach(fn => fn());
-  return { meshes, dispose() { for (const mesh of meshes) { mesh.geometry.dispose(); mesh.material.dispose(); mesh.dispose(); } } };
+  const subscriptions = [...frames];
+  return { meshes, frame(x,z) { for(const callback of subscriptions)callback({camera:{position:{x,z}}}); }, dispose() { for (const mesh of meshes) { mesh.geometry.dispose(); mesh.material.dispose(); mesh.dispose(); } } };
 }
 function roots(geometry, matrix) {
   const position = geometry.getAttribute('position');
@@ -120,4 +122,21 @@ test('Crown excludes the native floating trunk witnesses while preserving the un
     }
     assert.match(source, /distantTrunkFitsTerrain\(trunks\.current!\.geometry, dummy\.matrix\)/);
   } finally { crown.dispose(); centre.dispose(); terrain.dispose(); }
+});
+
+test('walking into the backdrop removes nearby silhouettes and repacks only at cell changes', () => {
+  const owner=render([0,0,0]);
+  try {
+    for(const [x,z] of [[0,0],[32,16],[-64,-24],[120,64],[0,0]]) {
+      owner.frame(x,z);
+      const [trunks,crowns]=owner.meshes;
+      assert.equal(trunks.count,crowns.count);assert.ok(trunks.count<=96);
+      for(const matrix of instanceRows(trunks)) {
+        const distance=Math.hypot(matrix.elements[12]-x,matrix.elements[14]-z);
+        assert.ok(distance>=44.999&&distance<=165.001);
+      }
+      const version=trunks.instanceMatrix.version;
+      owner.frame(x+.01,z+.01);assert.equal(trunks.instanceMatrix.version,version,'no per-frame buffer churn');
+    }
+  } finally {owner.dispose();}
 });

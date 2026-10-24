@@ -27,6 +27,7 @@ function harness() {
     './StoryObjectModel':{},'../chapters/ChapterPrimitives':{Beam:()=>null},
     '../environmentArt/authoredGeometry.ts':{},'./TactileMaterial':{},
     '../../../storyEvents/acceptedStoryEvents':{},
+    '../../../world/core/LocalStoryLight':{LocalStoryLight:()=>null},
   };
   // Actual component/hooks, installed R3F reconciler, Three geometry and actual
   // event-state resolver. Unrelated chapter children and the unchanged pole

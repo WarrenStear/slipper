@@ -1,3 +1,4 @@
+import { explorationClearings, explorationPaths, hasCanonicalGeography } from "./explorationLayout.ts";
 import type { Slipper3DEntry } from "../../data/slipper3dTypes.ts";
 import { getJourneyEntryBiome, getJourneyEntryClearingRadius, getJourneyEntryWorldPlacement } from "../../data/journeyWorldLayout.ts";
 import type { ForestClearingSeed, ForestPathSeed } from "../../workers/forestWorker.types";
@@ -8,18 +9,18 @@ import { clamp01 } from "../worldMath.ts";
 import { CORRIDOR_BASE_WIDTH, CROWNED_RETURN_RAMP_WIDTH, FOREST_CLEARING_RADIUS, TERRAIN_SEGMENTS, TERRAIN_SIZE } from "./worldConstants.ts";
 
 export function packForestClearingSeeds(entries: Slipper3DEntry[]): ForestClearingSeed[] {
-  return entries.map((entry) => ({
+  return [...entries.map((entry) => ({
     id: entry.id,
     chapter: entry.chapter,
     position: entryWorldPosition(entry, entries),
     radius: getJourneyEntryClearingRadius(entry.id),
     biome: getJourneyEntryBiome(entry.id),
     elevated: getJourneyEntryWorldPlacement(entry.id)?.elevated,
-  }));
+  })), ...(hasCanonicalGeography(entries) ? explorationClearings() : [])];
 }
 
 export function packForestPathSeeds(pathSegments: MazePathSegment[], entries: Slipper3DEntry[]): ForestPathSeed[] {
-  return pathSegments.map((segment) => {
+  return [...pathSegments.map((segment): ForestPathSeed => {
     const source = entryWorldPosition(segment.sourceEntry, entries);
     const target = entryWorldPosition(segment.targetEntry, entries);
     return {
@@ -42,7 +43,7 @@ export function packForestPathSeeds(pathSegments: MazePathSegment[], entries: Sl
       minZ: segment.minZ,
       maxZ: segment.maxZ,
     };
-  });
+  }), ...(hasCanonicalGeography(entries) ? explorationPaths() : [])];
 }
 
 export type CachedTerrainSampler = {

@@ -16,6 +16,7 @@ export type JourneyWorldCompositionProps = {
   reducedEffects?: boolean;
   reducedMotion?: boolean;
   activeOrigin?: WorldPoint3;
+  sampleGroundY?: (x: number, z: number) => number;
   renderAdjacent?: boolean;
   enabled?: boolean;
   openingResolved?: boolean;
@@ -29,7 +30,7 @@ export type JourneyWorldCompositionProps = {
  *
  * Mount this inside the existing Canvas/Physics tree. The component owns no
  * story state and performs no navigation; it renders the supplied active scene
- * at full fidelity and immediate route neighbors as lightweight silhouettes.
+ * at full fidelity and nearby scenery independently of narrative eligibility.
  */
 function JourneyWorldCompositionComponent({
   activeSceneId,
@@ -37,6 +38,7 @@ function JourneyWorldCompositionComponent({
   reducedEffects = false,
   reducedMotion = false,
   activeOrigin,
+  sampleGroundY,
   renderAdjacent = true,
   enabled = true,
   openingResolved = true,
@@ -55,6 +57,7 @@ function JourneyWorldCompositionComponent({
       reducedEffects={reducedEffects}
       reducedMotion={reducedMotion}
       activeOrigin={activeOrigin}
+      sampleGroundY={sampleGroundY}
       renderAdjacent={renderAdjacent && !openingEnclosed(activeSceneId, openingResolved)}
       openingResolved={openingResolved}
       interactionsEnabled={interactionsEnabled}

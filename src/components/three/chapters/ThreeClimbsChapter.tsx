@@ -1,3 +1,4 @@
+import { LocalStoryLight } from "../../../world/core/LocalStoryLight";
 import { TimberAssembly, Upholstery, RestingThrow, StoneBasin } from "./ChapterArt";
 import { ClothboundBook, MemoryFeather } from "../storyEvents/StoryHeroProps";
 import { ClimbLandscape } from "../environment/ClimbLandscape";
@@ -60,7 +61,7 @@ function HeartRoseMemory({ selected, reducedEffects }: { selected: boolean; redu
       <MemoryPedestal selected={selected} />
       <BotanicalCluster kind="rose" position={[0, .36, 0]} scale={2.15} seed={41} color={selected ? "#d49aa3" : "#a36f78"} />
       {selected && !reducedEffects ? (
-        <pointLight position={[0, 1.75, 0]} color="#d9a0a8" intensity={0.74} distance={5} />
+        <LocalStoryLight position={[0, 1.75, 0]} color="#d9a0a8" intensity={0.74} distance={5} />
       ) : null}
     </group>
   );
@@ -83,7 +84,7 @@ function HeartSwanFeatherMemory({ selected, reducedEffects }: { selected: boolea
       <MemoryPedestal selected={selected} />
       <group position={[0,.37,0]} rotation={[.15,-.24,-.45]} scale={2.1}><MemoryFeather /></group>
       {selected && !reducedEffects ? (
-        <pointLight position={[0, 1.45, 0]} color="#dce8ed" intensity={0.7} distance={5} />
+        <LocalStoryLight position={[0, 1.45, 0]} color="#dce8ed" intensity={0.7} distance={5} />
       ) : null}
     </group>
   );
@@ -121,7 +122,7 @@ function HeartBlueMoonMemory({ selected, reducedEffects }: { selected: boolean; 
         <meshBasicMaterial color="#e3edf2" transparent opacity={selected ? 0.9 : 0.55} toneMapped={false} side={2} />
       </mesh>
       {selected && !reducedEffects ? (
-        <pointLight position={[0, 1.3, 0.4]} color="#a7cede" intensity={0.76} distance={5} />
+        <LocalStoryLight position={[0, 1.3, 0.4]} color="#a7cede" intensity={0.76} distance={5} />
       ) : null}
     </group>
   );

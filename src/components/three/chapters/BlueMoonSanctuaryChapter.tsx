@@ -19,6 +19,8 @@ import {
 import type { ChapterSceneProps } from "./types";
 import { useJourneyStore } from "../../../stores/useJourneyStore";
 import { ObservedSanctuaryReflection } from "../storyEvents/ObservedSanctuaryReflection";
+import { CuboidCollider, RigidBody } from "@react-three/rapier";
+import { SANCTUARY_BRIDGE_DECK, SANCTUARY_BRIDGE_STEPS } from "../../../world/terrain/sanctuaryBridgeLayout";
 
 const BRIDGE_PLANKS = Array.from({ length: 35 }, (_, index) => index);
 const LILIES = Array.from({ length: 10 }, (_, i) => ({
@@ -53,6 +55,12 @@ export function WornSanctuaryBridge() {
     ]),
   ]), []);
   return <group position={[0, .3, 0]} name="weathered-sanctuary-bridge">
+    <RigidBody type="fixed" colliders={false} name="sanctuary-bridge-support">
+      <CuboidCollider position={[...SANCTUARY_BRIDGE_DECK.position]} args={[...SANCTUARY_BRIDGE_DECK.halfExtents]} />
+      {SANCTUARY_BRIDGE_STEPS.map((step, i) => <CuboidCollider key={i} position={step.position} args={[step.size[0] / 2, step.size[1] / 2, step.size[2] / 2]} />)}
+      {[-1, 1].map(side => <CuboidCollider key={side} position={[side * 1.95, .5, 0]} args={[.09, .7, 7.65]} />)}
+    </RigidBody>
+    <TimberAssembly name="bridge-grounded-approach-steps" pieces={SANCTUARY_BRIDGE_STEPS} color="#8d826c" surface="wet-wood" />
     <TimberAssembly pieces={boards} color="#aaa38f" surface="wet-wood" />
     <TimberAssembly pieces={supports} color="#756955" surface="wet-wood" />
     <TimberAssembly name="bridge-post-caps-and-knee-braces" pieces={joinery} color="#8b7c62" surface="wet-wood" />

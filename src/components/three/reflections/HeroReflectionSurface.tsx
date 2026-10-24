@@ -4,6 +4,7 @@ import { Color, PerspectiveCamera, PlaneGeometry, ShaderMaterial, UnsignedByteTy
 import { Reflector } from "three/examples/jsm/objects/Reflector.js";
 import { useSceneLook } from "../artDirection/SceneLookContext";
 import { heroReflectionDisturbance } from "./reflectionMotion";
+import { useActiveScenePresence } from "../../../world/core/ScenePresence";
 
 const capturing = new WeakSet<WebGLRenderer>();
 /** Exactly one eligible hero surface per scene; lower tiers keep their skin. */
@@ -11,7 +12,8 @@ export function HeroReflectionSurface({ kind, size, position = [0, 0, 0], rotati
   kind: "moonwater" | "mirror"; size: [number, number]; position?: [number, number, number]; rotation?: [number, number, number];
 }) {
   const presentation = useSceneLook();
-  const allowed = presentation && presentation.look.reflection.mode === kind && presentation.look.budget.reflectionSize > 0;
+  const active = useActiveScenePresence();
+  const allowed = active && presentation && presentation.look.reflection.mode === kind && presentation.look.budget.reflectionSize > 0;
   return allowed ? <CapturedSurface kind={kind} size={size} position={position} rotation={rotation} /> : null;
 }
 

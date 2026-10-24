@@ -19,7 +19,7 @@ type AuthoredLook = {
 // which single surface may justify a secondary view of the world.
 const worlds = {
   room: { source: "window", keyColor: "#b5c8d2", keyPosition: [5.8, 5.2, -6], keyIntensity: 1.2, sky: "#11161a", horizon: "#252c30", fog: "#1c262d", ground: "#211e19", leaf: "#23372f", reflection: "floor", wetness: .8, wear: .8, saturation: .82 },
-  wood: { source: "canopy", keyColor: "#d6d9b9", keyPosition: [-7, 13, 8], keyIntensity: 1.35, sky: "#10202b", horizon: "#53635a", fog: "#253c3d", ground: "#222b21", leaf: "#354e3e", reflection: "none", wetness: .28, wear: .7, saturation: .86 },
+  wood: { source: "canopy", keyColor: "#d6d9b9", keyPosition: [-7, 13, 8], keyIntensity: 2.1, sky: "#3b5259", horizon: "#a4b4a3", fog: "#596f67", ground: "#222b21", leaf: "#354e3e", reflection: "none", wetness: .28, wear: .7, saturation: .86 },
   moon: { source: "moon", keyColor: "#cadfe9", keyPosition: [6, 18, 38], keyIntensity: 1.2, sky: "#050c17", horizon: "#182e40", fog: "#162b35", ground: "#101b22", leaf: "#23393c", reflection: "moonwater", wetness: .72, wear: .74, saturation: .8 },
   nest: { source: "dawn", keyColor: "#e3d0ac", keyPosition: [8, 11, -7], keyIntensity: 1.6, sky: "#657b8a", horizon: "#b1ac91", fog: "#7e8e87", ground: "#373c2a", leaf: "#526447", reflection: "none", wetness: .08, wear: .65, saturation: .88 },
   seer: { source: "sunset", keyColor: "#dbb08c", keyPosition: [-16, 5, 10], keyIntensity: 1.5, sky: "#192b3e", horizon: "#967465", fog: "#35434c", ground: "#252c2a", leaf: "#374640", reflection: "mirror", wetness: .54, wear: .9, saturation: .7 },
@@ -91,7 +91,7 @@ function fillFloor(sceneId: JourneySceneId) {
   if (sceneId === "fire.boundary") return .055;
   // Outdoor readability reveals bark/cloth without adding another light.
   // Water remains dark; the motivated key still establishes the composition.
-  if (sceneId.startsWith("enchanted.")) return .3;
+  if (sceneId.startsWith("enchanted.")) return .5;
   if (sceneId === "blue-moon.sanctuary" || sceneId === "blue-moon.intimacy") return .14;
   if (sceneId.startsWith("blue-moon.") || sceneId.startsWith("epilogue.")) return .09;
   if (sceneId.startsWith("crowned.")) return .32;

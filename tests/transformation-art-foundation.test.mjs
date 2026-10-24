@@ -62,7 +62,7 @@ test('Climbs retain canonical object ownership and legacy fallback without path 
   for(const t of ['HeartRoseMemory','HeartSwanFeatherMemory','HeartBlueMoonMemory','FutureRestSymbol','FutureHomeSymbol','FutureVoiceSymbol','KeyProp','MoonDisc'])assert.ok(!types(active).includes(t),id+': '+t);
  }
  for(const [id,type]of [['climb.heart','HeartRoseMemory'],['climb.womb','FutureRestSymbol']])assert.ok(types(load('ThreeClimbsChapter.tsx',false,{state:{...ordinary,worldFlags:{}}}).ThreeClimbsChapter(chapterProps(id))).includes(type));
- for(const name of ['HeartRoseMemory','HeartSwanFeatherMemory','HeartBlueMoonMemory','FutureRestSymbol','FutureHomeSymbol','FutureVoiceSymbol','ProtectedCreationSpace'])assert.equal(fn(source('ThreeClimbsChapter.tsx'),name),fn(source('ThreeClimbsChapter.tsx',true),name),name);
+ for(const name of ['HeartRoseMemory','HeartSwanFeatherMemory','HeartBlueMoonMemory','FutureRestSymbol','FutureHomeSymbol','FutureVoiceSymbol','ProtectedCreationSpace'])assert.equal(fn(source('ThreeClimbsChapter.tsx'),name).replaceAll('<LocalStoryLight ', '<pointLight '),fn(source('ThreeClimbsChapter.tsx',true),name),name);
 });
 test('every existing readonly story selector and material/light/frame hook remains within the original owner set',()=>{
  for(const row of receipt.files){

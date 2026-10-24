@@ -1,4 +1,4 @@
-import { memo, useEffect, useLayoutEffect, useMemo, useRef } from "react";
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { RigidBody, TrimeshCollider } from "@react-three/rapier";
 import * as THREE from "three";
 import { TactileMaterial } from "../storyEvents/TactileMaterial";
@@ -95,15 +95,15 @@ const LandscapeEcologyLayer = memo(function LandscapeEcologyLayer({ spec, data, 
   </group>;
 });
 
-function LandscapeBasin({ spec, quality, reducedEffects, reducedMotion, collidable }: {
-  spec: LandscapeSpec; quality: string; reducedEffects: boolean; reducedMotion: boolean; collidable: boolean;
+function LandscapeBasin({ spec, quality, reducedEffects, reducedMotion, collidable, sampleGroundY }: {
+  spec: LandscapeSpec; quality: string; reducedEffects: boolean; reducedMotion: boolean; collidable: boolean; sampleGroundY?: (x: number, z: number) => number;
 }) {
   const budget = landscapeBudget(quality, reducedEffects), rich = !reducedEffects && (quality === "high" || quality === "cinematic");
   const theme = ENVIRONMENT_THEMES[spec.family], ecology = biomeEcologyBudget(quality, reducedEffects);
   const extraDraws = ecology.evergreens > 0 ? (theme.meadowFlowers ? 4 : 3) : 0;
-  const data = useMemo(() => createLandscapeTerrain(spec), [spec]);
+  const data = useMemo(() => createLandscapeTerrain(spec, sampleGroundY), [spec, sampleGroundY]);
   const land = useMemo(() => geometryFromBuffers(data), [data]);
-  const river = useMemo(() => { const buffers = createLandscapeRiver(spec); return buffers ? geometryFromBuffers(buffers) : null; }, [spec]);
+  const river = useMemo(() => { const buffers = sampleGroundY ? null : createLandscapeRiver(spec); return buffers ? geometryFromBuffers(buffers) : null; }, [spec, sampleGroundY]);
   const objects = useMemo(() => createLandscapeObjects(spec, data), [spec, data]);
   const bark = useMemo(createSaplingBarkGeometry, []), stone = useMemo(createMossStoneGeometry, []);
   const leaves = useMemo(() => createSaplingLeafGeometry(rich), [rich]);
@@ -116,10 +116,10 @@ function LandscapeBasin({ spec, quality, reducedEffects, reducedMotion, collidab
   useEffect(() => () => timber.dispose(), [timber]);
   useEffect(() => () => reeds.dispose(), [reeds]);
   return <group name={`outdoor-landscape:${spec.family}`} userData={{ family: spec.family, rivers: Number(Boolean(river)), trees: budget.trees + ecology.evergreens, terrainTriangles: data.indices.length / 3, drawCallBudget: (river ? 7 : 6) + extraDraws }}>
-    <mesh name="rolling-hills-and-carved-riverbanks" geometry={land.geometry} receiveShadow raycast={IGNORE_RAYCAST}>
+    {sampleGroundY ? null : <mesh name="rolling-hills-and-carved-riverbanks" geometry={land.geometry} receiveShadow raycast={IGNORE_RAYCAST}>
       <LandscapeGroundMaterial spec={spec} />
-    </mesh>
-    {collidable ? <RigidBody type="fixed" colliders={false} name="landscape-terrain-collision">
+    </mesh>}
+    {collidable && !sampleGroundY ? <RigidBody type="fixed" colliders={false} name="landscape-terrain-collision">
       {/* Same vertex/index arrays as the visible terrain, invariant across quality. */}
       <TrimeshCollider args={land.colliderArgs} friction={.85} />
     </RigidBody> : null}
@@ -136,10 +136,15 @@ function LandscapeBasin({ spec, quality, reducedEffects, reducedMotion, collidab
   </group>;
 }
 
-/** Only the active outdoor scene gets landscape; no lights, stores or new clocks. */
-export const OutdoorLandscape = memo(function OutdoorLandscape({ sceneId, quality, reducedEffects, reducedMotion, collidable = true }: {
+/** Continuous scenery borrows the world's terrain. Isolated chapter reviews retain their basin. */
+export const OutdoorLandscape = memo(function OutdoorLandscape({ sceneId, quality, reducedEffects, reducedMotion, collidable = true, sampleWorldGroundY, worldOrigin, headingRadians = 0 }: {
   sceneId: string; quality: string; reducedEffects: boolean; reducedMotion: boolean; collidable?: boolean;
+  sampleWorldGroundY?: (x: number, z: number) => number; worldOrigin?: readonly [number, number, number]; headingRadians?: number;
 }) {
-  const spec = landscapeForScene(sceneId);
-  return spec ? <LandscapeBasin spec={spec} quality={quality} reducedEffects={reducedEffects} reducedMotion={reducedMotion} collidable={collidable} /> : null;
+  const spec = landscapeForScene(sceneId), x = worldOrigin?.[0] ?? 0, y = worldOrigin?.[1] ?? 0, z = worldOrigin?.[2] ?? 0;
+  const ground = useCallback((lx: number, lz: number) => {
+    const c = Math.cos(headingRadians), s = Math.sin(headingRadians);
+    return (sampleWorldGroundY?.(x + lx * c + lz * s, z - lx * s + lz * c) ?? 0) - y;
+  }, [sampleWorldGroundY, x, y, z, headingRadians]);
+  return spec ? <LandscapeBasin spec={spec} quality={quality} reducedEffects={reducedEffects} reducedMotion={reducedMotion} collidable={collidable} sampleGroundY={sampleWorldGroundY ? ground : undefined} /> : null;
 });

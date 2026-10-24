@@ -34,6 +34,7 @@ import { NarrativeWeather } from "../../world/atmosphere/NarrativeWeather.tsx";
 import { PersistentEnvironmentalBreadcrumbs, PlayerBreadcrumbRecorder } from "../../world/ecology/EnvironmentalBreadcrumbs";
 import { NarrativeGroundDetailField, NarrativeGroundTrails } from "../../world/ecology/NarrativeGroundDetails";
 import { SemanticObjectPathing } from "../../world/ecology/SemanticObjectPathing";
+import { WillowRefuge } from "../../world/ecology/WillowRefuge";
 import { ContinuousForestBed } from "../../world/forest/ContinuousForestBed.tsx";
 import { ClearingLightHalo } from "../../world/guidance/ClearingLightHalo.tsx";
 import { GuidanceController } from "../../world/guidance/GuidanceController";
@@ -1621,13 +1622,15 @@ export function StoryScene({
         inputActive={physicalInputActive}
         sampleGroundY={sampleGroundY}
       />
+      {exteriorVisible && narrativeScene ? <WillowRefuge quality={qualityProfile.quality} sampleGroundY={sampleGroundY} explorationDepth={narrativeWorldState.explorationDepth} memoryPressure={narrativeWorldState.memoryPressure} /> : null}
       <JourneyWorldComposition
         activeSceneId={narrativeScene?.id}
         activeOrigin={authoredSceneOrigin}
         qualityProfile={qualityProfile}
         reducedEffects={reducedEffects}
         reducedMotion={reducedMotion}
-        renderAdjacent={false}
+        renderAdjacent={exteriorVisible}
+        sampleGroundY={sampleGroundY}
         interactionsEnabled={mode === "explore"}
         quietGuidanceActivity={quietGuidanceActivity}
         openingResolved={openingResolved}
