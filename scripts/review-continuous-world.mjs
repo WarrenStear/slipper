@@ -14,7 +14,7 @@ if (!['metal', 'swiftshader'].includes(angle)) throw Error('Unsupported REVIEW_A
 const fixture = await realpath(await mkdtemp(join(tmpdir(), 'slipper-continuous-stage-')));
 await mkdir(out, { recursive: true });
 for (const name of ['src', 'node_modules']) await symlink(join(repo, name), join(fixture, name), 'dir');
-await writeFile(join(fixture, 'index.html'), '<!doctype html><html><head><meta name="viewport" content="width=device-width, initial-scale=1"><style>html,body,#root{margin:0;width:100%;height:100%;overflow:hidden;background:#192420}</style></head><body><div id="root"></div><script type="module" src="/stage.tsx"></script></body></html>');
+await writeFile(join(fixture, 'index.html'), '<!doctype html><html><head><link rel="icon" href="data:,"><meta name="viewport" content="width=device-width, initial-scale=1"><style>html,body,#root{margin:0;width:100%;height:100%;overflow:hidden;background:#192420}</style></head><body><div id="root"></div><script type="module" src="/stage.tsx"></script></body></html>');
 await writeFile(join(fixture, 'stage.tsx'), `
 import React,{Suspense,useState,useEffect,useRef} from 'react';
 import {createRoot} from 'react-dom/client';
@@ -57,17 +57,18 @@ function App(){const [id,setId]=useState('enchanted.rabbit-hole'),[quality,setQu
  return <Canvas dpr={1} shadows camera={{fov:62,near:.05,far:220}} gl={{antialias:true,preserveDrawingBuffer:true}} onCreated={({gl})=>{gl.toneMapping=THREE.ACESFilmicToneMapping;gl.outputColorSpace=THREE.SRGBColorSpace;}}><Suspense fallback={null}><Physics paused>{mounted?<StorySceneWithMasterLantern entryId={entry.id} entries={entries} visuals={[]} controls="none" qualityProfile={RENDER_QUALITY_PROFILES[quality]} reducedEffects={quality==='low'} narrativeAudioSuppressed storyWorldMemory={memory}><Probe/></StorySceneWithMasterLantern>:null}</Physics></Suspense></Canvas>;
 }createRoot(document.getElementById('root')).render(<App/>);
 `);
-let server, browser;
+let server, browser, page;
 const errors = [], shots = [], resources = [];
 try {
-  server = await createServer({ configFile: false, root: fixture, publicDir: join(repo, 'public'), server: { host: '127.0.0.1', port: Number(process.env.REVIEW_PORT || 4341), hmr: false, watch: null, fs: { allow: [repo, fixture] } }, resolve: { dedupe: ['react', 'react-dom', 'three', '@react-three/fiber'] }, esbuild: { jsx: 'automatic' } });
+  server = await createServer({ configFile: false, root: fixture, publicDir: join(repo, 'public'), server: { host: '127.0.0.1', port: Number(process.env.REVIEW_PORT || 4341), hmr: false, watch: null, fs: { allow: [repo, fixture] } }, resolve: { dedupe: ['react', 'react-dom', 'three', '@react-three/fiber'] }, optimizeDeps: { noDiscovery: true, entries: [], include: ['react','react/jsx-dev-runtime','react-dom/client','three','@react-three/fiber','@react-three/drei','@react-three/rapier','zustand','zustand/middleware'] }, worker: { format: 'es' }, esbuild: { jsx: 'automatic' } });
   await server.listen();
-  browser = await chromium.launch({ headless: true, args: ['--use-angle=' + angle, '--enable-webgl', ...(angle === 'swiftshader' ? ['--enable-unsafe-swiftshader'] : [])] });
-  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
-  page.on('pageerror', error => errors.push(String(error)));
+  browser = await chromium.launch({ headless: true, channel: "chromium", args: ['--use-angle=' + angle, '--enable-webgl', ...(angle === 'swiftshader' ? ['--enable-unsafe-swiftshader'] : [])] });
+  page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  page.on('pageerror', error => { errors.push(String(error)); console.error(error); });
   page.on('console', message => { if (message.type() === 'error') { errors.push(message.text()); console.error(message.text()); } });
   await page.goto(server.resolvedUrls.local[0], { waitUntil: 'networkidle', timeout: 120000 });
-  await page.waitForFunction(() => window.__snapshot?.frames > 30, null, { timeout: 120000 });
+  await page.bringToFront();
+  await page.waitForFunction(() => window.__snapshot?.frames > 30, null, { timeout: 45000 });
   const initial = await page.evaluate(() => window.__state());
   for (const [name, pose] of [['wood', [-5,-368,-8,-350]], ['willow', [-66,-336,-52,-320]], ['sanctuary-from-wood', [-14,-294,-14,-276]], ['meadow-return', [-18,-331,10,-330]]]) {
     await page.evaluate(pose => window.__view(...pose), pose);
@@ -104,4 +105,4 @@ try {
   await writeFile(join(out,'measurements.json'),JSON.stringify({baseline,angle,viewport:{width:1440,height:900,dpr:1},shots,resources,errors},null,2));
   assert.deepEqual(errors,[]);
   console.log(JSON.stringify({out,shots:shots.map(s=>({name:s.name,draws:s.draws,triangles:s.triangles,p50ms:s.p50ms})),errors}));
-} catch(error) { await writeFile(join(out,"review-failure.json"),JSON.stringify({message:String(error),shots,resources,errors},null,2)); console.error(JSON.stringify({errors})); throw error; } finally { if(browser)await browser.close();if(server)await server.close();await rm(fixture,{recursive:true,force:true}); }
+} catch(error) { if(page) await page.screenshot({path:join(out,"failure.png")}).catch(()=>{}); await writeFile(join(out,"review-failure.json"),JSON.stringify({message:String(error),shots,resources,errors},null,2)); console.error(JSON.stringify({errors})); throw error; } finally { if(browser)await browser.close();if(server)await server.close();await rm(fixture,{recursive:true,force:true}); }

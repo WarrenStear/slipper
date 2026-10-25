@@ -33,7 +33,7 @@ No chapter, scene, fragment, event, save version or inventory schema was added o
 
 ## Asset provenance and budgets
 
-All new runtime geometry is authored in repository code using the existing Three.js geometry helpers. It adds no remotely hosted media, model downloads, package dependencies, texture files or third-party asset licence obligations. The generated willow concept is a local visual reference only, not a runtime skybox or a replacement for original imagery. Existing production-asset admission and placeholder declarations remain unchanged.
+All new runtime geometry is authored in repository code using the existing Three.js geometry helpers. It adds no remotely hosted media, model downloads or package dependencies. The subsequent graphics pass adds three locally generated material textures with provenance and exact prompts in [GENERATED_MATERIALS.md](../public/textures/forest/GENERATED_MATERIALS.md). These are generated approximations, not scanned PBR materials. The generated willow concept remains a local visual reference only, not a runtime skybox or a replacement for original imagery. Existing production-asset admission and placeholder declarations remain unchanged.
 
 | Quality | Additional nearby scenes | Radius before retention | Willow trunk/branches + leaves |
 | --- | ---: | ---: | ---: |
@@ -67,9 +67,23 @@ The desktop and mobile commands together run the same five-project matrix as `np
 - Final explicit `npm run test:unit`: **1,378 passed, zero failed**. This includes spatial residency, stable origins, original path preservation, exact terrain/pool agreement, bounded willow geometry, accepted object residence, raised-support grounding and a full bidirectional Rapier bridge traversal.
 - Browser scenery review: **128 scene/quality visits passed**, covering all 32 scene footprints at low, medium, high and cinematic settings. Scenery inspection left canonical story state unchanged. Three repeated return loops retained exactly **102 geometries and 17 textures** each. No browser console or page errors were recorded.
 - Source comparison: approved archive, canonical narrative definitions, chapter event definitions, journey store and save-state model are unchanged from the baseline. `git diff --check` passes.
-- At this checkpoint the desktop end-to-end matrix is still running; the mobile matrix follows. Final counts will be recorded after those runs complete. The results above do not imply that the complete browser matrix has already passed.
+- The initial desktop matrix completed with **84 passed, 20 skipped and 55 failed**. All 53 WebKit tests failed before app loading with `Page.overrideSetting: Unknown setting: PushAPIEnabled` (Playwright 1.62.0 selects its older macOS 14 WebKit revision 2251). Two Chromium tests failed: keyboard access after returning to Free Woods, and the second wipe in the opening. These failures remain recorded in the initial report. The Free Woods handoff has since been corrected. Both previously failing Chromium tests pass on the final production build with native Metal (2/2, 24.6 seconds); the opening needed no story-rule changes. No assertions or browser projects were disabled to hide failures.
 
-## Measured rendering cost
+### Final-build browser qualification
+
+The three available projects ran serially against the same production build with native Metal on macOS. The complete run took 30.2 minutes: **135 passed, 23 skipped, one failed**. Report breakdown:
+
+| Project | Passed | Existing platform skips | Failed |
+| --- | ---: | ---: | ---: |
+| Desktop Chromium | 48 | 5 | 0 |
+| Firefox | 38 | 15 | 0 |
+| Mobile Chromium | 49 | 3 | 1 |
+
+The mobile failure was a strict-locator ambiguity in the recovery test, not a failed recovery: the trace shows the route cleared, active entry retained, and `Returned safely to The vision.` announced. Free Woods now also exposes the separate quiet-guidance live region, so `p[role=status]` correctly matched two elements. The test now targets the screen-reader recovery paragraph specifically; its route and active-entry assertions are unchanged. The **entire five-test mobile exploration file then passed (5/5, 18.8 seconds)**, including trusted touch movement/look, portrait/landscape controls, input cancellation and recovery. The whole 159-case suite was not repeated after this test-only selector correction; its initial failure report is preserved alongside the passing rerun.
+
+The 23 skips are existing platform-specific guards, not additions from this branch. Desktop Chromium and Firefox completed without failures. The initial WebKit failures remain an environment qualification gap: this machine's Playwright 1.62.0 macOS 14 override starts WebKit revision 2251, which rejects `PushAPIEnabled` before an app page is created. An isolated mobile-WebKit startup probe reproduced the same `PushAPIEnabled` error while setting up the page (one failed probe, before app loading); the full mobile-WebKit project could not be qualified on this host. No browser implementation or assertion was patched to conceal that incompatibility. No hosted CI run for this branch is claimed; the checked workflows trigger on main or pull requests, not ordinary feature-branch pushes.
+
+## Measured rendering cost — initial streaming checkpoint
 
 Matched fixed views used Chromium on **Apple M1 / ANGLE Metal**, a 1,440 × 900 viewport, DPR 1 and the high quality profile. These are short frame-interval samples from the review fixture, with physics paused and the camera fixed. They are not isolated CPU/GPU timings or long-duration gameplay benchmarks. The baseline was an immutable checkout of `33775918`, using the same fixture and hardware.
 
@@ -84,6 +98,30 @@ Matched fixed views used Chromium on **Apple M1 / ANGLE Metal**, a 1,440 × 900 
 The additional draw calls include real nearby chapters that were absent from the baseline view. This is a content-cost increase, not a draw-call optimization claim. The low-quality portrait capture runs on the same Mac GPU; it does not establish a real phone's frame rate, thermal behavior or memory budget. GPU resource counts are allocation counts, not measured bytes or proof of leak freedom over unlimited play time.
 
 Local before/after PNGs, the generated concept reference and both measurement JSON files are saved outside the repository at `../artifacts/continuous-world-rebuild-20261024/`. The implementation screenshots show the actual procedural result; the concept is clearly separate. Nothing in that evidence directory is bundled into the application.
+
+## Mystical woodland graphics pass — 25 October 2026
+
+- Ground v4 replaces the very dark continuous-forest albedo with mid-value earth, moss and decomposed leaves. Its 376,292-byte WebP fits the existing 400 KB terrain budget; the final-world audit now checks the active file.
+- A generated weathered-bark map replaces canvas stripes in the continuous forest and gives the willow trunk and exposed roots real image detail. A 512-square RGBA twig spray replaces diamond leaf silhouettes across the continuous forest, chapter groves and distant crowns. Four vertices and two triangles per card preserve the existing instance and topology budgets. Each material sampler clone is disposed by its owner; loader source images remain shared.
+- Warm woodland sunlight, a cool sky fill and blue-green haze provide depth. High and cinematic tiers share one bounded 1024-square shadow map. The outdoor source and target shift together in scene-local coordinates as the camera explores, maintaining the authored light angle. Low/reduced-effects tiers keep shadows off. Domestic light position remains anchored, and the meadow's accepted warming effect remains distinct.
+- Free Woods suppresses the already-completed authored arrival handoff, keeping walking and reading controls available on return. The first story playthrough still uses its original transitions.
+- Local Chromium E2E rendering selects native Metal on macOS; Linux retains SwiftShader. `PLAYWRIGHT_ANGLE=swiftshader` explicitly restores software rendering for comparison. Full Chromium is also used by the graphics review. The fixture preloads its dependencies to avoid a Rapier initialization race and captures a screenshot on failure.
+- Canopy coverage tests now test intersection UVs against a SHA-pinned alpha mask from the compressed runtime image. A card's transparent margin is no longer counted as solid foliage. Original geometry bounds, central air gaps, instance caps and all narrative-state assertions remain checked.
+
+
+The graphics pass subsequently passed `npm run check` again (1,378 unit tests and seven security tests), followed by a fresh final production build and the updated terrain budget check. Its 128 scene/quality visits passed with no page or console errors; three return loops retained **102 geometries and 25 textures**. Native Metal frame samples at high quality were:
+
+| View | Draws / triangles, including shadows | Median / p95 frame interval |
+| --- | ---: | ---: |
+| First woodland | 106 / 393,397 | 16.7 / 17.4 ms |
+| Willow | 77 / 329,249 | 16.7 / 17.3 ms |
+| Sanctuary approached from wood | 129 / 195,325 | 16.7 / 17.5 ms |
+| Meadow return | 68 / 310,699 | 16.7 / 17.5 ms |
+| Willow, low, 390 × 844 | 48 / 127,070 | 16.7 / 17.8 ms |
+
+One shadow-casting light was recorded at high quality and zero on the low mobile-sized capture. These are short steady-view samples from the development review fixture, not production startup or sustained phone benchmarks. Earlier intermediate captures encountered cold shader/loading stalls and were retained as failed/intermediate evidence; their frame rates are not represented by this final table. The baseline used the prior headless-shell Chromium entry point, so the before/after GPU-work counts are more comparable than an inferred speedup between those browser entry points. Final graphics captures and measurements are in `graphics-final/` within the evidence directory.
+
+This is a material and lighting upgrade to a functioning procedural world. It is not a completed photoreal production-art replacement. The actual screenshots retain angular foreground rocks, sparse distant crowns and a schematic willow silhouette, which still need a dedicated modelling pass.
 
 ## Remaining production work
 

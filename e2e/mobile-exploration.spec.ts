@@ -480,7 +480,9 @@ test.describe("mobile navigation surfaces", () => {
     await expect(root).toHaveAttribute("data-world-mode", "explore");
     await expect(root).toHaveAttribute("data-active-entry", activeBefore!);
     await expect(root).toHaveAttribute("data-guidance-target", "");
-    await expect(root.locator("p[role='status']")).toContainText(
+    // Quiet guidance and recovery both have live regions in Free Woods.
+    // Assert the recovery announcement without assuming it is the only status.
+    await expect(root.locator("p.sr-only[role='status']")).toContainText(
       "Returned safely",
     );
   });
