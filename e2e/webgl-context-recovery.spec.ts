@@ -11,7 +11,14 @@ test("GPU context loss exposes recovery and preserves earned progress in text mo
   await expect(page).toHaveTitle(/Slipper in the Woods/);
   await page.getByRole("button", { name: "Begin", exact: true }).click();
   await expect(page.locator("canvas").first()).toHaveAttribute("data-opening-rendered-stage", "0", { timeout: 30_000 });
-  await page.locator("button[data-story-event-id='broken-floor.first-wipe']").click();
+  // The opening's visual canvas deliberately owns pointer input. Use the
+  // supported native keyboard activation rather than a pointer click through
+  // its occluding layer; this still exercises the real event and durable save.
+  const firstWipe = page.locator("button[data-story-event-id='broken-floor.first-wipe']");
+  await expect(firstWipe).toBeVisible();
+  await firstWipe.focus();
+  await expect(firstWipe).toBeFocused();
+  await page.keyboard.press("Enter");
   await expect.poll(async () => (await readCinematicStory(page)).completedStoryEventIds.includes("broken-floor.first-wipe")).toBe(true);
   const earned = (await readCinematicStory(page)).completedStoryEventIds;
 
