@@ -140,7 +140,8 @@ const bytes = snapshot => snapshot.map(({ count, capacity, matrices, positions, 
 test('actual cold ground owner survives a frame before passive effects; the former owner loses the upload', () => {
   const former = createCpuRoot(), current = createCpuRoot();
   const oldFirst = former.render(el(Former, props('high')), true), first = current.render(el(Current, props('high')), true);
-  assert.deepEqual(counts(first), [11, 2, 2, 0, 0, 0]);
+  assert.deepEqual(counts(first), [11, 2, 3, 0, 0, 0],
+    "The optional physical loops add one grounded stone at the fixed opening cell");
   assert.deepEqual(bytes(oldFirst), bytes(first), 'Authored cold placement math and buffers are unchanged');
   assert.deepEqual(counts(former.snapshot()), [0, 0, 0, 0, 0, 0], 'The installed React passive effect reproduces the captured cold defect');
   assert.deepEqual(bytes(current.snapshot()), bytes(first));
