@@ -230,7 +230,7 @@ export function buildSpatialStoryNodes({
     chapter: entry.chapter,
     sequence: entry.sequence,
     position: entryWorldPosition(entry, entries),
-  })));
+  })), { includeScenicLoops: true });
   const neighborIds = new Set<string>();
 
   for (const link of links) {
@@ -433,7 +433,7 @@ export function buildMazePathSegments(entries: Slipper3DEntry[]) {
     chapter: entry.chapter,
     sequence: entry.sequence,
     position: entryWorldPosition(entry, entries),
-  })));
+  })), { includeScenicLoops: true });
   for (const link of physicalLinks) {
     addSegment(entryMap.get(link.sourceId), entryMap.get(link.targetId), link.role);
   }

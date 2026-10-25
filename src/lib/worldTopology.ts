@@ -14,9 +14,71 @@ export type PhysicalStoryLink = {
   sourceId: string;
   targetId: string;
   role: PhysicalPathRole;
+  /** A geographic walking alternative, never a narrative unlock. */
+  scenic?: true;
+};
+
+export type PhysicalLinkOptions = {
+  /** Opt in only from terrain, navigation and world renderers. The canonical
+   * literary graph stays a 32-scene spine with 34 authored Echo spurs. */
+  includeScenicLoops?: boolean;
 };
 
 const CANONICAL_JOURNEY_ENTRY_IDS = journeyScenes.flatMap((scene) => scene.entryIds);
+
+// Hand-authored dry-ground triangles: these paths provide choices without
+// changing scene order, event eligibility, or the protected archive. Each
+// middle scene remains reached by the existing primary two path segments.
+// Do not add similar chords across water, buildings or the steep Crown ascent.
+const SCENIC_DRY_LOOP_TRIPLES = [
+  ["enchanted.rabbit-hole", "enchanted.friendship-meadow", "enchanted.masked-hearth"],
+  ["nest.two-hands", "nest.unsupported-cycle", "nest.protection"],
+  ["fork.weighing", "fork.four-verbs", "fork.relinquish-hope"],
+] as const;
+
+function scenicJourneyLinks(nodes: PhysicalStoryNode[]): PhysicalStoryLink[] {
+  const byEntryId = new Map(nodes.map((node) => [node.id, node]));
+  const bySceneId = new Map(journeyScenes.map((scene) => [scene.id, scene]));
+  const trails: PhysicalStoryLink[] = [];
+
+  for (const [firstId, middleId, lastId] of SCENIC_DRY_LOOP_TRIPLES) {
+    const firstScene = bySceneId.get(firstId);
+    const middleScene = bySceneId.get(middleId);
+    const lastScene = bySceneId.get(lastId);
+    if (!firstScene || !middleScene || !lastScene ||
+        firstScene.chapterId !== middleScene.chapterId ||
+        firstScene.chapterId !== lastScene.chapterId) continue;
+    const first = byEntryId.get(firstScene.keystoneEntryId);
+    const middle = byEntryId.get(middleScene.keystoneEntryId);
+    const last = byEntryId.get(lastScene.keystoneEntryId);
+    if (!first || !middle || !last) continue;
+    if (![...first.position, ...middle.position, ...last.position].every(Number.isFinite)) continue;
+    const dx = last.position[0] - first.position[0];
+    const dz = last.position[2] - first.position[2];
+    const distanceSq = dx * dx + dz * dz;
+    // Short, traversable dry-ground options. They must not turn a story
+    // interior or the mountain's vertical ascent into a shortcut.
+    if (distanceSq < 30 * 30 || distanceSq > 70 * 70 ||
+        Math.abs(last.position[1] - first.position[1]) > 2.5) continue;
+    const t = Math.max(0, Math.min(1,
+      ((middle.position[0] - first.position[0]) * dx +
+       (middle.position[2] - first.position[2]) * dz) / distanceSq));
+    const separation = Math.hypot(
+      middle.position[0] - (first.position[0] + dx * t),
+      middle.position[2] - (first.position[2] + dz * t),
+    );
+    // Keep the original middle clearing and its authored interactions spatially
+    // distinct from the alternative trail; no duplicates through the room.
+    if (separation < 8) continue;
+    trails.push({
+      sourceId: first.id,
+      targetId: last.id,
+      role: "shortcut",
+      scenic: true,
+    });
+  }
+  return trails;
+}
 
 function buildCanonicalJourneyLinks(nodes: PhysicalStoryNode[]) {
   if (nodes.length !== CANONICAL_JOURNEY_ENTRY_IDS.length) return null;
@@ -127,9 +189,13 @@ function graphHopDistance(
  * reader and constellation, but never become cross-forest corridors. The
  * generic planar builder below remains only for partial or legacy archives.
  */
-export function buildPhysicalStoryLinks(nodes: PhysicalStoryNode[]): PhysicalStoryLink[] {
+export function buildPhysicalStoryLinks(nodes: PhysicalStoryNode[], options: PhysicalLinkOptions = {}): PhysicalStoryLink[] {
   const canonicalJourneyLinks = buildCanonicalJourneyLinks(nodes);
-  if (canonicalJourneyLinks) return canonicalJourneyLinks;
+  if (canonicalJourneyLinks) {
+    return options.includeScenicLoops
+      ? [...canonicalJourneyLinks, ...scenicJourneyLinks(nodes)]
+      : canonicalJourneyLinks;
+  }
 
   const ordered = orderedNodes(nodes);
   if (ordered.length < 2) return [];

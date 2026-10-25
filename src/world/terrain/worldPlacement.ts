@@ -106,7 +106,7 @@ export function buildSpatialStoryNodes({
     chapter: entry.chapter,
     sequence: entry.sequence,
     position: entryWorldPosition(entry, entries),
-  })));
+  })), { includeScenicLoops: true });
   const neighborIds = new Set<string>();
 
   for (const link of links) {
