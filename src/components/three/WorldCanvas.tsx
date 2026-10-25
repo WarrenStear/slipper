@@ -21,7 +21,8 @@ import { resolveEnvironmentalEffectsProfile, resolveNarrativeRenderScale, useRen
 import type { NarrativeWorldState, SceneProximityState, StorySceneControls, StorySceneMode } from "./StoryScene";
 import { resolveWorldVisualState } from "./worldVisualState";
 import type { WorldMemoryState } from "./worldMemory/WorldMemoryDirector";
-import { RenderRecoveryBoundary } from "../ui/RenderRecovery";
+import { RenderRecovery, RenderRecoveryBoundary } from "../ui/RenderRecovery";
+import { observeWebGLContextLoss, pauseLostWebGLRenderer } from "../../lib/webglContextRecovery";
 import { requestTextJourney } from "../../lib/textJourney";
 import { WorldWorkerFailureContext, WorldWorkerFailureGuard } from "../../world/workerFailure";
 
@@ -65,12 +66,14 @@ function CanvasRendererController({
   narrativeWorldState,
   exposure,
   cinematicActive,
+  onContextLost,
 }: {
   narrativeWorldState: NarrativeWorldState;
   exposure?: number;
   cinematicActive: boolean;
+  onContextLost: () => void;
 }) {
-  const { gl } = useThree();
+  const { gl, setFrameloop } = useThree();
   const targetExposure =
     exposure ??
     THREE.MathUtils.clamp(
@@ -91,6 +94,18 @@ function CanvasRendererController({
     gl.toneMappingExposure = targetExposureRef.current;
     gl.outputColorSpace = THREE.SRGBColorSpace;
   }, [gl]);
+
+  // A lost WebGL context is an event, not a React error. Stop both render
+  // schedulers synchronously before replacing the canvas with DOM recovery.
+  const stopFramesBeforeRecovery = useCallback(
+    () => pauseLostWebGLRenderer(gl, setFrameloop, onContextLost),
+    [gl, setFrameloop, onContextLost],
+  );
+  useEffect(() => observeWebGLContextLoss(
+    gl.domElement,
+    stopFramesBeforeRecovery,
+    () => gl.getContext().isContextLost(),
+  ), [gl, stopFramesBeforeRecovery]);
 
   useFrame((_, delta) => {
     if (cinematicActive || isCinematicProfileActive()) return;
@@ -183,6 +198,8 @@ export function WorldCanvas({
   mode = "explore",
   onContinueTextJourney = requestTextJourney,
 }: WorldCanvasProps) {
+  const [contextLost, setContextLost] = useState(false);
+  const onContextLost = useCallback(() => setContextLost(true), []);
   const [workerFailure, setWorkerFailure] = useState<Error | null>(null);
   const reportWorkerFailure = useCallback((error: Error) => {
     setWorkerFailure(current => current ?? error);
@@ -222,6 +239,9 @@ export function WorldCanvas({
   );
   const shadowsEnabled = qualityProfile.enableMoonShadows || qualityProfile.enableLanternShadows;
 
+  // Recover outside WebGL while keeping the existing durable journey store.
+  if (contextLost) return <RenderRecovery onContinueTextJourney={onContinueTextJourney} />;
+
   return (
     <RenderRecoveryBoundary onContinueTextJourney={onContinueTextJourney}>
       <WorldWorkerFailureGuard error={workerFailure}>
@@ -251,7 +271,7 @@ export function WorldCanvas({
           <p>Your browser cannot display the forest. Choose the text journey in settings.</p>
         }
       >
-        <CanvasRendererController narrativeWorldState={narrativeWorldState} exposure={activeExposure} cinematicActive={mode === "explore"} />
+        <CanvasRendererController narrativeWorldState={narrativeWorldState} exposure={activeExposure} cinematicActive={mode === "explore"} onContextLost={onContextLost} />
         <Suspense fallback={<SceneLoader />}>
           {mode === "map" ? (
             <MapFallbackScene
