@@ -45,7 +45,9 @@ test('a long return walk stays bounded and never rebases a remembered place', ()
 });
 
 test('optional routes share forest exclusion and terrain seeds without adding canonical entries or graph links', () => {
-  assert.equal(entries.length,66);assert.equal(paths.length,65);
+  assert.equal(entries.length,66);
+  assert.equal(paths.length,68, "65 preserved canonical paths and three optional physical loops");
+  assert.equal(paths.filter(path => path.scenic).length,3);
   assert.deepEqual(packForestPathSeeds(paths,entries).slice(paths.length),explorationPaths());
   const clearings = packForestClearingSeeds(entries);
   assert.equal(clearings.filter(seed=>seed.id.startsWith('fragment-')).length,66);

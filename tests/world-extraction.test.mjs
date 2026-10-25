@@ -38,11 +38,12 @@ function assertPackedPathSnapshot(actual, expected) {
 
 test('extracted production path packing preserves every authored placement, seeded control point and crown ramp', () => {
   assert.equal(entries.length, 66);
-  assert.equal(paths.length, 65);
+  assert.equal(paths.length, 68, "65 canonical plus three optional scenic paths");
   assert.deepEqual(packForestClearingSeeds(entries).filter(seed => seed.id.startsWith("fragment-")), baseline.clearings);
   const packed=packForestPathSeeds(paths, entries).slice(0, paths.length);
-  assert.equal(packed.length,baseline.paths.length);
-  packed.forEach((path,index)=>assertPackedPathSnapshot(path,baseline.paths[index]));
+  assert.equal(packed.length, baseline.paths.length + 3);
+  packed.slice(0,baseline.paths.length).forEach((path,index)=>assertPackedPathSnapshot(path,baseline.paths[index]));
+  assert.equal(paths.slice(-3).filter(path=>path.scenic).length,3);
   for (const path of paths) {
     const seed = terrainCurveSeedFor(path);
     assert.equal(terrainCurveSeedFor(path), seed, 'Curve packing must reuse the same immutable segment cache');

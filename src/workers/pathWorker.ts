@@ -1,9 +1,10 @@
 /// <reference lib="webworker" />
 
-import type { Slipper3DEntry, Vector3Tuple } from "../data/slipper3dTypes";
-import { getJourneyEntryWorldPosition } from "../data/journeyWorldLayout";
-import { getOrderedEntries } from "../lib/storyGraph";
-import { buildPhysicalStoryLinks } from "../lib/worldTopology";
+import type { Slipper3DEntry, Vector3Tuple } from "../data/slipper3dTypes.ts";
+import { getJourneyEntryWorldPlacement, getJourneyEntryWorldPosition, isJourneyEntryElevated } from "../data/journeyWorldLayout.ts";
+import { getOrderedEntries } from "../lib/storyGraph.ts";
+import { buildPhysicalStoryLinks, type PhysicalPathRole } from "../lib/worldTopology.ts";
+import { createPhysicalRouteGeometry } from "../lib/physicalPathGeometry.ts";
 
 const CONSTELLATION_CENTER = 120;
 const CONSTELLATION_WORLD_SCALE = 0.72;
@@ -45,10 +46,6 @@ export type PathWorkerResponse =
       error: string;
     };
 
-function clamp01(value: number) {
-  return Math.max(0, Math.min(1, value));
-}
-
 function hashString(value: string) {
   let hash = 2166136261;
   for (let index = 0; index < value.length; index += 1) {
@@ -56,11 +53,6 @@ function hashString(value: string) {
     hash += (hash << 1) + (hash << 4) + (hash << 7) + (hash << 8) + (hash << 24);
   }
   return Math.abs(hash >>> 0);
-}
-
-function seededUnit(seed: number, index: number) {
-  const x = Math.sin(seed * 999 + index * 77.13) * 10000;
-  return x - Math.floor(x);
 }
 
 function chapterProgress(entry: Slipper3DEntry, entries: Slipper3DEntry[], chapter: string) {
@@ -107,69 +99,14 @@ function entryWorldPosition(entry: Slipper3DEntry, entries: Slipper3DEntry[]): V
   return [Math.cos(angle) * radius, y, Math.sin(angle) * radius];
 }
 
-function cubicBezierPoint(source: Point2D, controlA: Point2D, controlB: Point2D, target: Point2D, t: number): Point2D {
-  const safeT = clamp01(t);
-  const u = 1 - safeT;
-  const tt = safeT * safeT;
-  const uu = u * u;
-  const uuu = uu * u;
-  const ttt = tt * safeT;
-
-  return {
-    x: source.x * uuu + controlA.x * 3 * uu * safeT + controlB.x * 3 * u * tt + target.x * ttt,
-    y: source.y * uuu + controlA.y * 3 * uu * safeT + controlB.y * 3 * u * tt + target.y * ttt,
-  };
-}
-
-function distance(a: Point2D, b: Point2D) {
-  return Math.hypot(a.x - b.x, a.y - b.y);
-}
-
-function estimateCurveLength(source: Point2D, controlA: Point2D, controlB: Point2D, target: Point2D) {
-  let length = 0;
-  let previous = source;
-
-  for (let index = 1; index <= 32; index += 1) {
-    const point = cubicBezierPoint(source, controlA, controlB, target, index / 32);
-    length += distance(point, previous);
-    previous = point;
-  }
-
-  return length;
-}
-
-function buildControlPoints(source: Point2D, target: Point2D, seed: number) {
-  const dx = target.x - source.x;
-  const dy = target.y - source.y;
-  const length = Math.max(0.001, Math.hypot(dx, dy));
-  const directionX = dx / length;
-  const directionY = dy / length;
-  const normalX = -directionY;
-  const normalY = directionX;
-
-  const bend = (seededUnit(seed, 1) * 2 - 1) * Math.min(22, length * 0.24);
-  const bendB = (seededUnit(seed, 2) * 2 - 1) * Math.min(18, length * 0.18);
-  const tensionA = 0.26 + seededUnit(seed, 3) * 0.13;
-  const tensionB = 0.64 + seededUnit(seed, 4) * 0.13;
-
-  return {
-    controlA: {
-      x: source.x + dx * tensionA + normalX * bend,
-      y: source.y + dy * tensionA + normalY * bend,
-    },
-    controlB: {
-      x: source.x + dx * tensionB + normalX * (-bend * 0.45 + bendB),
-      y: source.y + dy * tensionB + normalY * (-bend * 0.45 + bendB),
-    },
-  };
-}
-
-function buildPathSegments(entries: Slipper3DEntry[]): SerializableMazePathSegment[] {
+export function buildPathSegments(entries: Slipper3DEntry[]): SerializableMazePathSegment[] {
   const entryMap = new Map(entries.map((entry) => [entry.id, entry]));
+  const ordered = getOrderedEntries(entries);
+  const orderIndexById = new Map(ordered.map((entry, index) => [entry.id, index]));
   const segments: SerializableMazePathSegment[] = [];
   const seenKeys = new Set<string>();
 
-  const addSegment = (source?: Slipper3DEntry, target?: Slipper3DEntry) => {
+  const addSegment = (source: Slipper3DEntry | undefined, target: Slipper3DEntry | undefined, role: PhysicalPathRole) => {
     if (!source || !target || source.id === target.id) return;
 
     const pairKey = [source.id, target.id].sort().join("::");
@@ -181,7 +118,17 @@ function buildPathSegments(entries: Slipper3DEntry[]): SerializableMazePathSegme
     const sourcePoint = { x: a[0], y: a[2] };
     const targetPoint = { x: b[0], y: b[2] };
     const seed = hashString(pairKey);
-    const { controlA, controlB } = buildControlPoints(sourcePoint, targetPoint, seed);
+    const sourcePlacement = getJourneyEntryWorldPlacement(source.id);
+    const targetPlacement = getJourneyEntryWorldPlacement(target.id);
+    const sourceIndex = orderIndexById.get(source.id) ?? -1;
+    const targetIndex = orderIndexById.get(target.id) ?? -1;
+    const crownRamp = sourcePlacement && targetPlacement
+      ? role === "backbone" && (isJourneyEntryElevated(source.id) || isJourneyEntryElevated(target.id))
+      : sourceIndex >= 0 && targetIndex >= 0 &&
+        Math.abs(sourceIndex - targetIndex) === 1 &&
+        (source.chapter === CHAPTER_CROWNED_RETURN || target.chapter === CHAPTER_CROWNED_RETURN);
+    const route = createPhysicalRouteGeometry(sourcePoint, targetPoint, seed, crownRamp);
+    const { controlA, controlB } = route;
 
     segments.push({
       key: pairKey,
@@ -192,7 +139,7 @@ function buildPathSegments(entries: Slipper3DEntry[]): SerializableMazePathSegme
       sourceEntryId: source.id,
       targetEntryId: target.id,
       curveSeed: seed / 2147483647,
-      curveLength: estimateCurveLength(sourcePoint, controlA, controlB, targetPoint),
+      curveLength: route.curveLength,
     });
   };
 
@@ -201,14 +148,15 @@ function buildPathSegments(entries: Slipper3DEntry[]): SerializableMazePathSegme
     chapter: entry.chapter,
     sequence: entry.sequence,
     position: entryWorldPosition(entry, entries),
-  })))) {
-    addSegment(entryMap.get(link.sourceId), entryMap.get(link.targetId));
+  })), { includeScenicLoops: true })) {
+    addSegment(entryMap.get(link.sourceId), entryMap.get(link.targetId), link.role);
   }
 
   return segments;
 }
 
-self.onmessage = (event: MessageEvent<PathWorkerRequest>) => {
+// The builder can be imported by Node-based parity tests without a Web Worker.
+if (typeof self !== "undefined") self.onmessage = (event: MessageEvent<PathWorkerRequest>) => {
   const message = event.data;
   if (message.type !== "BUILD_PATH_SEGMENTS") return;
 

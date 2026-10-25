@@ -6,7 +6,8 @@ import { buildPhysicalStoryLinks, type PhysicalPathRole } from "../../lib/worldT
 import { terrainCurvedPathPointAt as sampleTerrainCurvePoint, terrainCurvedPathTangentAt as sampleTerrainCurveTangent, terrainDistanceToPathSq as sampleTerrainPathDistanceSq, terrainPathProjectionT as sampleTerrainPathProjectionT, type TerrainCurveSeed } from "../../lib/terrainModel.ts";
 import { CHAPTER_CROWNED_RETURN, CORRIDOR_BASE_WIDTH, TERRAIN_SEGMENT_BOUNDS_PADDING } from "./worldConstants.ts";
 import { entryWorldPosition } from "./worldPlacement.ts";
-import { hashString, seededUnit } from "../worldMath.ts";
+import { hashString } from "../worldMath.ts";
+import { createPhysicalRouteGeometry } from "../../lib/physicalPathGeometry.ts";
 
 export type MazeMorphOptions = {
   memoryPressure?: number;
@@ -22,6 +23,8 @@ export type MazePathSegment = {
   targetEntry: Slipper3DEntry;
   key: string;
   role: PhysicalPathRole;
+  /** Optional geographic loop, not a literary unlock. */
+  scenic?: true;
   curveSeed: number;
   curveLength: number;
   crownRamp: boolean;
@@ -179,7 +182,7 @@ export function buildMazePathSegments(entries: Slipper3DEntry[]) {
   const segments: MazePathSegment[] = [];
   const seenKeys = new Set<string>();
 
-  const addSegment = (source: Slipper3DEntry | undefined, target: Slipper3DEntry | undefined, role: PhysicalPathRole) => {
+  const addSegment = (source: Slipper3DEntry | undefined, target: Slipper3DEntry | undefined, role: PhysicalPathRole, scenic?: true) => {
     if (!source || !target || source.id === target.id) return;
     const pairKey = [source.id, target.id].sort().join("::");
     if (seenKeys.has(pairKey)) return;
@@ -201,30 +204,16 @@ export function buildMazePathSegments(entries: Slipper3DEntry[]) {
         Math.abs(sourceIndex - targetIndex) === 1 &&
         (source.chapter === CHAPTER_CROWNED_RETURN ||
           target.chapter === CHAPTER_CROWNED_RETURN);
-    const direction = targetPoint.clone().sub(sourcePoint);
-    const length = Math.max(0.001, direction.length());
-    const tangent = direction.clone().normalize();
-    const normal = new THREE.Vector2(-tangent.y, tangent.x);
     const seed = hashString(pairKey);
-    const bendLimit = crownRamp ? 1.6 : 2.8;
-    const secondaryBendLimit = crownRamp ? 0.9 : 1.8;
-    const bend = (seededUnit(seed, 1) * 2 - 1) * Math.min(bendLimit, length * 0.18);
-    const bendB = (seededUnit(seed, 2) * 2 - 1) * Math.min(secondaryBendLimit, length * 0.12);
-    const tensionA = 0.28 + seededUnit(seed, 3) * 0.08;
-    const tensionB = 0.64 + seededUnit(seed, 4) * 0.08;
-    const controlA = sourcePoint
-      .clone()
-      .add(direction.clone().multiplyScalar(tensionA))
-      .add(normal.clone().multiplyScalar(bend));
-    const controlB = sourcePoint
-      .clone()
-      .add(direction.clone().multiplyScalar(tensionB))
-      .add(normal.clone().multiplyScalar(-bend * 0.42 + bendB));
+    const route = createPhysicalRouteGeometry(sourcePoint, targetPoint, seed, crownRamp);
+    const controlA = new THREE.Vector2(route.controlA.x, route.controlA.y);
+    const controlB = new THREE.Vector2(route.controlB.x, route.controlB.y);
 
     const bounds = estimateCurveBounds(sourcePoint, controlA, controlB, targetPoint);
     segments.push({
       key: pairKey,
       role,
+      ...(scenic ? { scenic } : {}),
       source: sourcePoint,
       controlA,
       controlB,
@@ -233,7 +222,7 @@ export function buildMazePathSegments(entries: Slipper3DEntry[]) {
       targetEntry: target,
       crownRamp,
       curveSeed: seed / 2147483647,
-      curveLength: estimateCurveLength(sourcePoint, controlA, controlB, targetPoint),
+      curveLength: route.curveLength,
       ...bounds,
     });
   };
@@ -243,9 +232,9 @@ export function buildMazePathSegments(entries: Slipper3DEntry[]) {
     chapter: entry.chapter,
     sequence: entry.sequence,
     position: entryWorldPosition(entry, entries),
-  })));
+  })), { includeScenicLoops: true });
   for (const link of physicalLinks) {
-    addSegment(entryMap.get(link.sourceId), entryMap.get(link.targetId), link.role);
+    addSegment(entryMap.get(link.sourceId), entryMap.get(link.targetId), link.role, link.scenic);
   }
 
   return segments;

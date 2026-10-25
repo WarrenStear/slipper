@@ -108,16 +108,23 @@ function distanceToPathBoundsSq(x: number, z: number, path: ForestPathSeed) {
   return dx * dx + dz * dz;
 }
 
-function nearestPathDistanceSq(
+export function nearestPathDistanceSq(
   x: number,
   z: number,
   paths: ForestPathSeed[],
   morph: TerrainWorkerConfig | ForestWorkerConfig,
   stopAtSq = 0,
+  maxRelevantDistance = Number.POSITIVE_INFINITY,
 ) {
+  const bounded = Number.isFinite(maxRelevantDistance) && maxRelevantDistance >= 0;
+  const maxRelevantSq = bounded ? maxRelevantDistance * maxRelevantDistance : Number.POSITIVE_INFINITY;
   let nearestDistanceSq = Number.POSITIVE_INFINITY;
   for (const path of paths) {
-    if (distanceToPathBoundsSq(x, z, path) > nearestDistanceSq) continue;
+    if (bounded && (
+      x < path.minX - maxRelevantDistance || x > path.maxX + maxRelevantDistance ||
+      z < path.minZ - maxRelevantDistance || z > path.maxZ + maxRelevantDistance
+    )) continue;
+    if (distanceToPathBoundsSq(x, z, path) > Math.min(nearestDistanceSq, maxRelevantSq)) continue;
     nearestDistanceSq = Math.min(
       nearestDistanceSq,
       distancePointToSegmentSq(x, z, path, morph),
@@ -425,6 +432,9 @@ export function buildForest(request: BuildForestWorkerRequest): BuildForestWorke
             config.paths,
             config,
             corridorWidth * corridorWidth,
+            // Beyond the authored edge influence, Bézier distance cannot
+            // change any vegetation or collider decision.
+            corridorWidth * 2.72,
           ),
         );
         const nearCorridor = nearestPathDistance < corridorWidth;
