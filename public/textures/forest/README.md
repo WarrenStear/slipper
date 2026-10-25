@@ -1,6 +1,8 @@
 # Forest textures
 
-The live terrain uses the optimized, tileable `ground-albedo-v3.webp` art pass.
+The live terrain uses the optimized, tileable `ground-albedo-v4.webp` art pass.
+The older v3 remains available to isolated chapter reviews. Generated bark and
+alpha-cut canopy materials accompany v4; see [provenance and exact prompts](GENERATED_MATERIALS.md).
 Keep new runtime textures compressed and below their declared render budget.
 
 `memory-bloom-v1.png` is the transparent path landmark used to give the living

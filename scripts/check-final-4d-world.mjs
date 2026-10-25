@@ -55,7 +55,7 @@ const requiredFiles = [
   "src/components/three/chapterDirector.ts",
   "src/components/three/renderQuality.ts",
   "src/components/three/worldVisualState.ts",
-  "public/textures/forest/ground-albedo-v3.webp",
+  "public/textures/forest/ground-albedo-v4.webp",
   "public/textures/forest/memory-bloom-v1.png",
   "public/textures/environment/first-wood-panorama-v3.webp",
   "public/textures/environment/forest-sky-horizon-v1.webp",
@@ -182,7 +182,7 @@ if (worldContract.error || worldContract.status !== 0) {
   hardFailures.push(`world ownership and geometry contract failed: ${worldContract.error?.message ?? worldContract.stderr ?? ""}\n${worldContract.stdout ?? ""}`);
 }
 
-const textureBytes = fs.statSync(path.join(ROOT, "public/textures/forest/ground-albedo-v3.webp")).size;
+const textureBytes = fs.statSync(path.join(ROOT, "public/textures/forest/ground-albedo-v4.webp")).size;
 if (textureBytes > 400_000) hardFailures.push(`forest ground texture exceeds its 400 KB budget (${textureBytes} bytes)`);
 const panoramaBytes = fs.statSync(path.join(ROOT, "public/textures/environment/first-wood-panorama-v3.webp")).size;
 if (panoramaBytes > 250_000) hardFailures.push(`forest panorama exceeds its 250 KB budget (${panoramaBytes} bytes)`);

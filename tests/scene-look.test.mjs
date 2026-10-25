@@ -84,7 +84,7 @@ test('airborne matter and fill follow scene intent with bounded quality gates', 
   for (const quality of ['low', 'medium', 'high', 'cinematic']) {
     assert.equal(sceneRenderBudget(quality, true).edgeSmoothing, false);
     assert.equal(sceneRenderBudget(quality, true).shafts, false);
-    assert.equal(resolveSceneLook('fire.boundary', quality).lighting.shadowProfile, quality === 'cinematic');
+    assert.equal(resolveSceneLook('fire.boundary', quality).lighting.shadowProfile, quality === 'high' || quality === 'cinematic');
   }
   assert.equal(sceneRenderBudget('high').edgeSmoothing, true);
   assert.equal(sceneRenderBudget('high').finishing, false);

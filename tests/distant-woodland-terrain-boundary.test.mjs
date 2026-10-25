@@ -13,7 +13,8 @@ const { journeyScenes } = await import('../src/data/journeyBlueprint.ts');
 const { getJourneyEntryWorldPosition } = await import('../src/data/journeyWorldLayout.ts');
 
 // Exercise the actual layout effect and JSX geometry on the CPU. Only React's
-// scheduling is replaced; instance matrices and active counts come from source.
+// scheduling and the leaf material loader are replaced; instance matrices,
+// geometry and active counts come from source.
 const require = createRequire(import.meta.url), effects = [], frames = [];
 const hookKey = '__distantWoodlandBoundaryHooks';
 globalThis[hookKey] = {
@@ -27,6 +28,7 @@ let compiled = ts.transpileModule(source, { compilerOptions: {
 } }).outputText;
 compiled = compiled.replace(/import \{[^}]+\} from "react";/, `const {memo,useEffect,useLayoutEffect,useMemo,useRef}=globalThis.${hookKey};`);
 compiled = compiled.replace(/import \{ useFrame \} from "@react-three\/fiber";/, `const {useFrame}=globalThis.${hookKey};`);
+compiled = compiled.replace(/import \{ CanopyMaterial \} from \".\/FoliageMaterial\";/, 'const CanopyMaterial = () => null;');
 compiled = compiled.replace(/from "([^"]+)"/g, (_, specifier) => {
   let url;
   if (specifier.startsWith('.')) { url = new URL(specifier, sourceURL); if (!existsSync(url)) url = new URL(specifier + '.ts', sourceURL); }

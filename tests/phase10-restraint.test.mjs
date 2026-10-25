@@ -42,11 +42,12 @@ const later=id=>/^(fork\.|climb\.|climbs\.|crowned\.|epilogue\.)/.test(id);
 test('actual accepted Surrender outcome modestly restrains only later ambient rates and preserves all other look fields after the reviewed woodland palette',()=>{
  for(const scene of story.journeyScenes)for(const quality of ['low','medium','high','cinematic'])for(const reduced of [false,true])for(const s of [snapshots[raised-1],snapshots[raised]]){
   const state=projected(s),before=plain(oldLook.resolveSceneLook(scene.id,quality,reduced,state)),after=plain(resolveSceneLook(scene.id,quality,reduced,state));
+  before.lighting.shadowProfile = (quality === 'high' || quality === 'cinematic') && !reduced;
   // Reviewed woodland readability change; all other fields retain the pinned baseline.
   if (scene.id.startsWith('enchanted.')) {
     before.lighting.fillFloor = .5;
-    if (scene.id === 'enchanted.rabbit-hole') before.lighting.intensity = 2.1;
-    Object.assign(before.atmosphere, {sky:'#3b5259',horizon:'#a4b4a3',fog:'#596f67'});
+    if (scene.id === 'enchanted.rabbit-hole') Object.assign(before.lighting, {intensity:2.7, color:'#f2d6a1', position:[-12,18,9]});
+    Object.assign(before.atmosphere, {sky:'#35596b',horizon:'#9bb9bc',fog:'#789794'});
   }
   const factor=state.surrenderComplete&&later(scene.id)?.84:1;
   for(const channel of SCENE_MOTION_CHANNELS)assert.equal(after.motion[channel],before.motion[channel]*factor,scene.id+'/'+channel);
@@ -54,7 +55,7 @@ test('actual accepted Surrender outcome modestly restrains only later ambient ra
  }
 });
 test('earlier restoration and nonboolean flags cannot keep unearned motion memory; accessibility still freezes all channels',()=>{
- for(const state of [{},{surrenderComplete:false},{surrenderComplete:'true'}])assert.deepEqual(plain(resolveSceneLook('crowned.home','high',false,state)),plain(oldLook.resolveSceneLook('crowned.home','high',false,state)));
+ for(const state of [{},{surrenderComplete:false},{surrenderComplete:'true'}])assert.deepEqual(plain(resolveSceneLook('crowned.home','high',false,state)),plain({...oldLook.resolveSceneLook('crowned.home','high',false,state),lighting:{...oldLook.resolveSceneLook('crowned.home','high',false,state).lighting,shadowProfile:true}}));
  const look=resolveSceneLook('crowned.home','high',false,projected(snapshots[raised]));
  for(const [motion,effects]of [[true,false],[false,true]]){
   const frame={motion:{...look.motion},time:Object.fromEntries(SCENE_MOTION_CHANNELS.map(c=>[c,7])),stillness:0};

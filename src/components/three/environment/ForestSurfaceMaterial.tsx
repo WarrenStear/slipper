@@ -54,6 +54,6 @@ export const ForestSurfaceMaterial = memo(function ForestSurfaceMaterial({ finis
     }
   }, [detail, finish]);
   const programKey = useCallback(() => `sidtw-forest-${finish}-${detail}-v3`, [detail, finish]);
-  return <meshStandardMaterial key={programKey()} {...appearance} color={tint} normalScale={normalScale} onBeforeRender={maps ? mapGuard : undefined} roughness={finish === "ground" ? .86 : .93} metalness={0} side={finish === "canopy" ? DoubleSide : FrontSide}
+  return <meshStandardMaterial key={programKey()} {...appearance} color={tint} alphaTest={finish === "canopy" ? .45 : 0} normalScale={normalScale} onBeforeRender={maps ? mapGuard : undefined} roughness={finish === "ground" ? .86 : .93} metalness={0} side={finish === "canopy" ? DoubleSide : FrontSide}
     onBeforeCompile={compile} customProgramCacheKey={programKey} />;
 });

@@ -24,7 +24,7 @@ export function SceneAtmosphere({ heading = 0 }: { heading?: number }) {
     const density = forestFogDensity(Math.min(.025, profile.fogDensity * Math.min(1.3, 90 / profile.visibility)), look.composition);
     owned.fog.density += (density - owned.fog.density) * alpha;
     uniforms.time.value = presentation.time.vegetation;
-    uniforms.structure.value = presentation.reducedEffects || !look.budget.shafts ? 0 : .055;
+    uniforms.structure.value = presentation.reducedEffects || !look.budget.shafts ? 0 : .32;
     const [x, y, z] = look.lighting.position;
     uniforms.sun.value.set(x * Math.cos(heading) + z * Math.sin(heading), y, z * Math.cos(heading) - x * Math.sin(heading)).normalize();
     sky.current?.position.copy(camera.position);

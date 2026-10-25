@@ -10,8 +10,10 @@ import { TERRAIN_BASE_Y } from "../terrain/worldConstants.ts";
 import { NarrativeWater } from "../../components/three/environment/SanctuaryWater";
 import { createExplorationPathGeometry, createWillowGeometry, createWillowPoolGeometry, createWillowUnderstory } from "./willowGeometry.ts";
 import type { TerrainMorphState } from "../../lib/terrainModel.ts";
+import { useWoodlandBarkTexture } from "../forest/useForestTextures";
 
 const WillowTree = memo(function WillowTree({ quality, sampleGroundY }: { quality: string; sampleGroundY: (x: number, z: number) => number }) {
+  const bark = useWoodlandBarkTexture();
   const { x, z } = WILLOW_REFUGE, y = sampleGroundY(x, z);
   const geometry = useMemo(() => createWillowGeometry(quality, (dx, dz) => sampleGroundY(x + dx, z + dz) - y), [quality, sampleGroundY, x, y, z]);
   const pool = useMemo(() => createWillowPoolGeometry(sampleGroundY), [sampleGroundY]);
@@ -21,7 +23,7 @@ const WillowTree = memo(function WillowTree({ quality, sampleGroundY }: { qualit
   useEffect(() => () => understory.dispose(), [understory]);
   return <group name="willow-refuge" position={[x, y, z]} userData={{ optionalGeography: true }}>
     <mesh name="willow-leaning-trunk-and-grounded-roots" geometry={geometry.wood} castShadow receiveShadow>
-      <TactileMaterial surface="bark" color="#827c66" roughness={.96} />
+      <meshStandardMaterial map={bark} color="#d2cfbc" roughness={.96} />
     </mesh>
     <mesh name="willow-hanging-lanceolate-leaves" geometry={geometry.leaves}>
       <FoliageMaterial color="#879b68" vertexColors doubleSided flexibility={.022} />

@@ -1,5 +1,5 @@
 import { WoodlandHabitat } from "./WoodlandHabitat";
-import { FoliageMaterial } from "./FoliageMaterial";
+import { CanopyMaterial } from "./FoliageMaterial";
 import { createWornTimberGeometry } from "../environmentArt/authoredGeometry";
 import { createOrganicCrownGeometry } from "./forestGeometry";
 import { memo, useEffect, useLayoutEffect, useMemo, useRef } from "react";
@@ -45,7 +45,7 @@ export const Forms = memo(function Forms({ forms, name, color, kind = "box", woo
   }, [forms]);
   return <instancedMesh ref={mesh} name={name} args={[organicGeometry ?? undefined, undefined, forms.length]} receiveShadow castShadow={shadows}>
     {organicGeometry ? null : kind === "stem" ? <cylinderGeometry args={[.025, .035, 1, 5]} /> : kind === "flower" ? <sphereGeometry args={[.11, 7, 5]} /> : kind === "branch" ? <cylinderGeometry args={[.46, .68, 1, 6]} /> : kind === "stone" ? <icosahedronGeometry args={[1, 0]} /> : <boxGeometry args={[1, 1, 1]} />}
-    {kind === "crown" ? <FoliageMaterial color={color} vertexColors doubleSided /> : (wood || surface) ? <TactileMaterial surface={surface ?? "wood"} color={color} roughness={wood ? .96 : roughness} /> : <meshStandardMaterial color={color} roughness={roughness} />}
+    {kind === "crown" ? <CanopyMaterial color={color} /> : (wood || surface) ? <TactileMaterial surface={surface ?? "wood"} color={color} roughness={wood ? .96 : roughness} /> : <meshStandardMaterial color={color} roughness={roughness} />}
   </instancedMesh>;
 });
 

@@ -210,12 +210,16 @@ function crownAt(type: number, detail: ForestGeometryDetail) {
       const across = new THREE.Vector3(-direction.z, 0, direction.x).normalize()
         .applyAxisAngle(direction, Math.sin(leaf * 1.31 + island * .47) * 1.1);
       const islandScale = Math.min(1, Math.max(...spread) / .3);
-      const length = (detail === 0 ? .33 : .235) * form.leaf * islandScale * (.85 + (leaf % 4) * .11);
-      const width = (detail === 0 ? .15 : .09) * form.leaf * islandScale * (.8 + (leaf % 3) * .12);
-      // Low detail uses compact folded sprays; richer tiers use smaller clustered
-      // blades. Varied pitch and roll provide living mass from real eye height,
-      // while disconnected islands retain air without an opaque supporting core.
-      const points = [c.clone().addScaledVector(direction, -length * .7), c.clone().addScaledVector(across, width), c.clone().addScaledVector(direction, length), c.clone().addScaledVector(across, -width)];
+      const length = (detail === 0 ? .26 : .18) * form.leaf * islandScale * (.85 + (leaf % 4) * .11);
+      const width = (detail === 0 ? .22 : .15) * form.leaf * islandScale * (.8 + (leaf % 3) * .12);
+      // Alpha-cut twig sprays replace single diamond blades at the same vertex
+      // budget. Folded cards and irregular pitch preserve depth from below.
+      const points = [
+        c.clone().addScaledVector(direction, -length).addScaledVector(across, -width),
+        c.clone().addScaledVector(direction, -length).addScaledVector(across, width),
+        c.clone().addScaledVector(direction, length).addScaledVector(across, width),
+        c.clone().addScaledVector(direction, length).addScaledVector(across, -width),
+      ];
       points[1].y += detail === 0 ? .055 : .035;
       points[3].y += detail === 0 ? .045 : .027;
       const offset = data.positions.length / 3;
@@ -224,7 +228,7 @@ function crownAt(type: number, detail: ForestGeometryDetail) {
         const shade = .67 + (leaf % 5) * .065 + (corner === 1 ? .065 : 0);
         data.colors.push(shade * .98, shade, shade * .92);
       });
-      data.uvs.push(.5, 0, 0, .45, .5, 1, 1, .45);
+      data.uvs.push(0, 0, 1, 0, 1, 1, 0, 1);
       data.indices.push(...[0, 1, 2, 0, 2, 3].map(n => n + offset));
     }
   }

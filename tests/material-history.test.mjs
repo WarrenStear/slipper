@@ -138,11 +138,12 @@ test('all32 look fields retain the pinned baseline except the explicitly reviewe
  for(const scene of api.journeyScenes)for(const quality of ['low','medium','high','cinematic'])for(const reduced of [false,true]){
   const state={surrenderComplete:true,mirrorStill:true,materialHistory:history(snapshots.get('river.ash-washed'))};
   const before=exports.resolveSceneLook(scene.id,quality,reduced,state),after=resolveSceneLook(scene.id,quality,reduced,state);
+  before.lighting.shadowProfile = (quality === 'high' || quality === 'cinematic') && !reduced;
   // Reviewed woodland readability change; all other fields retain the pinned baseline.
   if (scene.id.startsWith('enchanted.')) {
     before.lighting.fillFloor = .5;
-    if (scene.id === 'enchanted.rabbit-hole') before.lighting.intensity = 2.1;
-    Object.assign(before.atmosphere, {sky:'#3b5259',horizon:'#a4b4a3',fog:'#596f67'});
+    if (scene.id === 'enchanted.rabbit-hole') Object.assign(before.lighting, {intensity:2.7, color:'#f2d6a1', position:[-12,18,9]});
+    Object.assign(before.atmosphere, {sky:'#35596b',horizon:'#9bb9bc',fog:'#789794'});
   }
   delete before.materials;delete after.materials;
   assert.deepEqual(JSON.parse(JSON.stringify(after)),JSON.parse(JSON.stringify(before)),scene.id+'/'+quality+'/'+reduced);

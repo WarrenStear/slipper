@@ -1,5 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import {readFileSync} from 'node:fs';
+import {createHash} from 'node:crypto';
+const alpha = JSON.parse(readFileSync(new URL('./fixtures/canopy-alpha.json',import.meta.url)));
+assert.equal(createHash('sha256').update(readFileSync(new URL('../public/textures/forest/canopy-spray-v1.webp',import.meta.url))).digest('hex'),alpha.sha256);
+const leafHit = hits => hits.some(({uv}) => uv && alpha.rows[Math.min(63,Math.max(0,Math.floor((1-uv.y)*64)))][Math.min(63,Math.max(0,Math.floor(uv.x*64)))]==='1');
 import * as THREE from 'three';
 import {
   FOREST_ARCHETYPES,
@@ -194,7 +199,7 @@ test('all archetypes change both trunk and canopy shape beyond any instance tran
   } finally { Object.values(broad).forEach(g => g.dispose()); }
 });
 
-test('canopies contain independent small folded leaves with no faces connecting their gaps', () => {
+test('canopies contain independent folded alpha-cut twig sprays with no faces connecting their gaps', () => {
   for (const detail of [0, 1, 2]) {
     for (const type of FOREST_ARCHETYPES) {
       const pair = createForestArchetypeGeometry(type, detail);
@@ -207,7 +212,7 @@ test('canopies contain independent small folded leaves with no faces connecting 
           const offset = leaf * 4;
           assert.deepEqual([...g.index.array.slice(leaf * 6, leaf * 6 + 6)], [0, 1, 2, 0, 2, 3].map(i => i + offset));
           const vertices = Array.from({ length: 4 }, (_, i) => new THREE.Vector3().fromBufferAttribute(p, offset + i));
-          for (const a of vertices) for (const b of vertices) assert.ok(a.distanceTo(b) < (detail === 0 ? .7 : .5), 'bounded sprays/blades must not become oversized shards');
+          for (const a of vertices) for (const b of vertices) assert.ok(a.distanceTo(b) < (detail === 0 ? .9 : .65), 'bounded sprays/blades must not become oversized shards');
           const a = vertices[1].clone().sub(vertices[0]);
           const b = vertices[2].clone().sub(vertices[0]);
           const c = vertices[3].clone().sub(vertices[0]);
@@ -259,14 +264,14 @@ test('living canopy islands have projected foliage coverage while retaining air'
                 THREE.MathUtils.lerp(bounds.min.y, bounds.max.y, (row + .5) / grid),
                 bounds.max.z + 1,
               ), new THREE.Vector3(0, 0, -1));
-              if (ray.intersectObject(mesh).length > 0) covered++;
+              if (leafHit(ray.intersectObject(mesh))) covered++;
             }
             const ratio = covered / (grid * grid);
-            assert.ok(ratio >= .22 && ratio <= .6, `${type} detail${detail} island${island} coverage${ratio}`);
+            assert.ok(ratio >= .04 && ratio <= .6, `${type} detail${detail} island${island} coverage${ratio}`);
             coverage.push(ratio);
           }
           const average = coverage.reduce((sum, ratio) => sum + ratio, 0) / coverage.length;
-          assert.ok(average >= .3 && average <= .55, `${type} detail${detail} must retain living open mass`);
+          assert.ok(average >= .09 && average <= .5, `${type} detail${detail} must retain living open mass`);
         } finally { Object.values(pair).forEach(g => g.dispose()); }
       }
     }

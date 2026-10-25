@@ -17,7 +17,33 @@ export type ForestTexturePack = {
   ruinRoughnessMap: THREE.Texture | null;
 };
 
-export const FOREST_GROUND_ALBEDO_PATH = "/textures/forest/ground-albedo-v3.webp";
+export const FOREST_GROUND_ALBEDO_PATH = "/textures/forest/ground-albedo-v4.webp";
+export const FOREST_BARK_ALBEDO_PATH = "/textures/forest/bark-albedo-v1.webp";
+export const FOREST_CANOPY_ALBEDO_PATH = "/textures/forest/canopy-spray-v1.webp";
+
+export function useWoodlandCanopyTexture() {
+  const source = useTexture(FOREST_CANOPY_ALBEDO_PATH);
+  const texture = useMemo(() => {
+    const map = source.clone(); map.colorSpace = THREE.SRGBColorSpace;
+    map.anisotropy = 4; map.needsUpdate = true; return map;
+  }, [source]);
+  useEffect(() => () => texture.dispose(), [texture]);
+  return texture;
+}
+
+/** Each consumer owns its sampler; the loader retains the shared source image. */
+export function useWoodlandBarkTexture() {
+  const source = useTexture(FOREST_BARK_ALBEDO_PATH);
+  const texture = useMemo(() => {
+    const map = source.clone();
+    map.colorSpace = THREE.SRGBColorSpace;
+    map.wrapS = map.wrapT = THREE.RepeatWrapping;
+    map.repeat.set(1.4, 2.6); map.anisotropy = 8; map.needsUpdate = true;
+    return map;
+  }, [source]);
+  useEffect(() => () => texture.dispose(), [texture]);
+  return texture;
+}
 
 export function createSafeCanvasTexture(kind: "bark" | "crown" | "marsh" | "ruin") {
   const canvas = document.createElement("canvas");
@@ -95,13 +121,13 @@ export function createSafeCanvasTexture(kind: "bark" | "crown" | "marsh" | "ruin
 }
 
 export function useSafeForestTextures(): ForestTexturePack {
-  const groundAlbedo = useTexture(FOREST_GROUND_ALBEDO_PATH);
+  const [groundAlbedo, barkAlbedo, canopyAlbedo] = useTexture([FOREST_GROUND_ALBEDO_PATH, FOREST_BARK_ALBEDO_PATH, FOREST_CANOPY_ALBEDO_PATH]);
   const textures = useMemo<ForestTexturePack>(
     () => ({
-      barkMap: createSafeCanvasTexture("bark"),
+      barkMap: barkAlbedo.clone(),
       barkNormalMap: null,
       barkRoughnessMap: null,
-      crownMap: createSafeCanvasTexture("crown"),
+      crownMap: canopyAlbedo.clone(),
       crownNormalMap: null,
       crownRoughnessMap: null,
       marshMap: groundAlbedo.clone(),
@@ -111,12 +137,19 @@ export function useSafeForestTextures(): ForestTexturePack {
       ruinNormalMap: null,
       ruinRoughnessMap: null,
     }),
-    [groundAlbedo],
+    [groundAlbedo, barkAlbedo, canopyAlbedo],
   );
 
   useEffect(() => {
     textures.barkMap.repeat.set(1.4, 2.6);
-    textures.crownMap.repeat.set(1.1, 1.1);
+    textures.barkMap.colorSpace = THREE.SRGBColorSpace;
+    textures.barkMap.wrapS = textures.barkMap.wrapT = THREE.RepeatWrapping;
+    textures.barkMap.anisotropy = 8;
+    textures.barkMap.needsUpdate = true;
+    textures.crownMap.colorSpace = THREE.SRGBColorSpace;
+    textures.crownMap.wrapS = textures.crownMap.wrapT = THREE.ClampToEdgeWrapping;
+    textures.crownMap.anisotropy = 4;
+    textures.crownMap.needsUpdate = true;
     textures.marshMap.colorSpace = THREE.SRGBColorSpace;
     textures.marshMap.wrapS = THREE.RepeatWrapping;
     textures.marshMap.wrapT = THREE.RepeatWrapping;
