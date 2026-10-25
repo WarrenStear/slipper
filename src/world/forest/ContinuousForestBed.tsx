@@ -4,6 +4,7 @@ import { CuboidCollider, RigidBody } from "@react-three/rapier";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { createForestTrunkLibrary, createForestCrownLibrary } from "./forestGeometry.ts";
+import { createThornThicketGeometry } from "./thornThicketGeometry.ts";
 import { applyRootedForestPresentation, disposeForestMorphWeights, initializeForestMorphWeights } from "./forestInstancePresentation.ts";
 import { ForestSurfaceMaterial } from "../../components/three/environment/ForestSurfaceMaterial";
 import type { Slipper3DEntry } from "../../data/slipper3dTypes.ts";
@@ -49,6 +50,7 @@ export function ContinuousForestBed({
   const crownDetail = qualityProfile.quality === "high" || qualityProfile.quality === "cinematic" ? 2 : 0;
   const clearingCrownDetail = qualityProfile.quality === "low" ? 0 : 1;
   const trunkGeometry = useMemo(createForestTrunkLibrary, []);
+  const thicketGeometry = useMemo(() => createThornThicketGeometry(crownDetail ? "detail" : "base"), [crownDetail]);
   const crownGeometry = useMemo(() => createForestCrownLibrary(crownDetail), [crownDetail]);
   const clearingCrownGeometry = useMemo(() => showClearingFrame ? createForestCrownLibrary(clearingCrownDetail) : null, [clearingCrownDetail, showClearingFrame]);
 
@@ -128,6 +130,7 @@ export function ContinuousForestBed({
   ]);
 
   useEffect(() => () => trunkGeometry.dispose(), [trunkGeometry]);
+  useEffect(() => () => thicketGeometry.dispose(), [thicketGeometry]);
   useEffect(() => () => crownGeometry.dispose(), [crownGeometry]);
   useEffect(() => () => clearingCrownGeometry?.dispose(), [clearingCrownGeometry]);
 
@@ -302,9 +305,12 @@ export function ContinuousForestBed({
         <meshStandardMaterial map={forestTextures.marshMap} normalMap={forestTextures.marshNormalMap} roughnessMap={forestTextures.marshRoughnessMap} vertexColors color={visualState.palette.accent} emissive={visualState.palette.emissive} emissiveIntensity={0.07} metalness={0.22} roughness={0.28} transparent opacity={0.28 * visualState.semanticOpacity} side={THREE.DoubleSide} depthWrite={false} />
       </instancedMesh>
 
-      <instancedMesh ref={ruinRef} args={[undefined, undefined, FOREST_INSTANCE_COUNT]} frustumCulled castShadow receiveShadow>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial map={forestTextures.ruinMap} normalMap={forestTextures.ruinNormalMap} roughnessMap={forestTextures.ruinRoughnessMap} vertexColors color="#ffffff" roughness={0.9} metalness={0.045} transparent opacity={0.64 * visualState.semanticOpacity} />
+      <instancedMesh ref={ruinRef} geometry={thicketGeometry} name="continuous-thorned-understory"
+        args={[undefined, undefined, FOREST_INSTANCE_COUNT]} frustumCulled castShadow receiveShadow
+        raycast={() => {}} userData={{ decorativeOnly: true, instancedBudget: 1 }}>
+        <meshStandardMaterial map={forestTextures.ruinMap} normalMap={forestTextures.ruinNormalMap}
+          roughnessMap={forestTextures.ruinRoughnessMap} vertexColors color="#bbb6a6"
+          roughness={0.94} metalness={0} transparent opacity={0.82 * visualState.semanticOpacity} />
       </instancedMesh>
       </group>
     </group>
