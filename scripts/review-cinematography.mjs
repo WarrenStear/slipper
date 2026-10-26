@@ -70,7 +70,7 @@ const persist=()=>writeFile(out+'/review.json',JSON.stringify(report,null,2));
 async function capture(which,width,height,quality,before) {
  const ctx=await browser.newContext({viewport:{width,height},deviceScaleFactor:1,reducedMotion:'reduce'}),page=await ctx.newPage(),errors=[];
  const name=`${before?'before':'after'}-${which}-${quality}-${width}`;
- page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
+ page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.location().url+': '+m.text());});
  try{await page.goto(`http://127.0.0.1:${before?4205:4204}/${fixtureName}/?case=${which}&quality=${quality}&before=${before?1:0}`,{waitUntil:'domcontentloaded'});if(errors.length)throw new Error(errors.join('\n'));await Promise.race([page.locator('body[data-ready="true"]').waitFor({timeout:90000}),new Promise((_,reject)=>page.once('pageerror',reject))]);// Full-viewport static fixtures have no DOM overlay; avoid the software-GPU compositor.
  const png=await page.locator('canvas').evaluate(canvas=>{
   const bounds=canvas.getBoundingClientRect();
@@ -142,7 +142,7 @@ try{
    if(![required,required+'.ts',required+'.tsx'].some(file=>baselineFiles.has(file))) throw new Error(`Baseline ${baseline} lacks required fixture source ${required}`);
  }
  execFileSync('git',['worktree','add','--detach',beforeRoot,baseline]);await symlink(root+'/node_modules',beforeRoot+'/node_modules','dir');
- for(const dir of [root,beforeRoot]){await mkdir(dir+'/'+fixtureName,{recursive:true});await writeFile(dir+'/'+fixtureName+'/index.html','<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>Cinematography review fixture</title><style>html,body,#root{width:100%;height:100%;margin:0;overflow:hidden}button{padding:8px;margin:4px}</style></head><body><div id="root"></div><script type="module" src="./stage.tsx"></script></body></html>');await writeFile(dir+'/'+fixtureName+'/stage.tsx',dir===root?withMaterialPolicy(stage):stage);await writeFile(dir+'/'+fixtureName+'/shotComposition.ts',await readFile(root+'/src/cinematics/shotComposition.ts'));}
+ for(const dir of [root,beforeRoot]){await mkdir(dir+'/'+fixtureName,{recursive:true});await writeFile(dir+'/'+fixtureName+'/index.html','<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="data:,"><title>Cinematography review fixture</title><style>html,body,#root{width:100%;height:100%;margin:0;overflow:hidden}button{padding:8px;margin:4px}</style></head><body><div id="root"></div><script type="module" src="./stage.tsx"></script></body></html>');await writeFile(dir+'/'+fixtureName+'/stage.tsx',dir===root?withMaterialPolicy(stage):stage);await writeFile(dir+'/'+fixtureName+'/shotComposition.ts',await readFile(root+'/src/cinematics/shotComposition.ts'));}
  await server(root,4203,true);await server(root,4204);await server(beforeRoot,4205);
  browser=await chromium.launch({channel:'chromium',args:['--enable-webgl','--ignore-gpu-blocklist',`--use-angle=${angle}`]});
  await testRig();await entry(1280,800);await entry(390,844);

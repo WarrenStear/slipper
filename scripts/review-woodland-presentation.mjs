@@ -67,7 +67,7 @@ createRoot(document.getElementById('root')).render(<Canvas dpr={1} camera={{fov:
 async function capture(which,width,height,quality,before){
   const ctx=await browser.newContext({viewport:{width,height},deviceScaleFactor:1,reducedMotion:'reduce'}),page=await ctx.newPage(),errors=[];
   const name=`${before?'before':'after'}-${which}-${quality}-${width}`;
-  page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
+  page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.location().url+': '+m.text());});
   try{
     await page.goto(`http://127.0.0.1:4194/.woodland-review/?case=${which}&quality=${quality}&before=${before?1:0}`,{waitUntil:'domcontentloaded',timeout:45000});
     await page.locator('body[data-ready="true"]').waitFor({timeout:90000});
@@ -127,7 +127,7 @@ try{
     await mkdir(dirname(copy),{recursive:true});
     await writeFile(copy,text);
   }
-  await writeFile(fixture+'/index.html','<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>Woodland component comparison</title><style>html,body,#root{width:100%;height:100%;margin:0;overflow:hidden}</style></head><body><div id="root"></div><script type="module" src="./stage.tsx"></script></body></html>');
+  await writeFile(fixture+'/index.html','<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="data:,"><title>Woodland component comparison</title><style>html,body,#root{width:100%;height:100%;margin:0;overflow:hidden}</style></head><body><div id="root"></div><script type="module" src="./stage.tsx"></script></body></html>');
   await writeFile(fixture+'/stage.tsx',stage);
   // Other review harnesses share dependencies, never Vite's mutable prebundle cache.
   await writeFile(fixture+'/vite.config.ts', `import original from '../vite.config.ts'; export default { ...original, cacheDir: ${JSON.stringify(fixture+'/vite-cache')}, optimizeDeps: { ...original.optimizeDeps, entries: [${JSON.stringify(fixture+'/index.html')}] } };`);
