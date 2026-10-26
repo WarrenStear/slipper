@@ -121,7 +121,7 @@ The graphics pass subsequently passed `npm run check` again (1,378 unit tests an
 
 One shadow-casting light was recorded at high quality and zero on the low mobile-sized capture. These are short steady-view samples from the development review fixture, not production startup or sustained phone benchmarks. Earlier intermediate captures encountered cold shader/loading stalls and were retained as failed/intermediate evidence; their frame rates are not represented by this final table. The baseline used the prior headless-shell Chromium entry point, so the before/after GPU-work counts are more comparable than an inferred speedup between those browser entry points. Final graphics captures and measurements are in `graphics-final/` within the evidence directory.
 
-This is a material and lighting upgrade to a functioning procedural world. It is not a completed photoreal production-art replacement. The actual screenshots retain angular foreground rocks, sparse distant crowns and a schematic willow silhouette, which still need a dedicated modelling pass.
+This is a material and lighting upgrade to a functioning procedural world. It is not a completed photoreal production-art replacement. At that checkpoint, the screenshots retained angular foreground rocks, sparse distant crowns and a schematic willow silhouette; the following modelling pass addresses those areas.
 
 ## Woodland modelling and blue twilight pass — 26 October 2026
 
@@ -129,9 +129,24 @@ This checkpoint adds a split, curved willow bole, asymmetric boughs and attached
 
 Outdoor scenes share a blue twilight gradient and one textured blue moon painted into the distant sky, including low/reduced-effects tiers. Local chapter moons are suppressed when the global sky owns the image. Enclosed room lighting is preserved. The warm carried lantern follows the camera. Free Woods explicitly restores that carried presentation after the ending and suppresses its placed copy, while retaining the canonical placed object state and accepted events.
 
-The first twilight review passed four desktop views, one low portrait view, three return loops and the placed-ending → Free Woods lantern transition without page or console errors. The runtime review confirms one carried lantern in front of the camera, no second placed lantern in Free Woods, and unchanged story state. Type checking and the focused geometry, material-history, lantern and twilight checks pass. The full project check and final browser QA were still running at this user-requested checkpoint; final results will follow in this document.
+The user-requested checkpoint was committed and pushed as `c20eee2`. The subsequent full `npm run check` passed: 1,384 unit tests, seven security tests, content validation, application and Functions type checks, production build, and local Cloudflare Functions compilation. The first full run exposed an atmosphere test harness that did not provide the newly imported shared moon texture; that harness now supplies the dependency and additionally checks all quality/reduced-effects combinations, indoor/outdoor visibility, and owned-versus-borrowed texture disposal. The existing large-chunk build warning remains; this pass does not claim to reduce bundle size.
 
-Evidence is outside the repository at `../artifacts/woodland-art-pass-20261025/`. Intermediate `v1/`, `v2/`, `final/` and `twilight-v1/` folders are retained as such; the final qualified twilight review will be recorded separately. Generated texture provenance and the exact stone prompt are in `public/textures/forest/GENERATED_MATERIALS.md`.
+The final real-scene review passed all 128 scene/quality visits, three return loops, and the placed-ending → Free Woods lantern transition without page or console errors. It confirms one carried lantern in front of the moving camera, no second placed lantern in Free Woods, and unchanged story state. All three return loops retained **108 geometries and 30 textures**. Resource counts are allocation counts, not measured GPU bytes. Native Chromium/Metal on Apple M1, desktop 1440 × 900 DPR 1 and low portrait 390 × 844 DPR 1, recorded:
+
+| View | Draws / triangles, including shadows | Median / p95 frame interval |
+| --- | ---: | ---: |
+| First woodland | 112 / 581,989 | 16.7 / 26.2 ms |
+| Willow | 84 / 511,097 | 16.8 / 42.5 ms |
+| Sanctuary approached from wood | 137 / 308,241 | 16.7 / 17.1 ms |
+| Meadow return | 71 / 467,935 | 17.2 / 69.8 ms |
+| Blue-moon sky view | 60 / 451,387 | 16.7 / 18.7 ms |
+| Willow, low, 390 × 844 | 53 / 198,370 | 16.7 / 17.7 ms |
+
+These short samples include traversal/settling work. The high p95 values at the willow and meadow show remaining frame-time spikes; median values alone are not evidence of consistently smooth 60 fps. An intermediate run was paced near 33.3 ms across all views. A later empty-page rAF control measured 16.7 / 17.6 ms, so the evidence retains both runs without attributing the difference to a proven cause. This is more geometry and texture work than the prior art pass. Low/medium use the original 292-triangle trunk library while high/cinematic use 548 triangles per trunk; instanced floor vegetation remains two bounded draws. No actual phone, thermal or long-duration GPU-memory qualification is claimed.
+
+Production preview health passed at `http://127.0.0.1:4189/`: correct title, meaningful onboarding, Begin → rendered canvas and experience root, no Vite error overlay, and no page errors or console warnings. Browser plugin was unavailable; validation used the repository-pinned Playwright 1.62 Chromium with native Metal. Production interaction QA passed **2/2 desktop tests** (physical opening wipe/reload/inversion/click handoff; completed constellation → dedication → Free Woods/Archive/Constellation) and **5/5 mobile Chromium tests** (handedness, portrait/landscape maps, route recovery, input cancellation, and trusted touch position/look changes). Commands used `PLAYWRIGHT_TEST_BASE_URL=http://127.0.0.1:4189`, `npm run test:e2e`, the corresponding `chromium` / `mobile-chromium` projects, and external artifact output directories. Safari/WebKit remains unqualified because the installed Playwright WebKit runtime previously failed before application startup with `Page.overrideSetting: Unknown setting: PushAPIEnabled`; it was not rerun or represented as passing in this art pass.
+
+Evidence is outside the repository at `../artifacts/woodland-art-pass-20261025/`. Intermediate `v1/`, `v2/`, `final/` and `twilight-v1/` folders are retained as such; `twilight-final/` contains the final qualified twilight captures and measurement JSON. Generated texture provenance and the exact stone prompt are in `public/textures/forest/GENERATED_MATERIALS.md`.
 
 ## Remaining production work
 

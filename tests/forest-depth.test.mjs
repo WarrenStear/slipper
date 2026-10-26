@@ -114,13 +114,15 @@ test("zero-side banks alternate and already clear original placements remain fix
 });
 
 function loadOwner(path, presentation, scene, profile) {
-  const frames = [], cleanups = [], effects = [];
+  const frames = [], cleanups = [], effects = [], moonSource = new THREE.Texture();
   const element = (type, props) => ({ type, props });
   const imports = {
-    react: { useMemo: callback => callback(), useRef: value => ({ current: value }), useLayoutEffect: callback => {
+    react: { useMemo: callback => callback(), useRef: value => ({ current: value }), useEffect: callback => { const cleanup = callback(); if (cleanup) cleanups.push(cleanup); }, useLayoutEffect: callback => {
       effects.push(callback); const cleanup = callback(); if (cleanup) cleanups.push(cleanup);
     } },
     "react/jsx-runtime": { jsx: element, jsxs: element }, three: THREE,
+    "@react-three/drei": { useTexture: path => { assert.equal(path, "/textures/environment/moon-albedo-v1.png"); return moonSource; } },
+    "./CelestialMoon": { MOON_ALBEDO_PATH: "/textures/environment/moon-albedo-v1.png" },
     "@react-three/fiber": { useThree: () => ({ scene }), useFrame: (callback, priority = 0) => frames.push({ callback, priority }) },
     "../../components/three/artDirection/SceneLookContext": { useSceneLook: () => presentation },
     "../../components/three/artDirection/worldVisualContinuity": continuity,
@@ -132,7 +134,7 @@ function loadOwner(path, presentation, scene, profile) {
   const source = readFileSync(new URL(`../src/world/atmosphere/${path}.tsx`, import.meta.url), "utf8");
   runInNewContext(ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX } }).outputText,
     { exports, require: id => { assert.ok(id in imports, id); return imports[id]; } });
-  return { owner: exports[path], frames, cleanups, effects };
+  return { owner: exports[path], frames, cleanups, effects, moonSource };
 }
 const presentationFor = (id, quality = "high", reducedEffects = false) => ({ look: resolveSceneLook(id, quality, reducedEffects),
   reducedMotion: false, reducedEffects, time: { vegetation: 17 }, stillness: 0 });
@@ -173,5 +175,28 @@ test("actual mist owner uses composed placements with the same shared geometry, 
     assert.equal(runtime.frames.length, 1); assert.equal(runtime.frames[0].priority, 0);
     runtime.frames[0].callback({ scene }, .016);
     assert.equal(material.props.uniforms.fogDensity.value, .012); assert.equal(material.props.uniforms.time.value, 17);
+  }
+});
+
+
+test("blue moon survives low/reduced effects, hides indoors and releases only its owned sampler", () => {
+  for (const quality of ["low", "medium", "high", "cinematic"]) for (const reducedEffects of [false, true]) {
+    const presentation = presentationFor("enchanted.rabbit-hole", quality, reducedEffects);
+    presentation.reducedMotion = true;
+    const scene = new THREE.Scene(), runtime = loadOwner("SceneAtmosphere", presentation, scene, { fogDensity: .01, visibility: 80 });
+    const output = runtime.owner({}), material = output.props.children[1].props, uniforms = material.uniforms;
+    const owned = uniforms.moonMap.value;
+    assert.notEqual(owned, runtime.moonSource); assert.equal(owned.colorSpace, THREE.SRGBColorSpace);
+    let ownedDisposals = 0, sourceDisposals = 0;
+    owned.addEventListener("dispose", () => ownedDisposals++); runtime.moonSource.addEventListener("dispose", () => sourceDisposals++);
+    const camera = new THREE.PerspectiveCamera(); camera.position.set(40, 2, -330);
+    runtime.frames[0].callback({ camera }, .016);
+    assert.equal(uniforms.blueMoon.value, 1); assert.equal(material.depthWrite, false);
+    presentation.look = resolveSceneLook("thorned.locked-garden", quality, reducedEffects);
+    runtime.frames[0].callback({ camera }, .016); assert.equal(uniforms.blueMoon.value, 0);
+    presentation.look = resolveSceneLook("blue-moon.sanctuary", quality, reducedEffects);
+    camera.rotateY(1.2); runtime.frames[0].callback({ camera }, .016); assert.equal(uniforms.blueMoon.value, 1);
+    runtime.cleanups.forEach(cleanup => cleanup());
+    assert.equal(ownedDisposals, 1); assert.equal(sourceDisposals, 0);
   }
 });
