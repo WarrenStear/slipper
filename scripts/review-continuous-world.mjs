@@ -14,7 +14,7 @@ if (!['metal', 'swiftshader'].includes(angle)) throw Error('Unsupported REVIEW_A
 const fixture = await realpath(await mkdtemp(join(tmpdir(), 'slipper-continuous-stage-')));
 await mkdir(out, { recursive: true });
 for (const name of ['src', 'node_modules']) await symlink(join(repo, name), join(fixture, name), 'dir');
-await writeFile(join(fixture, 'index.html'), '<!doctype html><html><head><link rel="icon" href="data:,"><meta name="viewport" content="width=device-width, initial-scale=1"><style>html,body,#root{margin:0;width:100%;height:100%;overflow:hidden;background:#192420}</style></head><body><div id="root"></div><script type="module" src="/stage.tsx"></script></body></html>');
+await writeFile(join(fixture, 'index.html'), '<!doctype html><html><head><title>Slipper in the Woods — art review</title><link rel="icon" href="data:,"><meta name="viewport" content="width=device-width, initial-scale=1"><style>html,body,#root{margin:0;width:100%;height:100%;overflow:hidden;background:#192420}</style></head><body><div id="root"></div><script type="module" src="/stage.tsx"></script></body></html>');
 await writeFile(join(fixture, 'stage.tsx'), `
 import React,{Suspense,useState,useEffect,useRef} from 'react';
 import {createRoot} from 'react-dom/client';
@@ -39,22 +39,23 @@ window.__layouts=JOURNEY_SCENE_LAYOUTS.map(s=>({id:s.id,position:s.anchor.positi
 function Probe(){
  const {camera,scene,gl}=useThree(),frames=useRef(0),samples=useRef([]);
  useEffect(()=>{window.__view=(x,z,tx,tz,height=1.65)=>{window.__pose=[x,ground(x,z)+height,z,tx,ground(tx,tz)+1.8,tz];samples.current=[];};
+ window.__sky=()=>{const [x,y,z]=camera.position.toArray();window.__pose=[x,y,z,x+27,y+36,z+91];samples.current=[];};
  window.__state=()=>{const s=useJourneyStore.getState();return {events:s.completedStoryEventIds,scenes:s.completedSceneIds,objects:s.storyObjectStates};};},[]);
  useFrame((_,dt)=>{if(window.__pose){camera.position.set(...window.__pose.slice(0,3));camera.lookAt(...window.__pose.slice(3));}
  samples.current.push(dt*1000);if(samples.current.length>120)samples.current.shift();
  queueMicrotask(()=>{frames.current++;const context=gl.getContext(),debug=context.getExtension('WEBGL_debug_renderer_info');
- const groups=[],worldPositions={},lights=[];scene.traverse(o=>{if(o.name.startsWith('journey-scene:')){groups.push(o.name.slice(14));worldPositions[o.name.slice(14)]=o.getWorldPosition(new THREE.Vector3()).toArray();}if(o.isLight)lights.push({name:o.name,shadow:o.castShadow});});
+ const groups=[],worldPositions={},lights=[],lanterns=[],placedLanterns=[];scene.traverse(o=>{if(o.name.startsWith('journey-scene:')){groups.push(o.name.slice(14));worldPositions[o.name.slice(14)]=o.getWorldPosition(new THREE.Vector3()).toArray();}if(o.name.startsWith('MasterPlayerLanternSingleRealistic:'))lanterns.push(camera.worldToLocal(o.getWorldPosition(new THREE.Vector3())).toArray());if(o.userData.objectId==='lantern.master')placedLanterns.push(o.name);if(o.isLight)lights.push({name:o.name,shadow:o.castShadow});});
  const sorted=[...samples.current].sort((a,b)=>a-b);
- window.__snapshot={frames:frames.current,groups,worldPositions,willow:!!scene.getObjectByName('willow-refuge'),camera:camera.position.toArray(),draws:gl.info.render.calls,triangles:gl.info.render.triangles,geometries:gl.info.memory.geometries,textures:gl.info.memory.textures,lights:lights.length,shadowLights:lights.filter(l=>l.shadow).length,p50ms:sorted[Math.floor(sorted.length*.5)],p95ms:sorted[Math.floor(sorted.length*.95)],renderer:context.getParameter(debug?debug.UNMASKED_RENDERER_WEBGL:context.RENDERER),bridge:!!scene.getObjectByName('sanctuary-bridge-support')};});
+ window.__snapshot={frames:frames.current,groups,worldPositions,lanterns,placedLanterns,blueMoon:scene.getObjectByName('scene-directed-sky')?.material.uniforms.blueMoon.value,willow:!!scene.getObjectByName('willow-refuge'),camera:camera.position.toArray(),draws:gl.info.render.calls,triangles:gl.info.render.triangles,geometries:gl.info.memory.geometries,textures:gl.info.memory.textures,lights:lights.length,shadowLights:lights.filter(l=>l.shadow).length,p50ms:sorted[Math.floor(sorted.length*.5)],p95ms:sorted[Math.floor(sorted.length*.95)],renderer:context.getParameter(debug?debug.UNMASKED_RENDERER_WEBGL:context.RENDERER),bridge:!!scene.getObjectByName('sanctuary-bridge-support')};});
  },0);return null;
 }
-function App(){const [id,setId]=useState('enchanted.rabbit-hole'),[quality,setQuality]=useState('high'),[mounted,setMounted]=useState(true);
- useEffect(()=>{window.__setScene=setId;window.__setQuality=setQuality;window.__mount=setMounted;
+function App(){const [id,setId]=useState('enchanted.rabbit-hole'),[quality,setQuality]=useState('high'),[mounted,setMounted]=useState(true),[freeWoods,setFreeWoods]=useState(false),[completed,setCompleted]=useState(false);
+ useEffect(()=>{window.__setScene=setId;window.__setQuality=setQuality;window.__mount=setMounted;window.__setFreeWoods=setFreeWoods;window.__endStory=()=>{setCompleted(true);setId('crowned.sovereignty');useJourneyStore.setState({activeSceneId:'crowned.sovereignty',storyObjectStates:{'lantern.master':'placed'},completedRitualIds:['ritual.accept-lantern','ritual.place-lantern']});};
  useJourneyStore.setState({activeSceneId:'enchanted.rabbit-hole',worldFlags:{'story-events.started':true,'lantern.owned':true,'lantern.claimed-and-lit':true},storyObjectStates:{'broken-floor.reflection':'revealed','lantern.master':'carried'},completedStoryEventIds:[],completedSceneIds:[],completedChapterIds:[],completedRitualIds:['ritual.accept-lantern'],storyPlacementStates:{}});
  useWorldStore.setState({mode:'explore',controls:'orbit',physicsPaused:false});useSettingsStore.setState({drawerOpen:false,cameraAssistance:false,reducedMotion:true,showContextualGuidance:false});},[]);
  const entry=entries.find(e=>getJourneySceneForEntry(e.id)?.id===id)||entries[1];
- const memory={sceneId:id,chapterId:getJourneySceneForEntry(entry.id).chapterId,completedRitualIds:['ritual.accept-lantern'],completedActs:[],completedChapterIds:[],completedSceneIds:[],landmarkStates:{},worldFlags:{'lantern.owned':true},resonances:{},inventory:{lantern:true,recoveredKeys:[],symbolicObjects:[]},releasedWords:[],storyStarted:true,storyCompleted:false};
- return <Canvas dpr={1} shadows camera={{fov:62,near:.05,far:220}} gl={{antialias:true,preserveDrawingBuffer:true}} onCreated={({gl})=>{gl.toneMapping=THREE.ACESFilmicToneMapping;gl.outputColorSpace=THREE.SRGBColorSpace;}}><Suspense fallback={null}><Physics paused>{mounted?<StorySceneWithMasterLantern entryId={entry.id} entries={entries} visuals={[]} controls="none" qualityProfile={RENDER_QUALITY_PROFILES[quality]} reducedEffects={quality==='low'} narrativeAudioSuppressed storyWorldMemory={memory}><Probe/></StorySceneWithMasterLantern>:null}</Physics></Suspense></Canvas>;
+ const memory={sceneId:id,chapterId:getJourneySceneForEntry(entry.id).chapterId,completedRitualIds:['ritual.accept-lantern'],completedActs:[],completedChapterIds:[],completedSceneIds:[],landmarkStates:{},worldFlags:{'lantern.owned':true},resonances:{},inventory:{lantern:true,recoveredKeys:[],symbolicObjects:[]},releasedWords:[],storyStarted:true,storyCompleted:completed};
+ return <Canvas dpr={1} shadows camera={{fov:62,near:.05,far:220}} gl={{antialias:true,preserveDrawingBuffer:true}} onCreated={({gl})=>{gl.toneMapping=THREE.ACESFilmicToneMapping;gl.outputColorSpace=THREE.SRGBColorSpace;}}><Suspense fallback={null}><Physics paused>{mounted?<StorySceneWithMasterLantern freeWoods={freeWoods} entryId={entry.id} entries={entries} visuals={[]} controls="none" qualityProfile={RENDER_QUALITY_PROFILES[quality]} reducedEffects={quality==='low'} narrativeAudioSuppressed storyWorldMemory={memory}><Probe/></StorySceneWithMasterLantern>:null}</Physics></Suspense></Canvas>;
 }createRoot(document.getElementById('root')).render(<App/>);
 `);
 let server, browser, page;
@@ -75,7 +76,12 @@ try {
     await page.waitForTimeout(3000);
     await page.screenshot({ path: join(out, name + '.png') });
     const snapshot = await page.evaluate(() => window.__snapshot); shots.push({ name, ...snapshot });
-    if (!baseline) { assert.ok(snapshot.groups.length <= 6); if (name === 'willow') assert.equal(snapshot.willow, true); if (name === 'sanctuary-from-wood') assert.ok(snapshot.groups.includes('blue-moon.sanctuary')); }
+    if (!baseline) { assert.equal(snapshot.lanterns.length,1,'one carried lantern');assert.ok(snapshot.blueMoon>.99,'outdoor blue moon enabled');assert.ok(snapshot.lanterns[0][2]<-.5 && snapshot.lanterns[0][2]>-2,'lantern remains in front of the moving camera'); assert.ok(snapshot.groups.length <= 6); if (name === 'willow') assert.equal(snapshot.willow, true); if (name === 'sanctuary-from-wood') assert.ok(snapshot.groups.includes('blue-moon.sanctuary')); }
+  }
+  if (!baseline) {
+    await page.evaluate(()=>window.__view(-66,-336,-52,-320));await page.waitForTimeout(500);
+    await page.evaluate(()=>window.__sky());await page.waitForTimeout(2000);
+    await page.screenshot({path:join(out,'twilight-blue-moon.png')});shots.push({name:'twilight-blue-moon',...await page.evaluate(()=>window.__snapshot)});
   }
   assert.deepEqual(await page.evaluate(() => window.__state()), initial, 'Scenery inspection cannot advance or mutate story');
   if (!baseline) {
@@ -101,6 +107,16 @@ try {
     assert.ok(resources[2].textures<=resources[1].textures+2,'repeat route must not accumulate textures');
     await page.setViewportSize({width:390,height:844});await page.evaluate(()=>{window.__setQuality('low');window.__view(-66,-336,-52,-320)});await page.waitForTimeout(2000);
     await page.screenshot({path:join(out,'willow-mobile-low.png')});shots.push({name:'willow-mobile-low',...await page.evaluate(()=>window.__snapshot)});
+    await page.evaluate(()=>{window.__setQuality('high');window.__endStory();const layout=window.__layouts.find(l=>l.id==='crowned.sovereignty');window.__view(layout.position[0],layout.position[2]-4,layout.position[0],layout.position[2]+2)});
+    await page.waitForFunction(()=>window.__snapshot?.lanterns.length===0 && window.__snapshot.placedLanterns.length===1,null,{timeout:30000});
+    const ending=await page.evaluate(()=>window.__state());
+    await page.evaluate(()=>window.__setFreeWoods(true));
+    await page.waitForFunction(()=>window.__snapshot?.lanterns.length===1 && window.__snapshot.placedLanterns.length===0,null,{timeout:30000});
+    assert.deepEqual(await page.evaluate(()=>window.__state()),ending,'Free Woods carries the lantern without rewriting the placed ending');
+    await page.evaluate(()=>window.__view(-66,-336,-52,-320));await page.waitForTimeout(1500);
+    assert.equal((await page.evaluate(()=>window.__snapshot)).lanterns.length,1,'Free Woods keeps the carried light on return');
+    assert.deepEqual(await page.evaluate(()=>window.__state()),ending);
+    await page.screenshot({path:join(out,'free-woods-carried-lantern.png')});
   }
   await writeFile(join(out,'measurements.json'),JSON.stringify({baseline,angle,viewport:{width:1440,height:900,dpr:1},shots,resources,errors},null,2));
   assert.deepEqual(errors,[]);

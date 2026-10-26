@@ -45,6 +45,18 @@ export function useWoodlandBarkTexture() {
   return texture;
 }
 
+export const FOREST_STONE_ALBEDO_PATH = "/textures/forest/stone-albedo-v1.webp";
+export function useWoodlandSurfaceTexture(surface: "stone" | "soil") {
+  const source = useTexture(surface === "stone" ? FOREST_STONE_ALBEDO_PATH : FOREST_GROUND_ALBEDO_PATH);
+  const texture = useMemo(() => {
+    const map = source.clone(); map.colorSpace = THREE.SRGBColorSpace;
+    map.wrapS = map.wrapT = THREE.RepeatWrapping; map.anisotropy = 4;
+    map.repeat.set(surface === "stone" ? 2 : 1, 1); map.needsUpdate = true; return map;
+  }, [source, surface]);
+  useEffect(() => () => texture.dispose(), [texture]);
+  return texture;
+}
+
 export function createSafeCanvasTexture(kind: "bark" | "crown" | "marsh" | "ruin") {
   const canvas = document.createElement("canvas");
   canvas.width = 128;

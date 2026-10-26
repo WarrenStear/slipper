@@ -139,11 +139,13 @@ test('all32 look fields retain the pinned baseline except the explicitly reviewe
   const state={surrenderComplete:true,mirrorStill:true,materialHistory:history(snapshots.get('river.ash-washed'))};
   const before=exports.resolveSceneLook(scene.id,quality,reduced,state),after=resolveSceneLook(scene.id,quality,reduced,state);
   before.lighting.shadowProfile = (quality === 'high' || quality === 'cinematic') && !reduced;
-  // Reviewed woodland readability change; all other fields retain the pinned baseline.
+  // Requested outdoor twilight is the only shared atmosphere override.
+  if (!['window','domestic'].includes(before.lighting.source)) Object.assign(before.atmosphere, {sky:'#101c3b',horizon:'#425775',fog:'#304859'});
+  // Other narrative, reflection, material and camera fields retain the baseline.
   if (scene.id.startsWith('enchanted.')) {
-    before.lighting.fillFloor = .5;
-    if (scene.id === 'enchanted.rabbit-hole') Object.assign(before.lighting, {intensity:2.7, color:'#f2d6a1', position:[-12,18,9]});
-    Object.assign(before.atmosphere, {sky:'#35596b',horizon:'#9bb9bc',fog:'#789794'});
+    before.lighting.fillFloor = .34;
+    if (scene.id === 'enchanted.rabbit-hole') Object.assign(before.lighting, {intensity:1.8, color:'#adcaf3', position:[-12,18,9]});
+
   }
   delete before.materials;delete after.materials;
   assert.deepEqual(JSON.parse(JSON.stringify(after)),JSON.parse(JSON.stringify(before)),scene.id+'/'+quality+'/'+reduced);

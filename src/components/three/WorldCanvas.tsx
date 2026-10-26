@@ -26,6 +26,7 @@ import { requestTextJourney } from "../../lib/textJourney";
 import { WorldWorkerFailureContext, WorldWorkerFailureGuard } from "../../world/workerFailure";
 
 type WorldCanvasProps = {
+  freeWoods?: boolean;
   entryId: string;
   entries: Slipper3DEntry[];
   visuals: Slipper3DVisual[];
@@ -175,6 +176,7 @@ export function WorldCanvas({
   quietGuidanceActivity,
   initialPlayerPosition = null,
   narrativeAudioSuppressed = false,
+  freeWoods = false,
   onFinalConstellationFormationComplete,
   onPortalSelect,
   onMapSelectEntry,
@@ -266,6 +268,7 @@ export function WorldCanvas({
                 <CuboidCollider args={[420, 0.1, 420]} position={[0, -3, 0]} />
               </RigidBody>
               <StorySceneWithMasterLantern
+                freeWoods={freeWoods}
                 entryId={entryId}
                 entries={entries}
                 visuals={visuals}

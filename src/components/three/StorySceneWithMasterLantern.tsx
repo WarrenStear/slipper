@@ -1,3 +1,4 @@
+import { ExplorationLanternContext, carriesExplorationLantern } from "../../player/explorationLantern";
 import { resolveLanternGuidanceTarget } from "../../ui/lanternGuidancePresentation";
 import type { QuietGuidanceActivity } from "../../ui/quietGuidancePresentation";
 import { openingEnclosed } from "../../cinematics/openingPresentation";
@@ -22,6 +23,7 @@ import type { Vector3Tuple } from "../../data/slipper3dTypes";
 import type { WorldMemoryState } from "./worldMemory/WorldMemoryDirector";
 
 type StorySceneWithMasterLanternProps = {
+  freeWoods?: boolean;
   children?: ReactNode;
   entryId: string;
   entries: Slipper3DEntry[];
@@ -64,6 +66,7 @@ export function StorySceneWithMasterLantern({
   narrativeWorldState = FALLBACK_WORLD_STATE,
   controls = "orbit",
   mode = "explore",
+  freeWoods = false,
   qualityProfile,
   reducedEffects,
   onPlayerProximityChange,
@@ -106,15 +109,16 @@ export function StorySceneWithMasterLantern({
     }),
     [worldMemory],
   );
+  const explorationCarried = carriesExplorationLantern(mode, freeWoods);
   const showCarriedLantern =
     mode === "explore" &&
-    lanternNarrative.presence === "carried" && (!eventDriven || physicallyCarried);
+    (explorationCarried || (lanternNarrative.presence === "carried" && (!eventDriven || physicallyCarried)));
 
   // StoryScene resolves the canonical scene's authored origin and heading, then
   // mounts these children inside its single SceneLookDirector. Legacy projection
   // is evaluated only for a noncanonical fallback or an explicitly enabled debug view.
   return (
-    <StoryScene
+    <ExplorationLanternContext.Provider value={explorationCarried}><StoryScene
       {...props}
       controls={controls}
       mode={mode}
@@ -140,7 +144,7 @@ export function StorySceneWithMasterLantern({
         />
       ) : null}
       {children}
-    </StoryScene>
+    </StoryScene></ExplorationLanternContext.Provider>
   );
 }
 

@@ -22,7 +22,7 @@ export function createSanctuaryShorelineGeometry() {
         // Mitered corners share identical vertices; shelves never overlap and
         // cannot shimmer against one another at grazing walking-camera angles.
         const along = (t * 2 - 1) * (side < 2 ? 7.48 + v * 2.4 : 9.56 + v * 2.2);
-        const across = inner + v * (side < 2 ? 2.2 : 2.4);
+        const across = inner + v * ((side < 2 ? 2.2 : 2.4) + Math.sin(t * 23 + side) * envelope * .18);
         const x = side < 2 ? (side === 0 ? -across : across) : along;
         const z = side < 2 ? along : (side === 2 ? -across : across);
         const y = row === bands - 1 ? -.155 : .035 - v * .11 + Math.sin(t * 29 + side * 1.4) * .006 * envelope;

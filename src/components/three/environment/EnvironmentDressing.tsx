@@ -1,3 +1,5 @@
+import { WoodlandSurfaceMaterial } from "./WoodlandSurfaceMaterial";
+import { createShoreStoneGeometry } from "../environmentArt/woodlandAccentsGeometry";
 import { WoodlandHabitat } from "./WoodlandHabitat";
 import { CanopyMaterial } from "./FoliageMaterial";
 import { createWornTimberGeometry } from "../environmentArt/authoredGeometry";
@@ -14,6 +16,7 @@ type FormsProps = { forms: readonly DressingForm[]; name: string; color: string;
 export const Forms = memo(function Forms({ forms, name, color, kind = "box", wood = false, surface, shadows = false, roughness = .98 }: FormsProps) {
   const mesh = useRef<THREE.InstancedMesh>(null);
   const organicGeometry = useMemo(() => {
+    if (kind === "stone") return createShoreStoneGeometry();
     if (kind === "crown") return createOrganicCrownGeometry(2);
     if (kind === "box") return createWornTimberGeometry([1, 1, 1], 59);
     if (kind !== "tree") return null;
@@ -44,8 +47,8 @@ export const Forms = memo(function Forms({ forms, name, color, kind = "box", woo
     target.computeBoundingSphere(); target.computeBoundingBox();
   }, [forms]);
   return <instancedMesh ref={mesh} name={name} args={[organicGeometry ?? undefined, undefined, forms.length]} receiveShadow castShadow={shadows}>
-    {organicGeometry ? null : kind === "stem" ? <cylinderGeometry args={[.025, .035, 1, 5]} /> : kind === "flower" ? <sphereGeometry args={[.11, 7, 5]} /> : kind === "branch" ? <cylinderGeometry args={[.46, .68, 1, 6]} /> : kind === "stone" ? <icosahedronGeometry args={[1, 0]} /> : <boxGeometry args={[1, 1, 1]} />}
-    {kind === "crown" ? <CanopyMaterial color={color} /> : (wood || surface) ? <TactileMaterial surface={surface ?? "wood"} color={color} roughness={wood ? .96 : roughness} /> : <meshStandardMaterial color={color} roughness={roughness} />}
+    {organicGeometry ? null : kind === "stem" ? <cylinderGeometry args={[.025, .035, 1, 5]} /> : kind === "flower" ? <sphereGeometry args={[.11, 7, 5]} /> : kind === "branch" ? <cylinderGeometry args={[.46, .68, 1, 6]} /> : <boxGeometry args={[1, 1, 1]} />}
+    {kind === "crown" ? <CanopyMaterial color={color} /> : kind === "stone" && surface === "stone" ? <WoodlandSurfaceMaterial surface="stone" /> : (wood || surface) ? <TactileMaterial vertexColors={kind === "stone" && surface === "stone"} surface={surface ?? "wood"} color={color} roughness={wood ? .96 : roughness} /> : <meshStandardMaterial color={color} roughness={roughness} />}
   </instancedMesh>;
 });
 

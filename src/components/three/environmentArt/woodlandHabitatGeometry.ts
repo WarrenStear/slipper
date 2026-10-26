@@ -64,7 +64,7 @@ export function createDeadwoodGeometry() {
 
 /** Retain swept geometry exactly; only give each ring metre-scaled bark UVs.
  * Duplicate the wrap edge so the last face does not stretch across a whole tile. */
-function rootedBarkUv(geometry: THREE.BufferGeometry) {
+export function rootedBarkUv(geometry: THREE.BufferGeometry) {
   const p = geometry.getAttribute("position"), uv = geometry.getAttribute("uv");
   const rings = new Map<number, number[]>();
   for (let i = 0; i < p.count; i++) {

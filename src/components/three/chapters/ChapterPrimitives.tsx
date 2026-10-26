@@ -263,7 +263,9 @@ export const MoonDisc = memo(function MoonDisc({
     }
   });
 
-  if (!activeScene) return null;
+  // Canonical outdoor skies own one distant blue moon. Isolated chapter
+  // previews retain their local moon without duplicating it during exploration.
+  if (!activeScene || (presentation && presentation.look.lighting.source !== "window" && presentation.look.lighting.source !== "domestic")) return null;
   return (
     <group
       ref={groupRef}

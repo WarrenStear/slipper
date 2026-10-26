@@ -75,10 +75,10 @@ export function createSaplingLeafGeometry(rich: boolean) {
 
 /** Moss follows the same stone surface: no floating shell or z-fighting overlay. */
 export function createMossStoneGeometry() {
-  const geometry = new THREE.IcosahedronGeometry(1, 2);
+  const geometry = new THREE.IcosahedronGeometry(1, 3);
   const position = geometry.getAttribute("position") as THREE.BufferAttribute;
   const shades = new Float32Array(position.count * 3);
-  const stone = new THREE.Color("#81877d"), moss = new THREE.Color("#566948"), tint = new THREE.Color();
+  const stone = new THREE.Color("#d6d7c7"), moss = new THREE.Color("#91a565"), tint = new THREE.Color();
   let floor = Infinity;
   for (let i = 0; i < position.count; i++) {
     const x = position.getX(i), y = position.getY(i), z = position.getZ(i);
@@ -93,8 +93,28 @@ export function createMossStoneGeometry() {
   for (let i = 0; i < position.count; i++) position.setY(i, position.getY(i) - floor);
   position.needsUpdate = true;
   geometry.setAttribute("color", new THREE.Float32BufferAttribute(shades, 3));
-  geometry.computeVertexNormals(); geometry.computeBoundingBox(); geometry.computeBoundingSphere();
+  geometry.computeVertexNormals();
+  // IcosahedronGeometry is unindexed at UV seams; average coincident normals
+  // after weathering so the rock keeps its irregular contour without facets.
+  const normal = geometry.getAttribute("normal"), sums = new Map<string, THREE.Vector3>();
+  const keys: string[] = [];
+  for (let i = 0; i < position.count; i++) {
+    const key = [position.getX(i), position.getY(i), position.getZ(i)].map(n => n.toFixed(5)).join(",");
+    keys.push(key);
+    const sum = sums.get(key) ?? new THREE.Vector3();
+    sum.add(new THREE.Vector3(normal.getX(i), normal.getY(i), normal.getZ(i))); sums.set(key, sum);
+  }
+  for (let i = 0; i < normal.count; i++) { const n = sums.get(keys[i])!.normalize(); normal.setXYZ(i, n.x, n.y, n.z); }
+  geometry.computeBoundingBox(); geometry.computeBoundingSphere();
   return geometry;
+}
+
+/** Centred unit envelope for pre-existing shoreline transforms. */
+export function createShoreStoneGeometry() {
+  const geometry = createMossStoneGeometry(), box = geometry.boundingBox!;
+  const centre = box.getCenter(new THREE.Vector3()), size = box.getSize(new THREE.Vector3());
+  geometry.translate(-centre.x, -centre.y, -centre.z).scale(1.8 / size.x, 1.8 / size.y, 1.8 / size.z);
+  geometry.computeBoundingBox(); geometry.computeBoundingSphere(); return geometry;
 }
 
 export function createFallenBranchGeometry() {

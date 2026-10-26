@@ -123,6 +123,16 @@ One shadow-casting light was recorded at high quality and zero on the low mobile
 
 This is a material and lighting upgrade to a functioning procedural world. It is not a completed photoreal production-art replacement. The actual screenshots retain angular foreground rocks, sparse distant crowns and a schematic willow silhouette, which still need a dedicated modelling pass.
 
+## Woodland modelling and blue twilight pass — 26 October 2026
+
+This checkpoint adds a split, curved willow bole, asymmetric boughs and attached hanging branchlets; broader tree crowns with smoother high-tier branch curves; and smoothly shaded, irregular stones with a generated weathered-granite albedo. The willow pool and sanctuary banks gain grounded rocks, rushes and textured sediment. Two bounded instance batches add fern/grass colonies outside the actual curved routes. Moss and damp-earth variation enrich the terrain material without changing its height or collision surface. Four mist banks reuse the existing atmospheric shader and clock on high/cinematic tiers.
+
+Outdoor scenes share a blue twilight gradient and one textured blue moon painted into the distant sky, including low/reduced-effects tiers. Local chapter moons are suppressed when the global sky owns the image. Enclosed room lighting is preserved. The warm carried lantern follows the camera. Free Woods explicitly restores that carried presentation after the ending and suppresses its placed copy, while retaining the canonical placed object state and accepted events.
+
+The first twilight review passed four desktop views, one low portrait view, three return loops and the placed-ending → Free Woods lantern transition without page or console errors. The runtime review confirms one carried lantern in front of the camera, no second placed lantern in Free Woods, and unchanged story state. Type checking and the focused geometry, material-history, lantern and twilight checks pass. The full project check and final browser QA were still running at this user-requested checkpoint; final results will follow in this document.
+
+Evidence is outside the repository at `../artifacts/woodland-art-pass-20261025/`. Intermediate `v1/`, `v2/`, `final/` and `twilight-v1/` folders are retained as such; the final qualified twilight review will be recorded separately. Generated texture provenance and the exact stone prompt are in `public/textures/forest/GENERATED_MATERIALS.md`.
+
 ## Remaining production work
 
 - Finish and review the major hero assets: figures, house, bridge, domestic props, tree libraries and destination-specific set dressing. Existing fallback art still appears; this branch does not qualify it as finished production artwork.

@@ -675,6 +675,7 @@ function ExperienceApplication() {
       {mode !== "map" ? (
         <Suspense fallback={<div className="forest-loader" role="status">Drawing the nearby wood…</div>}>
           <WorldCanvas
+            freeWoods={experienceMode === "free-woods"}
             key={`continuous-world:${sceneRelocationRevision}:${sceneResetNonce}`}
             entryId={resolvedActiveEntryId}
             entries={entries}

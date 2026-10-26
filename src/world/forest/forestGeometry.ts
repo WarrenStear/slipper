@@ -31,13 +31,13 @@ type GeometryBuffers = {
 const toVector = (p: Vector3Tuple) => new THREE.Vector3(...p);
 export const FOREST_REFERENCE_TRUNK_SCALE = Object.freeze([0.3, 12, 0.3] as const);
 const referenceTrunkScale = FOREST_REFERENCE_TRUNK_SCALE;
-export const FOREST_REFERENCE_CROWN_SCALE = Object.freeze([1.5, 2.15, 1.45] as const);
+export const FOREST_REFERENCE_CROWN_SCALE = Object.freeze([2.25, 2.55, 2.15] as const);
 export const FOREST_REFERENCE_CROWN_HEIGHT = 10.3;
 const rootAngles = [.18, 1.74, 3.28, 4.86];
 // Trunk points are authored in metre space for a 12m tree, then normalized for
 // the established anisotropic trunk matrix. Core topology stays identical.
 // Unequal branch birth heights and bole bends distinguish age and growth habit.
-// All forms retain the exact six-ring/eight-side trunk and six supported limbs.
+// All forms retain the six-ring/twelve-side trunk and six curved, supported limbs.
 const TREE_FORMS: TrunkForm[] = [
   { spine: [[0, 0, 0], [.04, .65, -.03], [-.09, 3.2, .05], [.12, 5.8, .02], [.02, 8.4, -.06], [.13, 12, .04]], lift: [.2, .35, .1, .15, .1, .3], turns: [.1, 1.3, 2.5, 3.7, 4.7, 5.8], widths: [1.1, 1, .82, .96, .84, .68], root: 1.05, births: [4.7, 5.8, 7.4, 5.1, 6.8, 4.4], radii: [.43, .34, .29, .235, .13, .018] },
   { spine: [[0, 0, 0], [.015, .65, .02], [-.04, 3.2, -.02], [.035, 5.8, -.05], [.08, 8.4, .02], [.07, 12, -.02]], lift: [1.4, 1.65, 1.6, 1.3, .95, .72], turns: [.25, 1.45, 2.7, 3.9, 5.1, 6.15], widths: [.65, .75, .7, .6, .5, .45], root: .82, births: [5.1, 5.9, 7.1, 8.3, 9.2, 10.1], radii: [.29, .24, .2, .155, .09, .018] },
@@ -138,7 +138,8 @@ function finish(data: GeometryBuffers, name: string) {
   geometry.computeBoundingSphere();
   return geometry;
 }
-function trunkAt(type: number) {
+function trunkAt(type: number, detail: ForestGeometryDetail = 2) {
+  const rich = detail === 2;
   const form = TREE_FORMS[type], data = buffers();
   const spine = form.spine.map(point => [...point] as Vector3Tuple);
   // Living leaders taper into the central foliage instead of ending as a sawn
@@ -147,7 +148,7 @@ function trunkAt(type: number) {
     const [x, y, z] = CROWN_FORMS[type].islands[6];
     spine[5] = [x * FOREST_REFERENCE_CROWN_SCALE[0], FOREST_REFERENCE_CROWN_HEIGHT + y * FOREST_REFERENCE_CROWN_SCALE[1], z * FOREST_REFERENCE_CROWN_SCALE[2]];
   }
-  const leader = addTube(data, spine, form.radii, 8, true);
+  const leader = addTube(data, spine, form.radii, rich ? 12 : 8, true);
   const spineAtHeight = (height: number): THREE.Vector3 => {
     const next = spine.findIndex(point => point[1] >= height);
     if (next <= 0) return toVector(spine[Math.max(0, next)]);
@@ -158,7 +159,7 @@ function trunkAt(type: number) {
     const reach = (1.08 + (i % 2) * .13) * form.root;
     const rootAngle = angle + Math.sin(type * 1.3 + i) * .11;
     addTube(data, [[Math.cos(rootAngle) * .19, .4 * form.root, Math.sin(rootAngle) * .19],
-      [Math.cos(rootAngle) * reach, .055, Math.sin(rootAngle) * reach]], [.15 * form.root, .028], 4);
+      [Math.cos(rootAngle) * reach, .055, Math.sin(rootAngle) * reach]], [.15 * form.root, .028], rich ? 5 : 4);
   });
   const branchTipVertexIndices: number[] = [];
   for (let i = 0; i < 6; i++) {
@@ -171,7 +172,9 @@ function trunkAt(type: number) {
       .12 + form.lift[i] * .16,
       Math.sin(form.turns[i]) * bend,
     )).toArray();
-    const branch = addTube(data, [base.toArray(), middle, end], [.13, .075, .014].map(r => r * form.widths[i]), 3);
+    const curve = new THREE.CatmullRomCurve3([base, toVector(middle), toVector(end)]);
+    const points = (rich ? [0, .25, .5, .75, 1] : [0, .5, 1]).map(t => curve.getPoint(t).toArray());
+    const branch = addTube(data, points, (rich ? [.13, .108, .075, .042, .014] : [.13, .075, .014]).map(r => r * form.widths[i]), rich ? 5 : 3);
     branchTipVertexIndices.push(branch.endCapVertexIndex);
   }
   const oldLimbTips: number[] = [];
@@ -254,8 +257,8 @@ export function createForestTrunkGeometry() {
 export function createOrganicCrownGeometry(detail: ForestGeometryDetail = 0) {
   return crownAt(0, detail);
 }
-export function createForestTrunkLibrary() {
-  return library(trunkAt, "eight-authored-trunk-library");
+export function createForestTrunkLibrary(detail: ForestGeometryDetail = 2) {
+  return library(i => trunkAt(i, detail), `eight-authored-trunk-library:detail-${detail}`);
 }
 export function createForestCrownLibrary(detail: ForestGeometryDetail = 0) {
   return library(i => crownAt(i, detail), `eight-authored-crown-library:detail-${detail}`);
