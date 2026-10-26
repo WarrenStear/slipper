@@ -1,6 +1,8 @@
 import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
+import { indexExactAttributes } from "./authoredGeometry.ts";
+
 type Point = [number, number, number];
 
 function limb(parts: THREE.BufferGeometry[], start: Point, end: Point, radius: number, radialSegments = 7) {
@@ -74,15 +76,17 @@ export function createSaplingLeafGeometry(rich: boolean) {
 }
 
 /** Moss follows the same stone surface: no floating shell or z-fighting overlay. */
-export function createMossStoneGeometry() {
-  const geometry = new THREE.IcosahedronGeometry(1, 2);
+export function createMossStoneGeometry(detail = 3) {
+  const geometry = new THREE.IcosahedronGeometry(1, detail);
   const position = geometry.getAttribute("position") as THREE.BufferAttribute;
   const shades = new Float32Array(position.count * 3);
-  const stone = new THREE.Color("#81877d"), moss = new THREE.Color("#566948"), tint = new THREE.Color();
+  const stone = new THREE.Color("#b5b9af"), moss = new THREE.Color("#798653"), tint = new THREE.Color();
   let floor = Infinity;
   for (let i = 0; i < position.count; i++) {
     const x = position.getX(i), y = position.getY(i), z = position.getZ(i);
-    const contour = 1 + Math.sin(x * 5.7 + z * 4.3) * .075 + Math.cos(z * 7.1 - y * 3.6) * .035;
+    const weathering = 1 + Math.sin(x * 5.7 + z * 4.3) * .055 + Math.cos(z * 7.1 - y * 3.6) * .025;
+    const contour = Math.min(weathering, .91 / Math.max(.01, Math.abs(x * .81 + y * .31 + z * .49)),
+      .94 / Math.max(.01, Math.abs(-x * .36 + y * .88 + z * .3)));
     const py = y * .53 * contour;
     position.setXYZ(i, x * contour, py, z * contour * .79); floor = Math.min(floor, py);
     const patch = .5 + .5 * Math.sin(x * 6.2 + Math.cos(z * 5.4) * 1.7);
@@ -93,8 +97,29 @@ export function createMossStoneGeometry() {
   for (let i = 0; i < position.count; i++) position.setY(i, position.getY(i) - floor);
   position.needsUpdate = true;
   geometry.setAttribute("color", new THREE.Float32BufferAttribute(shades, 3));
-  geometry.computeVertexNormals(); geometry.computeBoundingBox(); geometry.computeBoundingSphere();
+  geometry.computeVertexNormals();
+  // IcosahedronGeometry is unindexed at UV seams; average coincident normals
+  // after weathering so the rock keeps its irregular contour without facets.
+  const normal = geometry.getAttribute("normal"), sums = new Map<string, THREE.Vector3>();
+  const keys: string[] = [];
+  for (let i = 0; i < position.count; i++) {
+    const key = [position.getX(i), position.getY(i), position.getZ(i)].map(n => n.toFixed(5)).join(",");
+    keys.push(key);
+    const sum = sums.get(key) ?? new THREE.Vector3();
+    sum.add(new THREE.Vector3(normal.getX(i), normal.getY(i), normal.getZ(i))); sums.set(key, sum);
+  }
+  for (let i = 0; i < normal.count; i++) { const n = sums.get(keys[i])!.normalize(); normal.setXYZ(i, n.x, n.y, n.z); }
+  indexExactAttributes(geometry);
+  geometry.computeBoundingBox(); geometry.computeBoundingSphere();
   return geometry;
+}
+
+/** Centred unit envelope for pre-existing shoreline transforms. */
+export function createShoreStoneGeometry() {
+  const geometry = createMossStoneGeometry(), box = geometry.boundingBox!;
+  const centre = box.getCenter(new THREE.Vector3()), size = box.getSize(new THREE.Vector3());
+  geometry.translate(-centre.x, -centre.y, -centre.z).scale(1.8 / size.x, 1.8 / size.y, 1.8 / size.z);
+  geometry.computeBoundingBox(); geometry.computeBoundingSphere(); return geometry;
 }
 
 export function createFallenBranchGeometry() {
@@ -104,4 +129,29 @@ export function createFallenBranchGeometry() {
   limb(parts, [-.06, .065, .025], [.28, .12, .36], .025, 5);
   limb(parts, [.2, .058, .025], [.41, .09, -.25], .018, 5);
   return finish(parts);
+}
+
+
+/** Young understory crowns use the same cutout twig image as the canopy, with
+ * open, overlapping sprays rather than oversized solid diamond leaves. */
+export function createSaplingSprayGeometry() {
+  const positions: number[] = [], uvs: number[] = [], colors: number[] = [], indices: number[] = [];
+  const shelves: Point[] = [[-.58, 2.8, -.17], [.51, 3.14, .27], [.08, 3.67, .04]];
+  for (const [shelf, centre] of shelves.entries()) for (let i = 0; i < 20; i++) {
+    const a = i * 2.39996 + shelf, t = (i + .5) / 20, radius = Math.sqrt(t) * .68;
+    const c = new THREE.Vector3(centre[0] + Math.cos(a) * radius, centre[1] + Math.sin(a * 1.7) * .34, centre[2] + Math.sin(a) * radius * .8);
+    const along = new THREE.Vector3(Math.cos(a), .35 + Math.sin(a * 2) * .7, Math.sin(a)).normalize().multiplyScalar(.34);
+    const across = new THREE.Vector3(-Math.sin(a), .18, Math.cos(a)).multiplyScalar(.29);
+    const offset = positions.length / 3;
+    for (const [x, y] of [[-1,-1],[-1,1],[1,1],[1,-1]]) {
+      c.clone().addScaledVector(along, y).addScaledVector(across, x).toArray(positions, positions.length);
+      const shade = .72 + t * .22; colors.push(shade * .92, shade, shade * .85);
+    }
+    uvs.push(0,0,1,0,1,1,0,1); indices.push(offset,offset+1,offset+2,offset,offset+2,offset+3);
+  }
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
+  geometry.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
+  geometry.setIndex(indices); geometry.computeVertexNormals(); geometry.computeBoundingBox(); geometry.computeBoundingSphere(); return geometry;
 }

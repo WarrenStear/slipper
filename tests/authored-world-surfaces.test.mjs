@@ -45,7 +45,7 @@ test('unknown quality falls back safely and reduced effects never adds more deta
 });
 
 for (const [name, build, max] of [
-  ['base fern',()=>createFernGeometry(false),270],['relief fern',()=>createFernGeometry(true),530],
+  ['base fern',()=>createFernGeometry(false),328],['relief fern',()=>createFernGeometry(true),530],
   ['rush',createRushGeometry,120],['litter',createLeafLitterGeometry,24],
   ['deadwood',createDeadwoodGeometry,378],['root threshold',createRootThresholdGeometry,1186],
 ]) {
@@ -128,7 +128,7 @@ test('replacement rushes remove the earlier untextured stick batch', () => {
 test('chapter ground reuses existing compressed art with private transform/disposal and a local fallback', () => {
   const s=read('src/components/three/environment/ChapterGroundMaterial.tsx');
   assert.match(s,/useTexture\("\/textures\/forest\/ground-albedo-v3\.webp"\)/);
-  for(const fragment of ['source.clone()', 'THREE.SRGBColorSpace', 'THREE.RepeatWrapping', 'map.dispose()', 'getDerivedStateFromError', '<Suspense fallback={fallback}>'])assert.ok(s.includes(fragment));
+  for(const fragment of ['createForestImageSampler(source, [radius * 2 / 3.4, radius * 2 / 3.4])', 'map.dispose()', 'getDerivedStateFromError', '<Suspense fallback={fallback}>'])assert.ok(s.includes(fragment));
   assert.doesNotMatch(s,/source\.dispose|WebGLRenderTarget|useFrame|TextureLoader/);
 });
 

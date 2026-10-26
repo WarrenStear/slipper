@@ -33,14 +33,14 @@ No chapter, scene, fragment, event, save version or inventory schema was added o
 
 ## Asset provenance and budgets
 
-All new runtime geometry is authored in repository code using the existing Three.js geometry helpers. It adds no remotely hosted media, model downloads, package dependencies, texture files or third-party asset licence obligations. The generated willow concept is a local visual reference only, not a runtime skybox or a replacement for original imagery. Existing production-asset admission and placeholder declarations remain unchanged.
+All new runtime geometry is authored in repository code using the existing Three.js geometry helpers. It adds no remotely hosted media, model downloads or package dependencies. The subsequent graphics pass adds three locally generated material textures with provenance and exact prompts in [GENERATED_MATERIALS.md](../public/textures/forest/GENERATED_MATERIALS.md). These are generated approximations, not scanned PBR materials. The generated willow concept remains a local visual reference only, not a runtime skybox or a replacement for original imagery. Existing production-asset admission and placeholder declarations remain unchanged.
 
 | Quality | Additional nearby scenes | Radius before retention | Willow trunk/branches + leaves |
 | --- | ---: | ---: | ---: |
-| Low / reduced effects | 3 | 48 m | 13,888 triangles |
-| Medium | 4 | 56 m | 13,888 triangles |
-| High | 5 | 64 m | 36,544 triangles |
-| Cinematic | 6 | 72 m | 36,544 triangles |
+| Low / reduced effects | 3 | 48 m | 28,490 triangles |
+| Medium | 4 | 56 m | 28,490 triangles |
+| High | 5 | 64 m | 51,530 triangles |
+| Cinematic | 6 | 72 m | 51,530 triangles |
 
 The active chapter is additional only while physically nearby. Understory, pool and path geometry have small fixed counts. The willow uses bounded merged meshes; its detailed subtree has 105/125 metre enter/exit distances. Scenery-only material detail is base regardless of the player's main quality tier. The distant woodland keeps two instanced draws and repacks at camera-cell boundaries. The existing hero-reflection budget remains authoritative.
 
@@ -67,9 +67,23 @@ The desktop and mobile commands together run the same five-project matrix as `np
 - Final explicit `npm run test:unit`: **1,378 passed, zero failed**. This includes spatial residency, stable origins, original path preservation, exact terrain/pool agreement, bounded willow geometry, accepted object residence, raised-support grounding and a full bidirectional Rapier bridge traversal.
 - Browser scenery review: **128 scene/quality visits passed**, covering all 32 scene footprints at low, medium, high and cinematic settings. Scenery inspection left canonical story state unchanged. Three repeated return loops retained exactly **102 geometries and 17 textures** each. No browser console or page errors were recorded.
 - Source comparison: approved archive, canonical narrative definitions, chapter event definitions, journey store and save-state model are unchanged from the baseline. `git diff --check` passes.
-- At this checkpoint the desktop end-to-end matrix is still running; the mobile matrix follows. Final counts will be recorded after those runs complete. The results above do not imply that the complete browser matrix has already passed.
+- The initial desktop matrix completed with **84 passed, 20 skipped and 55 failed**. All 53 WebKit tests failed before app loading with `Page.overrideSetting: Unknown setting: PushAPIEnabled` (Playwright 1.62.0 selects its older macOS 14 WebKit revision 2251). Two Chromium tests failed: keyboard access after returning to Free Woods, and the second wipe in the opening. These failures remain recorded in the initial report. The Free Woods handoff has since been corrected. Both previously failing Chromium tests pass on the final production build with native Metal (2/2, 24.6 seconds); the opening needed no story-rule changes. No assertions or browser projects were disabled to hide failures.
 
-## Measured rendering cost
+### Final-build browser qualification
+
+The three available projects ran serially against the same production build with native Metal on macOS. The complete run took 30.2 minutes: **135 passed, 23 skipped, one failed**. Report breakdown:
+
+| Project | Passed | Existing platform skips | Failed |
+| --- | ---: | ---: | ---: |
+| Desktop Chromium | 48 | 5 | 0 |
+| Firefox | 38 | 15 | 0 |
+| Mobile Chromium | 49 | 3 | 1 |
+
+The mobile failure was a strict-locator ambiguity in the recovery test, not a failed recovery: the trace shows the route cleared, active entry retained, and `Returned safely to The vision.` announced. Free Woods now also exposes the separate quiet-guidance live region, so `p[role=status]` correctly matched two elements. The test now targets the screen-reader recovery paragraph specifically; its route and active-entry assertions are unchanged. The **entire five-test mobile exploration file then passed (5/5, 18.8 seconds)**, including trusted touch movement/look, portrait/landscape controls, input cancellation and recovery. The whole 159-case suite was not repeated after this test-only selector correction; its initial failure report is preserved alongside the passing rerun.
+
+The 23 skips are existing platform-specific guards, not additions from this branch. Desktop Chromium and Firefox completed without failures. The initial WebKit failures remain an environment qualification gap: this machine's Playwright 1.62.0 macOS 14 override starts WebKit revision 2251, which rejects `PushAPIEnabled` before an app page is created. An isolated mobile-WebKit startup probe reproduced the same `PushAPIEnabled` error while setting up the page (one failed probe, before app loading); the full mobile-WebKit project could not be qualified on this host. No browser implementation or assertion was patched to conceal that incompatibility. No hosted CI run for this branch is claimed; the checked workflows trigger on main or pull requests, not ordinary feature-branch pushes.
+
+## Measured rendering cost — initial streaming checkpoint
 
 Matched fixed views used Chromium on **Apple M1 / ANGLE Metal**, a 1,440 × 900 viewport, DPR 1 and the high quality profile. These are short frame-interval samples from the review fixture, with physics paused and the camera fixed. They are not isolated CPU/GPU timings or long-duration gameplay benchmarks. The baseline was an immutable checkout of `33775918`, using the same fixture and hardware.
 
@@ -84,6 +98,110 @@ Matched fixed views used Chromium on **Apple M1 / ANGLE Metal**, a 1,440 × 900 
 The additional draw calls include real nearby chapters that were absent from the baseline view. This is a content-cost increase, not a draw-call optimization claim. The low-quality portrait capture runs on the same Mac GPU; it does not establish a real phone's frame rate, thermal behavior or memory budget. GPU resource counts are allocation counts, not measured bytes or proof of leak freedom over unlimited play time.
 
 Local before/after PNGs, the generated concept reference and both measurement JSON files are saved outside the repository at `../artifacts/continuous-world-rebuild-20261024/`. The implementation screenshots show the actual procedural result; the concept is clearly separate. Nothing in that evidence directory is bundled into the application.
+
+## Mystical woodland graphics pass — 25 October 2026
+
+- Ground v4 replaces the very dark continuous-forest albedo with mid-value earth, moss and decomposed leaves. Its 376,292-byte WebP fits the existing 400 KB terrain budget; the final-world audit now checks the active file.
+- A generated weathered-bark map replaces canvas stripes in the continuous forest and gives the willow trunk and exposed roots real image detail. A 512-square RGBA twig spray replaces diamond leaf silhouettes across the continuous forest, chapter groves and distant crowns. Four vertices and two triangles per card preserve the existing instance and topology budgets. Each material sampler clone is disposed by its owner; loader source images remain shared.
+- Warm woodland sunlight, a cool sky fill and blue-green haze provide depth. High and cinematic tiers share one bounded 1024-square shadow map. The outdoor source and target shift together in scene-local coordinates as the camera explores, maintaining the authored light angle. Low/reduced-effects tiers keep shadows off. Domestic light position remains anchored, and the meadow's accepted warming effect remains distinct.
+- Free Woods suppresses the already-completed authored arrival handoff, keeping walking and reading controls available on return. The first story playthrough still uses its original transitions.
+- Local Chromium E2E rendering selects native Metal on macOS; Linux retains SwiftShader. `PLAYWRIGHT_ANGLE=swiftshader` explicitly restores software rendering for comparison. Full Chromium is also used by the graphics review. The fixture preloads its dependencies to avoid a Rapier initialization race and captures a screenshot on failure.
+- Canopy coverage tests now test intersection UVs against a SHA-pinned alpha mask from the compressed runtime image. A card's transparent margin is no longer counted as solid foliage. Original geometry bounds, central air gaps, instance caps and all narrative-state assertions remain checked.
+
+
+The graphics pass subsequently passed `npm run check` again (1,378 unit tests and seven security tests), followed by a fresh final production build and the updated terrain budget check. Its 128 scene/quality visits passed with no page or console errors; three return loops retained **102 geometries and 25 textures**. Native Metal frame samples at high quality were:
+
+| View | Draws / triangles, including shadows | Median / p95 frame interval |
+| --- | ---: | ---: |
+| First woodland | 106 / 393,397 | 16.7 / 17.4 ms |
+| Willow | 77 / 329,249 | 16.7 / 17.3 ms |
+| Sanctuary approached from wood | 129 / 195,325 | 16.7 / 17.5 ms |
+| Meadow return | 68 / 310,699 | 16.7 / 17.5 ms |
+| Willow, low, 390 × 844 | 48 / 127,070 | 16.7 / 17.8 ms |
+
+One shadow-casting light was recorded at high quality and zero on the low mobile-sized capture. These are short steady-view samples from the development review fixture, not production startup or sustained phone benchmarks. Earlier intermediate captures encountered cold shader/loading stalls and were retained as failed/intermediate evidence; their frame rates are not represented by this final table. The baseline used the prior headless-shell Chromium entry point, so the before/after GPU-work counts are more comparable than an inferred speedup between those browser entry points. Final graphics captures and measurements are in `graphics-final/` within the evidence directory.
+
+This is a material and lighting upgrade to a functioning procedural world. It is not a completed photoreal production-art replacement. At that checkpoint, the screenshots retained angular foreground rocks, sparse distant crowns and a schematic willow silhouette; the following modelling pass addresses those areas.
+
+## Woodland modelling and blue twilight pass — 26 October 2026
+
+This checkpoint adds a split, curved willow bole, asymmetric boughs and attached hanging branchlets; broader tree crowns with smoother high-tier branch curves; and smoothly shaded, irregular stones with a generated weathered-granite albedo. The willow pool and sanctuary banks gain grounded rocks, rushes and textured sediment. Two bounded instance batches add fern/grass colonies outside the actual curved routes. Moss and damp-earth variation enrich the terrain material without changing its height or collision surface. Four mist banks reuse the existing atmospheric shader and clock on high/cinematic tiers.
+
+Outdoor scenes share a blue twilight gradient and one textured blue moon painted into the distant sky, including low/reduced-effects tiers. Local chapter moons are suppressed when the global sky owns the image. Enclosed room lighting is preserved. The warm carried lantern follows the camera. Free Woods explicitly restores that carried presentation after the ending and suppresses its placed copy, while retaining the canonical placed object state and accepted events.
+
+The user-requested checkpoint was committed and pushed as `c20eee2`. The subsequent full `npm run check` passed: 1,384 unit tests, seven security tests, content validation, application and Functions type checks, production build, and local Cloudflare Functions compilation. The first full run exposed an atmosphere test harness that did not provide the newly imported shared moon texture; that harness now supplies the dependency and additionally checks all quality/reduced-effects combinations, indoor/outdoor visibility, and owned-versus-borrowed texture disposal. The existing large-chunk build warning remains; this pass does not claim to reduce bundle size.
+
+The final real-scene review passed all 128 scene/quality visits, three return loops, and the placed-ending → Free Woods lantern transition without page or console errors. It confirms one carried lantern in front of the moving camera, no second placed lantern in Free Woods, and unchanged story state. All three return loops retained **108 geometries and 30 textures**. Resource counts are allocation counts, not measured GPU bytes. Native Chromium/Metal on Apple M1, desktop 1440 × 900 DPR 1 and low portrait 390 × 844 DPR 1, recorded:
+
+| View | Draws / triangles, including shadows | Median / p95 frame interval |
+| --- | ---: | ---: |
+| First woodland | 112 / 581,989 | 16.7 / 26.2 ms |
+| Willow | 84 / 511,097 | 16.8 / 42.5 ms |
+| Sanctuary approached from wood | 137 / 308,241 | 16.7 / 17.1 ms |
+| Meadow return | 71 / 467,935 | 17.2 / 69.8 ms |
+| Blue-moon sky view | 60 / 451,387 | 16.7 / 18.7 ms |
+| Willow, low, 390 × 844 | 53 / 198,370 | 16.7 / 17.7 ms |
+
+These short samples include traversal/settling work. The high p95 values at the willow and meadow show remaining frame-time spikes; median values alone are not evidence of consistently smooth 60 fps. An intermediate run was paced near 33.3 ms across all views. A later empty-page rAF control measured 16.7 / 17.6 ms, so the evidence retains both runs without attributing the difference to a proven cause. This is more geometry and texture work than the prior art pass. Low/medium use the original 292-triangle trunk library while high/cinematic use 548 triangles per trunk; instanced floor vegetation remains two bounded draws. No actual phone, thermal or long-duration GPU-memory qualification is claimed.
+
+Production preview health passed at `http://127.0.0.1:4189/`: correct title, meaningful onboarding, Begin → rendered canvas and experience root, no Vite error overlay, and no page errors or console warnings. Browser plugin was unavailable; validation used the repository-pinned Playwright 1.62 Chromium with native Metal. Production interaction QA passed **2/2 desktop tests** (physical opening wipe/reload/inversion/click handoff; completed constellation → dedication → Free Woods/Archive/Constellation) and **5/5 mobile Chromium tests** (handedness, portrait/landscape maps, route recovery, input cancellation, and trusted touch position/look changes). Commands used `PLAYWRIGHT_TEST_BASE_URL=http://127.0.0.1:4189`, `npm run test:e2e`, the corresponding `chromium` / `mobile-chromium` projects, and external artifact output directories. Safari/WebKit remains unqualified because the installed Playwright WebKit runtime previously failed before application startup with `Page.overrideSetting: Unknown setting: PushAPIEnabled`; it was not rerun or represented as passing in this art pass.
+
+Evidence is outside the repository at `../artifacts/woodland-art-pass-20261025/`. Intermediate `v1/`, `v2/`, `final/` and `twilight-v1/` folders are retained as such; `twilight-final/` contains the final qualified twilight captures and measurement JSON. Generated texture provenance and the exact stone prompt are in `public/textures/forest/GENERATED_MATERIALS.md`.
+
+## Forest density and traversal smoothing — 26 October 2026
+
+Living tree families now have fuller twig sprays at the same canopy vertex count. A second vegetation layer adds young trees with textured bark and open leaf clusters, capped at 24/40/64/80 instances for low/medium/high/cinematic. Bark and crowns add two instanced draws, bringing the nearby floor habitat to four. Ferns have more leaflets and simpler rachis tubes. Young trees stay outside the actual curved routes and the willow's immediate 18-metre foreground; their maximum scaled crown radius is tested below the two-metre clearance envelope. Terrain heights and colliders are unchanged.
+
+The willow has narrower leaves, subtle midribs, more attached hanging strands and a slightly lower branch crest. Its current triangle budgets are reflected in the table above. The sanctuary bank has finer irregular contours, lighter sediment tint and small gravel among the larger stones and rushes. Gravel joins the existing stone batch, keeping shoreline dressing at three draws. Blue twilight, the textured blue moon, camera-carried lantern and canonical ending placement remain intact. This pass reuses existing textures and adds no asset downloads or dependencies.
+
+Two measured sources of traversal hitches were addressed:
+
+- CPU profiles identified first-use shader validation/compilation waits. Nearby scene and willow materials now start compilation inside the same render target as their eventual beauty draw, at most one bounded region per frame. On drivers supporting parallel compilation, scenery receives a 250 ms lead before visibility. Active story objects stay immediate. Cancellation is synchronous and cannot later access disposed resources; unsupported drivers and oversized batches keep normal rendering. This is a bounded preparation interval, not a GPU readiness guarantee. Shader diagnostics remain enabled.
+- Shoreline stones now index their template once before cloning, preserving UV/normal seams and avoiding repeated vertex hashing for each stone. Overlapping forest-floor windows reuse grounded candidates in a 2,048-entry cache, reset when the ground/path/morph inputs change. Determinism, curved-route clearance, quality caps and cache bounds are tested.
+
+`REVIEW_WALK=1` adds a reproducible 36-second moving-camera profile to `scripts/review-continuous-world.mjs`. It follows the wood → willow → sanctuary route twice, saves Chrome CPU profiles and raw frame intervals, and avoids the fixture's heavy inspection traversal during sampling. The baseline is immutable commit `7775f91`; both runs use pinned Playwright Chromium with native ANGLE Metal on Apple M1, high quality, 1440 × 900 and DPR 1. Physics is paused in this graphics fixture, so these results measure rendering/streaming rather than complete controller-driven gameplay.
+
+| Traversal | Baseline median / p95 | Updated median / p95 | Baseline → updated maximum | Frames over 50 ms, baseline → updated |
+| --- | ---: | ---: | ---: | ---: |
+| First route | 16.7 / 17.6 ms | 16.7 / 18.6 ms | 788.7 → 97.7 ms | 4 → 4 |
+| Return route | 16.7 / 17.6 ms | 16.6 / 18.6 ms | 269.1 → 95.0 ms | 4 → 3 |
+
+The largest first-route hitch fell by approximately 88%, but there are still several 50–98 ms frames. Typical p95 rose by about one millisecond with the denser art; this is a reduction in worst stalls, not a universal frame-rate improvement or a claim of stutter-free 60 fps. First-route sampled CPU time in `getProgramInfoLog` fell from about 692 to 90 ms. Remaining construction, uploads and driver work warrant further profiling on target hardware.
+
+Final review passed 128 scene/quality visits, blue-moon and carried-lantern checks, unchanged story-state assertions, and the placed-ending → Free Woods transition. Three return loops retained exactly 110 geometries and 30 textures. No page or console errors were recorded. The final high-quality wood/willow/shoreline captures respectively recorded 114/86/139 draws and 639,369/582,877/340,763 triangles including shadows. Low portrait at 390 × 844 used 55 draws, 221,350 triangles and no shadow-casting light. These desktop-GPU measurements do not qualify physical phones or long-duration memory pressure.
+
+`npm run check` passed with 1,389 unit tests and seven security tests, plus content checks, application/Functions type checks, production build and local Worker compilation. The existing large-chunk warning remains. Approved narrative, events, save model, journey store and compiled world content are unchanged. Evidence is outside the repository at `../artifacts/forest-density-pass-20261026/`; `baseline/`, `v1/` and `final/` distinguish the comparison stages.
+
+Production preview QA at `http://127.0.0.1:4189/` passed page/title identity, meaningful onboarding, Begin → visible canvas/experience root, no framework overlay, and zero console warnings/page errors. The same final build passed both desktop Chromium interaction cases (opening wipe/reload/click handoff and completed constellation → dedication → Free Woods), plus all five mobile Chromium exploration tests (handedness, portrait/landscape maps, route recovery, cancellation and trusted touch movement/look). After removing an unused local array during final review, the affected 15 geometry/exploration tests passed again; that cleanup has no rendered effect. Browser plugin was unavailable, so the repository's pinned Playwright supplied browser QA. Safari/WebKit retains the previously documented pre-application `PushAPIEnabled` runtime blocker and was not rerun in this pass. The empty-page pacing control measured 16.7 / 17.9 ms median/p95.
+
+## Tree, stone and water realism — 26 October 2026
+
+The high/cinematic tree library adds two curved upper-bole rings and maps bark by distance along the branch or trunk, avoiding the stretched texture on tall leaders. Each high trunk is now 596 triangles; low/medium remain at 292. The eight-family paired trunk/crown capacity stays below 275,000 triangles. Crown population, rooted footprint, branch support, UV wrap seams and canonical paths retain their existing checks.
+
+Woodland accent stones now use the existing weathered-stone texture, matching the surrounding bank rocks instead of appearing as pale untextured forms. Their silhouettes have broad eroded planes, darker mineral colour, subtle veins and lichen. Water has crossing ripples, shallower sediment colour and a view-dependent reflection of the blue twilight gradient and moon. The reflection uses the sky's world direction, with ripple normals breaking up the reflected moon; it remains an opaque dielectric approximation in the existing single pass, not a live capture of nearby scenery. Reduced-motion water retains static ripple normals while its clock stays frozen; authored ritual stillness continues to settle the water surface. No new textures, models, packages or shadow maps were added.
+
+Traversal work addresses repeated geometry construction, lighting variants and texture uploads. Repeated shoreline rocks, gravel and reeds use three instanced batches plus the sediment mesh, replacing merged copies that were rebuilt on every visit. Shared dressing geometry is under 60 KB before instance matrices, with unchanged bank placements and bridge clearance. Repeated timber construction uses independently owned clones from a CPU-only template cache bounded to 64 entries and 8 MiB of buffers/keys. Templates never enter the rendered scene; eviction cannot dispose a live consumer's geometry.
+
+The opening room's underfloor blue light now obeys the existing active-scene presence rule. Diagnostics identified it as an unintended sixth light in the forest whenever the opening remained resident as scenery; evicting the room changed the shader light count and recompiled already-visible materials. The opening retains its original light while active. Wood, willow and shoreline now keep the same five global/carried lights during this route. The review asserts that count, and records light types and ancestor names.
+
+Woodland, chapter-floor and landscape image samplers now share the loader's unchanged image Source without incrementing its pixel version on every scenery mount. Each consumer still owns its repeat/offset/filter settings and disposal. The helper marks a fresh sampler ready before assigning the shared Source, uses public Three APIs, and adds no application GPU cache. The installed renderer handles GPU reference counting and reuploads after the last consumer releases a texture. This is restricted to these immutable image maps; compressed material delivery remains on its existing path. A real WebGL test checks one initial upload, no second upload for another sampler, equal rendered pixels after disposal/remount, and zero remaining textures after cleanup.
+
+The disposable review fixture supports optional `REVIEW_TRACE=1` draw-stall attribution and a close water capture. The final profile uses the same 36-second route as the fresh baseline at `d7156ab`. Both run on Apple M1 / Chromium ANGLE Metal, high quality, 1440 × 900, DPR 1, with physics paused. Production controller input is checked separately. Two unsuccessful experiments (legacy guidance light slots and staged image uploads) were removed; they did not establish a benefit on this route.
+
+| Traversal | Baseline median / p95 | Final median / p95 | Baseline → final maximum | Frames over 50 ms, baseline → final |
+| --- | ---: | ---: | ---: | ---: |
+| First 36-second route | 16.7 / 17.5 ms | 16.7 / 17.6 ms | 192.9 → 44.2 ms | 3 → 0 |
+| Return route | 16.7 / 17.6 ms | 16.7 / 17.7 ms | 305.3 → 71.0 ms | 5 → 1 |
+
+This comparison disables per-draw timing hooks on both sides while retaining the same Chrome CPU profiler. The final diagnostic run with draw-level timing enabled measured 121.3/109.3 ms maxima and 9/4 frames over 50 ms; ordinary p95 was 17.8/17.7 ms. These single-machine runs demonstrate reduced streaming costs, with substantial scheduling/diagnostic variability, not a guarantee of stutter-free gameplay. Sampled texture-upload time in that diagnostic run was 29/11 ms across the two routes, versus about 216/350 ms in the baseline; sampled shader-validation time was 48/44 ms versus 195/204 ms. The earlier shoreline geometry-construction hotspot also disappeared from the leading CPU costs. Some initial shaders and compressed material maps still require first-use work.
+
+The final art review passed all 128 scene/quality visits, carried-lantern/blue-moon assertions, unchanged story-state assertions, and placed-ending → Free Woods ownership. High-quality wood/willow/shore captures recorded 115/87/142 draws and 646,473/590,413/344,603 triangles including shadows. Low portrait at 390 × 844 recorded 56 draws, 221,350 triangles and no shadow-casting lights. All three return loops retained 111 geometries and 30 textures, with no growth. Page and console errors were empty. The added CPU template cache has its independent 64-entry/8 MiB bound.
+
+`npm run check` passed with 1,396 unit tests and seven security tests, content QA, application/Functions type checks, the production build and local Worker compilation. The existing large-chunk warning remains. Narrative content, canonical events, the journey/save model, terrain heights and colliders are unchanged. The opening's authored expressions are compared against their unchanged frozen fixture after normalizing only the new local-light wrapper/import; the original light position, colour, intensity and range remain exact.
+
+Production preview QA at `http://127.0.0.1:4189/` passed page/title identity, nonblank onboarding, Begin → visible canvas/experience root, no framework error overlay, and zero console warnings/page errors. Pinned Playwright Chromium was used because the Browser plugin was unavailable. Both desktop interaction tests passed (opening wipe/reload/click handoff and completed 3D constellation/dedication/Free Woods), as did all five mobile exploration tests (handedness, portrait/landscape maps, recovery, input cancellation and trusted touch movement/look). The empty-page pacing control measured 16.7 / 17.5 ms median/p95. Key commands were `npm run check`, `REVIEW_WALK=1 node scripts/review-continuous-world.mjs`, and the targeted `npm run test:e2e` desktop/mobile projects against the built preview.
+
+Evidence is outside the repository at `../artifacts/tree-stone-water-pass-20261026/`. `release/` contains the final full visual review and a diagnostic traversal profile; `release-untraced/` is the matching comparison without per-draw timing hooks. Earlier folders are intermediate investigations, including unsuccessful experiments. These desktop GPU measurements and mobile viewport emulation do not qualify physical phones, thermals, long-duration memory pressure or Safari. WebKit retains the previously documented pre-application `PushAPIEnabled` runtime blocker and was not rerun.
 
 ## Remaining production work
 

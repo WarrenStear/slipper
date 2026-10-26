@@ -18,9 +18,9 @@ const firstWoodOwner = 'src/scenes/first-wood/FirstWoodScene.tsx';
 const firstWoodBaselineOwner = 'src/scenes/first-wood/WoodlandBaselineFirstWoodScene.tsx';
 const copies = originals.map(p => [`src/components/three/${p}`, `src/components/three/${p.replace(/([^/]+)$/, 'WoodlandBaseline$1')}`]);
 const report = {
-  candidate: execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(), baseline, requestedAngle: angle,
+  candidate: execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(), baseline, requestedAngle: angle, browserChannel: 'chromium',
   candidateFirstWoodOwner: firstWoodOwner,
-  method: 'Same-camera, settled-profile source-component fixtures. Seeded ending state is appearance evidence only, not an earned gameplay completion. No real-device FPS claim.',
+  method: 'Same-camera, settled-profile source-component fixtures; capture freezes rendering after 25 warm-up frames and saves the full-viewport canvas framebuffer directly. Production entry uses page screenshots. Seeded ending state is appearance evidence only, not an earned gameplay completion. No real-device FPS claim.',
   captures: [], failures: [],
 };
 const processes = []; let browser;
@@ -59,19 +59,28 @@ useSettingsStore.setState({reducedMotion:true,reducedEffects:quality==='low'});u
 const Chapter=ending?(before?BeforeEnd:IntegratedFinalTableau):(before?BeforeWood:FirstWoodScene);
 const Fog=before?BeforeFog:CinematicAtmosphereDirector,Light=before?BeforeLight:CinematicLightingDirector;
 const profile=resolveCinematicProfile(sceneId,{});for(let i=0;i<300;i++)advanceCinematicProfile(profile,.1);
-function Evidence(){const {camera,scene,gl}=useThree(),frames=useRef(0);
+function Evidence(){const {camera,scene,gl,setFrameloop}=useThree(),frames=useRef(0);
  useLayoutEffect(()=>{if(ending){camera.position.set(0,3.3,6.5);camera.lookAt(0,4.8,-15);}else{camera.position.set(0,2.7,-8);camera.lookAt(0,2.8,6);}camera.updateProjectionMatrix();},[camera]);
  useFrame((_,delta)=>advanceCinematicProfile(profile,delta),-2);
- useFrame(()=>{if(++frames.current===25){let lights=0,shadowLights=0;const names=[],batches=[];scene.traverse(o=>{if(o.name)names.push(o.name);if(o.isLight){lights++;if(o.castShadow)shadowLights++;}if(o.isInstancedMesh)batches.push({name:o.name,count:o.count});});window.__woodlandEvidence={calls:gl.info.render.calls,triangles:gl.info.render.triangles,lights,shadowLights,names,batches,camera:camera.position.toArray(),fog:{density:scene.fog?.density,color:scene.fog?.color.getHexString()}};document.body.dataset.ready='true';}});return null;}
+ useFrame(()=>{if(++frames.current===25){let lights=0,shadowLights=0;const names=[],batches=[];scene.traverse(o=>{if(o.name)names.push(o.name);if(o.isLight){lights++;if(o.castShadow)shadowLights++;}if(o.isInstancedMesh)batches.push({name:o.name,count:o.count});});window.__woodlandEvidence={calls:gl.info.render.calls,triangles:gl.info.render.triangles,lights,shadowLights,names,batches,camera:camera.position.toArray(),fog:{density:scene.fog?.density,color:scene.fog?.color.getHexString()}};document.body.dataset.ready='true';setFrameloop('never');}});return null;}
 createRoot(document.getElementById('root')).render(<Canvas dpr={1} camera={{fov:65,near:.05,far:150}} gl={{antialias:true,preserveDrawingBuffer:true}}><color attach='background' args={['#080e11']}/><hemisphereLight args={['#b9c8cf','#30251e',.45]}/><Suspense fallback={null}><Physics paused><Chapter scene={scene} qualityProfile={RENDER_QUALITY_PROFILES[quality]} reducedEffects={quality==='low'} reducedMotion/></Physics><Light/><Fog/><Evidence/></Suspense></Canvas>);`;
 async function capture(which,width,height,quality,before){
   const ctx=await browser.newContext({viewport:{width,height},deviceScaleFactor:1,reducedMotion:'reduce'}),page=await ctx.newPage(),errors=[];
   const name=`${before?'before':'after'}-${which}-${quality}-${width}`;
-  page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
+  page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.location().url+': '+m.text());});
   try{
     await page.goto(`http://127.0.0.1:4194/.woodland-review/?case=${which}&quality=${quality}&before=${before?1:0}`,{waitUntil:'domcontentloaded',timeout:45000});
     await page.locator('body[data-ready="true"]').waitFor({timeout:90000});
-    await page.screenshot({path:`${out}/${name}.png`,timeout:60000});
+    // This fixture contains only the full-viewport canvas. Read its preserved
+    // framebuffer instead of waiting on Chromium's software-GPU compositor.
+    const png = await page.locator('canvas').evaluate(canvas => {
+      const bounds = canvas.getBoundingClientRect();
+      if (bounds.x !== 0 || bounds.y !== 0 || bounds.width !== innerWidth || bounds.height !== innerHeight
+        || canvas.width !== innerWidth || canvas.height !== innerHeight) throw new Error('Fixture canvas must cover the viewport at DPR 1');
+      return canvas.toDataURL('image/png');
+    });
+    if (!png.startsWith('data:image/png;base64,')) throw new Error('Canvas capture did not produce PNG pixels');
+    await writeFile(`${out}/${name}.png`, Buffer.from(png.slice('data:image/png;base64,'.length), 'base64'));
     const stats=await page.evaluate(()=>window.__woodlandEvidence);
     if(!stats.calls||errors.length)throw new Error(errors.join('\n')||'Empty render');
     if(!before){
@@ -81,7 +90,7 @@ async function capture(which,width,height,quality,before){
     }
     report.captures.push({name,which,width,height,quality,before,scope:'seeded chapter fixture',...stats});
   }catch(e){report.failures.push({name,error:String(e),errors});}
-  finally{await ctx.close();await writeFile(out+'/review.json',JSON.stringify(report,null,2));}
+  finally{await ctx.close();await writeFile(out+'/review.json',JSON.stringify(report,null,2));console.log('capture checkpoint',name,report.captures.length,report.failures.length);}
 }
 async function entry(width,height){
   const ctx=await browser.newContext({viewport:{width,height},deviceScaleFactor:1,reducedMotion:'no-preference'}),page=await ctx.newPage(),errors=[];
@@ -118,12 +127,12 @@ try{
     await mkdir(dirname(copy),{recursive:true});
     await writeFile(copy,text);
   }
-  await writeFile(fixture+'/index.html','<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>Woodland component comparison</title><style>html,body,#root{width:100%;height:100%;margin:0;overflow:hidden}</style></head><body><div id="root"></div><script type="module" src="./stage.tsx"></script></body></html>');
+  await writeFile(fixture+'/index.html','<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="data:,"><title>Woodland component comparison</title><style>html,body,#root{width:100%;height:100%;margin:0;overflow:hidden}</style></head><body><div id="root"></div><script type="module" src="./stage.tsx"></script></body></html>');
   await writeFile(fixture+'/stage.tsx',stage);
   // Other review harnesses share dependencies, never Vite's mutable prebundle cache.
   await writeFile(fixture+'/vite.config.ts', `import original from '../vite.config.ts'; export default { ...original, cacheDir: ${JSON.stringify(fixture+'/vite-cache')}, optimizeDeps: { ...original.optimizeDeps, entries: [${JSON.stringify(fixture+'/index.html')}] } };`);
   await server(['preview'],4193);await server(['--config',fixture+'/vite.config.ts'],4194);
-  browser=await chromium.launch({args:['--enable-webgl','--ignore-gpu-blocklist',`--use-angle=${angle}`]});
+  browser=await chromium.launch({channel:'chromium',args:['--enable-webgl','--ignore-gpu-blocklist',`--use-angle=${angle}`]});
   await entry(1280,800);await entry(390,844);
   for(const which of ['meadow','rabbit','ending']){
     for(const quality of ['low','high']){await capture(which,1100,720,quality,true);await capture(which,1100,720,quality,false);}

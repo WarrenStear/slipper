@@ -34,25 +34,35 @@ export function SceneLighting({ quality = "medium" }: { quality?: LookQuality })
   const target = useMemo(() => {
     const object = new Object3D(); object.position.set(...look.composition.focalPoint); return object;
   }, []);
-  const scratch = useMemo(() => ({ color: new Color(), position: new Vector3() }), []);
-  useFrame(({ gl }, delta) => {
+  const scratch = useMemo(() => ({ color: new Color(), skyTint: new Color("#d4e2e6"), position: new Vector3(), offset: new Vector3() }), []);
+  useFrame(({ gl, camera }, delta) => {
     const profile = getCurrentCinematicProfile(), alpha = worldTransitionAlpha(delta, presentation.reducedMotion);
     gl.toneMappingExposure = profile.exposure;
-    target.position.lerp(scratch.position.set(...look.composition.focalPoint), alpha);
+    // Move the outdoor shadow window with physical exploration. Both source
+    // and target receive the same local offset, preserving the authored angle.
+    scratch.offset.set(0, 0, 0);
+    if (!localKey && target.parent) {
+      camera.getWorldPosition(scratch.offset);
+      target.parent.worldToLocal(scratch.offset);
+      scratch.offset.sub(scratch.position.set(...look.composition.focalPoint));
+    }
+    target.position.lerp(scratch.position.set(...look.composition.focalPoint).add(scratch.offset), alpha);
     target.updateMatrixWorld();
     if (key.current) {
-      key.current.position.lerp(scratch.position.set(...look.lighting.position), alpha);
+      key.current.position.lerp(scratch.position.set(...look.lighting.position).add(scratch.offset), alpha);
       key.current.color.lerp(scratch.color.set(look.lighting.color), alpha);
       key.current.intensity = blendWorldValue(key.current.intensity, look.lighting.intensity, alpha);
       if (localKey) key.current.angle = blendWorldValue(key.current.angle, look.lighting.source === "fire" ? 1.24 : 1.05, alpha);
     }
     if (fill.current) {
-      fill.current.color.lerp(scratch.color.set(look.lighting.color), alpha);
+      scratch.color.set(localKey ? look.lighting.color : look.atmosphere.horizon);
+      if (!localKey) scratch.color.lerp(scratch.skyTint, .45);
+      fill.current.color.lerp(scratch.color, alpha);
       fill.current.groundColor.lerp(scratch.color.set(look.lighting.groundColor), alpha);
       fill.current.intensity = blendWorldValue(fill.current.intensity, Math.max(look.lighting.fillFloor, profile.fillIntensity * 1.05), alpha);
     }
     if (skyReturn.current && desiredReturn) {
-      skyReturn.current.position.lerp(scratch.position.set(...desiredReturn.position), alpha);
+      skyReturn.current.position.lerp(scratch.position.set(...desiredReturn.position).add(scratch.offset), alpha);
       skyReturn.current.color.lerp(scratch.color.set(desiredReturn.color), alpha);
       skyReturn.current.intensity = blendWorldValue(skyReturn.current.intensity, desiredReturn.intensity * desiredReturnStrength * (1 - presentation.stillness * .7), alpha);
     }
@@ -66,8 +76,8 @@ export function SceneLighting({ quality = "medium" }: { quality?: LookQuality })
       castShadow={look.lighting.shadowProfile} shadow-mapSize-width={1024} shadow-mapSize-height={1024}
       shadow-camera-near={.35} shadow-camera-far={21} shadow-bias={-.0003} shadow-normalBias={.025} />
       : <directionalLight {...common} target={target} castShadow={look.lighting.shadowProfile}
-        shadow-mapSize-width={1024} shadow-mapSize-height={1024} shadow-camera-left={-16} shadow-camera-right={16}
-        shadow-camera-top={16} shadow-camera-bottom={-16} shadow-camera-near={.5} shadow-camera-far={85}
+        shadow-mapSize-width={1024} shadow-mapSize-height={1024} shadow-camera-left={-24} shadow-camera-right={24}
+        shadow-camera-top={24} shadow-camera-bottom={-24} shadow-camera-near={.5} shadow-camera-far={85}
         shadow-bias={-.0003} shadow-normalBias={.035} />}
     {returnStrength > 0 && accent ? <directionalLight ref={skyReturn} name="canopy-sky-return" target={target}
       position={accent.position} color={accent.color} intensity={accent.intensity * returnStrength} castShadow={false} /> : null}

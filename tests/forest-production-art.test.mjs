@@ -15,7 +15,7 @@ test('shared rooted forest geometry is finite, deterministic, and within its ins
   assert.deepEqual(position.array,b.getAttribute('position').array);
   for(const value of position.array)assert.ok(Number.isFinite(value));
   assert.ok((a.index?.count??position.count)/3<=600);
-  assert.ok(a.boundingSphere.radius<6);
+  assert.ok(a.boundingSphere.radius<9);
   a.dispose();b.dispose();
  }
 });

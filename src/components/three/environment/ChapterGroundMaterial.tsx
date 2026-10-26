@@ -1,6 +1,7 @@
 import { Component, Suspense, useCallback, useEffect, useMemo, type ReactNode } from "react";
 import { useTexture } from "@react-three/drei";
 import * as THREE from "three";
+import { createForestImageSampler } from "../../../world/forest/forestImageSampler";
 import { TactileMaterial, useTactileDetail } from "../storyEvents/TactileMaterial";
 import { applyTactileShader } from "../storyEvents/tactileShader";
 
@@ -14,12 +15,7 @@ function MappedGround({ radius, color, roughness, metalness }: Props) {
   // Reuse the existing compressed terrain art, not a second texture library.
   const source = useTexture("/textures/forest/ground-albedo-v3.webp");
   const detail = useTactileDetail();
-  const map = useMemo(() => {
-    const texture = source.clone(); texture.colorSpace = THREE.SRGBColorSpace;
-    texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-    texture.repeat.set(radius * 2 / 3.4, radius * 2 / 3.4);
-    texture.anisotropy = 4; texture.needsUpdate = true; return texture;
-  }, [source, radius]);
+  const map = useMemo(() => createForestImageSampler(source, [radius * 2 / 3.4, radius * 2 / 3.4]), [source, radius]);
   useEffect(() => () => map.dispose(), [map]);
   const compile = useCallback((shader: Parameters<THREE.MeshStandardMaterial["onBeforeCompile"]>[0]) => {
     applyTactileShader(shader, "earth", detail);

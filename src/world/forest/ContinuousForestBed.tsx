@@ -1,3 +1,4 @@
+import { ForestFloorHabitat } from "../ecology/ForestFloorHabitat";
 import { claimForestBuild } from "../../lib/forestBuildSchedule.ts";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { CuboidCollider, RigidBody } from "@react-three/rapier";
@@ -48,7 +49,7 @@ export function ContinuousForestBed({
   const ruinRef = useRef<THREE.InstancedMesh>(null);
   const crownDetail = qualityProfile.quality === "high" || qualityProfile.quality === "cinematic" ? 2 : 0;
   const clearingCrownDetail = qualityProfile.quality === "low" ? 0 : 1;
-  const trunkGeometry = useMemo(createForestTrunkLibrary, []);
+  const trunkGeometry = useMemo(() => createForestTrunkLibrary(crownDetail), [crownDetail]);
   const crownGeometry = useMemo(() => createForestCrownLibrary(crownDetail), [crownDetail]);
   const clearingCrownGeometry = useMemo(() => showClearingFrame ? createForestCrownLibrary(clearingCrownDetail) : null, [clearingCrownDetail, showClearingFrame]);
 
@@ -276,6 +277,7 @@ export function ContinuousForestBed({
       {/* Keep terrain/forest workers and collisions mounted while the opening
           room occludes the exterior; only its visual submissions are deferred. */}
       <group name="continuous-forest-visuals" visible={renderVisible}>
+      <ForestFloorHabitat quality={qualityProfile.quality} paths={pathSeeds} clearings={clearingSeeds} ground={forestGroundYAt} morph={forestTerrainMorph} />
       {showClearingFrame && clearingCrownGeometry ? (
         <ClearingForestFrame
           center={activePosition}

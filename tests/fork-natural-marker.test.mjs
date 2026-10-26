@@ -1,3 +1,4 @@
+import * as geometryTemplates from "../src/components/three/environmentArt/geometryTemplateCache.ts";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFileSync } from "node:fs";
@@ -20,7 +21,7 @@ const source = (name, before = false) => readFileSync(before ? join(fixtures, na
 function evaluate(body, dependencies = {}, cleanups = []) {
   const exports = {};
   const react = { memo: fn => fn, useMemo: fn => fn(), useRef: value => ({ current: value }), useEffect: fn => { const cleanup = fn(); if (cleanup) cleanups.push(cleanup); } };
-  const localRequire = name => dependencies[name] ?? (name === "react" ? react : name === "react/jsx-runtime" ? jsx : name === "three" ? THREE : stub);
+  const localRequire = name => dependencies[name] ?? (name.endsWith("geometryTemplateCache.ts") ? geometryTemplates : name === "react" ? react : name === "react/jsx-runtime" ? jsx : name === "three" ? THREE : stub);
   const js = ts.transpileModule(body, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX } }).outputText;
   runInNewContext(js, { exports, require: localRequire }, { timeout: 1000 });
   return exports;

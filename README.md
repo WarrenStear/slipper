@@ -11,6 +11,13 @@ Zustand, and Cloudflare Pages.
 The active repository is [WarrenStear/slipper](https://github.com/WarrenStear/slipper).
 Use `main` for production. The public experience is
 [slipperinthewoods.com](https://slipperinthewoods.com).
+The active Cloudflare Pages project is `slipper`, with the Pages origin
+[slipper-2cd.pages.dev](https://slipper-2cd.pages.dev). Keep the Wrangler project
+name and `deploy:pages` target aligned with that project. The historical
+`slipper-in-the-woods` project was connected to a different repository.
+Pages' default single-page application fallback handles non-asset routes; a
+catch-all rewrite to `/index.html` is unnecessary and triggers a redirect-loop
+warning in Wrangler.
 
 ```bash
 git clone https://github.com/WarrenStear/slipper.git
@@ -27,6 +34,21 @@ records its Git revision, branch, build time, and source working-tree state auto
 (excluding the regenerated world-state output);
 the version document is served without caching. The development server explicitly
 reports a development version instead of a historical production date.
+
+After building a clean checkout of the production commit, verify both the live
+revision and the bytes of its JavaScript/CSS entry bundles:
+
+```bash
+npm run verify:deployment -- https://slipperinthewoods.com FULL_MAIN_COMMIT_SHA
+```
+
+The verifier also requires the expected repository, `main` branch, clean source,
+and `Cache-Control: no-store` on version metadata. An optional build directory
+and branch can follow the SHA when qualifying a preview.
+
+The build toolchain uses a scoped Miniflare override for `undici` 7.30.1 to fix
+GHSA-xjj6-f33q-929c and related advisories. Remove the override once Miniflare's
+own pinned dependency includes the patched release, then rerun the full checks.
 
 ## Narrative north star
 

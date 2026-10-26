@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from "react";
 import { useTexture } from "@react-three/drei";
 import * as THREE from "three";
+import { createForestImageSampler } from "./forestImageSampler";
 
 export type ForestTexturePack = {
   barkMap: THREE.Texture;
@@ -17,7 +18,32 @@ export type ForestTexturePack = {
   ruinRoughnessMap: THREE.Texture | null;
 };
 
-export const FOREST_GROUND_ALBEDO_PATH = "/textures/forest/ground-albedo-v3.webp";
+export const FOREST_GROUND_ALBEDO_PATH = "/textures/forest/ground-albedo-v4.webp";
+export const FOREST_BARK_ALBEDO_PATH = "/textures/forest/bark-albedo-v1.webp";
+export const FOREST_CANOPY_ALBEDO_PATH = "/textures/forest/canopy-spray-v1.webp";
+
+export function useWoodlandCanopyTexture() {
+  const source = useTexture(FOREST_CANOPY_ALBEDO_PATH);
+  const texture = useMemo(() => createForestImageSampler(source, [1, 1], 4, true), [source]);
+  useEffect(() => () => texture.dispose(), [texture]);
+  return texture;
+}
+
+/** Each consumer owns its sampler; the loader retains the shared source image. */
+export function useWoodlandBarkTexture() {
+  const source = useTexture(FOREST_BARK_ALBEDO_PATH);
+  const texture = useMemo(() => createForestImageSampler(source, [1.4, 2.6], 8), [source]);
+  useEffect(() => () => texture.dispose(), [texture]);
+  return texture;
+}
+
+export const FOREST_STONE_ALBEDO_PATH = "/textures/forest/stone-albedo-v1.webp";
+export function useWoodlandSurfaceTexture(surface: "stone" | "soil") {
+  const source = useTexture(surface === "stone" ? FOREST_STONE_ALBEDO_PATH : FOREST_GROUND_ALBEDO_PATH);
+  const texture = useMemo(() => createForestImageSampler(source, [surface === "stone" ? 2 : 1, 1]), [source, surface]);
+  useEffect(() => () => texture.dispose(), [texture]);
+  return texture;
+}
 
 export function createSafeCanvasTexture(kind: "bark" | "crown" | "marsh" | "ruin") {
   const canvas = document.createElement("canvas");
@@ -95,34 +121,26 @@ export function createSafeCanvasTexture(kind: "bark" | "crown" | "marsh" | "ruin
 }
 
 export function useSafeForestTextures(): ForestTexturePack {
-  const groundAlbedo = useTexture(FOREST_GROUND_ALBEDO_PATH);
+  const [groundAlbedo, barkAlbedo, canopyAlbedo] = useTexture([FOREST_GROUND_ALBEDO_PATH, FOREST_BARK_ALBEDO_PATH, FOREST_CANOPY_ALBEDO_PATH]);
   const textures = useMemo<ForestTexturePack>(
     () => ({
-      barkMap: createSafeCanvasTexture("bark"),
+      barkMap: createForestImageSampler(barkAlbedo, [1.4, 2.6], 8),
       barkNormalMap: null,
       barkRoughnessMap: null,
-      crownMap: createSafeCanvasTexture("crown"),
+      crownMap: createForestImageSampler(canopyAlbedo, [1, 1], 4, true),
       crownNormalMap: null,
       crownRoughnessMap: null,
-      marshMap: groundAlbedo.clone(),
+      marshMap: createForestImageSampler(groundAlbedo, [144, 144]),
       marshNormalMap: null,
       marshRoughnessMap: null,
       ruinMap: createSafeCanvasTexture("ruin"),
       ruinNormalMap: null,
       ruinRoughnessMap: null,
     }),
-    [groundAlbedo],
+    [groundAlbedo, barkAlbedo, canopyAlbedo],
   );
 
   useEffect(() => {
-    textures.barkMap.repeat.set(1.4, 2.6);
-    textures.crownMap.repeat.set(1.1, 1.1);
-    textures.marshMap.colorSpace = THREE.SRGBColorSpace;
-    textures.marshMap.wrapS = THREE.RepeatWrapping;
-    textures.marshMap.wrapT = THREE.RepeatWrapping;
-    textures.marshMap.anisotropy = 4;
-    textures.marshMap.repeat.set(144, 144);
-    textures.marshMap.needsUpdate = true;
     textures.ruinMap.repeat.set(1.8, 1.8);
 
     return () => {

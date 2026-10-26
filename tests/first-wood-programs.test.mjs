@@ -1,3 +1,4 @@
+import { prepareStreamedScenery } from "../src/world/core/sceneryPreparation.ts";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFileSync } from "node:fs";
@@ -85,10 +86,10 @@ test("removed and disposed receivers are not retained for a later batch, and com
 function actualPostProcessing(presentation) {
   const source = readFileSync(new URL("../src/components/three/artDirection/ScenePostProcessing.tsx", import.meta.url), "utf8");
   const code = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX } }).outputText;
-  const imports = { react: React, "react/jsx-runtime": jsxRuntime, three: THREE, "@react-three/fiber": fiber,
+  const imports = { "../../../world/core/sceneryPreparation": { prepareStreamedScenery }, react: React, "react/jsx-runtime": jsxRuntime, three: THREE, "@react-three/fiber": fiber,
     "three/examples/jsm/postprocessing/Pass.js": { FullScreenQuad }, "./firstWoodPrograms": { enqueueFirstWoodPrograms },
     "./SceneLookContext": { useSceneLook: () => presentation.current }, "./worldVisualContinuity": continuity };
-  const exports = {}; runInNewContext(code, { exports, require: id => { assert.ok(id in imports, id); return imports[id]; } }, { timeout: 1000 });
+  const exports = {}; runInNewContext(code, { exports, performance, require: id => { assert.ok(id in imports, id); return imports[id]; } }, { timeout: 1000 });
   return exports.ScenePostProcessing;
 }
 

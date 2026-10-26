@@ -675,6 +675,7 @@ function ExperienceApplication() {
       {mode !== "map" ? (
         <Suspense fallback={<div className="forest-loader" role="status">Drawing the nearby wood…</div>}>
           <WorldCanvas
+            freeWoods={experienceMode === "free-woods"}
             key={`continuous-world:${sceneRelocationRevision}:${sceneResetNonce}`}
             entryId={resolvedActiveEntryId}
             entries={entries}
@@ -707,7 +708,9 @@ function ExperienceApplication() {
           activeNarrativeScene && completedSceneIds.includes(activeNarrativeScene.id)
         )}
         reducedMotion={reducedMotion}
-        suppressed={mode !== "explore" || activeNarrativeScene?.id === "broken-floor.confession"}
+        // Free Woods revisits have already completed the authored handoff.
+        // Replaying it can withhold reading and walking controls on return.
+        suppressed={mode !== "explore" || experienceMode === "free-woods" || activeNarrativeScene?.id === "broken-floor.confession"}
         onPhaseChange={setStoryTransitionPhase}
       />
 

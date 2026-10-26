@@ -17,6 +17,13 @@ const grassBatch = 'clustered-hillside-tussocks', flowerBatch = 'meadow-wildflow
 const ecologyNames = [...evergreenBatches, grassBatch, flowerBatch];
 const requiredConfig = ['sceneId', 'quality', 'reducedEffects', 'reducedMotion'];
 
+/** Screenshot readback is a performance diagnostic, not a shader failure. */
+export function isFatalBiomeConsole(type, message) {
+  if (type === 'error') return true;
+  if (type !== 'warning' || !/webgl|shader|context lost/i.test(message)) return false;
+  return !/^\[\.WebGL-[^\]]+\]GL Driver Message \(OpenGL, Performance, GL_CLOSE_PATH_NV, High\): GPU stall due to ReadPixels(?: \(this message will no longer repeat\))?$/.test(message);
+}
+
 export function expectedBiomeCounts(config) {
   const scene = BIOME_REVIEW_CASES.find(item => item.sceneId === config?.sceneId);
   const tier = qualities.indexOf(config?.quality);

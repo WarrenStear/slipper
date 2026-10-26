@@ -1,3 +1,4 @@
+import { WoodlandSurfaceMaterial } from "./WoodlandSurfaceMaterial";
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { RigidBody, TrimeshCollider } from "@react-three/rapier";
 import * as THREE from "three";
@@ -71,7 +72,7 @@ const LandscapeInstances = memo(function LandscapeInstances({ geometry, placemen
     {finish === "flowers" ? <meshStandardMaterial color={tint ?? "#e3d8b2"} vertexColors roughness={.88} side={THREE.DoubleSide} />
       : finish === "leaves" || finish === "reeds" || finish === "grass" ? <FoliageMaterial color={tint ?? (finish === "leaves" ? "#859566" : "#8c9973")}
         vertexColors={finish !== "reeds"} doubleSided flexibility={finish === "leaves" ? .014 : .023} />
-        : <TactileMaterial surface={finish} color={tint ?? (finish === "stone" ? "#ffffff" : "#9c8f77")} vertexColors={finish === "stone"} roughness={.95} />}
+        : finish === "stone" ? <WoodlandSurfaceMaterial surface="stone" /> : <TactileMaterial surface={finish} color={tint ?? "#9c8f77"} roughness={.95} />}
   </instancedMesh>;
 });
 

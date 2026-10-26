@@ -8,7 +8,7 @@ import { groundMistPatches, GROUND_MIST_FRAGMENT, GROUND_MIST_VERTEX, type MistP
 import { composeGroundMist } from "./forestDepth.ts";
 
 const IGNORE_RAYCAST = () => undefined;
-function MistBatch({ patches }: { patches: readonly MistPatch[] }) {
+export function GroundMistBanks({ patches, opacityScale = 1 }: { patches: readonly MistPatch[]; opacityScale?: number }) {
   const presentation = useSceneLook()!;
   const ref = useRef<InstancedMesh>(null);
   const uniforms = useMemo(() => ({ tint: { value: new Color(presentation.look.atmosphere.horizon) }, time: { value: 0 }, opacity: { value: 0 }, fogDensity: { value: 0 } }), []);
@@ -28,7 +28,7 @@ function MistBatch({ patches }: { patches: readonly MistPatch[] }) {
     uniforms.tint.value.lerp(tintTarget.set(presentation.look.atmosphere.horizon), alpha);
     uniforms.time.value = presentation.time.vegetation;
     uniforms.fogDensity.value = readAtmosphereFogDensity(scene.fog);
-    uniforms.opacity.value = blendWorldValue(uniforms.opacity.value, (presentation.look.sceneId.startsWith("blue-moon.") ? .065 : .085) * (1 - presentation.stillness * .8), alpha);
+    uniforms.opacity.value = blendWorldValue(uniforms.opacity.value, (presentation.look.sceneId.startsWith("blue-moon.") ? .065 : .085) * opacityScale * (1 - presentation.stillness * .8), alpha);
   });
   return <instancedMesh ref={ref} name="scene-local-ground-mist" args={[undefined, undefined, patches.length]} renderOrder={2} raycast={IGNORE_RAYCAST} userData={{ decorativeOnly: true, drawCallBudget: 1, patches: patches.length }}>
     <sphereGeometry args={[1, 12, 6]} />
@@ -40,5 +40,5 @@ function MistBatch({ patches }: { patches: readonly MistPatch[] }) {
 export function GroundMist() {
   const presentation = useSceneLook()!;
   const patches = useMemo(() => composeGroundMist(groundMistPatches(presentation.look.sceneId), presentation.look.composition), [presentation.look.sceneId, presentation.look.composition]);
-  return presentation.look.budget.shafts && patches.length ? <MistBatch patches={patches} /> : null;
+  return presentation.look.budget.shafts && patches.length ? <GroundMistBanks patches={patches} /> : null;
 }

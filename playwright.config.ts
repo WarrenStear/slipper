@@ -1,5 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
 
+// Match native desktop rendering locally; retain software rendering on Linux CI.
+const chromiumAngle = process.env.PLAYWRIGHT_ANGLE ?? (process.platform === "darwin" ? "metal" : "swiftshader");
+
 const baseURL =
   process.env.PLAYWRIGHT_TEST_BASE_URL ?? "http://127.0.0.1:4173";
 
@@ -50,7 +53,7 @@ export default defineConfig({
           args: [
             "--enable-webgl",
             "--ignore-gpu-blocklist",
-            "--use-angle=swiftshader",
+            `--use-angle=${chromiumAngle}`,
           ],
         },
       },
@@ -84,7 +87,7 @@ export default defineConfig({
           args: [
             "--enable-webgl",
             "--ignore-gpu-blocklist",
-            "--use-angle=swiftshader",
+            `--use-angle=${chromiumAngle}`,
           ],
         },
       },

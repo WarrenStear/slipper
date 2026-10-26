@@ -1,6 +1,7 @@
 import { Component, Suspense, memo, useCallback, useEffect, useMemo, type ReactNode } from "react";
 import { useTexture } from "@react-three/drei";
-import { Color, Vector4, SRGBColorSpace, RepeatWrapping, type Texture, type MeshStandardMaterial } from "three";
+import { Color, Vector4, type Texture, type MeshStandardMaterial } from "three";
+import { createForestImageSampler } from "../../../world/forest/forestImageSampler";
 import { useTactileDetail } from "../storyEvents/TactileMaterial";
 import { ENVIRONMENT_THEMES } from "./environmentThemes";
 import type { LandscapeSpec } from "./landscapeGeography";
@@ -31,15 +32,8 @@ class GroundMapBoundary extends Component<{ children: ReactNode; fallback: React
 
 function MappedWoodlandGround({ spec }: { spec: LandscapeSpec }) {
   const source = useTexture("/textures/forest/ground-albedo-v3.webp");
-  const map = useMemo(() => {
-    const texture = source.clone();
-    texture.colorSpace = SRGBColorSpace;
-    texture.wrapS = texture.wrapT = RepeatWrapping;
-    // Landscape UVs already encode metres at .12 units/metre: one repeat is 3.4m.
-    texture.repeat.set(1 / (.12 * 3.4), 1 / (.12 * 3.4));
-    texture.anisotropy = 4; texture.needsUpdate = true;
-    return texture;
-  }, [source]);
+  // Landscape UVs already encode metres at .12 units/metre: one repeat is 3.4m.
+  const map = useMemo(() => createForestImageSampler(source, [1 / (.12 * 3.4), 1 / (.12 * 3.4)]), [source]);
   useEffect(() => () => map.dispose(), [map]);
   return <GroundMaterial spec={spec} map={map} />;
 }

@@ -31,13 +31,13 @@ type GeometryBuffers = {
 const toVector = (p: Vector3Tuple) => new THREE.Vector3(...p);
 export const FOREST_REFERENCE_TRUNK_SCALE = Object.freeze([0.3, 12, 0.3] as const);
 const referenceTrunkScale = FOREST_REFERENCE_TRUNK_SCALE;
-export const FOREST_REFERENCE_CROWN_SCALE = Object.freeze([1.5, 2.15, 1.45] as const);
+export const FOREST_REFERENCE_CROWN_SCALE = Object.freeze([2.25, 2.55, 2.15] as const);
 export const FOREST_REFERENCE_CROWN_HEIGHT = 10.3;
 const rootAngles = [.18, 1.74, 3.28, 4.86];
 // Trunk points are authored in metre space for a 12m tree, then normalized for
 // the established anisotropic trunk matrix. Core topology stays identical.
 // Unequal branch birth heights and bole bends distinguish age and growth habit.
-// All forms retain the exact six-ring/eight-side trunk and six supported limbs.
+// All forms retain the six-ring/twelve-side trunk and six curved, supported limbs.
 const TREE_FORMS: TrunkForm[] = [
   { spine: [[0, 0, 0], [.04, .65, -.03], [-.09, 3.2, .05], [.12, 5.8, .02], [.02, 8.4, -.06], [.13, 12, .04]], lift: [.2, .35, .1, .15, .1, .3], turns: [.1, 1.3, 2.5, 3.7, 4.7, 5.8], widths: [1.1, 1, .82, .96, .84, .68], root: 1.05, births: [4.7, 5.8, 7.4, 5.1, 6.8, 4.4], radii: [.43, .34, .29, .235, .13, .018] },
   { spine: [[0, 0, 0], [.015, .65, .02], [-.04, 3.2, -.02], [.035, 5.8, -.05], [.08, 8.4, .02], [.07, 12, -.02]], lift: [1.4, 1.65, 1.6, 1.3, .95, .72], turns: [.25, 1.45, 2.7, 3.9, 5.1, 6.15], widths: [.65, .75, .7, .6, .5, .45], root: .82, births: [5.1, 5.9, 7.1, 8.3, 9.2, 10.1], radii: [.29, .24, .2, .155, .09, .018] },
@@ -61,8 +61,10 @@ const CROWN_FORMS: CrownForm[] = [
 function addTube(buffers: GeometryBuffers, points: Vector3Tuple[], radii: number[], sides: number, bole = false) {
   const start = buffers.positions.length / 3;
   const stride = sides + 1;
+  let barkDistance = 0;
   for (let row = 0; row < points.length; row++) {
     const point = toVector(points[row]);
+    if (row) barkDistance += point.distanceTo(toVector(points[row - 1]));
     const tangent = toVector(points[Math.min(points.length - 1, row + 1)]).sub(toVector(points[Math.max(0, row - 1)])).normalize();
     const reference = Math.abs(tangent.y) > .95 ? new THREE.Vector3(1, 0, 0) : new THREE.Vector3(0, 1, 0);
     const across = new THREE.Vector3().crossVectors(tangent, reference).normalize();
@@ -74,7 +76,7 @@ function addTube(buffers: GeometryBuffers, points: Vector3Tuple[], radii: number
         const first = start + row * stride;
         buffers.positions.push(...buffers.positions.slice(first * 3, first * 3 + 3));
         buffers.colors.push(...buffers.colors.slice(first * 3, first * 3 + 3));
-        buffers.uvs.push(1, row / (points.length - 1));
+        buffers.uvs.push(1, barkDistance / 4);
         buffers.seamPairs.push([first, first + sides]);
         continue;
       }
@@ -84,7 +86,7 @@ function addTube(buffers: GeometryBuffers, points: Vector3Tuple[], radii: number
         + basal * (.16 + .2 * Math.cos(angle * 4 + .35));
       const vertex = point.clone().addScaledVector(across, Math.cos(angle) * radii[row] * flute).addScaledVector(around, Math.sin(angle) * radii[row] * flute);
       buffers.positions.push(vertex.x / referenceTrunkScale[0], vertex.y / referenceTrunkScale[1] - .5, vertex.z / referenceTrunkScale[2]);
-      buffers.uvs.push(side / sides, row / (points.length - 1));
+      buffers.uvs.push(side / sides, barkDistance / 4);
       const shade = .73 + row / (points.length - 1) * .17 + side % 3 * .018;
       // Broad, low-frequency dampness and a sheltered moss face supplement the
       // existing authored bark maps without another material or draw.
@@ -138,7 +140,8 @@ function finish(data: GeometryBuffers, name: string) {
   geometry.computeBoundingSphere();
   return geometry;
 }
-function trunkAt(type: number) {
+function trunkAt(type: number, detail: ForestGeometryDetail = 2) {
+  const rich = detail === 2;
   const form = TREE_FORMS[type], data = buffers();
   const spine = form.spine.map(point => [...point] as Vector3Tuple);
   // Living leaders taper into the central foliage instead of ending as a sawn
@@ -147,7 +150,13 @@ function trunkAt(type: number) {
     const [x, y, z] = CROWN_FORMS[type].islands[6];
     spine[5] = [x * FOREST_REFERENCE_CROWN_SCALE[0], FOREST_REFERENCE_CROWN_HEIGHT + y * FOREST_REFERENCE_CROWN_SCALE[1], z * FOREST_REFERENCE_CROWN_SCALE[2]];
   }
-  const leader = addTube(data, spine, form.radii, 8, true);
+  // Preserve the authored rings and rooted footprint; two intermediate rings
+  // soften the long upper bole without adding more tree instances or draws.
+  const boleCurve = new THREE.CatmullRomCurve3(spine.map(toVector));
+  const ringParameters = rich ? [0, 1, 2, 2.5, 3, 3.5, 4, 5] : [0, 1, 2, 3, 4, 5];
+  const bolePoints = ringParameters.map(t => boleCurve.getPoint(t / 5).toArray());
+  const boleRadii = ringParameters.map(t => THREE.MathUtils.lerp(form.radii[Math.floor(t)], form.radii[Math.ceil(t)], t % 1));
+  const leader = addTube(data, bolePoints, boleRadii, rich ? 12 : 8, true);
   const spineAtHeight = (height: number): THREE.Vector3 => {
     const next = spine.findIndex(point => point[1] >= height);
     if (next <= 0) return toVector(spine[Math.max(0, next)]);
@@ -158,7 +167,7 @@ function trunkAt(type: number) {
     const reach = (1.08 + (i % 2) * .13) * form.root;
     const rootAngle = angle + Math.sin(type * 1.3 + i) * .11;
     addTube(data, [[Math.cos(rootAngle) * .19, .4 * form.root, Math.sin(rootAngle) * .19],
-      [Math.cos(rootAngle) * reach, .055, Math.sin(rootAngle) * reach]], [.15 * form.root, .028], 4);
+      [Math.cos(rootAngle) * reach, .055, Math.sin(rootAngle) * reach]], [.15 * form.root, .028], rich ? 5 : 4);
   });
   const branchTipVertexIndices: number[] = [];
   for (let i = 0; i < 6; i++) {
@@ -171,7 +180,9 @@ function trunkAt(type: number) {
       .12 + form.lift[i] * .16,
       Math.sin(form.turns[i]) * bend,
     )).toArray();
-    const branch = addTube(data, [base.toArray(), middle, end], [.13, .075, .014].map(r => r * form.widths[i]), 3);
+    const curve = new THREE.CatmullRomCurve3([base, toVector(middle), toVector(end)]);
+    const points = (rich ? [0, .25, .5, .75, 1] : [0, .5, 1]).map(t => curve.getPoint(t).toArray());
+    const branch = addTube(data, points, (rich ? [.13, .108, .075, .042, .014] : [.13, .075, .014]).map(r => r * form.widths[i]), rich ? 5 : 3);
     branchTipVertexIndices.push(branch.endCapVertexIndex);
   }
   const oldLimbTips: number[] = [];
@@ -210,12 +221,17 @@ function crownAt(type: number, detail: ForestGeometryDetail) {
       const across = new THREE.Vector3(-direction.z, 0, direction.x).normalize()
         .applyAxisAngle(direction, Math.sin(leaf * 1.31 + island * .47) * 1.1);
       const islandScale = Math.min(1, Math.max(...spread) / .3);
-      const length = (detail === 0 ? .33 : .235) * form.leaf * islandScale * (.85 + (leaf % 4) * .11);
-      const width = (detail === 0 ? .15 : .09) * form.leaf * islandScale * (.8 + (leaf % 3) * .12);
-      // Low detail uses compact folded sprays; richer tiers use smaller clustered
-      // blades. Varied pitch and roll provide living mass from real eye height,
-      // while disconnected islands retain air without an opaque supporting core.
-      const points = [c.clone().addScaledVector(direction, -length * .7), c.clone().addScaledVector(across, width), c.clone().addScaledVector(direction, length), c.clone().addScaledVector(across, -width)];
+      const fullness = type === 7 || type === 6 ? 1 : 1.22;
+      const length = fullness * (detail === 0 ? .26 : .18) * form.leaf * islandScale * (.85 + (leaf % 4) * .11);
+      const width = fullness * (detail === 0 ? .22 : .15) * form.leaf * islandScale * (.8 + (leaf % 3) * .12);
+      // Alpha-cut twig sprays replace single diamond blades at the same vertex
+      // budget. Folded cards and irregular pitch preserve depth from below.
+      const points = [
+        c.clone().addScaledVector(direction, -length).addScaledVector(across, -width),
+        c.clone().addScaledVector(direction, -length).addScaledVector(across, width),
+        c.clone().addScaledVector(direction, length).addScaledVector(across, width),
+        c.clone().addScaledVector(direction, length).addScaledVector(across, -width),
+      ];
       points[1].y += detail === 0 ? .055 : .035;
       points[3].y += detail === 0 ? .045 : .027;
       const offset = data.positions.length / 3;
@@ -224,7 +240,7 @@ function crownAt(type: number, detail: ForestGeometryDetail) {
         const shade = .67 + (leaf % 5) * .065 + (corner === 1 ? .065 : 0);
         data.colors.push(shade * .98, shade, shade * .92);
       });
-      data.uvs.push(.5, 0, 0, .45, .5, 1, 1, .45);
+      data.uvs.push(0, 0, 1, 0, 1, 1, 0, 1);
       data.indices.push(...[0, 1, 2, 0, 2, 3].map(n => n + offset));
     }
   }
@@ -250,8 +266,8 @@ export function createForestTrunkGeometry() {
 export function createOrganicCrownGeometry(detail: ForestGeometryDetail = 0) {
   return crownAt(0, detail);
 }
-export function createForestTrunkLibrary() {
-  return library(trunkAt, "eight-authored-trunk-library");
+export function createForestTrunkLibrary(detail: ForestGeometryDetail = 2) {
+  return library(i => trunkAt(i, detail), `eight-authored-trunk-library:detail-${detail}`);
 }
 export function createForestCrownLibrary(detail: ForestGeometryDetail = 0) {
   return library(i => crownAt(i, detail), `eight-authored-crown-library:detail-${detail}`);

@@ -7,6 +7,8 @@ export type LookPoint = [number, number, number];
 export type HeroReflection = "none" | "floor" | "moonwater" | "mirror";
 type LightSource = "window" | "canopy" | "moon" | "dawn" | "sunset" | "domestic" | "fire" | "sky" | "remembered";
 type Composition = { heroLandmark: string; focalPoint: LookPoint; negativeSpace: number; foregroundDensity: number; horizonOpenness: number };
+export const TWILIGHT_SKY = Object.freeze({ sky: "#101c3b", horizon: "#425775", fog: "#304859" });
+
 type AuthoredLook = {
   source: LightSource; keyColor: string; keyPosition: LookPoint; keyIntensity: number;
   sky: string; horizon: string; fog: string; ground: string; leaf: string;
@@ -19,7 +21,7 @@ type AuthoredLook = {
 // which single surface may justify a secondary view of the world.
 const worlds = {
   room: { source: "window", keyColor: "#b5c8d2", keyPosition: [5.8, 5.2, -6], keyIntensity: 1.2, sky: "#11161a", horizon: "#252c30", fog: "#1c262d", ground: "#211e19", leaf: "#23372f", reflection: "floor", wetness: .8, wear: .8, saturation: .82 },
-  wood: { source: "canopy", keyColor: "#d6d9b9", keyPosition: [-7, 13, 8], keyIntensity: 2.1, sky: "#3b5259", horizon: "#a4b4a3", fog: "#596f67", ground: "#222b21", leaf: "#354e3e", reflection: "none", wetness: .28, wear: .7, saturation: .86 },
+  wood: { source: "canopy", keyColor: "#adcaf3", keyPosition: [-12, 18, 9], keyIntensity: 1.8, sky: "#35596b", horizon: "#9bb9bc", fog: "#789794", ground: "#222b21", leaf: "#354e3e", reflection: "none", wetness: .28, wear: .7, saturation: .86 },
   moon: { source: "moon", keyColor: "#cadfe9", keyPosition: [6, 18, 38], keyIntensity: 1.2, sky: "#050c17", horizon: "#182e40", fog: "#162b35", ground: "#101b22", leaf: "#23393c", reflection: "moonwater", wetness: .72, wear: .74, saturation: .8 },
   nest: { source: "dawn", keyColor: "#e3d0ac", keyPosition: [8, 11, -7], keyIntensity: 1.6, sky: "#657b8a", horizon: "#b1ac91", fog: "#7e8e87", ground: "#373c2a", leaf: "#526447", reflection: "none", wetness: .08, wear: .65, saturation: .88 },
   seer: { source: "sunset", keyColor: "#dbb08c", keyPosition: [-16, 5, 10], keyIntensity: 1.5, sky: "#192b3e", horizon: "#967465", fog: "#35434c", ground: "#252c2a", leaf: "#374640", reflection: "mirror", wetness: .54, wear: .9, saturation: .7 },
@@ -41,8 +43,8 @@ function image(world: keyof typeof worlds, heroLandmark: string, focalPoint: Loo
 export const SCENE_LOOKS = {
   "broken-floor.confession": image("room", "forest beneath ordinary wet timber", [0, 0, 3], .8, .1, 0),
   "enchanted.rabbit-hole": image("wood", "distant lantern through layered trunks", [0, 1.5, 9], .4, .8, .16),
-  "enchanted.friendship-meadow": image("wood", "warm clearing inside cool woodland", [-2, 1, 5], .55, .5, .35, { keyIntensity: 1.65 }),
-  "enchanted.masked-hearth": image("wood", "small domestic light behind branches", [0, 1.5, 6], .5, .72, .18, { keyIntensity: .9 }),
+  "enchanted.friendship-meadow": image("wood", "warm clearing inside cool woodland", [-2, 1, 5], .55, .5, .35, { keyIntensity: 1.65, keyColor: "#d6d9b9", keyPosition: [-7, 13, 8] }),
+  "enchanted.masked-hearth": image("wood", "small domestic light behind branches", [0, 1.5, 6], .5, .72, .18, { keyIntensity: .9, keyColor: "#d6d9b9", keyPosition: [-7, 13, 8] }),
   "blue-moon.sanctuary": image("moon", "narrow bridge beneath the moon", [0, 2, 9], .85, .2, .65),
   "blue-moon.intimacy": image("moon", "white cloth and Swan against black water", [-3, 1.2, 4], .75, .18, .6),
   "blue-moon.caged-bird": image("moon", "familiar bridge held by closed architecture", [0, 2, 5], .68, .3, .5, { keyIntensity: 1.05 }),
@@ -91,7 +93,7 @@ function fillFloor(sceneId: JourneySceneId) {
   if (sceneId === "fire.boundary") return .055;
   // Outdoor readability reveals bark/cloth without adding another light.
   // Water remains dark; the motivated key still establishes the composition.
-  if (sceneId.startsWith("enchanted.")) return .5;
+  if (sceneId.startsWith("enchanted.")) return .34;
   if (sceneId === "blue-moon.sanctuary" || sceneId === "blue-moon.intimacy") return .14;
   if (sceneId.startsWith("blue-moon.") || sceneId.startsWith("epilogue.")) return .09;
   if (sceneId.startsWith("crowned.")) return .32;
@@ -116,6 +118,7 @@ export function sceneRenderBudget(quality: LookQuality, reducedEffects = false) 
 
 export function resolveSceneLook(sceneId: JourneySceneId, quality: LookQuality = "medium", reducedEffects = false, state: CinematicStoryState & { mirrorStill?: boolean; openingReveal?: number; openingInverted?: boolean; meadowRested?: boolean; materialHistory?: MaterialHistory } = {}) {
   const authored = SCENE_LOOKS[sceneId];
+  const outdoor = authored.source !== "window" && authored.source !== "domestic";
   const emotional = resolveCinematicProfile(sceneId, sceneId === "thorned.self-owned-world" ? { ...state, compression: 0 } : state);
   const quiet = (sceneId === "river.release-surrender" && state.surrenderComplete) || (sceneId === "sunset.stillness" && state.mirrorStill);
   // The existing accepted white-fabric outcome remains the only authority.
@@ -133,8 +136,8 @@ export function resolveSceneLook(sceneId: JourneySceneId, quality: LookQuality =
       surrenderRelease: sceneId === "river.release-surrender" && state.surrenderComplete ? 1 : 0,
       domesticCompression: sceneId === "thorned.self-owned-world" ? 0 : Math.max(0, Math.min(1, state.compression ?? 0)),
     },
-    lighting: { source: authored.source, color: sceneId === "enchanted.friendship-meadow" && state.meadowRested === true ? "#e3d0ac" : authored.keyColor, groundColor: sceneId.startsWith("enchanted.") ? "#766e52" : sceneId.startsWith("blue-moon.") ? "#41565a" : authored.ground, position: authored.keyPosition, intensity: authored.keyIntensity, fill: emotional.fillIntensity, fillFloor: fillFloor(sceneId), shadowProfile: quality === "cinematic" && !reducedEffects },
-    atmosphere: { sky: authored.sky, horizon: authored.horizon, fog: authored.fog, density: Math.min(.025, emotional.fogDensity * Math.min(1.3, 90 / emotional.visibility)), visibility: emotional.visibility },
+    lighting: { source: authored.source, color: sceneId === "enchanted.friendship-meadow" && state.meadowRested === true ? "#e3d0ac" : authored.keyColor, groundColor: sceneId.startsWith("enchanted.") ? "#766e52" : sceneId.startsWith("blue-moon.") ? "#41565a" : authored.ground, position: authored.keyPosition, intensity: authored.keyIntensity, fill: emotional.fillIntensity, fillFloor: fillFloor(sceneId), shadowProfile: (quality === "high" || quality === "cinematic") && !reducedEffects },
+    atmosphere: { sky: outdoor ? TWILIGHT_SKY.sky : authored.sky, horizon: outdoor ? TWILIGHT_SKY.horizon : authored.horizon, fog: outdoor ? TWILIGHT_SKY.fog : authored.fog, density: Math.min(.025, emotional.fogDensity * Math.min(1.3, 90 / emotional.visibility)), visibility: emotional.visibility },
     grade: { exposure: emotional.exposure, contrast: 1 + (emotional.contrast - 1) * .16, saturation: authored.saturation, warmth: emotional.warmth, vignette: reducedEffects ? 0 : .09, grain: reducedEffects ? 0 : .0012 },
     materials: { damage: sceneId.startsWith("crowned.") && state.surrenderComplete ? .18 : 0, reintegrated: sceneId.startsWith("crowned.") && state.materialHistory?.integrated === true, wetness: authored.wetness, roughnessBias: quiet ? .03 : 0, environmentalWear: authored.wear, history: state.materialHistory, rememberedScene: sceneId.startsWith("crowned.") || sceneId === "epilogue.constellation" },
     composition: authored.composition,

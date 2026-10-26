@@ -1,3 +1,4 @@
+import { useExplorationLanternCarried } from "../../../player/explorationLantern";
 import { memo, useMemo } from "react";
 import { sceneryObjectResidence } from "./sceneryObjectResidence";
 import type { JourneySceneId } from "../../../lib/storyJourneyState";
@@ -25,6 +26,7 @@ const CROWN_MIRROR_STAND: readonly ConstructionPiece[] = [
 export const StoryObjectPresentation = memo(function StoryObjectPresentation({ sceneId, reducedMotion, interactiveIdentity = true, activeSceneId = sceneId }: {
   sceneId: JourneySceneId; reducedMotion: boolean; interactiveIdentity?: boolean; activeSceneId?: JourneySceneId;
 }) {
+  const explorationCarried = useExplorationLanternCarried();
   const objects = useMemo(() => objectsForScene(sceneId), [sceneId]);
   const objectStates = useJourneyStore(state => state.storyObjectStates);
   const acceptedIds = useJourneyStore(state => state.completedStoryEventIds);
@@ -41,6 +43,7 @@ export const StoryObjectPresentation = memo(function StoryObjectPresentation({ s
     {objects.map(object => {
       if (!interactiveIdentity && sceneryObjectResidence(object, activeSceneId, acceptedIds) !== sceneId) return null;
       const state = objectStates[object.id];
+      if (object.id === "lantern.master" && explorationCarried) return null;
       if (object.id === "broken-floor.reflection" || object.kind === "path" || ["carried", "burned", "released"].includes(state ?? "")) return null;
       // The actor/player lantern owns guidance and carrying. Only the chosen
       // placed light is rendered by the object system.

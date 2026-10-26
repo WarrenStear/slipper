@@ -1,6 +1,7 @@
 import { memo, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { TactileMaterial } from "../storyEvents/TactileMaterial";
+import { WoodlandSurfaceMaterial } from "./WoodlandSurfaceMaterial";
 import { FoliageMaterial } from "./FoliageMaterial";
 import { WoodlandFireflies } from "./WoodlandFireflies";
 import { WOODLAND_BATCH_CAPACITY, setActiveInstanceCount } from "./woodlandRuntimeBudget";
@@ -36,7 +37,7 @@ function AccentInstances({ geometry, placements, name, finish, color, capacity }
   // update, not an InstancedMesh reconstruction with new matrix/colour buffers.
   return <instancedMesh ref={ref} name={name} args={[undefined, undefined, capacity]} geometry={geometry} receiveShadow raycast={IGNORE_RAYCAST}>
     {finish === "leaves" ? <FoliageMaterial color={color} vertexColors doubleSided flexibility={.018} />
-      : finish === "stone" || finish === "fungi" ? <meshStandardMaterial color={color} vertexColors roughness={finish === "fungi" ? .82 : .97} metalness={0} />
+      : finish === "stone" ? <WoodlandSurfaceMaterial surface="stone" /> : finish === "fungi" ? <meshStandardMaterial color={color} vertexColors roughness={.82} metalness={0} />
         : <TactileMaterial surface="bark" barkCoordinates color={color} roughness={.96} />}
   </instancedMesh>;
 }

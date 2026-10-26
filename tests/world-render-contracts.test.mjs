@@ -90,7 +90,7 @@ test("the master lantern and canvas own their render responsibilities", () => {
   assert.doesNotMatch(read("src/world/forest/ContinuousForestBed.tsx"), /crownAccentRef|lowerCrownRef|upperCrownRef|sideCrownRef/);
   assert.doesNotMatch(scene, /applyNarrativeTextureBlend/);
   assert.ok(
-    fs.statSync(path.join(ROOT, "public/textures/forest/ground-albedo-v3.webp")).size < 400_000,
+    fs.statSync(path.join(ROOT, "public/textures/forest/ground-albedo-v4.webp")).size < 400_000,
   );
   assert.ok(
     fs.statSync(path.join(ROOT, "public/textures/forest/memory-bloom-v1.png")).size < 320_000,
@@ -364,8 +364,8 @@ test("forest trees use grounded rooted geometry and open instanced crowns", () =
   assert.match(read("src/world/forest/ClearingForestFrame.tsx"), /groundYAt/);
   assert.match(geometry, /createForestCrownLibrary/);
   assert.doesNotMatch(geometry, /new THREE\.(?:SphereGeometry|IcosahedronGeometry|PlaneGeometry|CircleGeometry)/);
-  assert.match(read("src/components/three/environment/DistantWoodland.tsx"), /<meshStandardMaterial color="#63715e"[^>]*side=\{THREE\.DoubleSide\}/);
-  assert.match(read("src/components/three/chapters/ChapterPrimitives.tsx"), /<meshStandardMaterial color=\{tint\} roughness=\{0\.98\} side=\{THREE\.DoubleSide\}/);
+  assert.match(read("src/components/three/environment/DistantWoodland.tsx"), /<CanopyMaterial color="#63715e"/);
+  assert.match(read("src/components/three/chapters/ChapterPrimitives.tsx"), /<CanopyMaterial color=\{tint\}/);
   for (const owner of ["src/world/forest/ContinuousForestBed.tsx", "src/world/forest/ClearingForestFrame.tsx"]) assert.doesNotMatch(read(owner), /transparent\s+opacity=.*crown/i);
   assert.match(worker, /edgeWall/);
   assert.match(worker, /trunkWidth/);

@@ -17,6 +17,7 @@ import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js
 import { createTaperedBranchGeometry, createWaxCandleGeometry, createFlameGeometry } from "../environmentArt/authoredGeometry";
 import { NarrativeWater } from "../environment/SanctuaryWater";
 import { createOrganicCrownGeometry } from "../environment/forestGeometry";
+import { CanopyMaterial } from "../environment/FoliageMaterial";
 import { MirrorMemorySurface } from "../reflections/MirrorMemorySurface";
 import { useSettingsStore } from "../../../stores/useSettingsStore";
 import { TimberAssembly } from "./ChapterArt";
@@ -262,7 +263,9 @@ export const MoonDisc = memo(function MoonDisc({
     }
   });
 
-  if (!activeScene) return null;
+  // Canonical outdoor skies own one distant blue moon. Isolated chapter
+  // previews retain their local moon without duplicating it during exploration.
+  if (!activeScene || (presentation && presentation.look.lighting.source !== "window" && presentation.look.lighting.source !== "domestic")) return null;
   return (
     <group
       ref={groupRef}
@@ -440,7 +443,7 @@ export const TreeGrove = memo(function TreeGrove({
         <TactileMaterial surface="bark" color={trunk} roughness={1} />
       </instancedMesh>
       <instancedMesh ref={crownRef} geometry={crownGeometry} args={[undefined, undefined, count]} receiveShadow>
-        <meshStandardMaterial color={tint} roughness={0.98} side={THREE.DoubleSide} />
+        <CanopyMaterial color={tint} />
       </instancedMesh>
     </group>
   );

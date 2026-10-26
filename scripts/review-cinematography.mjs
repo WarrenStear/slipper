@@ -11,8 +11,8 @@ const root = process.cwd(), out = '/tmp/slipper-cinematography-review';
 const beforeRoot = '/tmp/slipper-cinematography-baseline';
 const fixtureName = '.cinematography-review';
 const processes = []; let browser;
-const report = { candidate: execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(), baseline, requestedAngle: angle,
-  method: 'Identical scene states, camera positions and directions. Baseline uses settled authored FOV; candidate uses responsive shot FOV except the opening, which retains its authored lens. Environment motion is reduced and the light profile is pre-settled; comparisons wait 25 completed render frames. Actual camera/input lifecycle is exercised separately in a lightweight fixture. Not an unassisted gameplay or FPS certification.', captures: [], interactions: [], failures: [] };
+const report = { candidate: execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(), baseline, requestedAngle: angle, browserChannel: 'chromium',
+  method: 'Identical scene states, camera positions and directions. Baseline uses settled authored FOV; candidate uses responsive shot FOV except the opening, which retains its authored lens. Environment motion is reduced and the light profile is pre-settled; comparisons wait 25 completed render frames then freeze the static fixture for full-viewport framebuffer capture; production entry uses page screenshots. Actual camera/input lifecycle is exercised separately in a lightweight fixture. Not an unassisted gameplay or FPS certification.', captures: [], interactions: [], failures: [] };
 const stage = `import React,{Suspense,useLayoutEffect,useRef} from 'react';
 import {createRoot} from 'react-dom/client';import {Canvas,useFrame,useThree} from '@react-three/fiber';import {Physics} from '@react-three/rapier';
 import {BrokenFloorChapter} from '../src/components/three/chapters/BrokenFloorChapter';
@@ -38,7 +38,7 @@ useJourneyStore.setState({sceneId:id,storyStarted:true,storyCompleted:false,stor
 useWorldStore.setState({mode:'explore',controls:'walk',physicsPaused:false});useSettingsStore.setState({drawerOpen:false,reducedMotion:false,cameraAssistance:true});
 const profile=resolveCinematicProfile(id,{});for(let i=0;i<300;i++)advanceCinematicProfile(profile,.1);
 const Chapter={broken:BrokenFloorChapter,blue:BlueMoonSanctuaryChapter,house:ThornedHouseChapter,meadow:EnchantedWoodChapter,ending:IntegratedFinalTableau}[which];
-function Evidence(){const {camera,scene,gl}=useThree(),frames=useRef(0);
+function Evidence(){const {camera,scene,gl,setFrameloop}=useThree(),frames=useRef(0);
  useLayoutEffect(()=>{
   if(rig){camera.position.set(0,1.6,2);camera.lookAt(.9,1.3,-5);}
   else if(detail){camera.position.set(2.5,1.6,4);camera.lookAt(0,.65,0);}
@@ -49,7 +49,7 @@ function Evidence(){const {camera,scene,gl}=useThree(),frames=useRef(0);
   else{camera.position.set(0,3.3,6.5);camera.lookAt(0,4.8,-15);}
   if(!rig)camera.fov=detail?50:(before||which==='broken')?profile.fov:shotLens(id,profile.fov,camera.aspect);camera.updateProjectionMatrix();
  },[camera]);
- useFrame(()=>{if(rig||++frames.current===25){let lights=0,shadowLights=0;scene.traverse(o=>{if(o.isLight){lights++;if(o.castShadow)shadowLights++;}});window.__shotEvidence={calls:gl.info.render.calls,triangles:gl.info.render.triangles,lights,shadowLights,fov:camera.fov,position:camera.position.toArray(),quaternion:camera.quaternion.toArray(),sceneId:id};document.body.dataset.ready='true';}});return null;
+ useFrame(()=>{if(rig||++frames.current===25){let lights=0,shadowLights=0;scene.traverse(o=>{if(o.isLight){lights++;if(o.castShadow)shadowLights++;}});window.__shotEvidence={calls:gl.info.render.calls,triangles:gl.info.render.triangles,lights,shadowLights,fov:camera.fov,position:camera.position.toArray(),quaternion:camera.quaternion.toArray(),sceneId:id};document.body.dataset.ready='true';if(!rig)setFrameloop('never');}});return null;
 }
 function Rig(){const reducedMotion=useSettingsStore(s=>s.reducedMotion),cameraAssistance=useSettingsStore(s=>s.cameraAssistance);return <CinematicCameraDirector sceneId={id} reducedMotion={reducedMotion} cameraAssistance={cameraAssistance} focusPosition={[0,1.3,-5]}/>;}
 function Controls(){return rig?<div style={{position:'fixed',top:8,left:8,zIndex:10}}><button onClick={()=>useSettingsStore.setState({drawerOpen:true})}>Open settings</button><button onClick={()=>useSettingsStore.setState({drawerOpen:false})}>Close settings</button><button onClick={()=>useSettingsStore.setState({reducedMotion:true})}>Reduce motion</button><button onClick={()=>useWorldStore.setState({controls:'orbit'})}>Orbit</button></div>:null;}
@@ -70,8 +70,15 @@ const persist=()=>writeFile(out+'/review.json',JSON.stringify(report,null,2));
 async function capture(which,width,height,quality,before) {
  const ctx=await browser.newContext({viewport:{width,height},deviceScaleFactor:1,reducedMotion:'reduce'}),page=await ctx.newPage(),errors=[];
  const name=`${before?'before':'after'}-${which}-${quality}-${width}`;
- page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
- try{await page.goto(`http://127.0.0.1:${before?4205:4204}/${fixtureName}/?case=${which}&quality=${quality}&before=${before?1:0}`,{waitUntil:'domcontentloaded'});if(errors.length)throw new Error(errors.join('\n'));await Promise.race([page.locator('body[data-ready="true"]').waitFor({timeout:90000}),new Promise((_,reject)=>page.once('pageerror',reject))]);await page.screenshot({path:out+'/'+name+'.png',timeout:60000});const stats=await page.evaluate(()=>window.__shotEvidence);if(!stats.calls||errors.length)throw new Error(errors.join('\n')||'Empty render');report.captures.push({name,which,width,height,quality,before,scope:'seeded scene or material fixture',...stats});}
+ page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.location().url+': '+m.text());});
+ try{await page.goto(`http://127.0.0.1:${before?4205:4204}/${fixtureName}/?case=${which}&quality=${quality}&before=${before?1:0}`,{waitUntil:'domcontentloaded'});if(errors.length)throw new Error(errors.join('\n'));await Promise.race([page.locator('body[data-ready="true"]').waitFor({timeout:90000}),new Promise((_,reject)=>page.once('pageerror',reject))]);// Full-viewport static fixtures have no DOM overlay; avoid the software-GPU compositor.
+ const png=await page.locator('canvas').evaluate(canvas=>{
+  const bounds=canvas.getBoundingClientRect();
+  if(bounds.x!==0||bounds.y!==0||bounds.width!==innerWidth||bounds.height!==innerHeight||canvas.width!==innerWidth||canvas.height!==innerHeight)throw new Error('Fixture canvas must cover the viewport at DPR 1');
+  return canvas.toDataURL('image/png');
+ });
+ if(!png.startsWith('data:image/png;base64,'))throw new Error('Canvas capture did not produce PNG pixels');
+ await writeFile(out+'/'+name+'.png',Buffer.from(png.slice('data:image/png;base64,'.length),'base64'));const stats=await page.evaluate(()=>window.__shotEvidence);if(!stats.calls||errors.length)throw new Error(errors.join('\n')||'Empty render');report.captures.push({name,which,width,height,quality,before,scope:'seeded scene or material fixture',...stats});}
  catch(error){report.failures.push({name,error:String(error),errors});}finally{await ctx.close();await persist();console.log('capture checkpoint',name,report.captures.length,report.failures.length);}
 }
 async function testRig(){
@@ -135,9 +142,9 @@ try{
    if(![required,required+'.ts',required+'.tsx'].some(file=>baselineFiles.has(file))) throw new Error(`Baseline ${baseline} lacks required fixture source ${required}`);
  }
  execFileSync('git',['worktree','add','--detach',beforeRoot,baseline]);await symlink(root+'/node_modules',beforeRoot+'/node_modules','dir');
- for(const dir of [root,beforeRoot]){await mkdir(dir+'/'+fixtureName,{recursive:true});await writeFile(dir+'/'+fixtureName+'/index.html','<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>Cinematography review fixture</title><style>html,body,#root{width:100%;height:100%;margin:0;overflow:hidden}button{padding:8px;margin:4px}</style></head><body><div id="root"></div><script type="module" src="./stage.tsx"></script></body></html>');await writeFile(dir+'/'+fixtureName+'/stage.tsx',dir===root?withMaterialPolicy(stage):stage);await writeFile(dir+'/'+fixtureName+'/shotComposition.ts',await readFile(root+'/src/cinematics/shotComposition.ts'));}
+ for(const dir of [root,beforeRoot]){await mkdir(dir+'/'+fixtureName,{recursive:true});await writeFile(dir+'/'+fixtureName+'/index.html','<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="data:,"><title>Cinematography review fixture</title><style>html,body,#root{width:100%;height:100%;margin:0;overflow:hidden}button{padding:8px;margin:4px}</style></head><body><div id="root"></div><script type="module" src="./stage.tsx"></script></body></html>');await writeFile(dir+'/'+fixtureName+'/stage.tsx',dir===root?withMaterialPolicy(stage):stage);await writeFile(dir+'/'+fixtureName+'/shotComposition.ts',await readFile(root+'/src/cinematics/shotComposition.ts'));}
  await server(root,4203,true);await server(root,4204);await server(beforeRoot,4205);
- browser=await chromium.launch({args:['--enable-webgl','--ignore-gpu-blocklist',`--use-angle=${angle}`]});
+ browser=await chromium.launch({channel:'chromium',args:['--enable-webgl','--ignore-gpu-blocklist',`--use-angle=${angle}`]});
  await testRig();await entry(1280,800);await entry(390,844);
  await capture('details',1100,720,'high',true);await capture('details',1100,720,'high',false);
  for(const which of ['broken','blue','house','meadow','ending']){

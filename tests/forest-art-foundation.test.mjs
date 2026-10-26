@@ -50,17 +50,17 @@ const metre = (geometry, index) => new THREE.Vector3().fromBufferAttribute(geome
   .multiply(new THREE.Vector3(...forest.FOREST_REFERENCE_TRUNK_SCALE)).add(new THREE.Vector3(0, 6, 0));
 const destroy = pair => Object.values(pair).forEach(geometry => geometry.dispose());
 
-test('all 24 actual archetype/tier pairs retain exact topology, vertex allocation and separate material surfaces', () => {
+test('all 24 archetype/tier pairs retain crown topology and bounded separate curved wood surfaces', () => {
   assert.deepEqual(forest.FOREST_ARCHETYPES, Array.from(oldForest.FOREST_ARCHETYPES));
   for (const type of forest.FOREST_ARCHETYPES) for (const detail of [0, 1, 2]) {
     const before = oldForest.createForestArchetypeGeometry(type, detail), after = forest.createForestArchetypeGeometry(type, detail);
     try {
       for (const part of ['trunk', 'crown']) {
-        assert.deepEqual(after[part].index.array, before[part].index.array);
+        if (part === "crown") assert.deepEqual(after[part].index.array, before[part].index.array);
+        else assert.equal(after[part].index.count / 3, 596);
         assert.deepEqual(Object.keys(after[part].attributes), Object.keys(before[part].attributes));
         for (const key of Object.keys(after[part].attributes)) {
-          assert.equal(after[part].attributes[key].count, before[part].attributes[key].count);
-          assert.equal(after[part].attributes[key].array.byteLength, before[part].attributes[key].array.byteLength);
+          assert.equal(after[part].attributes[key].count, part === "trunk" ? 374 : before[part].attributes[key].count);
         }
         assert.equal(after[part].groups.length, 0);
       }
@@ -75,12 +75,12 @@ test('the existing lower bole rings now describe basal shoulders within the old 
     try {
       // The first two real indexed tube rows: nine vertices include the UV twin.
       const oldFirstRise = Array.from({ length: 8 }, (_, i) => metre(before.trunk, 9 + i).y);
-      const newFirstRise = Array.from({ length: 8 }, (_, i) => metre(after.trunk, 9 + i).y);
+      const newFirstRise = Array.from({ length: 12 }, (_, i) => metre(after.trunk, 13 + i).y);
       assert.ok(Math.max(...newFirstRise) < Math.min(...oldFirstRise) * .4, type);
       const oldFootprint = Math.max(...Array.from({ length: before.trunk.attributes.position.count }, (_, i) => {
         const p = metre(before.trunk, i); return p.y < 1 ? Math.hypot(p.x, p.z) : 0;
       }));
-      for (let i = 0; i < 18; i++) {
+      for (let i = 0; i < 26; i++) {
         const p = metre(after.trunk, i); assert.ok(Math.hypot(p.x, p.z) < oldFootprint, type);
       }
       const firstColors = after.trunk.attributes.color.array.slice(0, 27);
@@ -89,7 +89,7 @@ test('the existing lower bole rings now describe basal shoulders within the old 
   }
 });
 
-test('reused old-limb geometry gives every form two finite short age scars with no new triangles', () => {
+test('reused old-limb geometry gives every form two finite short age scars within the curved-wood budget', () => {
   for (const type of forest.FOREST_ARCHETYPES) {
     const pair = forest.createForestArchetypeGeometry(type, 2);
     try {
@@ -98,7 +98,7 @@ test('reused old-limb geometry gives every form two finite short age scars with 
       const tips = indices.map(index => metre(pair.trunk, index));
       for (const p of tips) { assert.ok(p.y > 3 && p.y < 5.4); assert.ok(Math.hypot(p.x, p.z) < 1); }
       assert.ok(tips[1].y - tips[0].y > 1);
-      assert.equal(pair.trunk.index.count / 3, 292);
+      assert.equal(pair.trunk.index.count / 3, 596);
     } finally { destroy(pair); }
   }
 });

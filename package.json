@@ -30,7 +30,8 @@
     "wrangler:check": "wrangler pages functions build functions --outdir .wrangler/functions-build --project-directory . --build-output-directory dist --compatibility-date=2026-04-30",
     "wrangler:validate": "npm run wrangler:check",
     "preview": "vite preview --host 0.0.0.0",
-    "deploy:pages": "npm run build && wrangler pages deploy dist --project-name slipper-in-the-woods",
+    "deploy:pages": "npm run build && wrangler pages deploy dist --project-name slipper",
+    "verify:deployment": "node scripts/verify-deployment.mjs",
     "cf:kv:create:journey": "wrangler kv namespace create SIDTW_JOURNEY_KV",
     "cf:kv:create:magic": "wrangler kv namespace create SIDTW_MAGIC_KV",
     "assets:inspect:wolf": "gltf-transform inspect public/models/wolf.glb",
@@ -73,7 +74,12 @@
     "@types/three": "^0.171.0",
     "@vitejs/plugin-react": "^4.3.4",
     "typescript": "^5.7.2",
-    "vite": "^6.4.3",
-    "wrangler": "^4.136.1"
+    "vite": "^6.4.5",
+    "wrangler": "^4.152.0"
+  },
+  "overrides": {
+    "miniflare@5.20261019.2-beta": {
+      "undici": "7.30.1"
+    }
   }
 }

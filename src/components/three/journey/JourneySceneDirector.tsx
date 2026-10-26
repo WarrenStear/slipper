@@ -1,3 +1,4 @@
+import { PreparedScenery, SceneryPreparationDriver } from "../../../world/core/PreparedScenery";
 import { TactileDetailProvider } from "../storyEvents/TactileMaterial";
 import { memo, useMemo, type ElementType } from "react";
 import {
@@ -110,6 +111,7 @@ function JourneySceneDirectorComponent({
     : [0, 0, 0];
   return (
     <group name="authored-journey-scene-window" position={worldOffset} userData={{ streaming: Boolean(sampleGroundY), sceneCount: sceneIds.length }}>
+      <SceneryPreparationDriver />
       {/* One input owner and carried-object presentation survives scenery eviction. */}
       {interactionsEnabled ? <group position={mutablePoint(sampleGroundY ? sceneWorldOrigin(activeSceneId, sampleGroundY) : activeScene.anchor.position)} rotation={[0, activeScene.anchor.headingRadians, 0]}>
         <StoryEventDirector sceneId={activeSceneId} reducedMotion={reducedMotion} renderWorldObjects={sceneIds.includes(activeSceneId)} quietGuidanceActivity={quietGuidanceActivity} />
@@ -126,7 +128,7 @@ function JourneySceneDirectorComponent({
         const reduced = active ? reducedEffects : true;
         return <ScenePresence.Provider key={sceneId} value={active}>
           <TactileDetailProvider quality={detail.quality} reducedEffects={reduced}>
-          <group name={`journey-scene:${sceneId}`} userData={{ environmentId: manifest.environmentId, active, sceneryOnly: !active }}
+          <PreparedScenery active={active || !sampleGroundY}><group name={`journey-scene:${sceneId}`} userData={{ environmentId: manifest.environmentId, active, sceneryOnly: !active }}
             position={position} rotation={[0, scene.anchor.headingRadians, 0]}>
             {active && interactionsEnabled ? <ActiveStoryActors sceneId={sceneId} qualityProfile={qualityProfile} reducedEffects={reducedEffects} reducedMotion={reducedMotion} /> : null}
             {!active && scene.chapterId !== "broken-floor" && scene.chapterId !== "lantern-epilogue" ?
@@ -135,7 +137,7 @@ function JourneySceneDirectorComponent({
             <OutdoorLandscape sceneId={sceneId} quality={detail.quality} reducedEffects={reduced} reducedMotion={reducedMotion || !active} collidable={interactionsEnabled} sampleWorldGroundY={sampleGroundY} worldOrigin={position} headingRadians={scene.anchor.headingRadians} />
             <Chapter scene={scene} qualityProfile={detail} reducedEffects={reduced} reducedMotion={reducedMotion || !active}
               openingResolved={openingResolved} onFinalConstellationFormationComplete={active ? onFinalConstellationFormationComplete : undefined} />
-          </group>
+          </group></PreparedScenery>
         </TactileDetailProvider>
         </ScenePresence.Provider>;
       })}

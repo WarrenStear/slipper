@@ -38,12 +38,13 @@ export const ForestSurfaceMaterial = memo(function ForestSurfaceMaterial({ finis
           float soilMacro = storyNoise(vStoryPosition * .16);
           float leafBreakup = storyNoise(vStoryPosition * 1.2);
           float damp = clamp(vTerrainHabitat.y * (.56 + soilMacro * .55), 0., 1.);
-          float moss = vTerrainHabitat.z * smoothstep(.3, .76, soilMacro) * (1. - vTerrainHabitat.x * .78);
+          float moss = clamp(vTerrainHabitat.z * 1.3, 0., 1.) * smoothstep(.24, .64, soilMacro) * (1. - vTerrainHabitat.x * .86);
+          float rootShade = smoothstep(.65, .95, storyNoise(vStoryPosition * .48));
           float litter = smoothstep(.57, .78, leafBreakup) * (1. - moss) * (1. - vTerrainHabitat.x * .64);
           diffuseColor.rgb *= mix(vec3(.68, .67, .59), vec3(1.05, 1.04, .93), soilMacro);
-          diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * vec3(.59, .72, .48), moss * .55);
+          diffuseColor.rgb = mix(diffuseColor.rgb, mix(diffuseColor.rgb * vec3(.55, .76, .4), vec3(.075, .115, .037), .4), moss * .8);
           diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * vec3(1.14, .98, .75), litter * .3);
-          diffuseColor.rgb *= 1. - damp * .16;
+          diffuseColor.rgb *= 1. - damp * .2 - rootShade * .12;
           diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * vec3(.82, .78, .75), vTerrainHabitat.w * .45);
         `)
         .replace("#include <roughnessmap_fragment>", `#include <roughnessmap_fragment>
@@ -53,7 +54,7 @@ export const ForestSurfaceMaterial = memo(function ForestSurfaceMaterial({ finis
       applyFoliageFinish(shader, detail === "relief");
     }
   }, [detail, finish]);
-  const programKey = useCallback(() => `sidtw-forest-${finish}-${detail}-v3`, [detail, finish]);
-  return <meshStandardMaterial key={programKey()} {...appearance} color={tint} normalScale={normalScale} onBeforeRender={maps ? mapGuard : undefined} roughness={finish === "ground" ? .86 : .93} metalness={0} side={finish === "canopy" ? DoubleSide : FrontSide}
+  const programKey = useCallback(() => `sidtw-forest-${finish}-${detail}-v4`, [detail, finish]);
+  return <meshStandardMaterial key={programKey()} {...appearance} color={tint} bumpMap={finish === "bark" && detail === "relief" ? appearance.map : null} bumpScale={.065} alphaTest={finish === "canopy" ? .45 : 0} normalScale={normalScale} onBeforeRender={maps ? mapGuard : undefined} roughness={finish === "ground" ? .86 : .93} metalness={0} side={finish === "canopy" ? DoubleSide : FrontSide}
     onBeforeCompile={compile} customProgramCacheKey={programKey} />;
 });

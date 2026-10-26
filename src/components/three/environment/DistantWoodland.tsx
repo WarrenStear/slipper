@@ -3,6 +3,7 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { distantTrunkFitsTerrain } from "./distantWoodlandBounds";
 import { createOrganicCrownGeometry } from "./forestGeometry";
+import { CanopyMaterial } from "./FoliageMaterial";
 
 import { distantWoodlandLayout, distantWoodlandUnit as unit } from "./distantWoodlandLayout";
 
@@ -75,7 +76,7 @@ export const DistantWoodland = memo(function DistantWoodland({ origin, quality, 
       <meshStandardMaterial color="#505950" roughness={1} />
     </instancedMesh>
     <instancedMesh ref={crowns} args={[crown, undefined, count]}>
-      <meshStandardMaterial color="#63715e" vertexColors roughness={1} side={THREE.DoubleSide} />
+      <CanopyMaterial color="#63715e" />
     </instancedMesh>
   </group>;
 });
