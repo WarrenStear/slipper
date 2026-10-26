@@ -1,3 +1,4 @@
+import { PreparedScenery } from "../core/PreparedScenery";
 import { GroundMistBanks } from "../atmosphere/GroundMist";
 import type { MistPatch } from "../atmosphere/groundMistField";
 import { useSceneLook } from "../../components/three/artDirection/SceneLookContext";
@@ -35,7 +36,7 @@ const WillowTree = memo(function WillowTree({ quality, sampleGroundY }: { qualit
       <meshStandardMaterial map={bark} bumpMap={quality === "high" || quality === "cinematic" ? bark : null} bumpScale={.075} color="#d2cfbc" vertexColors roughness={.96} />
     </mesh>
     <mesh name="willow-hanging-lanceolate-leaves" geometry={geometry.leaves} castShadow receiveShadow>
-      <FoliageMaterial color="#879b68" vertexColors doubleSided flexibility={.022} />
+      <FoliageMaterial color="#879b68" vertexColors doubleSided leafVeins flexibility={.018} />
     </mesh>
     <mesh name="willow-root-ferns-and-bank-rushes" geometry={understory} receiveShadow><FoliageMaterial color="#667d52" doubleSided /></mesh>
     <mesh name="willow-weathered-bank-stones" geometry={stones} receiveShadow><WoodlandSurfaceMaterial surface="stone" /></mesh>
@@ -62,6 +63,6 @@ export const WillowRefuge = memo(function WillowRefuge({ quality, sampleGroundY,
   useEffect(() => () => path.dispose(), [path]);
   return <group name="optional-exploration-geography">
     <mesh name="willow-connected-earth-paths" geometry={path} receiveShadow><TactileMaterial surface="earth" color="#5e5846" vertexColors side={DoubleSide} /></mesh>
-    {resident ? <WillowTree quality={quality} sampleGroundY={sampleGroundY} /> : null}
+    {resident ? <PreparedScenery active={false}><WillowTree quality={quality} sampleGroundY={sampleGroundY} /></PreparedScenery> : null}
   </group>;
 });

@@ -213,7 +213,7 @@ test('canopies contain independent folded alpha-cut twig sprays with no faces co
           const offset = leaf * 4;
           assert.deepEqual([...g.index.array.slice(leaf * 6, leaf * 6 + 6)], [0, 1, 2, 0, 2, 3].map(i => i + offset));
           const vertices = Array.from({ length: 4 }, (_, i) => new THREE.Vector3().fromBufferAttribute(p, offset + i));
-          for (const a of vertices) for (const b of vertices) assert.ok(a.distanceTo(b) < (detail === 0 ? .9 : .65), 'bounded sprays/blades must not become oversized shards');
+          for (const a of vertices) for (const b of vertices) assert.ok(a.distanceTo(b) < (detail === 0 ? 1.1 : .8), 'bounded sprays/blades must not become oversized shards');
           const a = vertices[1].clone().sub(vertices[0]);
           const b = vertices[2].clone().sub(vertices[0]);
           const c = vertices[3].clone().sub(vertices[0]);

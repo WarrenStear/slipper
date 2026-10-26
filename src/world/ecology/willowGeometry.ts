@@ -60,9 +60,9 @@ export function createWillowGeometry(quality: string, ground: (x: number, z: num
     const x = Math.cos(a) * length, z = Math.sin(a) * length;
     branch([[.1, .7, 0], [x * .25, .35, z * .25], [x * .65, ground(x * .65, z * .65) + .09, z * .65], [x, ground(x, z) - .03, z]], .36, i, 7, 14);
   }
-  const positions: number[] = [], indices: number[] = [], colors: number[] = [];
+  const positions: number[] = [], indices: number[] = [], colors: number[] = [], uvs: number[] = [];
   const addLeaf = (origin: THREE.Vector3, angle: number, seed: number) => {
-    const length = .25 + artNoise(seed, 4) * .17, width = .047 + artNoise(seed, 5) * .023;
+    const length = .22 + artNoise(seed, 4) * .14, width = .03 + artNoise(seed, 5) * .013;
     const direction = new THREE.Vector3(Math.cos(angle) * .65, -.76, Math.sin(angle) * .65).normalize();
     const across = new THREE.Vector3(-Math.sin(angle), .1, Math.cos(angle)).multiplyScalar(width);
     const middle = origin.clone().addScaledVector(direction, length * .45);
@@ -70,13 +70,14 @@ export function createWillowGeometry(quality: string, ground: (x: number, z: num
     const base = positions.length / 3;
     for (const p of [origin, middle.clone().add(across), tip, middle.clone().sub(across)]) positions.push(p.x, p.y, p.z);
     indices.push(base, base + 1, base + 2, base, base + 2, base + 3);
+    uvs.push(.5,0, 0,.45, .5,1, 1,.45);
     const variation = .68 + artNoise(seed, 9) * .32;
     for (let j = 0; j < 4; j++) colors.push(variation * .91, variation, variation * .72);
   };
   for (let arm = 0; arm < 10; arm++) {
     const a = arm * 2.39996, radius = 5 + artNoise(97, arm) * 2.4;
     const start = new THREE.Vector3(.5, 3.5 + artNoise(33, arm) * 1.5, 0);
-    const crest = new THREE.Vector3(Math.cos(a) * radius * .55, 6.8 + artNoise(9, arm) * 1.15, Math.sin(a) * radius * .55);
+    const crest = new THREE.Vector3(Math.cos(a) * radius * .55, 6.5 + artNoise(9, arm) * 1.15, Math.sin(a) * radius * .55);
     const tip = new THREE.Vector3(Math.cos(a) * radius, 5.4 + artNoise(71, arm) * 1.1, Math.sin(a) * radius);
     const bough = new THREE.CatmullRomCurve3([start, crest, tip]);
     branch([start.toArray(), crest.toArray(), tip.toArray()], .24 + artNoise(2, arm) * .1, arm, 7, 18);
@@ -86,7 +87,7 @@ export function createWillowGeometry(quality: string, ground: (x: number, z: num
       const arch = anchor.clone().lerp(end, .45); arch.y += .35;
       const twig = new THREE.CatmullRomCurve3([anchor, arch, end]);
       branch([anchor.toArray(), arch.toArray(), end.toArray()], .065, arm * 3 + fork, 4, 8);
-      const strands = detailed ? 8 : 6, pairs = detailed ? 22 : 13;
+      const strands = detailed ? 9 : 6, pairs = detailed ? 32 : 20;
       for (let strand = 0; strand < strands; strand++) {
         const seed = arm * 307 + fork * 37 + strand;
         const top = twig.getPoint(.12 + strand / strands * .86);
@@ -106,6 +107,7 @@ export function createWillowGeometry(quality: string, ground: (x: number, z: num
   }
   const leaves = new THREE.BufferGeometry();
   leaves.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+  leaves.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
   leaves.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
   leaves.setIndex(indices); leaves.computeVertexNormals(); leaves.computeBoundingSphere();
   const bole = mergeArtGeometries(wood), p = bole.getAttribute("position"), tint: number[] = [];

@@ -37,10 +37,10 @@ All new runtime geometry is authored in repository code using the existing Three
 
 | Quality | Additional nearby scenes | Radius before retention | Willow trunk/branches + leaves |
 | --- | ---: | ---: | ---: |
-| Low / reduced effects | 3 | 48 m | 13,888 triangles |
-| Medium | 4 | 56 m | 13,888 triangles |
-| High | 5 | 64 m | 36,544 triangles |
-| Cinematic | 6 | 72 m | 36,544 triangles |
+| Low / reduced effects | 3 | 48 m | 28,490 triangles |
+| Medium | 4 | 56 m | 28,490 triangles |
+| High | 5 | 64 m | 51,530 triangles |
+| Cinematic | 6 | 72 m | 51,530 triangles |
 
 The active chapter is additional only while physically nearby. Understory, pool and path geometry have small fixed counts. The willow uses bounded merged meshes; its detailed subtree has 105/125 metre enter/exit distances. Scenery-only material detail is base regardless of the player's main quality tier. The distant woodland keeps two instanced draws and repacks at camera-cell boundaries. The existing hero-reflection budget remains authoritative.
 
@@ -147,6 +147,32 @@ These short samples include traversal/settling work. The high p95 values at the 
 Production preview health passed at `http://127.0.0.1:4189/`: correct title, meaningful onboarding, Begin → rendered canvas and experience root, no Vite error overlay, and no page errors or console warnings. Browser plugin was unavailable; validation used the repository-pinned Playwright 1.62 Chromium with native Metal. Production interaction QA passed **2/2 desktop tests** (physical opening wipe/reload/inversion/click handoff; completed constellation → dedication → Free Woods/Archive/Constellation) and **5/5 mobile Chromium tests** (handedness, portrait/landscape maps, route recovery, input cancellation, and trusted touch position/look changes). Commands used `PLAYWRIGHT_TEST_BASE_URL=http://127.0.0.1:4189`, `npm run test:e2e`, the corresponding `chromium` / `mobile-chromium` projects, and external artifact output directories. Safari/WebKit remains unqualified because the installed Playwright WebKit runtime previously failed before application startup with `Page.overrideSetting: Unknown setting: PushAPIEnabled`; it was not rerun or represented as passing in this art pass.
 
 Evidence is outside the repository at `../artifacts/woodland-art-pass-20261025/`. Intermediate `v1/`, `v2/`, `final/` and `twilight-v1/` folders are retained as such; `twilight-final/` contains the final qualified twilight captures and measurement JSON. Generated texture provenance and the exact stone prompt are in `public/textures/forest/GENERATED_MATERIALS.md`.
+
+## Forest density and traversal smoothing — 26 October 2026
+
+Living tree families now have fuller twig sprays at the same canopy vertex count. A second vegetation layer adds young trees with textured bark and open leaf clusters, capped at 24/40/64/80 instances for low/medium/high/cinematic. Bark and crowns add two instanced draws, bringing the nearby floor habitat to four. Ferns have more leaflets and simpler rachis tubes. Young trees stay outside the actual curved routes and the willow's immediate 18-metre foreground; their maximum scaled crown radius is tested below the two-metre clearance envelope. Terrain heights and colliders are unchanged.
+
+The willow has narrower leaves, subtle midribs, more attached hanging strands and a slightly lower branch crest. Its current triangle budgets are reflected in the table above. The sanctuary bank has finer irregular contours, lighter sediment tint and small gravel among the larger stones and rushes. Gravel joins the existing stone batch, keeping shoreline dressing at three draws. Blue twilight, the textured blue moon, camera-carried lantern and canonical ending placement remain intact. This pass reuses existing textures and adds no asset downloads or dependencies.
+
+Two measured sources of traversal hitches were addressed:
+
+- CPU profiles identified first-use shader validation/compilation waits. Nearby scene and willow materials now start compilation inside the same render target as their eventual beauty draw, at most one bounded region per frame. On drivers supporting parallel compilation, scenery receives a 250 ms lead before visibility. Active story objects stay immediate. Cancellation is synchronous and cannot later access disposed resources; unsupported drivers and oversized batches keep normal rendering. This is a bounded preparation interval, not a GPU readiness guarantee. Shader diagnostics remain enabled.
+- Shoreline stones now index their template once before cloning, preserving UV/normal seams and avoiding repeated vertex hashing for each stone. Overlapping forest-floor windows reuse grounded candidates in a 2,048-entry cache, reset when the ground/path/morph inputs change. Determinism, curved-route clearance, quality caps and cache bounds are tested.
+
+`REVIEW_WALK=1` adds a reproducible 36-second moving-camera profile to `scripts/review-continuous-world.mjs`. It follows the wood → willow → sanctuary route twice, saves Chrome CPU profiles and raw frame intervals, and avoids the fixture's heavy inspection traversal during sampling. The baseline is immutable commit `7775f91`; both runs use pinned Playwright Chromium with native ANGLE Metal on Apple M1, high quality, 1440 × 900 and DPR 1. Physics is paused in this graphics fixture, so these results measure rendering/streaming rather than complete controller-driven gameplay.
+
+| Traversal | Baseline median / p95 | Updated median / p95 | Baseline → updated maximum | Frames over 50 ms, baseline → updated |
+| --- | ---: | ---: | ---: | ---: |
+| First route | 16.7 / 17.6 ms | 16.7 / 18.6 ms | 788.7 → 97.7 ms | 4 → 4 |
+| Return route | 16.7 / 17.6 ms | 16.6 / 18.6 ms | 269.1 → 95.0 ms | 4 → 3 |
+
+The largest first-route hitch fell by approximately 88%, but there are still several 50–98 ms frames. Typical p95 rose by about one millisecond with the denser art; this is a reduction in worst stalls, not a universal frame-rate improvement or a claim of stutter-free 60 fps. First-route sampled CPU time in `getProgramInfoLog` fell from about 692 to 90 ms. Remaining construction, uploads and driver work warrant further profiling on target hardware.
+
+Final review passed 128 scene/quality visits, blue-moon and carried-lantern checks, unchanged story-state assertions, and the placed-ending → Free Woods transition. Three return loops retained exactly 110 geometries and 30 textures. No page or console errors were recorded. The final high-quality wood/willow/shoreline captures respectively recorded 114/86/139 draws and 639,369/582,877/340,763 triangles including shadows. Low portrait at 390 × 844 used 55 draws, 221,350 triangles and no shadow-casting light. These desktop-GPU measurements do not qualify physical phones or long-duration memory pressure.
+
+`npm run check` passed with 1,389 unit tests and seven security tests, plus content checks, application/Functions type checks, production build and local Worker compilation. The existing large-chunk warning remains. Approved narrative, events, save model, journey store and compiled world content are unchanged. Evidence is outside the repository at `../artifacts/forest-density-pass-20261026/`; `baseline/`, `v1/` and `final/` distinguish the comparison stages.
+
+Production preview QA at `http://127.0.0.1:4189/` passed page/title identity, meaningful onboarding, Begin → visible canvas/experience root, no framework overlay, and zero console warnings/page errors. The same final build passed both desktop Chromium interaction cases (opening wipe/reload/click handoff and completed constellation → dedication → Free Woods), plus all five mobile Chromium exploration tests (handedness, portrait/landscape maps, route recovery, cancellation and trusted touch movement/look). After removing an unused local array during final review, the affected 15 geometry/exploration tests passed again; that cleanup has no rendered effect. Browser plugin was unavailable, so the repository's pinned Playwright supplied browser QA. Safari/WebKit retains the previously documented pre-application `PushAPIEnabled` runtime blocker and was not rerun in this pass. The empty-page pacing control measured 16.7 / 17.9 ms median/p95.
 
 ## Remaining production work
 

@@ -20,7 +20,7 @@ function finish(positions: number[], indices: number[], uvs: number[]) {
 }
 
 /** Recover exact vertex sharing without welding distinct normals or UV seams. */
-function indexExactAttributes(geometry: THREE.BufferGeometry) {
+export function indexExactAttributes(geometry: THREE.BufferGeometry) {
   if (geometry.index) return;
   const attributes = Object.entries(geometry.attributes);
   const originals: number[] = [], indices: number[] = [];

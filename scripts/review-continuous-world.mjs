@@ -40,9 +40,16 @@ function Probe(){
  const {camera,scene,gl}=useThree(),frames=useRef(0),samples=useRef([]);
  useEffect(()=>{window.__view=(x,z,tx,tz,height=1.65)=>{window.__pose=[x,ground(x,z)+height,z,tx,ground(tx,tz)+1.8,tz];samples.current=[];};
  window.__sky=()=>{const [x,y,z]=camera.position.toArray();window.__pose=[x,y,z,x+27,y+36,z+91];samples.current=[];};
+ window.__beginWalk=()=>{const route=[[-5,-368],[-20,-353],[-36,-337],[-53,-329],[-66,-336],[-53,-320],[-34,-308],[-14,-294]];
+ const poses=[];for(let i=0;i<route.length-1;i++){const [x,z]=route[i],[tx,tz]=route[i+1],steps=Math.ceil(Math.hypot(tx-x,tz-z)*2);for(let n=0;n<steps;n++){const t=n/steps,px=x+(tx-x)*t,pz=z+(tz-z)*t;poses.push([px,ground(px,pz)+1.65,pz]);}}
+ window.__walk={poses,start:performance.now(),duration:36000};window.__walkFrames=[];window.__walkDone=false;};
  window.__state=()=>{const s=useJourneyStore.getState();return {events:s.completedStoryEventIds,scenes:s.completedSceneIds,objects:s.storyObjectStates};};},[]);
- useFrame((_,dt)=>{if(window.__pose){camera.position.set(...window.__pose.slice(0,3));camera.lookAt(...window.__pose.slice(3));}
+ useFrame((_,dt)=>{
+ if(window.__walk){const walk=window.__walk,t=Math.min(1,(performance.now()-walk.start)/walk.duration),index=t*(walk.poses.length-1),i=Math.floor(index),a=walk.poses[i],b=walk.poses[Math.min(i+1,walk.poses.length-1)],position=a.map((v,k)=>v+(b[k]-v)*(index-i));
+ const target=walk.poses[Math.min(i+10,walk.poses.length-1)];window.__pose=[...position,target[0],target[1],target[2]+.01];window.__walkFrames.push(dt*1000);if(t===1){window.__walk=null;window.__walkDone=true;}}
+ if(window.__pose){camera.position.set(...window.__pose.slice(0,3));camera.lookAt(...window.__pose.slice(3));}
  samples.current.push(dt*1000);if(samples.current.length>120)samples.current.shift();
+ if(window.__walk) return;
  queueMicrotask(()=>{frames.current++;const context=gl.getContext(),debug=context.getExtension('WEBGL_debug_renderer_info');
  const groups=[],worldPositions={},lights=[],lanterns=[],placedLanterns=[];scene.traverse(o=>{if(o.name.startsWith('journey-scene:')){groups.push(o.name.slice(14));worldPositions[o.name.slice(14)]=o.getWorldPosition(new THREE.Vector3()).toArray();}if(o.name.startsWith('MasterPlayerLanternSingleRealistic:'))lanterns.push(camera.worldToLocal(o.getWorldPosition(new THREE.Vector3())).toArray());if(o.userData.objectId==='lantern.master')placedLanterns.push(o.name);if(o.isLight)lights.push({name:o.name,shadow:o.castShadow});});
  const sorted=[...samples.current].sort((a,b)=>a-b);
@@ -71,6 +78,21 @@ try {
   await page.bringToFront();
   await page.waitForFunction(() => window.__snapshot?.frames > 30, null, { timeout: 45000 });
   const initial = await page.evaluate(() => window.__state());
+  if (process.env.REVIEW_WALK === '1') {
+    await page.evaluate(()=>window.__view(-5,-368,-8,-350));await page.waitForTimeout(5000);
+    const client=await page.context().newCDPSession(page);await client.send('Profiler.enable');
+    const walks=[];
+    for(let pass=0;pass<2;pass++) {
+      await page.evaluate(()=>window.__view(-5,-368,-8,-350));await page.waitForTimeout(2000);
+      await client.send('Profiler.start');await page.evaluate(()=>window.__beginWalk());
+      await page.waitForFunction(()=>window.__walkDone,null,{timeout:50000});
+      const {profile}=await client.send('Profiler.stop');await writeFile(join(out,'walk-'+pass+'.cpuprofile'),JSON.stringify(profile));
+      const values=await page.evaluate(()=>window.__walkFrames), sorted=[...values].sort((a,b)=>a-b);
+      walks.push({pass,frames:values.length,p50ms:sorted[Math.floor(sorted.length*.5)],p95ms:sorted[Math.floor(sorted.length*.95)],p99ms:sorted[Math.floor(sorted.length*.99)],maxms:Math.max(...values),over33ms:values.filter(x=>x>33.4).length,over50ms:values.filter(x=>x>50).length,intervals:values});
+    }
+    assert.deepEqual(await page.evaluate(()=>window.__state()),initial);assert.deepEqual(errors,[]);
+    await writeFile(join(out,'walk-measurements.json'),JSON.stringify({walks,errors},null,2));console.log(JSON.stringify(walks.map(({intervals,...summary})=>summary)));
+  }
   for (const [name, pose] of [['wood', [-5,-368,-8,-350]], ['willow', [-66,-336,-52,-320]], ['sanctuary-from-wood', [-14,-294,-14,-276]], ['meadow-return', [-18,-331,10,-330]]]) {
     await page.evaluate(pose => window.__view(...pose), pose);
     await page.waitForTimeout(3000);

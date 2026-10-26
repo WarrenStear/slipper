@@ -13,13 +13,13 @@ function pinnule(base: THREE.Vector3, tip: THREE.Vector3, width: number) {
   geometry.computeVertexNormals(); return geometry;
 }
 
-/** One shared fern geometry: 270 / 530 triangles, not an object per leaflet. */
+/** One shared fern geometry: 328 / 530 triangles, not an object per leaflet. */
 export function createFernGeometry(relief = false) {
-  const pieces: THREE.BufferGeometry[] = [], fronds = relief ? 5 : 3, pairs = relief ? 7 : 5;
+  const pieces: THREE.BufferGeometry[] = [], fronds = relief ? 5 : 4, pairs = relief ? 10 : 7;
   for (let f = 0; f < fronds; f++) {
     const angle = f * 2.39996 + .32, length = .86 + artNoise(14, f) * .35;
     const point = (t: number) => new THREE.Vector3(Math.sin(angle) * t * length, Math.sin(t * Math.PI * .83) * .64 * length, Math.cos(angle) * t * length);
-    pieces.push(createTaperedBranchGeometry([0, .3, .68, 1].map(t => point(t).toArray() as ArtVec3), .009, f, 3, 8));
+    pieces.push(createTaperedBranchGeometry([0, .3, .68, 1].map(t => point(t).toArray() as ArtVec3), .009, f, 3, 4));
     for (let pair = 0; pair < pairs; pair++) {
       const t = .16 + pair / pairs * .7, base = point(t), leafLength = (.19 * Math.sin(t * Math.PI) + .025) * length;
       for (const side of [-1, 1]) {

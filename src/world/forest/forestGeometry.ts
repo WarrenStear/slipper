@@ -213,8 +213,9 @@ function crownAt(type: number, detail: ForestGeometryDetail) {
       const across = new THREE.Vector3(-direction.z, 0, direction.x).normalize()
         .applyAxisAngle(direction, Math.sin(leaf * 1.31 + island * .47) * 1.1);
       const islandScale = Math.min(1, Math.max(...spread) / .3);
-      const length = (detail === 0 ? .26 : .18) * form.leaf * islandScale * (.85 + (leaf % 4) * .11);
-      const width = (detail === 0 ? .22 : .15) * form.leaf * islandScale * (.8 + (leaf % 3) * .12);
+      const fullness = type === 7 || type === 6 ? 1 : 1.22;
+      const length = fullness * (detail === 0 ? .26 : .18) * form.leaf * islandScale * (.85 + (leaf % 4) * .11);
+      const width = fullness * (detail === 0 ? .22 : .15) * form.leaf * islandScale * (.8 + (leaf % 3) * .12);
       // Alpha-cut twig sprays replace single diamond blades at the same vertex
       // budget. Folded cards and irregular pitch preserve depth from below.
       const points = [

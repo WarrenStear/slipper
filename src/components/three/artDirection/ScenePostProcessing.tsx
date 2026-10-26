@@ -1,3 +1,4 @@
+import { prepareStreamedScenery } from "../../../world/core/sceneryPreparation";
 import { useEffect, useMemo } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { DepthTexture, HalfFloatType, ShaderMaterial, UnsignedByteType, UnsignedIntType, Vector2, WebGLRenderTarget } from "three";
@@ -120,6 +121,7 @@ export function ScenePostProcessing({ sceneId, bloomIntensity, vignetteIntensity
         preparation.attempted = true;
         enqueueFirstWoodPrograms(sceneId, gl, scene, camera);
       }
+      prepareStreamedScenery(gl, scene, camera, performance.now());
       gl.clear(); gl.render(scene, camera);
       if (levels.length) {
         quad.material = bright; bright.uniforms.inputMap.value = target.texture; bright.uniforms.stepSize.value.set(.5 / w, .5 / h);

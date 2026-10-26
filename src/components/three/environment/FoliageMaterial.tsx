@@ -7,8 +7,8 @@ import { applyFoliageFinish } from "./foliageFinish";
 import { useSceneLook } from "../artDirection/SceneLookContext";
 
 /** Opaque leaves or alpha-cut sprays; neither requires depth sorting. */
-export const FoliageMaterial = memo(function FoliageMaterial({ color, vertexColors = false, doubleSided = false, flexibility = 0, map }: {
-  color: string; vertexColors?: boolean; doubleSided?: boolean; flexibility?: number; map?: Texture;
+export const FoliageMaterial = memo(function FoliageMaterial({ color, vertexColors = false, doubleSided = false, flexibility = 0, map, leafVeins = false }: {
+  color: string; vertexColors?: boolean; doubleSided?: boolean; flexibility?: number; map?: Texture; leafVeins?: boolean;
 }) {
   const detail = useTactileDetail();
   const presentation = useSceneLook();
@@ -21,6 +21,16 @@ export const FoliageMaterial = memo(function FoliageMaterial({ color, vertexColo
   const compile = useCallback((shader: Parameters<MeshStandardMaterial["onBeforeCompile"]>[0]) => {
     applyTactileShader(shader, "moss", detail);
     applyFoliageFinish(shader, detail === "relief");
+    if (leafVeins) {
+      shader.vertexShader = shader.vertexShader.replace("#include <common>", "#include <common>\nvarying vec2 leafUv;")
+        .replace("#include <begin_vertex>", "#include <begin_vertex>\nleafUv = uv;");
+      shader.fragmentShader = shader.fragmentShader.replace("#include <common>", "#include <common>\nvarying vec2 leafUv;")
+        .replace("#include <color_fragment>", `#include <color_fragment>
+          float midrib = 1. - smoothstep(.008, .035, abs(leafUv.x - .5));
+          float edge = smoothstep(.3, .5, abs(leafUv.x - .5));
+          diffuseColor.rgb *= .94 + midrib * .14 - edge * .12;
+        `);
+    }
     if (flexibility > 0) {
       shader.uniforms.habitatWind = wind;
       shader.vertexShader = shader.vertexShader.replace("#include <common>", "#include <common>\nuniform vec2 habitatWind;")
@@ -38,8 +48,8 @@ export const FoliageMaterial = memo(function FoliageMaterial({ color, vertexColo
           transformed.z += sin(habitatWind.x * .43 + phase * .71) * tip * habitatWind.y * .4;
         `);
     }
-  }, [detail, flexibility, wind]);
-  const key = useCallback(() => `sidtw-foliage-v2-${detail}-${flexibility > 0}`, [detail, flexibility]);
+  }, [detail, flexibility, wind, leafVeins]);
+  const key = useCallback(() => `sidtw-foliage-v3-${detail}-${flexibility > 0}-${leafVeins}`, [detail, flexibility, leafVeins]);
   return <meshStandardMaterial key={key()} color={color} map={map} alphaTest={map ? .45 : 0} vertexColors={vertexColors} roughness={.92} metalness={0}
     side={doubleSided ? DoubleSide : FrontSide} onBeforeRender={updateWind} onBeforeCompile={compile} customProgramCacheKey={key} />;
 });

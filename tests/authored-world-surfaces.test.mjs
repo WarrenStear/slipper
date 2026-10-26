@@ -45,7 +45,7 @@ test('unknown quality falls back safely and reduced effects never adds more deta
 });
 
 for (const [name, build, max] of [
-  ['base fern',()=>createFernGeometry(false),270],['relief fern',()=>createFernGeometry(true),530],
+  ['base fern',()=>createFernGeometry(false),328],['relief fern',()=>createFernGeometry(true),530],
   ['rush',createRushGeometry,120],['litter',createLeafLitterGeometry,24],
   ['deadwood',createDeadwoodGeometry,378],['root threshold',createRootThresholdGeometry,1186],
 ]) {

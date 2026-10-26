@@ -19,13 +19,13 @@ test('forest-floor colonies stay grounded and outside the real curved routes thr
       const cx = Math.floor(x / 4.8), cz = Math.floor(z / 4.8);
       const layout = forestFloorLayout(cx, cz, seeds, clearings, ground, morph);
       assert.deepEqual(layout, forestFloorLayout(cx, cz, seeds, clearings, ground, morph));
-      for (const kind of ['ferns','grass']) {
+      for (const kind of ['ferns','grass','saplings']) {
         assert.ok(layout[kind].length <= FOREST_FLOOR_CAPACITY[kind]);
         for (const plant of layout[kind]) {
           assert.equal(plant.y, ground(plant.x, plant.z));
           assert.ok(Object.values(plant).every(Number.isFinite));
-          // Fern radius at max scale is <1.8m; grass <.6m. Keep 2m tread clear.
-          const envelope = kind === 'ferns' ? 1.8 : .6;
+          // Max radii: fern <1.8m, grass <.6m, young crown <2m. Keep 2m tread clear.
+          const envelope = kind === 'grass' ? .6 : kind === 'saplings' ? 2 : 1.8;
           for (const path of seeds) {
             if (plant.x < path.minX || plant.x > path.maxX || plant.z < path.minZ || plant.z > path.maxZ) continue;
             assert.ok(Math.sqrt(terrainDistanceToPathSq(plant.x, plant.z, path, morph)) - envelope > 2);
@@ -40,7 +40,7 @@ test('floor quality prefixes and low tree geometry have explicit cheaper ceiling
   let previous = 0;
   for (const quality of ['low','medium','high','cinematic']) {
     const budget = forestFloorBudget(quality);
-    assert.ok(budget.ferns > previous && budget.ferns <= 150 && budget.grass <= 220); previous = budget.ferns;
+    assert.ok(budget.ferns > previous && budget.ferns <= 150 && budget.grass <= 220 && budget.saplings <= 80); previous = budget.ferns;
   }
   const low = createForestTrunkLibrary(0), high = createForestTrunkLibrary(2);
   try {
@@ -79,4 +79,34 @@ test('all outdoor scenes retain twilight on every quality tier while enclosed ro
       assert.ok(Number.isFinite(atmosphere.density) && atmosphere.density <= .025);
     }
   }
+});
+
+test('overlapping forest-floor windows reuse grounded candidates with a bounded cache', () => {
+  let samples = 0;
+  const ground = (x, z) => { samples++; return TERRAIN_BASE_Y + terrainElevationAtPoint(x, z, entries, paths, {}); };
+  const cache = new Map();
+  const first = forestFloorLayout(-13, -70, seeds, clearings, ground, {}, cache);
+  const uncached = forestFloorLayout(-13, -70, seeds, clearings, ground);
+  assert.deepEqual(first, uncached);
+  samples = 0;
+  const again = forestFloorLayout(-13, -70, seeds, clearings, ground, {}, cache);
+  assert.deepEqual(again, first);
+  // Grass offsets are sampled independently; the expensive candidate/path work
+  // and fern/sapling ground samples are shared across overlapping windows.
+  assert.equal(samples, again.grass.length);
+  forestFloorLayout(-12, -70, seeds, clearings, ground, {}, cache);
+  assert.ok(cache.size < 400, 'adjacent cells add a strip, not a second complete window');
+  for (let x = -20; x <= 20; x++) forestFloorLayout(x, -65, seeds, clearings, ground, {}, cache);
+  assert.ok(cache.size <= 2048);
+});
+
+test('young-tree spray geometry fits the actual route-clearance envelope at maximum scale', async () => {
+  const { createSaplingSprayGeometry } = await import('../src/components/three/environmentArt/woodlandAccentsGeometry.ts');
+  const g = createSaplingSprayGeometry();
+  try {
+    assert.equal(g.index.count / 3, 120);
+    const p = g.attributes.position;
+    for (let i = 0; i < p.count; i++) assert.ok(Math.hypot(p.getX(i), p.getZ(i)) * 1.45 * .85 < 2);
+    for (const attribute of Object.values(g.attributes)) assert.ok([...attribute.array].every(Number.isFinite));
+  } finally { g.dispose(); }
 });

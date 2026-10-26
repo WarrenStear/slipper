@@ -67,7 +67,7 @@ test('willow geometry is finite, bounded, deterministic and scales within a fixe
       assert.ok([...a[key].getAttribute('position').array].every(Number.isFinite));
       triangles+=a[key].index.count/3;a[key].dispose();b[key].dispose();
     }
-    assert.ok(triangles>previous&&triangles<38000);previous=triangles;
+    assert.ok(triangles>previous&&triangles<54000);previous=triangles;
   }
 });
 

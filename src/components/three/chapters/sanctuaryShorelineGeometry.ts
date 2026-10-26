@@ -5,9 +5,9 @@ import * as THREE from "three";
  * accepted water interaction at [3.3, .08, 1.8]. No collision is introduced. */
 export function createSanctuaryShorelineGeometry() {
   const positions: number[] = [], colors: number[] = [], uvs: number[] = [], indices: number[] = [];
-  const wet = new THREE.Color("#444c43"), earth = new THREE.Color("#6d7056"), dry = new THREE.Color("#87846c");
+  const wet = new THREE.Color("#7e877a"), earth = new THREE.Color("#a69f82"), dry = new THREE.Color("#c2b99b");
   const tint = new THREE.Color();
-  const segments = 36, bands = 5;
+  const segments = 48, bands = 4;
   // Each pair follows one shoreline. End shelves reach beneath the last bridge
   // boards, giving the existing deck a landfall instead of ending over water.
   for (let side = 0; side < 4; side++) {
@@ -15,14 +15,14 @@ export function createSanctuaryShorelineGeometry() {
     for (let i = 0; i <= segments; i++) {
       const t = i / segments;
       const envelope = Math.sin(t * Math.PI);
-      const scallop = (Math.sin(t * 17 + side * 2.1) * .22 + Math.sin(t * 39 + side) * .08) * envelope;
+      const scallop = (Math.sin(t * 17 + side * 2.1) * .27 + Math.sin(t * 39 + side) * .085) * envelope;
       const inner = (side < 2 ? 9.56 : 7.48) + scallop;
       for (let row = 0; row < bands; row++) {
         const v = row / (bands - 1);
         // Mitered corners share identical vertices; shelves never overlap and
         // cannot shimmer against one another at grazing walking-camera angles.
         const along = (t * 2 - 1) * (side < 2 ? 7.48 + v * 2.4 : 9.56 + v * 2.2);
-        const across = inner + v * ((side < 2 ? 2.2 : 2.4) + Math.sin(t * 23 + side) * envelope * .18);
+        const across = inner + v * ((side < 2 ? 2.2 : 2.4) + Math.sin(t * 23 + side) * envelope * .38);
         const x = side < 2 ? (side === 0 ? -across : across) : along;
         const z = side < 2 ? along : (side === 2 ? -across : across);
         const y = row === bands - 1 ? -.155 : .035 - v * .11 + Math.sin(t * 29 + side * 1.4) * .006 * envelope;

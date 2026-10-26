@@ -1,17 +1,20 @@
 import { terrainDistanceToPathSq, terrainSeededUnit, type TerrainMorphState } from "../../lib/terrainModel.ts";
 import type { ForestClearingSeed, ForestPathSeed } from "../../workers/forestWorker.types";
-import { WILLOW_POOL } from "../terrain/explorationLayout.ts";
+import { WILLOW_POOL, WILLOW_REFUGE } from "../terrain/explorationLayout.ts";
 import { TERRAIN_BASE_Y } from "../terrain/worldConstants.ts";
 
-export const FOREST_FLOOR_CAPACITY = { ferns: 150, grass: 220 } as const;
+export const FOREST_FLOOR_CAPACITY = { ferns: 150, grass: 220, saplings: 80 } as const;
 export type ForestFloorPlant = { x: number; y: number; z: number; scale: number; yaw: number; seed: number };
 /** Stable world-grid clusters. Camera cells only select an overlapping window;
  * changing quality never moves an existing plant or fills a walking corridor. */
-export function forestFloorLayout(cellX: number, cellZ: number, paths: readonly ForestPathSeed[], clearings: readonly ForestClearingSeed[], ground: (x: number, z: number) => number, morph: TerrainMorphState = {}) {
-  const ferns: ForestFloorPlant[] = [], grass: ForestFloorPlant[] = [];
+export function forestFloorLayout(cellX: number, cellZ: number, paths: readonly ForestPathSeed[], clearings: readonly ForestClearingSeed[], ground: (x: number, z: number) => number, morph: TerrainMorphState = {}, cache?: Map<string, ForestFloorPlant | null>) {
+  const ferns: ForestFloorPlant[] = [], grass: ForestFloorPlant[] = [], saplings: ForestFloorPlant[] = [];
   const candidates: ForestFloorPlant[] = [];
   for (let dz = -8; dz <= 8; dz++) for (let dx = -8; dx <= 8; dx++) {
     const gx = cellX * 2 + dx, gz = cellZ * 2 + dz;
+    const key = `${gx}:${gz}`;
+    if (cache?.has(key)) { const plant = cache.get(key); if (plant) candidates.push(plant); continue; }
+    if (cache) { if (cache.size >= 2048) cache.delete(cache.keys().next().value!); cache.set(key, null); }
     const seed = terrainSeededUnit(gx, gz, 41);
     if (seed < .12) continue;
     const x = gx * 2.4 + (terrainSeededUnit(gx, gz, 42) - .5) * 2.2;
@@ -22,18 +25,20 @@ export function forestFloorLayout(cellX: number, cellZ: number, paths: readonly 
     if (paths.some(path => x >= path.minX && x <= path.maxX && z >= path.minZ && z <= path.maxZ && terrainDistanceToPathSq(x, z, path, morph) < 4 ** 2)) continue;
     const y = ground(x, z);
     if (Math.hypot((x - WILLOW_POOL.x) / 12.5, (z - WILLOW_POOL.z) / 9.5) < 1 || y < TERRAIN_BASE_Y - .12) continue;
-    candidates.push({ x, y, z, scale: .8 + terrainSeededUnit(gx, gz, 44) * .65, yaw: seed * Math.PI * 2, seed });
+    const plant = { x, y, z, scale: .8 + terrainSeededUnit(gx, gz, 44) * .65, yaw: seed * Math.PI * 2, seed };
+    cache?.set(key, plant); candidates.push(plant);
   }
   candidates.sort((a, b) => a.seed - b.seed);
   for (const plant of candidates) {
+    if (plant.seed > .56 && Math.hypot(plant.x - WILLOW_REFUGE.x, plant.z - WILLOW_REFUGE.z) > 18 && saplings.length < FOREST_FLOOR_CAPACITY.saplings) saplings.push({ ...plant, scale: plant.scale * .85 });
     if (ferns.length < FOREST_FLOOR_CAPACITY.ferns) ferns.push(plant);
     if (grass.length < FOREST_FLOOR_CAPACITY.grass) {
       const x = plant.x + .55, z = plant.z + .5;
       grass.push({ ...plant, x, z, y: ground(x, z), scale: plant.scale * .8 });
     }
   }
-  return { ferns, grass };
+  return { ferns, grass, saplings };
 }
 export function forestFloorBudget(quality: string) {
-  return quality === "cinematic" ? { ferns: 150, grass: 220 } : quality === "high" ? { ferns: 130, grass: 180 } : quality === "medium" ? { ferns: 80, grass: 120 } : { ferns: 48, grass: 72 };
+  return quality === "cinematic" ? { ferns: 150, grass: 220, saplings: 80 } : quality === "high" ? { ferns: 130, grass: 180, saplings: 64 } : quality === "medium" ? { ferns: 80, grass: 120, saplings: 40 } : { ferns: 48, grass: 72, saplings: 24 };
 }
