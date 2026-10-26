@@ -18,7 +18,7 @@ const firstWoodOwner = 'src/scenes/first-wood/FirstWoodScene.tsx';
 const firstWoodBaselineOwner = 'src/scenes/first-wood/WoodlandBaselineFirstWoodScene.tsx';
 const copies = originals.map(p => [`src/components/three/${p}`, `src/components/three/${p.replace(/([^/]+)$/, 'WoodlandBaseline$1')}`]);
 const report = {
-  candidate: execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(), baseline, requestedAngle: angle,
+  candidate: execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(), baseline, requestedAngle: angle, browserChannel: 'chromium',
   candidateFirstWoodOwner: firstWoodOwner,
   method: 'Same-camera, settled-profile source-component fixtures; capture freezes rendering after 25 warm-up frames and saves the full-viewport canvas framebuffer directly. Production entry uses page screenshots. Seeded ending state is appearance evidence only, not an earned gameplay completion. No real-device FPS claim.',
   captures: [], failures: [],
@@ -90,7 +90,7 @@ async function capture(which,width,height,quality,before){
     }
     report.captures.push({name,which,width,height,quality,before,scope:'seeded chapter fixture',...stats});
   }catch(e){report.failures.push({name,error:String(e),errors});}
-  finally{await ctx.close();await writeFile(out+'/review.json',JSON.stringify(report,null,2));}
+  finally{await ctx.close();await writeFile(out+'/review.json',JSON.stringify(report,null,2));console.log('capture checkpoint',name,report.captures.length,report.failures.length);}
 }
 async function entry(width,height){
   const ctx=await browser.newContext({viewport:{width,height},deviceScaleFactor:1,reducedMotion:'no-preference'}),page=await ctx.newPage(),errors=[];
@@ -132,7 +132,7 @@ try{
   // Other review harnesses share dependencies, never Vite's mutable prebundle cache.
   await writeFile(fixture+'/vite.config.ts', `import original from '../vite.config.ts'; export default { ...original, cacheDir: ${JSON.stringify(fixture+'/vite-cache')}, optimizeDeps: { ...original.optimizeDeps, entries: [${JSON.stringify(fixture+'/index.html')}] } };`);
   await server(['preview'],4193);await server(['--config',fixture+'/vite.config.ts'],4194);
-  browser=await chromium.launch({args:['--enable-webgl','--ignore-gpu-blocklist',`--use-angle=${angle}`]});
+  browser=await chromium.launch({channel:'chromium',args:['--enable-webgl','--ignore-gpu-blocklist',`--use-angle=${angle}`]});
   await entry(1280,800);await entry(390,844);
   for(const which of ['meadow','rabbit','ending']){
     for(const quality of ['low','high']){await capture(which,1100,720,quality,true);await capture(which,1100,720,quality,false);}

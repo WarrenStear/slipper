@@ -11,8 +11,8 @@ const root = process.cwd(), out = '/tmp/slipper-cinematography-review';
 const beforeRoot = '/tmp/slipper-cinematography-baseline';
 const fixtureName = '.cinematography-review';
 const processes = []; let browser;
-const report = { candidate: execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(), baseline, requestedAngle: angle,
-  method: 'Identical scene states, camera positions and directions. Baseline uses settled authored FOV; candidate uses responsive shot FOV except the opening, which retains its authored lens. Environment motion is reduced and the light profile is pre-settled; comparisons wait 25 completed render frames then freeze the static fixture for screenshot readback. Actual camera/input lifecycle is exercised separately in a lightweight fixture. Not an unassisted gameplay or FPS certification.', captures: [], interactions: [], failures: [] };
+const report = { candidate: execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(), baseline, requestedAngle: angle, browserChannel: 'chromium',
+  method: 'Identical scene states, camera positions and directions. Baseline uses settled authored FOV; candidate uses responsive shot FOV except the opening, which retains its authored lens. Environment motion is reduced and the light profile is pre-settled; comparisons wait 25 completed render frames then freeze the static fixture for full-viewport framebuffer capture; production entry uses page screenshots. Actual camera/input lifecycle is exercised separately in a lightweight fixture. Not an unassisted gameplay or FPS certification.', captures: [], interactions: [], failures: [] };
 const stage = `import React,{Suspense,useLayoutEffect,useRef} from 'react';
 import {createRoot} from 'react-dom/client';import {Canvas,useFrame,useThree} from '@react-three/fiber';import {Physics} from '@react-three/rapier';
 import {BrokenFloorChapter} from '../src/components/three/chapters/BrokenFloorChapter';
@@ -71,7 +71,14 @@ async function capture(which,width,height,quality,before) {
  const ctx=await browser.newContext({viewport:{width,height},deviceScaleFactor:1,reducedMotion:'reduce'}),page=await ctx.newPage(),errors=[];
  const name=`${before?'before':'after'}-${which}-${quality}-${width}`;
  page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
- try{await page.goto(`http://127.0.0.1:${before?4205:4204}/${fixtureName}/?case=${which}&quality=${quality}&before=${before?1:0}`,{waitUntil:'domcontentloaded'});if(errors.length)throw new Error(errors.join('\n'));await Promise.race([page.locator('body[data-ready="true"]').waitFor({timeout:90000}),new Promise((_,reject)=>page.once('pageerror',reject))]);await page.screenshot({path:out+'/'+name+'.png',timeout:60000});const stats=await page.evaluate(()=>window.__shotEvidence);if(!stats.calls||errors.length)throw new Error(errors.join('\n')||'Empty render');report.captures.push({name,which,width,height,quality,before,scope:'seeded scene or material fixture',...stats});}
+ try{await page.goto(`http://127.0.0.1:${before?4205:4204}/${fixtureName}/?case=${which}&quality=${quality}&before=${before?1:0}`,{waitUntil:'domcontentloaded'});if(errors.length)throw new Error(errors.join('\n'));await Promise.race([page.locator('body[data-ready="true"]').waitFor({timeout:90000}),new Promise((_,reject)=>page.once('pageerror',reject))]);// Full-viewport static fixtures have no DOM overlay; avoid the software-GPU compositor.
+ const png=await page.locator('canvas').evaluate(canvas=>{
+  const bounds=canvas.getBoundingClientRect();
+  if(bounds.x!==0||bounds.y!==0||bounds.width!==innerWidth||bounds.height!==innerHeight||canvas.width!==innerWidth||canvas.height!==innerHeight)throw new Error('Fixture canvas must cover the viewport at DPR 1');
+  return canvas.toDataURL('image/png');
+ });
+ if(!png.startsWith('data:image/png;base64,'))throw new Error('Canvas capture did not produce PNG pixels');
+ await writeFile(out+'/'+name+'.png',Buffer.from(png.slice('data:image/png;base64,'.length),'base64'));const stats=await page.evaluate(()=>window.__shotEvidence);if(!stats.calls||errors.length)throw new Error(errors.join('\n')||'Empty render');report.captures.push({name,which,width,height,quality,before,scope:'seeded scene or material fixture',...stats});}
  catch(error){report.failures.push({name,error:String(error),errors});}finally{await ctx.close();await persist();console.log('capture checkpoint',name,report.captures.length,report.failures.length);}
 }
 async function testRig(){
@@ -137,7 +144,7 @@ try{
  execFileSync('git',['worktree','add','--detach',beforeRoot,baseline]);await symlink(root+'/node_modules',beforeRoot+'/node_modules','dir');
  for(const dir of [root,beforeRoot]){await mkdir(dir+'/'+fixtureName,{recursive:true});await writeFile(dir+'/'+fixtureName+'/index.html','<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>Cinematography review fixture</title><style>html,body,#root{width:100%;height:100%;margin:0;overflow:hidden}button{padding:8px;margin:4px}</style></head><body><div id="root"></div><script type="module" src="./stage.tsx"></script></body></html>');await writeFile(dir+'/'+fixtureName+'/stage.tsx',dir===root?withMaterialPolicy(stage):stage);await writeFile(dir+'/'+fixtureName+'/shotComposition.ts',await readFile(root+'/src/cinematics/shotComposition.ts'));}
  await server(root,4203,true);await server(root,4204);await server(beforeRoot,4205);
- browser=await chromium.launch({args:['--enable-webgl','--ignore-gpu-blocklist',`--use-angle=${angle}`]});
+ browser=await chromium.launch({channel:'chromium',args:['--enable-webgl','--ignore-gpu-blocklist',`--use-angle=${angle}`]});
  await testRig();await entry(1280,800);await entry(390,844);
  await capture('details',1100,720,'high',true);await capture('details',1100,720,'high',false);
  for(const which of ['broken','blue','house','meadow','ending']){
