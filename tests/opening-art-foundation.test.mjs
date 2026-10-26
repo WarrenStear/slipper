@@ -138,5 +138,11 @@ test('floor finishing keeps the vertex, uniform/sampler families and actual brus
 });
 
 test('the complete BrokenFloor owner preserves ordinary boards, ten-step timing, authored lights and interaction-derived semantics', () => {
-  assert.equal(read('../src/scenes/broken-floor/BrokenFloorScene.tsx'), source('src/scenes/broken-floor/BrokenFloorScene.tsx'));
+  const current = read('../src/scenes/broken-floor/BrokenFloorScene.tsx');
+  assert.match(current, /<LocalStoryLight name="opening-underfloor-blue-light" position=\{\[0, -2\.4, 1\]\}/);
+  // The original light parameters and every other opening expression remain
+  // identical; only the existing active-scene ownership wrapper is allowed.
+  const normalized = current.replace('import { LocalStoryLight } from "../../world/core/LocalStoryLight";\n', '')
+    .replace('<LocalStoryLight name="opening-underfloor-blue-light" ', '<pointLight ');
+  assert.equal(normalized, source('src/scenes/broken-floor/BrokenFloorScene.tsx'));
 });

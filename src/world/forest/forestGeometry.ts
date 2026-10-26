@@ -61,8 +61,10 @@ const CROWN_FORMS: CrownForm[] = [
 function addTube(buffers: GeometryBuffers, points: Vector3Tuple[], radii: number[], sides: number, bole = false) {
   const start = buffers.positions.length / 3;
   const stride = sides + 1;
+  let barkDistance = 0;
   for (let row = 0; row < points.length; row++) {
     const point = toVector(points[row]);
+    if (row) barkDistance += point.distanceTo(toVector(points[row - 1]));
     const tangent = toVector(points[Math.min(points.length - 1, row + 1)]).sub(toVector(points[Math.max(0, row - 1)])).normalize();
     const reference = Math.abs(tangent.y) > .95 ? new THREE.Vector3(1, 0, 0) : new THREE.Vector3(0, 1, 0);
     const across = new THREE.Vector3().crossVectors(tangent, reference).normalize();
@@ -74,7 +76,7 @@ function addTube(buffers: GeometryBuffers, points: Vector3Tuple[], radii: number
         const first = start + row * stride;
         buffers.positions.push(...buffers.positions.slice(first * 3, first * 3 + 3));
         buffers.colors.push(...buffers.colors.slice(first * 3, first * 3 + 3));
-        buffers.uvs.push(1, row / (points.length - 1));
+        buffers.uvs.push(1, barkDistance / 4);
         buffers.seamPairs.push([first, first + sides]);
         continue;
       }
@@ -84,7 +86,7 @@ function addTube(buffers: GeometryBuffers, points: Vector3Tuple[], radii: number
         + basal * (.16 + .2 * Math.cos(angle * 4 + .35));
       const vertex = point.clone().addScaledVector(across, Math.cos(angle) * radii[row] * flute).addScaledVector(around, Math.sin(angle) * radii[row] * flute);
       buffers.positions.push(vertex.x / referenceTrunkScale[0], vertex.y / referenceTrunkScale[1] - .5, vertex.z / referenceTrunkScale[2]);
-      buffers.uvs.push(side / sides, row / (points.length - 1));
+      buffers.uvs.push(side / sides, barkDistance / 4);
       const shade = .73 + row / (points.length - 1) * .17 + side % 3 * .018;
       // Broad, low-frequency dampness and a sheltered moss face supplement the
       // existing authored bark maps without another material or draw.
@@ -148,7 +150,13 @@ function trunkAt(type: number, detail: ForestGeometryDetail = 2) {
     const [x, y, z] = CROWN_FORMS[type].islands[6];
     spine[5] = [x * FOREST_REFERENCE_CROWN_SCALE[0], FOREST_REFERENCE_CROWN_HEIGHT + y * FOREST_REFERENCE_CROWN_SCALE[1], z * FOREST_REFERENCE_CROWN_SCALE[2]];
   }
-  const leader = addTube(data, spine, form.radii, rich ? 12 : 8, true);
+  // Preserve the authored rings and rooted footprint; two intermediate rings
+  // soften the long upper bole without adding more tree instances or draws.
+  const boleCurve = new THREE.CatmullRomCurve3(spine.map(toVector));
+  const ringParameters = rich ? [0, 1, 2, 2.5, 3, 3.5, 4, 5] : [0, 1, 2, 3, 4, 5];
+  const bolePoints = ringParameters.map(t => boleCurve.getPoint(t / 5).toArray());
+  const boleRadii = ringParameters.map(t => THREE.MathUtils.lerp(form.radii[Math.floor(t)], form.radii[Math.ceil(t)], t % 1));
+  const leader = addTube(data, bolePoints, boleRadii, rich ? 12 : 8, true);
   const spineAtHeight = (height: number): THREE.Vector3 => {
     const next = spine.findIndex(point => point[1] >= height);
     if (next <= 0) return toVector(spine[Math.max(0, next)]);

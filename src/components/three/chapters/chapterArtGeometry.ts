@@ -2,6 +2,7 @@ import { projectPlasterMetreUvs } from "../environmentArt/plasterGeometry.ts";
 import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { createWornTimberGeometry, createWeatheredPanelGeometry } from "../environmentArt/authoredGeometry.ts";
+import { createGeometryTemplateCache } from "../environmentArt/geometryTemplateCache.ts";
 
 export type ArtVector = [number, number, number];
 export type ConstructionPiece = {
@@ -71,8 +72,17 @@ function constructionTimber(size: ArtVector, seed: number) {
   return geometry;
 }
 
-/** One material batch, with joinery and wear authored into each bounded piece. */
+const constructionTemplates = createGeometryTemplateCache();
+/** Revisited joinery reuses CPU data, while each mounted mesh owns its buffers. */
 export function createConstructionGeometry(pieces: readonly ConstructionPiece[], plaster = false) {
+  const bounded = pieces.slice(0, 256);
+  if (!bounded.every(p => [...p.position, ...p.size, ...(p.rotation ?? [])].every(Number.isFinite))) return buildConstructionGeometry(bounded, plaster);
+  const key = JSON.stringify([plaster, bounded]);
+  return constructionTemplates.get(key, () => buildConstructionGeometry(bounded, plaster));
+}
+
+/** One material batch, with joinery and wear authored into each bounded piece. */
+function buildConstructionGeometry(pieces: readonly ConstructionPiece[], plaster = false) {
   const geometries = pieces.slice(0, 256).map((piece, index) => {
     const geometry = plaster
       ? projectPlasterMetreUvs(createWeatheredPanelGeometry(piece.size, index + 17))

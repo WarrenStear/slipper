@@ -80,11 +80,13 @@ export function createMossStoneGeometry(detail = 3) {
   const geometry = new THREE.IcosahedronGeometry(1, detail);
   const position = geometry.getAttribute("position") as THREE.BufferAttribute;
   const shades = new Float32Array(position.count * 3);
-  const stone = new THREE.Color("#d6d7c7"), moss = new THREE.Color("#91a565"), tint = new THREE.Color();
+  const stone = new THREE.Color("#b5b9af"), moss = new THREE.Color("#798653"), tint = new THREE.Color();
   let floor = Infinity;
   for (let i = 0; i < position.count; i++) {
     const x = position.getX(i), y = position.getY(i), z = position.getZ(i);
-    const contour = 1 + Math.sin(x * 5.7 + z * 4.3) * .075 + Math.cos(z * 7.1 - y * 3.6) * .035;
+    const weathering = 1 + Math.sin(x * 5.7 + z * 4.3) * .055 + Math.cos(z * 7.1 - y * 3.6) * .025;
+    const contour = Math.min(weathering, .91 / Math.max(.01, Math.abs(x * .81 + y * .31 + z * .49)),
+      .94 / Math.max(.01, Math.abs(-x * .36 + y * .88 + z * .3)));
     const py = y * .53 * contour;
     position.setXYZ(i, x * contour, py, z * contour * .79); floor = Math.min(floor, py);
     const patch = .5 + .5 * Math.sin(x * 6.2 + Math.cos(z * 5.4) * 1.7);

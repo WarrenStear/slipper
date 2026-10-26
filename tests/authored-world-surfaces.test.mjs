@@ -128,7 +128,7 @@ test('replacement rushes remove the earlier untextured stick batch', () => {
 test('chapter ground reuses existing compressed art with private transform/disposal and a local fallback', () => {
   const s=read('src/components/three/environment/ChapterGroundMaterial.tsx');
   assert.match(s,/useTexture\("\/textures\/forest\/ground-albedo-v3\.webp"\)/);
-  for(const fragment of ['source.clone()', 'THREE.SRGBColorSpace', 'THREE.RepeatWrapping', 'map.dispose()', 'getDerivedStateFromError', '<Suspense fallback={fallback}>'])assert.ok(s.includes(fragment));
+  for(const fragment of ['createForestImageSampler(source, [radius * 2 / 3.4, radius * 2 / 3.4])', 'map.dispose()', 'getDerivedStateFromError', '<Suspense fallback={fallback}>'])assert.ok(s.includes(fragment));
   assert.doesNotMatch(s,/source\.dispose|WebGLRenderTarget|useFrame|TextureLoader/);
 });
 

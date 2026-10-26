@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from "react";
 import { useTexture } from "@react-three/drei";
 import * as THREE from "three";
+import { createForestImageSampler } from "./forestImageSampler";
 
 export type ForestTexturePack = {
   barkMap: THREE.Texture;
@@ -23,10 +24,7 @@ export const FOREST_CANOPY_ALBEDO_PATH = "/textures/forest/canopy-spray-v1.webp"
 
 export function useWoodlandCanopyTexture() {
   const source = useTexture(FOREST_CANOPY_ALBEDO_PATH);
-  const texture = useMemo(() => {
-    const map = source.clone(); map.colorSpace = THREE.SRGBColorSpace;
-    map.anisotropy = 4; map.needsUpdate = true; return map;
-  }, [source]);
+  const texture = useMemo(() => createForestImageSampler(source, [1, 1], 4, true), [source]);
   useEffect(() => () => texture.dispose(), [texture]);
   return texture;
 }
@@ -34,13 +32,7 @@ export function useWoodlandCanopyTexture() {
 /** Each consumer owns its sampler; the loader retains the shared source image. */
 export function useWoodlandBarkTexture() {
   const source = useTexture(FOREST_BARK_ALBEDO_PATH);
-  const texture = useMemo(() => {
-    const map = source.clone();
-    map.colorSpace = THREE.SRGBColorSpace;
-    map.wrapS = map.wrapT = THREE.RepeatWrapping;
-    map.repeat.set(1.4, 2.6); map.anisotropy = 8; map.needsUpdate = true;
-    return map;
-  }, [source]);
+  const texture = useMemo(() => createForestImageSampler(source, [1.4, 2.6], 8), [source]);
   useEffect(() => () => texture.dispose(), [texture]);
   return texture;
 }
@@ -48,11 +40,7 @@ export function useWoodlandBarkTexture() {
 export const FOREST_STONE_ALBEDO_PATH = "/textures/forest/stone-albedo-v1.webp";
 export function useWoodlandSurfaceTexture(surface: "stone" | "soil") {
   const source = useTexture(surface === "stone" ? FOREST_STONE_ALBEDO_PATH : FOREST_GROUND_ALBEDO_PATH);
-  const texture = useMemo(() => {
-    const map = source.clone(); map.colorSpace = THREE.SRGBColorSpace;
-    map.wrapS = map.wrapT = THREE.RepeatWrapping; map.anisotropy = 4;
-    map.repeat.set(surface === "stone" ? 2 : 1, 1); map.needsUpdate = true; return map;
-  }, [source, surface]);
+  const texture = useMemo(() => createForestImageSampler(source, [surface === "stone" ? 2 : 1, 1]), [source, surface]);
   useEffect(() => () => texture.dispose(), [texture]);
   return texture;
 }
@@ -136,13 +124,13 @@ export function useSafeForestTextures(): ForestTexturePack {
   const [groundAlbedo, barkAlbedo, canopyAlbedo] = useTexture([FOREST_GROUND_ALBEDO_PATH, FOREST_BARK_ALBEDO_PATH, FOREST_CANOPY_ALBEDO_PATH]);
   const textures = useMemo<ForestTexturePack>(
     () => ({
-      barkMap: barkAlbedo.clone(),
+      barkMap: createForestImageSampler(barkAlbedo, [1.4, 2.6], 8),
       barkNormalMap: null,
       barkRoughnessMap: null,
-      crownMap: canopyAlbedo.clone(),
+      crownMap: createForestImageSampler(canopyAlbedo, [1, 1], 4, true),
       crownNormalMap: null,
       crownRoughnessMap: null,
-      marshMap: groundAlbedo.clone(),
+      marshMap: createForestImageSampler(groundAlbedo, [144, 144]),
       marshNormalMap: null,
       marshRoughnessMap: null,
       ruinMap: createSafeCanvasTexture("ruin"),
@@ -153,21 +141,6 @@ export function useSafeForestTextures(): ForestTexturePack {
   );
 
   useEffect(() => {
-    textures.barkMap.repeat.set(1.4, 2.6);
-    textures.barkMap.colorSpace = THREE.SRGBColorSpace;
-    textures.barkMap.wrapS = textures.barkMap.wrapT = THREE.RepeatWrapping;
-    textures.barkMap.anisotropy = 8;
-    textures.barkMap.needsUpdate = true;
-    textures.crownMap.colorSpace = THREE.SRGBColorSpace;
-    textures.crownMap.wrapS = textures.crownMap.wrapT = THREE.ClampToEdgeWrapping;
-    textures.crownMap.anisotropy = 4;
-    textures.crownMap.needsUpdate = true;
-    textures.marshMap.colorSpace = THREE.SRGBColorSpace;
-    textures.marshMap.wrapS = THREE.RepeatWrapping;
-    textures.marshMap.wrapT = THREE.RepeatWrapping;
-    textures.marshMap.anisotropy = 4;
-    textures.marshMap.repeat.set(144, 144);
-    textures.marshMap.needsUpdate = true;
     textures.ruinMap.repeat.set(1.8, 1.8);
 
     return () => {

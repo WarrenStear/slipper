@@ -38,6 +38,7 @@ export const NarrativeWater = memo(function NarrativeWater({
     waterSize: { value: new THREE.Vector2() },
     waterFlow: { value: 0 }, waterFine: { value: 0 }, waterCircle: { value: 0 },
     waterRiverBanks: { value: 0 }, waterDepth: { value: .9 }, waterSky: { value: new THREE.Color() },
+    waterZenith: { value: new THREE.Color("#102444") }, waterMoon: { value: 0 },
   }), []);
   useEffect(() => {
     appearance.waterSize.value.set(Math.max(.1, width), Math.max(.1, circle ? width : depth));
@@ -62,18 +63,23 @@ export const NarrativeWater = memo(function NarrativeWater({
       writeWaterSkyTarget(sky.target, sky.horizon, sky.key, warm);
       const alpha = worldTransitionAlpha(delta, reducedMotion || presentation.reducedMotion || !skyReady.current);
       appearance.waterSky.value.lerp(sky.target, alpha);
+      appearance.waterZenith.value.lerp(sky.target.set(presentation.look.atmosphere.sky), alpha);
+      const moon = presentation.look.lighting.source !== "window" && presentation.look.lighting.source !== "domestic" ? 1 : 0;
+      appearance.waterMoon.value += (moon - appearance.waterMoon.value) * alpha;
       skyReady.current = true;
     } else {
       skyReady.current = false;
       time.current = environmentTime(time.current, delta, !document.hidden, reducedMotion || reducedEffects);
     }
     uniforms.waterTime.value = reducedMotion || reducedEffects ? 0 : presentation ? presentation.time.water * 3 : time.current;
-    uniforms.waterDetail.value = reducedEffects ? .5 : presentation ? Math.min(1, presentation.motion.water * 4) : 1;
+    // Comfort mode freezes time, not surface relief. Authored ritual stillness
+    // still settles the normal field through the shared presentation fade.
+    uniforms.waterDetail.value = (reducedEffects ? .5 : 1) * (presentation ? 1 - presentation.stillness : 1);
   });
   return <mesh name={flow ? "directional-river-water" : "still-reflective-water"} rotation={[-Math.PI / 2, 0, 0]} geometry={geometry} receiveShadow>
     {geometry ? null : circle ? <circleGeometry args={[width * .5, 48]} /> : <planeGeometry args={[width, depth]} />}
     <meshStandardMaterial color={color} roughness={roughness} metalness={0}
-      onBeforeCompile={compile} customProgramCacheKey={() => "sidtw-narrative-water-v3"} />
+      onBeforeCompile={compile} customProgramCacheKey={() => "sidtw-narrative-water-v4"} />
   </mesh>;
 });
 

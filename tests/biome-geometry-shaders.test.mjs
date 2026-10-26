@@ -59,7 +59,7 @@ test('river shader keeps legacy ponds opt-in and no artificial shore at open riv
   assert.match(water, /riverBanks = false/);
   assert.match(water, /waterRiverBanks: \{ value: 0 \}/);
   assert.match(water, /waterRiverBanks.value = riverBanks && !circle \? 1 : 0/);
-  assert.match(water, /sidtw-narrative-water-v3/);
+  assert.match(water, /sidtw-narrative-water-v4/);
 });
 test('water shading is bounded and legacy bank/depth equations are unchanged when opt-out', () => {
   const mix = (a, b, t) => a * (1 - t) + b * t;

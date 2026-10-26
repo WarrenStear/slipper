@@ -44,7 +44,7 @@ test('floor quality prefixes and low tree geometry have explicit cheaper ceiling
   }
   const low = createForestTrunkLibrary(0), high = createForestTrunkLibrary(2);
   try {
-    assert.equal(low.index.count / 3, 292); assert.equal(high.index.count / 3, 548);
+    assert.equal(low.index.count / 3, 292); assert.equal(high.index.count / 3, 596);
     assert.equal(low.morphAttributes.position.length, 8); assert.equal(high.morphAttributes.position.length, 8);
     assert.deepEqual(low.userData.archetypeIds, high.userData.archetypeIds);
   } finally { low.dispose(); high.dispose(); }

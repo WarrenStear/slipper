@@ -1,3 +1,4 @@
+import * as geometryTemplates from "../src/components/three/environmentArt/geometryTemplateCache.ts";
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {readFileSync} from 'node:fs';
@@ -15,7 +16,7 @@ const marker=new Proxy({}, {get:(_,name)=>String(name)});
 function moduleSource(body,{state=ordinary,cleanups=[],dependencies={}}={}){
  const exports={};
  const react={memo:fn=>fn,useMemo:fn=>fn(),useEffect:fn=>{const cleanup=fn();if(cleanup)cleanups.push(cleanup);}};
- const localRequire=name=>dependencies[name]??(name==='react'?react:name==='react/jsx-runtime'?jsx:name==='three'?THREE:name.endsWith('useJourneyStore')?{useJourneyStore:select=>select(state)}:name.endsWith('journeyWorldLayout')?{getJourneySceneArrivalHeading:()=>.63}:marker);
+ const localRequire=name=>dependencies[name]??(name.endsWith('geometryTemplateCache.ts')?geometryTemplates:name==='react'?react:name==='react/jsx-runtime'?jsx:name==='three'?THREE:name.endsWith('useJourneyStore')?{useJourneyStore:select=>select(state)}:name.endsWith('journeyWorldLayout')?{getJourneySceneArrivalHeading:()=>.63}:marker);
  const js=ts.transpileModule(body,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX}}).outputText;
  runInNewContext(js,{exports,require:localRequire},{timeout:1000});return exports;
 }

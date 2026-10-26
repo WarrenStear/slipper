@@ -57,10 +57,10 @@ test('all 24 archetype/tier pairs retain crown topology and bounded separate cur
     try {
       for (const part of ['trunk', 'crown']) {
         if (part === "crown") assert.deepEqual(after[part].index.array, before[part].index.array);
-        else assert.equal(after[part].index.count / 3, 548);
+        else assert.equal(after[part].index.count / 3, 596);
         assert.deepEqual(Object.keys(after[part].attributes), Object.keys(before[part].attributes));
         for (const key of Object.keys(after[part].attributes)) {
-          assert.equal(after[part].attributes[key].count, part === "trunk" ? 348 : before[part].attributes[key].count);
+          assert.equal(after[part].attributes[key].count, part === "trunk" ? 374 : before[part].attributes[key].count);
         }
         assert.equal(after[part].groups.length, 0);
       }
@@ -98,7 +98,7 @@ test('reused old-limb geometry gives every form two finite short age scars withi
       const tips = indices.map(index => metre(pair.trunk, index));
       for (const p of tips) { assert.ok(p.y > 3 && p.y < 5.4); assert.ok(Math.hypot(p.x, p.z) < 1); }
       assert.ok(tips[1].y - tips[0].y > 1);
-      assert.equal(pair.trunk.index.count / 3, 548);
+      assert.equal(pair.trunk.index.count / 3, 596);
     } finally { destroy(pair); }
   }
 });

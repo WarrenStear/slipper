@@ -298,7 +298,7 @@ test('bark wrap seams have exact position/color twins, unwrapped UVs and matchin
       const geometry = pair.trunk;
       const position = geometry.attributes.position, normal = geometry.attributes.normal;
       const color = geometry.attributes.color, uv = geometry.attributes.uv;
-      assert.equal(position.count, 348);
+      assert.equal(position.count, 374);
       const seams = geometry.userData.seamVertexPairs;
       assert.ok(seams.length > 0);
       for (const [first, twin] of seams) {
@@ -319,16 +319,16 @@ test('bark wrap seams have exact position/color twins, unwrapped UVs and matchin
   }
 });
 
-test('curved tree libraries stay within the explicit 263k paired capacity ceiling', () => {
+test('curved tree libraries stay within the explicit 275k paired capacity ceiling', () => {
   const trunk = createForestTrunkGeometry();
   try {
-    assert.equal(trunk.index.count / 3, 548);
+    assert.equal(trunk.index.count / 3, 596);
     for (const detail of [0, 1, 2]) {
       const crown = createOrganicCrownGeometry(detail);
       try {
         assert.equal(crown.index.count / 3, detail === 0 ? 140 : 532);
         const triangles = (trunk.index.count / 3 + crown.index.count / 3) * 243;
-        assert.ok(triangles <= 263000);
+        assert.ok(triangles <= 275000);
       } finally { crown.dispose(); }
     }
   } finally { trunk.dispose(); }

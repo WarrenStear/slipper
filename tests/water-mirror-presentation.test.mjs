@@ -11,6 +11,7 @@ test('single-pass water integrates with the installed standard-light shader at e
   for (const code of ['vWaterUv=uv', 'varying vec2 vWaterUv']) assert.ok(shader.vertexShader.includes(code));
   for (const code of ['float waterHeight', 'float waterBank', 'roughnessFactor=clamp', 'float waterDet', 'float fresnel', 'outgoingLight=mix']) assert.ok(shader.fragmentShader.includes(code), code);
   assert.ok(shader.fragmentShader.indexOf('float h=waterHeight') < shader.fragmentShader.indexOf('float sheen='));
+  for (const code of ['inverseTransformDirection(normal,viewMatrix)', 'reflect(-worldView,worldNormal)', 'waterZenith', 'moonDisc', 'waterMoon']) assert.ok(shader.fragmentShader.includes(code), code);
   assert.match(shader.fragmentShader, /#include <lights_fragment_begin>/);
   assert.match(shader.fragmentShader, /#include <tonemapping_fragment>/);
   assert.match(shader.fragmentShader, /#include <fog_fragment>/);

@@ -1,4 +1,5 @@
 import { useFrame } from "@react-three/fiber";
+import { LocalStoryLight } from "../../world/core/LocalStoryLight";
 import { memo, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { openingRoomTarget, openingStage } from "../../cinematics/openingPresentation";
@@ -193,7 +194,7 @@ function BrokenFloorChapterComponent({
         reducedMotion={reducedMotion}
       />
       <ChapterLightRig family="broken-floor" reducedMotion={reducedMotion} />
-      <pointLight position={[0, -2.4, 1]} color="#6da2b8" intensity={reducedEffects ? 0.35 : 0.75} distance={18} />
+      <LocalStoryLight name="opening-underfloor-blue-light" position={[0, -2.4, 1]} color="#6da2b8" intensity={reducedEffects ? 0.35 : 0.75} distance={18} />
     </group>
   );
 }
