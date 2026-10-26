@@ -20,7 +20,7 @@ const copies = originals.map(p => [`src/components/three/${p}`, `src/components/
 const report = {
   candidate: execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(), baseline, requestedAngle: angle,
   candidateFirstWoodOwner: firstWoodOwner,
-  method: 'Same-camera, settled-profile source-component fixtures; capture freezes rendering after 25 warm-up frames. Seeded ending state is appearance evidence only, not an earned gameplay completion. No real-device FPS claim.',
+  method: 'Same-camera, settled-profile source-component fixtures; capture freezes rendering after 25 warm-up frames and saves the full-viewport canvas framebuffer directly. Production entry uses page screenshots. Seeded ending state is appearance evidence only, not an earned gameplay completion. No real-device FPS claim.',
   captures: [], failures: [],
 };
 const processes = []; let browser;
@@ -71,7 +71,16 @@ async function capture(which,width,height,quality,before){
   try{
     await page.goto(`http://127.0.0.1:4194/.woodland-review/?case=${which}&quality=${quality}&before=${before?1:0}`,{waitUntil:'domcontentloaded',timeout:45000});
     await page.locator('body[data-ready="true"]').waitFor({timeout:90000});
-    await page.screenshot({path:`${out}/${name}.png`,timeout:60000});
+    // This fixture contains only the full-viewport canvas. Read its preserved
+    // framebuffer instead of waiting on Chromium's software-GPU compositor.
+    const png = await page.locator('canvas').evaluate(canvas => {
+      const bounds = canvas.getBoundingClientRect();
+      if (bounds.x !== 0 || bounds.y !== 0 || bounds.width !== innerWidth || bounds.height !== innerHeight
+        || canvas.width !== innerWidth || canvas.height !== innerHeight) throw new Error('Fixture canvas must cover the viewport at DPR 1');
+      return canvas.toDataURL('image/png');
+    });
+    if (!png.startsWith('data:image/png;base64,')) throw new Error('Canvas capture did not produce PNG pixels');
+    await writeFile(`${out}/${name}.png`, Buffer.from(png.slice('data:image/png;base64,'.length), 'base64'));
     const stats=await page.evaluate(()=>window.__woodlandEvidence);
     if(!stats.calls||errors.length)throw new Error(errors.join('\n')||'Empty render');
     if(!before){
