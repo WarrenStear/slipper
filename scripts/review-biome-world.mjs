@@ -8,7 +8,7 @@ import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import {
   BIOME_REVIEW_CASES, BIOME_REVIEW_VIEWPORTS, assertBiomeSnapshot,
-  assertQualityReuse, assertFrozenMotion, assertCompleteBiomeReview,
+  assertQualityReuse, assertFrozenMotion, assertCompleteBiomeReview, isFatalBiomeConsole,
 } from './biome-review-contract.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -17,7 +17,7 @@ const parent = resolve(process.env.REVIEW_OUT || join(tmpdir(), 'slipper-biome-r
 await mkdir(parent, { recursive: true });
 const out = await mkdtemp(join(parent, 'run-'));
 const report = { scope: 'Production entry plus isolated biome source-component rendering; not a full gameplay or real-device FPS certification',
-  check: { status: 'not-run' }, captures: [], entries: [], failures: [], output: out };
+  check: { status: 'not-run' }, captures: [], entries: [], failures: [], warnings: [], output: out };
 let browser, server, production;
 const save = () => writeFile(join(out, 'review.json'), JSON.stringify(report, null, 2));
 
@@ -34,11 +34,12 @@ async function repositoryCheck() {
   } catch (error) { report.check.status = 'failed'; throw error; }
   finally { await new Promise(accept => log.end(accept)); await save(); }
 }
-function collectErrors(page) {
+function collectErrors(page, scope) {
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
   page.on('console', message => {
-    if (message.type() === 'error' || message.type() === 'warning' && /webgl|shader|context lost/i.test(message.text())) errors.push(message.text());
+    if (message.type() === 'warning') report.warnings.push({ scope, message: message.text() });
+    if (isFatalBiomeConsole(message.type(), message.text())) errors.push(message.text());
   });
   page.on('response', response => { if (response.status() >= 400) errors.push(`${response.status()} ${response.url()}`); });
   page.on('requestfailed', request => { if (request.failure()?.errorText !== 'net::ERR_ABORTED') errors.push(`${request.failure()?.errorText}: ${request.url()}`); });
@@ -59,7 +60,7 @@ async function applySettings(page, config) {
 }
 async function productionEntry(viewport) {
   const context = await browser.newContext({ viewport, deviceScaleFactor: 1 }), page = await context.newPage();
-  const errors = collectErrors(page), screenshot = `production-entry-${viewport.width}.png`;
+  const errors = collectErrors(page, `production-entry-${viewport.width}`), screenshot = `production-entry-${viewport.width}.png`;
   try {
     const response = await page.goto('http://127.0.0.1:4195/?accessible=1', { waitUntil: 'domcontentloaded', timeout: 45000 });
     if (!response?.ok() || digest(await response.body()) !== report.productionIndexHash) throw new Error('Production entry does not match the validated dist/index.html');
@@ -76,7 +77,7 @@ async function productionEntry(viewport) {
 }
 async function biomeCase(scene, viewport) {
   const context = await browser.newContext({ viewport, deviceScaleFactor: 1 }), page = await context.newPage();
-  const errors = collectErrors(page);
+  const errors = collectErrors(page, `${scene.sceneId}-${viewport.width}`);
   const states = [
     ['high', 'high', false, false], ['medium', 'medium', false, false], ['cinematic', 'cinematic', false, false],
     ['effects-off', 'cinematic', true, false], ['motion-off', 'cinematic', false, true],

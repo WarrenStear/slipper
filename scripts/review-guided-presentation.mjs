@@ -11,13 +11,14 @@ const report = { candidate: execFileSync('git', ['rev-parse', 'HEAD'], { encodin
 let server, browser;
 const stage = `import React,{Suspense,useState,useLayoutEffect} from 'react';
 import {createRoot} from 'react-dom/client';
-import {Canvas,useThree} from '@react-three/fiber';
+import {Canvas,useThree,useFrame} from '@react-three/fiber';
 import {Physics} from '@react-three/rapier';
+import {StoryRuntimeProvider,useStoryRuntimeHost,useStoryRuntimeShell} from '../src/experience/StoryRuntimeContext';
 import GuidedStoryMoment from '../src/components/ui/GuidedStoryMoment';
 import StoryTransitionDirector from '../src/components/three/journey/StoryTransitionDirector';
 import {BlueMoonSanctuaryChapter} from '../src/components/three/chapters/BlueMoonSanctuaryChapter';
 import {StoryEventDirector} from '../src/components/three/storyEvents/StoryEventDirector';
-import {getJourneyScene,getJourneyChapter} from '../src/data/journeyNarrative';
+import {getJourneyScene,getJourneyChapter,journeyScenes,journeyChapters} from '../src/data/journeyNarrative';
 import {getJourneySceneLayout} from '../src/data/journeyWorldLayout';
 import {RENDER_QUALITY_PROFILES} from '../src/components/three/renderQuality';
 import {useJourneyStore} from '../src/stores/useJourneyStore';
@@ -25,15 +26,19 @@ import {useWorldStore} from '../src/stores/useWorldStore';
 import {useSettingsStore} from '../src/stores/useSettingsStore';
 const transitionMode=new URLSearchParams(location.search).get('case')==='transition';
 const blue=getJourneyScene('blue-moon.sanctuary');
-useJourneyStore.setState({sceneId:blue.id,chapterId:blue.chapterId,activeEntryId:blue.keystoneEntryId,storyStarted:true,storyCompleted:false,completedSceneIds:[],completedStoryEventIds:[],worldFlags:{'story-events.started':true},storyObjectStates:{},storyPlacementStates:{}});
+useJourneyStore.setState({isInitialized:true,sceneId:blue.id,chapterId:blue.chapterId,activeEntryId:blue.keystoneEntryId,visitedEntryIds:[blue.keystoneEntryId],witnessedEntryIds:[blue.keystoneEntryId],storyStarted:true,storyCompleted:false,completedSceneIds:journeyScenes.slice(0,journeyScenes.findIndex(s=>s.id===blue.id)).map(s=>s.id),completedChapterIds:journeyChapters.slice(0,journeyChapters.findIndex(c=>c.id===blue.chapterId)).map(c=>c.id),completedStoryEventIds:[],worldFlags:{'story-events.started':true},storyObjectStates:{},storyPlacementStates:{}});
 useSettingsStore.setState({drawerOpen:false,showContextualGuidance:true,reducedMotion:false});
 useWorldStore.setState({mode:'explore',controls:'walk',physicsPaused:false});
-function View({near}){const {camera}=useThree();useLayoutEffect(()=>{camera.position.set(...(near?[-3,1.4,-3]:[0,3.2,-10]));camera.lookAt(...(near?[-3,.7,-1.5]:[0,2.4,7]));camera.updateProjectionMatrix();},[camera,near]);return null;}
+// This seeded component fixture supplies camera observations to the same
+// runtime host used by the app. It does not bypass event dispatch or attention.
+function View({near}){const {camera}=useThree(),host=useStoryRuntimeHost();useLayoutEffect(()=>{camera.position.set(...(near?[-3,1.4,-3]:[0,3.2,-10]));camera.lookAt(...(near?[-3,.7,-1.5]:[0,2.4,7]));camera.updateProjectionMatrix();},[camera,near]);useFrame(()=>{const binding=host?.physicalBinding();if(binding)binding.port.publish(binding.lease,{observedAtMs:performance.now(),position:camera.position.toArray(),quaternion:camera.quaternion.toArray(),inputEnabled:host.physicalActive(),settled:true});},-1);return null;}
 function App(){const [near,setNear]=useState(false),[phase,setPhase]=useState('arrival'),[suppressed,setSuppressed]=useState(false),[complete,setComplete]=useState(false),[guideSuspended,setGuideSuspended]=useState(false);
  const id=useJourneyStore(s=>s.sceneId),settings=useSettingsStore(s=>s.drawerOpen);
+ const host=useStoryRuntimeShell({ready:true,participating:true,overlayOpen:settings,allowActions:true});
  const scene=getJourneyScene(id),chapter=getJourneyChapter(scene.chapterId);
  return <main className='app-shell is-first-journey' data-review-phase={phase} data-review-scene={id}>
  <nav aria-label='Fixture controls' style={{position:'fixed',right:8,bottom:8,zIndex:70,display:'flex',gap:4,background:'#111',padding:6}}>
+ {!transitionMode?<button onClick={()=>{const result=host.dispatchNavigation({type:'begin'});if(!result.accepted)throw new Error('Fixture entry rejected: '+result.reason);}}>Enter seeded scene</button>:null}
  <button onClick={()=>useSettingsStore.setState({drawerOpen:!settings})}>{settings?'Close settings':'Open settings'}</button>
  {transitionMode?<><button onClick={()=>setSuppressed(v=>!v)}>{suppressed?'Resume reading':'Read pause'}</button><button onClick={()=>setComplete(true)}>Complete fixture</button></>:<><button onClick={()=>setGuideSuspended(v=>!v)}>{guideSuspended?'Resume guide':'Pause guide'}</button><button onClick={()=>setNear(true)}>Approach candle</button><button onClick={()=>useJourneyStore.setState({sceneId:'river.release-surrender',chapterId:'fire-river',activeEntryId:getJourneyScene('river.release-surrender').keystoneEntryId,completedStoryEventIds:['river.birds-released'],storyObjectStates:{'river.birds':'released'},worldFlags:{'story-events.started':true}})}>Quiet fixture</button></>}
  </nav>
@@ -44,7 +49,7 @@ function App(){const [near,setNear]=useState(false),[phase,setPhase]=useState('a
  </>}
  </main>;
 }
-createRoot(document.getElementById('root')).render(<App/>);`;
+createRoot(document.getElementById('root')).render(<StoryRuntimeProvider><App/></StoryRuntimeProvider>);`;
 async function persist() { await writeFile(out+'/review.json', JSON.stringify(report,null,2)); }
 async function run(name, width, task) {
   const ctx=await browser.newContext({viewport:{width,height:width===390?844:800},deviceScaleFactor:1});
@@ -86,6 +91,7 @@ try {
   await page.goto('http://127.0.0.1:4230/'+fixture+'/');await page.bringToFront();
   await expect(page).toHaveTitle('Guided story review');const guide=page.locator('[data-guided-story="blue-moon.sanctuary"]');
   await expect(guide).toBeVisible();await expect(guide).toContainText('Light First candle.');
+  await page.getByRole('button',{name:'Enter seeded scene',exact:true}).click();
   const label=page.locator('.story-guided-target');await expect(label).toBeVisible({timeout:60000});
   await page.waitForTimeout(800);await capture(page,'sanctuary-guide-'+width);
   await page.getByRole('button',{name:'Open settings',exact:true}).click();await expect(guide).toBeHidden();await expect(label).toBeHidden();

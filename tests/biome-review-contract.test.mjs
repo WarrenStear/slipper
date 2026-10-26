@@ -6,8 +6,19 @@ import { join } from 'node:path';
 import { execFileSync, spawnSync } from 'node:child_process';
 import {
   BIOME_REVIEW_CASES, BIOME_REVIEW_VIEWPORTS, expectedBiomeCounts,
-  assertBiomeSnapshot, assertQualityReuse, assertFrozenMotion, assertCompleteBiomeReview,
+  assertBiomeSnapshot, assertQualityReuse, assertFrozenMotion, assertCompleteBiomeReview, isFatalBiomeConsole,
 } from '../scripts/biome-review-contract.mjs';
+
+test('screenshot readback diagnostics do not hide shader, context or application failures', () => {
+  const readback = '[.WebGL-0xe740015bc00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels';
+  assert.equal(isFatalBiomeConsole('warning', readback), false);
+  assert.equal(isFatalBiomeConsole('warning', readback + ' (this message will no longer repeat)'), false);
+  assert.equal(isFatalBiomeConsole('error', readback), true);
+  for (const message of ['WebGL context lost', 'THREE.WebGLProgram: Shader Error', 'WebGL INVALID_OPERATION', readback + '; context lost']) {
+    assert.equal(isFatalBiomeConsole('warning', message), true);
+  }
+  assert.equal(isFatalBiomeConsole('error', 'Uncaught TypeError'), true);
+});
 
 const config = (patch = {}) => ({ sceneId: 'enchanted.rabbit-hole', quality: 'high', reducedEffects: false, reducedMotion: false, ...patch });
 function sample(settings = config()) {

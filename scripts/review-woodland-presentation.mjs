@@ -20,7 +20,7 @@ const copies = originals.map(p => [`src/components/three/${p}`, `src/components/
 const report = {
   candidate: execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(), baseline, requestedAngle: angle,
   candidateFirstWoodOwner: firstWoodOwner,
-  method: 'Same-camera, settled-profile source-component fixtures. Seeded ending state is appearance evidence only, not an earned gameplay completion. No real-device FPS claim.',
+  method: 'Same-camera, settled-profile source-component fixtures; capture freezes rendering after 25 warm-up frames. Seeded ending state is appearance evidence only, not an earned gameplay completion. No real-device FPS claim.',
   captures: [], failures: [],
 };
 const processes = []; let browser;
@@ -59,10 +59,10 @@ useSettingsStore.setState({reducedMotion:true,reducedEffects:quality==='low'});u
 const Chapter=ending?(before?BeforeEnd:IntegratedFinalTableau):(before?BeforeWood:FirstWoodScene);
 const Fog=before?BeforeFog:CinematicAtmosphereDirector,Light=before?BeforeLight:CinematicLightingDirector;
 const profile=resolveCinematicProfile(sceneId,{});for(let i=0;i<300;i++)advanceCinematicProfile(profile,.1);
-function Evidence(){const {camera,scene,gl}=useThree(),frames=useRef(0);
+function Evidence(){const {camera,scene,gl,setFrameloop}=useThree(),frames=useRef(0);
  useLayoutEffect(()=>{if(ending){camera.position.set(0,3.3,6.5);camera.lookAt(0,4.8,-15);}else{camera.position.set(0,2.7,-8);camera.lookAt(0,2.8,6);}camera.updateProjectionMatrix();},[camera]);
  useFrame((_,delta)=>advanceCinematicProfile(profile,delta),-2);
- useFrame(()=>{if(++frames.current===25){let lights=0,shadowLights=0;const names=[],batches=[];scene.traverse(o=>{if(o.name)names.push(o.name);if(o.isLight){lights++;if(o.castShadow)shadowLights++;}if(o.isInstancedMesh)batches.push({name:o.name,count:o.count});});window.__woodlandEvidence={calls:gl.info.render.calls,triangles:gl.info.render.triangles,lights,shadowLights,names,batches,camera:camera.position.toArray(),fog:{density:scene.fog?.density,color:scene.fog?.color.getHexString()}};document.body.dataset.ready='true';}});return null;}
+ useFrame(()=>{if(++frames.current===25){let lights=0,shadowLights=0;const names=[],batches=[];scene.traverse(o=>{if(o.name)names.push(o.name);if(o.isLight){lights++;if(o.castShadow)shadowLights++;}if(o.isInstancedMesh)batches.push({name:o.name,count:o.count});});window.__woodlandEvidence={calls:gl.info.render.calls,triangles:gl.info.render.triangles,lights,shadowLights,names,batches,camera:camera.position.toArray(),fog:{density:scene.fog?.density,color:scene.fog?.color.getHexString()}};document.body.dataset.ready='true';setFrameloop('never');}});return null;}
 createRoot(document.getElementById('root')).render(<Canvas dpr={1} camera={{fov:65,near:.05,far:150}} gl={{antialias:true,preserveDrawingBuffer:true}}><color attach='background' args={['#080e11']}/><hemisphereLight args={['#b9c8cf','#30251e',.45]}/><Suspense fallback={null}><Physics paused><Chapter scene={scene} qualityProfile={RENDER_QUALITY_PROFILES[quality]} reducedEffects={quality==='low'} reducedMotion/></Physics><Light/><Fog/><Evidence/></Suspense></Canvas>);`;
 async function capture(which,width,height,quality,before){
   const ctx=await browser.newContext({viewport:{width,height},deviceScaleFactor:1,reducedMotion:'reduce'}),page=await ctx.newPage(),errors=[];

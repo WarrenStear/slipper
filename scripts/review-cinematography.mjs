@@ -12,7 +12,7 @@ const beforeRoot = '/tmp/slipper-cinematography-baseline';
 const fixtureName = '.cinematography-review';
 const processes = []; let browser;
 const report = { candidate: execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(), baseline, requestedAngle: angle,
-  method: 'Identical scene states, camera positions and directions. Baseline uses settled authored FOV; candidate uses responsive shot FOV except the opening, which retains its authored lens. Environment motion is reduced and the light profile is pre-settled; comparisons wait 25 completed render frames. Actual camera/input lifecycle is exercised separately in a lightweight fixture. Not an unassisted gameplay or FPS certification.', captures: [], interactions: [], failures: [] };
+  method: 'Identical scene states, camera positions and directions. Baseline uses settled authored FOV; candidate uses responsive shot FOV except the opening, which retains its authored lens. Environment motion is reduced and the light profile is pre-settled; comparisons wait 25 completed render frames then freeze the static fixture for screenshot readback. Actual camera/input lifecycle is exercised separately in a lightweight fixture. Not an unassisted gameplay or FPS certification.', captures: [], interactions: [], failures: [] };
 const stage = `import React,{Suspense,useLayoutEffect,useRef} from 'react';
 import {createRoot} from 'react-dom/client';import {Canvas,useFrame,useThree} from '@react-three/fiber';import {Physics} from '@react-three/rapier';
 import {BrokenFloorChapter} from '../src/components/three/chapters/BrokenFloorChapter';
@@ -38,7 +38,7 @@ useJourneyStore.setState({sceneId:id,storyStarted:true,storyCompleted:false,stor
 useWorldStore.setState({mode:'explore',controls:'walk',physicsPaused:false});useSettingsStore.setState({drawerOpen:false,reducedMotion:false,cameraAssistance:true});
 const profile=resolveCinematicProfile(id,{});for(let i=0;i<300;i++)advanceCinematicProfile(profile,.1);
 const Chapter={broken:BrokenFloorChapter,blue:BlueMoonSanctuaryChapter,house:ThornedHouseChapter,meadow:EnchantedWoodChapter,ending:IntegratedFinalTableau}[which];
-function Evidence(){const {camera,scene,gl}=useThree(),frames=useRef(0);
+function Evidence(){const {camera,scene,gl,setFrameloop}=useThree(),frames=useRef(0);
  useLayoutEffect(()=>{
   if(rig){camera.position.set(0,1.6,2);camera.lookAt(.9,1.3,-5);}
   else if(detail){camera.position.set(2.5,1.6,4);camera.lookAt(0,.65,0);}
@@ -49,7 +49,7 @@ function Evidence(){const {camera,scene,gl}=useThree(),frames=useRef(0);
   else{camera.position.set(0,3.3,6.5);camera.lookAt(0,4.8,-15);}
   if(!rig)camera.fov=detail?50:(before||which==='broken')?profile.fov:shotLens(id,profile.fov,camera.aspect);camera.updateProjectionMatrix();
  },[camera]);
- useFrame(()=>{if(rig||++frames.current===25){let lights=0,shadowLights=0;scene.traverse(o=>{if(o.isLight){lights++;if(o.castShadow)shadowLights++;}});window.__shotEvidence={calls:gl.info.render.calls,triangles:gl.info.render.triangles,lights,shadowLights,fov:camera.fov,position:camera.position.toArray(),quaternion:camera.quaternion.toArray(),sceneId:id};document.body.dataset.ready='true';}});return null;
+ useFrame(()=>{if(rig||++frames.current===25){let lights=0,shadowLights=0;scene.traverse(o=>{if(o.isLight){lights++;if(o.castShadow)shadowLights++;}});window.__shotEvidence={calls:gl.info.render.calls,triangles:gl.info.render.triangles,lights,shadowLights,fov:camera.fov,position:camera.position.toArray(),quaternion:camera.quaternion.toArray(),sceneId:id};document.body.dataset.ready='true';if(!rig)setFrameloop('never');}});return null;
 }
 function Rig(){const reducedMotion=useSettingsStore(s=>s.reducedMotion),cameraAssistance=useSettingsStore(s=>s.cameraAssistance);return <CinematicCameraDirector sceneId={id} reducedMotion={reducedMotion} cameraAssistance={cameraAssistance} focusPosition={[0,1.3,-5]}/>;}
 function Controls(){return rig?<div style={{position:'fixed',top:8,left:8,zIndex:10}}><button onClick={()=>useSettingsStore.setState({drawerOpen:true})}>Open settings</button><button onClick={()=>useSettingsStore.setState({drawerOpen:false})}>Close settings</button><button onClick={()=>useSettingsStore.setState({reducedMotion:true})}>Reduce motion</button><button onClick={()=>useWorldStore.setState({controls:'orbit'})}>Orbit</button></div>:null;}
